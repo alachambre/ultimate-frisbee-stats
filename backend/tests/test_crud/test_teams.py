@@ -125,3 +125,58 @@ def test_delete_team_cascades_to_players(db_session, sample_team, sample_players
     # Verify players are deleted (cascade)
     players = get_players_by_team(db_session, team_id)
     assert len(players) == 0
+
+
+def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sample_players, sample_game):
+    """Test that deleting a team cascades to delete games, points, and players"""
+    from app.crud import games, points, get_players_by_team
+    from app.schemas import PointCreate
+
+    team_id = sample_team.id
+    game_id = sample_game.id
+
+    # Create some points for the game
+    player_ids = [p.id for p in sample_players]
+    point1 = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=game_id,
+            starting_on_offense=True,
+            won=True,
+            player_ids=player_ids
+        )
+    )
+    point2 = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=game_id,
+            starting_on_offense=False,
+            won=False,
+            player_ids=player_ids
+        )
+    )
+
+    # Verify everything exists before deletion
+    assert teams.get_team(db_session, team_id) is not None
+    assert len(get_players_by_team(db_session, team_id)) == 7
+    assert games.get_game(db_session, game_id) is not None
+    assert points.get_point(db_session, point1.id) is not None
+    assert points.get_point(db_session, point2.id) is not None
+
+    # Delete team
+    success = teams.delete_team(db_session, team_id)
+    assert success is True
+
+    # Verify cascade delete worked for all related entities
+    # Team should be deleted
+    assert teams.get_team(db_session, team_id) is None
+
+    # Players should be deleted (cascade from team)
+    assert len(get_players_by_team(db_session, team_id)) == 0
+
+    # Game should be deleted (cascade from team)
+    assert games.get_game(db_session, game_id) is None
+
+    # Points should be deleted (cascade from game)
+    assert points.get_point(db_session, point1.id) is None
+    assert points.get_point(db_session, point2.id) is None
