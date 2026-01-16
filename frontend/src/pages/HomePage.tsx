@@ -1,42 +1,53 @@
 import { Link } from "react-router-dom";
+import { Container, Typography, Grid, Card, CardActionArea, CardContent, Box } from "@mui/material";
+import GroupIcon from "@mui/icons-material/Group";
+import SportsIcon from "@mui/icons-material/Sports";
 
 export default function HomePage() {
   return (
-    <div className="px-4 py-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+    <Container maxWidth="md" sx={{ py: 8 }}>
+      <Box textAlign="center" mb={8}>
+        <Typography variant="h3" fontWeight="bold" gutterBottom>
           Ultimate Frisbee Stats Tracker
-        </h1>
-        <p className="text-xl text-gray-600 mb-8">
+        </Typography>
+        <Typography variant="h6" color="text.secondary">
           Track your team's performance, game by game, point by point
-        </p>
+        </Typography>
+      </Box>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mt-12">
-          <Link
-            to="/teams"
-            className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition"
-          >
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              Manage Teams
-            </h2>
-            <p className="text-gray-600">
-              Create and manage your team roster
-            </p>
-          </Link>
+      <Grid container spacing={4}>
+        <Grid item xs={12} sm={6}>
+          <Card>
+            <CardActionArea component={Link} to="/teams" sx={{ height: "100%" }}>
+              <CardContent sx={{ textAlign: "center", py: 4 }}>
+                <GroupIcon sx={{ fontSize: 60, color: "primary.main", mb: 2 }} />
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Manage Teams
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Create and manage your team roster
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
 
-          <Link
-            to="/games"
-            className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition"
-          >
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-              Track Games
-            </h2>
-            <p className="text-gray-600">
-              Record games and track point-by-point stats
-            </p>
-          </Link>
-        </div>
-      </div>
-    </div>
+        <Grid item xs={12} sm={6}>
+          <Card>
+            <CardActionArea component={Link} to="/games" sx={{ height: "100%" }}>
+              <CardContent sx={{ textAlign: "center", py: 4 }}>
+                <SportsIcon sx={{ fontSize: 60, color: "primary.main", mb: 2 }} />
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Track Games
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Record games and track point-by-point stats
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
+      </Grid>
+    </Container>
   );
 }

@@ -1,3 +1,5 @@
+import { Box, CircularProgress, Typography } from "@mui/material";
+
 interface LoadingStateProps {
   message?: string;
 }
@@ -6,8 +8,17 @@ export default function LoadingState({
   message = "Loading...",
 }: LoadingStateProps) {
   return (
-    <div className="flex justify-center items-center h-64">
-      <div className="text-lg text-gray-600">{message}</div>
-    </div>
+    <Box
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="256px"
+    >
+      <CircularProgress size={60} sx={{ mb: 2 }} />
+      <Typography variant="h6" color="text.secondary">
+        {message}
+      </Typography>
+    </Box>
   );
 }

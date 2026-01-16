@@ -1,8 +1,17 @@
 import { useState, FormEvent, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updatePlayer, deletePlayer } from "../services";
-import type { Player } from "../types";
-import Modal from "./Modal";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Alert,
+  Box,
+} from "@mui/material";
+import { updatePlayer, deletePlayer } from "../../services";
+import type { Player } from "../../types";
 
 interface EditPlayerModalProps {
   isOpen: boolean;
@@ -24,7 +33,6 @@ export default function EditPlayerModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const queryClient = useQueryClient();
 
-  // Update local state when player prop changes
   useEffect(() => {
     setPlayerName(player.name);
     setPlayerNumber(player.number?.toString() || "");
@@ -72,115 +80,96 @@ export default function EditPlayerModal({
 
   if (showDeleteConfirm) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Delete Player?">
-        <p className="text-gray-600 mb-6">
-          Are you sure you want to remove {player.name} from the team?
-        </p>
-        {deleteMutation.isError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">
-              Error deleting player. Please try again.
-            </p>
-          </div>
-        )}
-        <div className="flex justify-end gap-3">
-          <button
+      <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Delete Player?</DialogTitle>
+        <DialogContent>
+          <Box>
+            Are you sure you want to remove {player.name} from the team?
+            {deleteMutation.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                Error deleting player. Please try again.
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
             onClick={() => setShowDeleteConfirm(false)}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
             disabled={deleteMutation.isPending}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300"
+            variant="contained"
+            color="error"
             disabled={deleteMutation.isPending}
           >
             {deleteMutation.isPending ? "Deleting..." : "Delete Player"}
-          </button>
-        </div>
-      </Modal>
+          </Button>
+        </DialogActions>
+      </Dialog>
     );
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Edit Player">
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label
-            htmlFor="player-name"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Player Name *
-          </label>
-          <input
-            id="player-name"
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter player name"
-            maxLength={100}
-            required
-            autoFocus
-          />
-        </div>
-
-        <div className="mb-4">
-          <label
-            htmlFor="player-number"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Jersey Number (Optional)
-          </label>
-          <input
-            id="player-number"
-            type="number"
-            value={playerNumber}
-            onChange={(e) => setPlayerNumber(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0-99"
-            min="0"
-            max="99"
-          />
-        </div>
-
-        {updateMutation.isError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">
-              Error updating player. Please try again.
-            </p>
-          </div>
-        )}
-
-        <div className="flex justify-between">
-          <button
-            type="button"
+        <DialogTitle>Edit Player</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField
+              autoFocus
+              label="Player Name"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="Enter player name"
+              inputProps={{ maxLength: 100 }}
+              required
+            />
+            <TextField
+              label="Jersey Number (Optional)"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={playerNumber}
+              onChange={(e) => setPlayerNumber(e.target.value)}
+              placeholder="0-99"
+              inputProps={{ min: 0, max: 99 }}
+            />
+            {updateMutation.isError && (
+              <Alert severity="error">
+                Error updating player. Please try again.
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "space-between" }}>
+          <Button
             onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 text-red-600 border border-red-600 rounded-md hover:bg-red-50"
+            color="error"
             disabled={updateMutation.isPending}
           >
             Delete Player
-          </button>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              disabled={updateMutation.isPending}
-            >
+          </Button>
+          <Box>
+            <Button onClick={handleClose} disabled={updateMutation.isPending}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
+              variant="contained"
               disabled={updateMutation.isPending || !playerName.trim()}
+              sx={{ ml: 1 }}
             >
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Box>
+        </DialogActions>
       </form>
-    </Modal>
+    </Dialog>
   );
 }

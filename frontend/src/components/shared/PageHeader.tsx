@@ -1,3 +1,6 @@
+import { Box, Typography, Button } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+
 interface PageHeaderProps {
   title: string;
   actionLabel?: string;
@@ -10,16 +13,25 @@ export default function PageHeader({
   onActionClick,
 }: PageHeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+    <Box
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      mb={4}
+    >
+      <Typography variant="h3" component="h1" fontWeight="bold">
+        {title}
+      </Typography>
       {onActionClick && (
-        <button
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
           onClick={onActionClick}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          size="large"
         >
           {actionLabel}
-        </button>
+        </Button>
       )}
-    </div>
+    </Box>
   );
 }

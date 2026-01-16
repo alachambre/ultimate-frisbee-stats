@@ -1,3 +1,5 @@
+import { Box, Typography, Alert } from "@mui/material";
+
 interface ErrorStateProps {
   message: string;
   title?: string;
@@ -8,11 +10,18 @@ export default function ErrorState({
   title = "Error",
 }: ErrorStateProps) {
   return (
-    <div className="flex justify-center items-center h-64">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-red-600 mb-2">{title}</h2>
-        <p className="text-gray-600">{message}</p>
-      </div>
-    </div>
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="256px"
+    >
+      <Alert severity="error" sx={{ maxWidth: 600 }}>
+        <Typography variant="h6" gutterBottom>
+          {title}
+        </Typography>
+        <Typography variant="body2">{message}</Typography>
+      </Alert>
+    </Box>
   );
 }

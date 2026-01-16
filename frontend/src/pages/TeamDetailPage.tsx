@@ -1,6 +1,21 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Container,
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 import { getTeam, deleteTeam } from "../services";
 import type { Player } from "../types";
 import LoadingState from "../components/shared/LoadingState";
@@ -49,48 +64,55 @@ export default function TeamDetailPage() {
   };
 
   return (
-    <div className="px-4 max-w-4xl mx-auto">
+    <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Header */}
-      <div className="mb-6">
-        <Link
+      <Box mb={4}>
+        <Button
+          component={Link}
           to="/teams"
-          className="text-blue-600 hover:text-blue-700 mb-2 inline-block"
+          startIcon={<ArrowBackIcon />}
+          sx={{ mb: 2 }}
         >
-          ← Back to Teams
-        </Link>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">
+          Back to Teams
+        </Button>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              {team.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
               Created {new Date(team.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <button
+            </Typography>
+          </Box>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
             onClick={() => setIsDeleteConfirmOpen(true)}
-            className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50"
           >
             Delete Team
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
 
       {/* Players Section */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">
+      <Paper>
+        <Box p={3} borderBottom="1px solid" borderColor="divider">
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">
               Players ({team.players.length})
-            </h2>
-            <button
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
               onClick={() => setIsAddPlayerModalOpen(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
               Add Player
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Box>
+        </Box>
 
-        <div className="p-6">
+        <Box p={3}>
           {team.players.length === 0 ? (
             <EmptyPlayersState
               onAddClick={() => setIsAddPlayerModalOpen(true)}
@@ -101,53 +123,46 @@ export default function TeamDetailPage() {
               onEditPlayer={setEditingPlayer}
             />
           )}
-        </div>
-      </div>
+        </Box>
+      </Paper>
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50"
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete Team?</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Are you sure you want to delete "{team.name}"? This will also
+            delete all players and games for this team. This action cannot be
+            undone.
+          </Typography>
+          {deleteMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Error deleting team. Please try again.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
             onClick={() => setIsDeleteConfirmOpen(false)}
-          />
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Delete Team?
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete "{team.name}"? This will also
-                delete all players and games for this team. This action cannot
-                be undone.
-              </p>
-              {deleteMutation.isError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-sm text-red-600">
-                    Error deleting team. Please try again.
-                  </p>
-                </div>
-              )}
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setIsDeleteConfirmOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                  disabled={deleteMutation.isPending}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300"
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? "Deleting..." : "Delete Team"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            disabled={deleteMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete Team"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Player Modals */}
       <AddPlayerModal
@@ -164,6 +179,6 @@ export default function TeamDetailPage() {
           teamId={Number(teamId)}
         />
       )}
-    </div>
+    </Container>
   );
 }

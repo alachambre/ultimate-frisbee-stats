@@ -1,7 +1,16 @@
 import { useState, FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPlayer } from "../services";
-import Modal from "./Modal";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Alert,
+  Box,
+} from "@mui/material";
+import { createPlayer } from "../../services";
 
 interface AddPlayerModalProps {
   isOpen: boolean;
@@ -21,7 +30,6 @@ export default function AddPlayerModal({
   const mutation = useMutation({
     mutationFn: createPlayer,
     onSuccess: () => {
-      // Invalidate team detail query to refresh player list
       queryClient.invalidateQueries({ queryKey: ["team", teamId.toString()] });
       setPlayerName("");
       setPlayerNumber("");
@@ -48,73 +56,53 @@ export default function AddPlayerModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Player">
+    <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label
-            htmlFor="player-name"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Player Name *
-          </label>
-          <input
-            id="player-name"
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter player name"
-            maxLength={100}
-            required
-            autoFocus
-          />
-        </div>
-
-        <div className="mb-4">
-          <label
-            htmlFor="player-number"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Jersey Number (Optional)
-          </label>
-          <input
-            id="player-number"
-            type="number"
-            value={playerNumber}
-            onChange={(e) => setPlayerNumber(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0-99"
-            min="0"
-            max="99"
-          />
-        </div>
-
-        {mutation.isError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">
-              Error adding player. Please try again.
-            </p>
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            disabled={mutation.isPending}
-          >
+        <DialogTitle>Add Player</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField
+              autoFocus
+              label="Player Name"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="Enter player name"
+              inputProps={{ maxLength: 100 }}
+              required
+            />
+            <TextField
+              label="Jersey Number (Optional)"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={playerNumber}
+              onChange={(e) => setPlayerNumber(e.target.value)}
+              placeholder="0-99"
+              inputProps={{ min: 0, max: 99 }}
+            />
+            {mutation.isError && (
+              <Alert severity="error">
+                Error adding player. Please try again.
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} disabled={mutation.isPending}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
+            variant="contained"
             disabled={mutation.isPending || !playerName.trim()}
           >
             {mutation.isPending ? "Adding..." : "Add Player"}
-          </button>
-        </div>
+          </Button>
+        </DialogActions>
       </form>
-    </Modal>
+    </Dialog>
   );
 }

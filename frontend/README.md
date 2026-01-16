@@ -10,11 +10,28 @@ React + TypeScript Progressive Web App for tracking ultimate frisbee team statis
 frontend/
 ├── src/
 │   ├── components/       # Reusable UI components
-│   │   └── Layout.tsx    # Main app layout with navigation
+│   │   ├── Layout.tsx    # Main app layout with AppBar
+│   │   ├── shared/       # Reusable shared components
+│   │   │   ├── PageHeader.tsx
+│   │   │   ├── LoadingState.tsx
+│   │   │   └── ErrorState.tsx
+│   │   ├── teams/        # Team domain components
+│   │   │   ├── TeamCard.tsx
+│   │   │   ├── TeamsGrid.tsx
+│   │   │   └── EmptyTeamsState.tsx
+│   │   ├── players/      # Player domain components
+│   │   │   ├── PlayerCard.tsx
+│   │   │   ├── PlayersGrid.tsx
+│   │   │   └── EmptyPlayersState.tsx
+│   │   └── modals/       # Modal dialogs
+│   │       ├── CreateTeamModal.tsx
+│   │       ├── AddPlayerModal.tsx
+│   │       └── EditPlayerModal.tsx
 │   ├── pages/            # Page components (routes)
-│   │   ├── HomePage.tsx  # Landing page
-│   │   ├── TeamsPage.tsx # Team list/management
-│   │   └── GamesPage.tsx # Game tracking
+│   │   ├── HomePage.tsx       # Landing page
+│   │   ├── TeamsPage.tsx      # Team list/management
+│   │   ├── TeamDetailPage.tsx # Individual team with players
+│   │   └── GamesPage.tsx      # Game tracking (coming soon)
 │   ├── services/         # API layer (mirrors backend CRUD)
 │   │   ├── api.ts        # Axios client configuration
 │   │   ├── teams.ts      # Team API calls
@@ -30,10 +47,9 @@ frontend/
 │   │   └── test-utils.tsx # Custom render with providers
 │   ├── App.tsx           # Root component with providers
 │   ├── main.tsx          # Application entry point
-│   └── index.css         # Tailwind CSS imports
+│   └── index.css         # Global CSS styles
 ├── public/               # Static assets
 ├── vitest.config.ts      # Vitest configuration
-├── tailwind.config.js    # Tailwind CSS configuration
 └── package.json          # Dependencies and scripts
 ```
 
@@ -44,7 +60,7 @@ frontend/
 - **Type safety**: TypeScript types matching backend Pydantic schemas exactly
 - **Server state management**: TanStack Query for caching and synchronization
 - **Testing infrastructure**: Vitest + React Testing Library (ready for comprehensive tests)
-- **Styling**: Tailwind CSS for mobile-first responsive design
+- **Styling**: Material UI for professional, accessible components
 
 ### Technology Stack
 
@@ -57,9 +73,10 @@ frontend/
 - React Router 7.12.0 - Client-side routing
 - TanStack Query 5.90.17 - Server state management
 
-**Styling:**
-- Tailwind CSS 4.1.18 - Utility-first CSS framework
-- PostCSS 8.5.6 - CSS processing
+**UI Framework:**
+- Material UI 6.x - Comprehensive React component library
+- @mui/icons-material - Material Design icons
+- Emotion - CSS-in-JS styling (MUI dependency)
 
 **HTTP Client:**
 - Axios 1.13.2 - API requests with interceptors
@@ -104,11 +121,12 @@ npm install
 - `react-router-dom` - Routing
 - `@tanstack/react-query` - Server state management
 - `axios` - HTTP client
+- `@mui/material` + `@emotion/react` + `@emotion/styled` - Material UI components
+- `@mui/icons-material` - Material Design icons
 
 **Development Dependencies:**
 - `vite` + `@vitejs/plugin-react` - Build tooling
 - `typescript` - Type checking
-- `tailwindcss` + `postcss` + `autoprefixer` - Styling
 - `vitest` + Testing Library - Testing framework
 - `eslint` - Code linting
 
@@ -245,6 +263,55 @@ All types in `src/types/index.ts` exactly match the backend Pydantic schemas:
 
 This ensures type safety across the entire application.
 
+## UI Components & Styling
+
+### Material UI
+
+The application uses Material UI (MUI) for all UI components, providing:
+- **Professional design**: Clean, modern Material Design aesthetic
+- **Accessibility**: WCAG compliant, keyboard navigation, ARIA attributes
+- **Responsive**: Mobile-first design with built-in breakpoints
+- **Customizable**: Theme configuration in `App.tsx`
+- **Icon library**: `@mui/icons-material` for consistent iconography
+
+### Component Examples
+
+**Common MUI components used:**
+- `Container`, `Box`, `Grid` - Layout
+- `Typography` - Text with variant system (h1-h6, body1-2, etc.)
+- `Button`, `IconButton` - Actions
+- `TextField` - Form inputs
+- `Dialog`, `DialogTitle`, `DialogContent`, `DialogActions` - Modals
+- `Card`, `CardContent`, `CardActionArea` - Content containers
+- `Paper` - Elevated surfaces
+- `AppBar`, `Toolbar` - Navigation
+- `Alert` - Feedback messages
+- `CircularProgress` - Loading indicators
+- `Chip` - Tags and labels
+
+### Theme Customization
+
+Edit the theme in `App.tsx`:
+```typescript
+const theme = createTheme({
+  palette: {
+    mode: "light",
+    primary: {
+      main: "#1976d2", // Blue
+    },
+    secondary: {
+      main: "#dc004e", // Pink
+    },
+  },
+});
+```
+
+### Styling Approach
+
+- **sx prop**: Inline styles with theme access
+- **Emotion**: CSS-in-JS for dynamic styling
+- **No custom CSS**: MUI handles all styling needs
+
 ## Development Workflow
 
 ### 1. Make code changes
@@ -273,12 +340,14 @@ npm run build
 - Testing infrastructure (Vitest + React Testing Library)
 - Routing with React Router
 - TanStack Query for server state
-- Tailwind CSS styling
-- Basic pages: Home, Teams, Games
-- Layout component with navigation
+- Material UI styling with theme configuration
+- Pages: Home, Teams, Team Detail, Games
+- Layout component with AppBar navigation
+- Team management (CRUD operations)
+- Player management with modals
+- Shared components (PageHeader, LoadingState, ErrorState)
 
 ### 🚧 In Progress / TODO
-- Team detail page with player roster
 - Game tracking page with live scoring
 - Point entry form with player selection
 - Game detail/review page

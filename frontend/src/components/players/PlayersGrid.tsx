@@ -1,3 +1,4 @@
+import { Grid } from "@mui/material";
 import type { Player } from "../../types";
 import PlayerCard from "./PlayerCard";
 
@@ -11,14 +12,12 @@ export default function PlayersGrid({
   onEditPlayer,
 }: PlayersGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Grid container spacing={2}>
       {players.map((player) => (
-        <PlayerCard
-          key={player.id}
-          player={player}
-          onEdit={() => onEditPlayer(player)}
-        />
+        <Grid item xs={12} sm={6} key={player.id}>
+          <PlayerCard player={player} onEdit={() => onEditPlayer(player)} />
+        </Grid>
       ))}
-    </div>
+    </Grid>
   );
 }

@@ -1,3 +1,4 @@
+import { Grid } from "@mui/material";
 import type { Team } from "../../types";
 import TeamCard from "./TeamCard";
 
@@ -7,10 +8,12 @@ interface TeamsGridProps {
 
 export default function TeamsGrid({ teams }: TeamsGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <Grid container spacing={3}>
       {teams.map((team) => (
-        <TeamCard key={team.id} team={team} />
+        <Grid item xs={12} sm={6} md={4} key={team.id}>
+          <TeamCard team={team} />
+        </Grid>
       ))}
-    </div>
+    </Grid>
   );
 }

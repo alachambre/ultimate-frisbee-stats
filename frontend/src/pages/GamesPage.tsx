@@ -1,16 +1,23 @@
+import { Container, Box, Typography, Button, Paper } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+
 export default function GamesPage() {
   return (
-    <div className="px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Games</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h3" component="h1" fontWeight="bold">
+          Games
+        </Typography>
+        <Button variant="contained" startIcon={<AddIcon />}>
           New Game
-        </button>
-      </div>
+        </Button>
+      </Box>
 
-      <div className="text-center py-12 bg-white rounded-lg shadow">
-        <p className="text-gray-600">Games page coming soon</p>
-      </div>
-    </div>
+      <Paper sx={{ textAlign: "center", py: 8 }}>
+        <Typography variant="body1" color="text.secondary">
+          Games page coming soon
+        </Typography>
+      </Paper>
+    </Container>
   );
 }

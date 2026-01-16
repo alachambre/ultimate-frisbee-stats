@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Container } from "@mui/material";
 import { getTeams } from "../services";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
@@ -29,7 +30,7 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className="px-4">
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <PageHeader
         title="Teams"
         actionLabel="Add Team"
@@ -46,6 +47,6 @@ export default function TeamsPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
-    </div>
+    </Container>
   );
 }
