@@ -25,8 +25,8 @@ backend/
 │   └── main.py            # FastAPI application setup
 ├── tests/
 │   ├── conftest.py        # Test fixtures and configuration
-│   ├── test_crud/         # Unit tests for database operations (48 tests)
-│   └── test_api/          # Integration tests for API endpoints (50 tests)
+│   ├── test_crud/         # Unit tests for database operations
+│   └── test_api/          # Integration tests for API endpoints
 └── requirements.txt       # Python dependencies
 ```
 
@@ -34,7 +34,7 @@ backend/
 
 - **Clean separation of concerns**: Routers handle HTTP, CRUD handles database, Models define schema
 - **Domain-driven organization**: Code organized by business domain (teams, players, games, points)
-- **Comprehensive testing**: 98 tests covering both unit and integration levels
+- **Comprehensive testing**: Comprehensive test coverage at both unit and integration levels
 - **V2-ready architecture**: Designed to easily add event tracking (goals, assists, turnovers) later
 
 ### Data Model
@@ -130,20 +130,20 @@ The `--reload` flag enables automatic reloading when you modify code files.
 
 ## Running Tests
 
-### Run all tests (98 tests)
+### Run all tests
 
 ```bash
 source venv/bin/activate
 pytest tests/ -v
 ```
 
-### Run only CRUD unit tests (48 tests)
+### Run only CRUD unit tests
 
 ```bash
 pytest tests/test_crud/ -v
 ```
 
-### Run only API integration tests (50 tests)
+### Run only API integration tests
 
 ```bash
 pytest tests/test_api/ -v
@@ -187,6 +187,7 @@ pytest tests/ -v --tb=short
 
 ### Games
 - `POST /games` - Create a game
+- `GET /games` - List all games with scores and team names
 - `GET /games/{game_id}` - Get game with score and points
 - `PUT /games/{game_id}` - Update game
 - `POST /games/{game_id}/finish` - Mark game as finished

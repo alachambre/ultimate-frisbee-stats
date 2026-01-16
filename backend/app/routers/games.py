@@ -11,6 +11,21 @@ router = APIRouter(
 )
 
 
+@router.get("", response_model=List[schemas.GameWithScore])
+def list_games(db: Session = Depends(get_db)):
+    games = crud.get_all_games(db)
+    # Transform to include scores and team name
+    return [
+        {
+            **game.__dict__,
+            "our_score": crud.get_game_score(db, game.id)[0],
+            "opponent_score": crud.get_game_score(db, game.id)[1],
+            "team_name": crud.get_team(db, game.team_id).name if crud.get_team(db, game.team_id) else "Unknown",
+        }
+        for game in games
+    ]
+
+
 @router.post("", response_model=schemas.Game, status_code=201)
 def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
     # Verify team exists

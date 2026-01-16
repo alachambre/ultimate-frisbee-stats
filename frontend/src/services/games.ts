@@ -4,6 +4,7 @@ import type {
   GameCreate,
   GameUpdate,
   GameDetail,
+  GameWithScore,
   PointWithPlayers,
 } from "../types";
 
@@ -37,6 +38,12 @@ export const finishGame = async (gameId: number): Promise<Game> => {
 // Delete game
 export const deleteGame = async (gameId: number): Promise<void> => {
   await apiClient.delete(`/games/${gameId}`);
+};
+
+// Get all games
+export const getAllGames = async (): Promise<GameWithScore[]> => {
+  const response = await apiClient.get<GameWithScore[]>("/games");
+  return response.data;
 };
 
 // Get all points for a game

@@ -23,15 +23,22 @@ frontend/
 │   │   │   ├── PlayerCard.tsx
 │   │   │   ├── PlayersGrid.tsx
 │   │   │   └── EmptyPlayersState.tsx
+│   │   ├── games/        # Game domain components
+│   │   │   ├── GameCard.tsx
+│   │   │   ├── GamesGrid.tsx
+│   │   │   └── EmptyGamesState.tsx
 │   │   └── modals/       # Modal dialogs
 │   │       ├── CreateTeamModal.tsx
 │   │       ├── AddPlayerModal.tsx
-│   │       └── EditPlayerModal.tsx
+│   │       ├── EditPlayerModal.tsx
+│   │       ├── CreateGameModal.tsx
+│   │       └── EditGameModal.tsx
 │   ├── pages/            # Page components (routes)
 │   │   ├── HomePage.tsx       # Landing page
 │   │   ├── TeamsPage.tsx      # Team list/management
 │   │   ├── TeamDetailPage.tsx # Individual team with players
-│   │   └── GamesPage.tsx      # Game tracking (coming soon)
+│   │   ├── GamesPage.tsx      # Game list/management
+│   │   └── GameDetailPage.tsx # Individual game with score and points
 │   ├── services/         # API layer (mirrors backend CRUD)
 │   │   ├── api.ts        # Axios client configuration
 │   │   ├── teams.ts      # Team API calls
@@ -191,7 +198,9 @@ npm run test:coverage
 
 ### Current Test Coverage
 
-**7 passing tests** covering critical user flows for Phase 1 (Team & Player Management):
+Comprehensive test coverage for critical user flows:
+
+**Phase 1 - Team & Player Management:**
 
 **TeamsPage:**
 - Shows empty state when no teams exist
@@ -203,6 +212,21 @@ npm run test:coverage
 - Allows user to add a player to the team
 - Allows user to edit a player
 - Allows user to delete a player
+
+**Phase 2 - Game Management:**
+
+**GamesPage:**
+- Shows empty state when no games exist
+- Creates new game successfully with team selection
+- Displays games in grid when games exist
+- Navigates to game detail on card click
+
+**GameDetailPage:**
+- Displays game information correctly
+- Shows score and empty points list
+- Edits game successfully
+- Finishes game successfully
+- Deletes game with confirmation
 
 ### Test Architecture
 
@@ -224,7 +248,9 @@ src/
 ├── pages/
 │   └── __tests__/
 │       ├── TeamsPage.test.tsx
-│       └── TeamDetailPage.test.tsx
+│       ├── TeamDetailPage.test.tsx
+│       ├── GamesPage.test.tsx
+│       └── GameDetailPage.test.tsx
 ```
 
 **Mock API with MSW:**
@@ -400,22 +426,32 @@ npm run build
 - Testing infrastructure:
   - Vitest + React Testing Library + MSW
   - Happy DOM for lightweight test environment
-  - 7 passing integration tests covering critical user flows
   - TypeScript support with @testing-library/jest-dom matchers
 - Routing with React Router
 - TanStack Query for server state
 - Material UI styling with theme configuration
-- Pages: Home, Teams, Team Detail, Games (placeholder)
 - Layout component with AppBar navigation
 - Team management (CRUD operations) - **fully tested**
 - Player management with modals - **fully tested**
 - Shared components (PageHeader, LoadingState, ErrorState)
 - Component architecture: domain-driven folders (teams/, players/, modals/)
 
-### 🚧 In Progress / TODO - Phase 2+
-- Game tracking page with live scoring
-- Point entry form with player selection
-- Game detail/review page
+### ✅ Completed - Phase 2: Game Management
+- Games list page with grid layout - **fully tested**
+- Game creation modal with team selection
+- Game detail page with scores and actions
+- Edit game modal
+- Finish game functionality (changes status from "In Progress" to "Finished")
+- Delete game with confirmation dialog
+- Game cards showing opponent, date, score, status badges, and team names
+- Empty state components for games
+- Full CRUD operations for games - **fully tested**
+- MSW mocks for all game endpoints
+
+### 🚧 In Progress / TODO - Phase 3+
+- Point entry form with player selection during live games
+- Live scoring interface
+- Point-by-point gameplay tracking
 - Statistics dashboard
 - Offline support (PWA features)
 - E2E tests with Playwright (optional)

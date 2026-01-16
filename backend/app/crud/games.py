@@ -20,6 +20,10 @@ def get_game(db: Session, game_id: int) -> Optional[models.Game]:
     return db.query(models.Game).filter(models.Game.id == game_id).first()
 
 
+def get_all_games(db: Session) -> List[models.Game]:
+    return db.query(models.Game).order_by(models.Game.date.desc()).all()
+
+
 def get_games_by_team(db: Session, team_id: int) -> List[models.Game]:
     return db.query(models.Game).filter(models.Game.team_id == team_id).order_by(models.Game.date.desc()).all()
 
@@ -61,16 +65,19 @@ def get_game_score(db: Session, game_id: int) -> tuple[int, int]:
 def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
     """Get complete game information with score and all points"""
     from app.crud.points import get_points_by_game
+    from app.crud.teams import get_team
     game = get_game(db, game_id)
     if not game:
         return None
 
     points = get_points_by_game(db, game_id)
     our_score, opponent_score = get_game_score(db, game_id)
+    team = get_team(db, game.team_id)
 
     return {
         **game.__dict__,
         "our_score": our_score,
         "opponent_score": opponent_score,
+        "team_name": team.name if team else "Unknown",
         "points": points
     }

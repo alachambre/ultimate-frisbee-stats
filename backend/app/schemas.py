@@ -85,6 +85,7 @@ class GameWithScore(Game):
     """Game with calculated score information"""
     our_score: int
     opponent_score: int
+    team_name: str
 
 
 # ============================================

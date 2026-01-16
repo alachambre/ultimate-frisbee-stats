@@ -20,6 +20,7 @@ from app.crud.players import (
 from app.crud.games import (
     create_game,
     get_game,
+    get_all_games,
     get_games_by_team,
     update_game,
     finish_game,
@@ -52,6 +53,7 @@ __all__ = [
     # Games
     "create_game",
     "get_game",
+    "get_all_games",
     "get_games_by_team",
     "update_game",
     "finish_game",

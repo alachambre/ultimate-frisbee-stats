@@ -68,6 +68,7 @@ export interface Game extends GameBase {
 export interface GameWithScore extends Game {
   our_score: number;
   opponent_score: number;
+  team_name: string;
 }
 
 // ============================================
