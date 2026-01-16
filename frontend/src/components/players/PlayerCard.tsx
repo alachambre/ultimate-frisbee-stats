@@ -22,7 +22,7 @@ export default function PlayerCard({ player, onEdit }: PlayerCardProps) {
               </Typography>
             )}
           </Box>
-          <IconButton onClick={onEdit} color="primary" size="small">
+          <IconButton onClick={onEdit} color="primary" size="small" aria-label="Edit player">
             <EditIcon />
           </IconButton>
         </Box>

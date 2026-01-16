@@ -4,10 +4,8 @@ import {
   CardContent,
   Typography,
   Box,
-  Chip,
   CardActionArea,
 } from "@mui/material";
-import GroupIcon from "@mui/icons-material/Group";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import type { Team } from "../../types";
@@ -17,8 +15,6 @@ interface TeamCardProps {
 }
 
 export default function TeamCard({ team }: TeamCardProps) {
-  const playerCount = team.players?.length || 0;
-
   return (
     <Card
       sx={{
@@ -41,16 +37,6 @@ export default function TeamCard({ team }: TeamCardProps) {
               {team.name}
             </Typography>
             <ChevronRightIcon color="action" />
-          </Box>
-
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <Chip
-              icon={<GroupIcon />}
-              label={`${playerCount} ${playerCount === 1 ? "Player" : "Players"}`}
-              size="small"
-              color="primary"
-              variant="outlined"
-            />
           </Box>
 
           <Box display="flex" alignItems="center" gap={1}>

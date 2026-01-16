@@ -84,7 +84,10 @@ frontend/
 **Testing:**
 - Vitest 4.0.17 - Unit and integration testing
 - React Testing Library 16.3.1 - Component testing
-- jsdom 27.4.0 - DOM implementation for tests
+- @testing-library/user-event - Simulating user interactions
+- @testing-library/jest-dom - Custom Jest matchers for DOM
+- MSW (Mock Service Worker) - API mocking with request interception
+- Happy DOM - Lightweight DOM implementation (faster alternative to jsdom)
 
 ### Data Flow
 
@@ -127,7 +130,9 @@ npm install
 **Development Dependencies:**
 - `vite` + `@vitejs/plugin-react` - Build tooling
 - `typescript` - Type checking
-- `vitest` + Testing Library - Testing framework
+- `vitest` + Testing Library + MSW + happy-dom - Testing framework
+- `@testing-library/user-event` - User interaction simulation
+- `@testing-library/jest-dom` - DOM matchers
 - `eslint` - Code linting
 
 ## Configuration
@@ -184,22 +189,77 @@ npm run test:ui
 npm run test:coverage
 ```
 
+### Current Test Coverage
+
+**7 passing tests** covering critical user flows for Phase 1 (Team & Player Management):
+
+**TeamsPage:**
+- Shows empty state when no teams exist
+- Allows user to create a new team
+- Displays multiple teams in a grid
+
+**TeamDetailPage:**
+- Shows empty state when team has no players
+- Allows user to add a player to the team
+- Allows user to edit a player
+- Allows user to delete a player
+
 ### Test Architecture
 
-Tests follow the same clean architecture as the backend:
-- **Test utilities** (`src/test/test-utils.tsx`): Custom render with providers
-- **Setup file** (`src/test/setup.ts`): Global test configuration
-- **Component tests**: Test components in isolation
-- **Integration tests**: Test full user flows with mocked API
+Tests use modern React testing best practices:
+- **Testing Library** (`@testing-library/react`): User-centric component testing
+- **MSW (Mock Service Worker)** (`msw`): API mocking with HTTP request interception
+- **Happy DOM** (`happy-dom`): Lightweight DOM implementation for tests
+- **Vitest**: Fast test runner with native ESM support
 
-Example test structure:
+**Test Structure:**
+```
+src/
+├── test/
+│   ├── setup.ts              # MSW server setup, global test config
+│   ├── test-utils.tsx        # Custom render with providers
+│   ├── vitest-env.d.ts       # TypeScript declarations
+│   └── mocks/
+│       └── handlers.ts       # MSW request handlers (API mocks)
+├── pages/
+│   └── __tests__/
+│       ├── TeamsPage.test.tsx
+│       └── TeamDetailPage.test.tsx
+```
+
+**Mock API with MSW:**
+The test suite uses MSW to intercept HTTP requests and provide realistic API responses:
+- In-memory data store simulates backend state
+- Full CRUD operations for teams and players
+- Automatic state management between tests
+- No actual backend required for tests
+
+Example test:
 ```typescript
-import { render, screen } from '../test/test-utils';
-import TeamsPage from '../pages/TeamsPage';
+import { render, screen, waitFor } from '../../test/test-utils';
+import userEvent from '@testing-library/user-event';
+import TeamsPage from '../TeamsPage';
 
-test('renders team list', async () => {
+test('allows user to create a new team', async () => {
+  const user = userEvent.setup();
   render(<TeamsPage />);
-  expect(await screen.findByText('Teams')).toBeInTheDocument();
+
+  // Click create button
+  const createButton = screen.getByRole('button', { name: /create your first team/i });
+  await user.click(createButton);
+
+  // Fill form
+  const nameInput = screen.getByLabelText(/team name/i);
+  await user.type(nameInput, 'Test Team');
+
+  // Submit
+  const submitButton = screen.getByRole('button', { name: /create team/i });
+  await user.click(submitButton);
+
+  // Verify team appears
+  await waitFor(() => {
+    expect(screen.getByText('Test Team')).toBeInTheDocument();
+  });
 });
 ```
 
@@ -333,27 +393,32 @@ npm run build
 
 ## Current Implementation Status
 
-### ✅ Completed
+### ✅ Completed - Phase 1: Team & Player Management
 - Project setup with Vite + React + TypeScript
 - Complete TypeScript types matching backend schemas
 - API service layer with all endpoints
-- Testing infrastructure (Vitest + React Testing Library)
+- Testing infrastructure:
+  - Vitest + React Testing Library + MSW
+  - Happy DOM for lightweight test environment
+  - 7 passing integration tests covering critical user flows
+  - TypeScript support with @testing-library/jest-dom matchers
 - Routing with React Router
 - TanStack Query for server state
 - Material UI styling with theme configuration
-- Pages: Home, Teams, Team Detail, Games
+- Pages: Home, Teams, Team Detail, Games (placeholder)
 - Layout component with AppBar navigation
-- Team management (CRUD operations)
-- Player management with modals
+- Team management (CRUD operations) - **fully tested**
+- Player management with modals - **fully tested**
 - Shared components (PageHeader, LoadingState, ErrorState)
+- Component architecture: domain-driven folders (teams/, players/, modals/)
 
-### 🚧 In Progress / TODO
+### 🚧 In Progress / TODO - Phase 2+
 - Game tracking page with live scoring
 - Point entry form with player selection
 - Game detail/review page
 - Statistics dashboard
 - Offline support (PWA features)
-- Comprehensive test suite
+- E2E tests with Playwright (optional)
 
 ## Troubleshooting
 
