@@ -130,32 +130,35 @@ def test_get_game_score_empty(db_session, sample_game):
 
 def test_get_game_score_with_points(db_session, sample_game, sample_players):
     """Test calculating game score"""
+    from app.schemas import PointFinish
     # Create some points
     player_ids = [p.id for p in sample_players]
 
     # We won 3 points
     for _ in range(3):
-        points.create_point(
+        point = points.create_point(
             db_session,
             PointCreate(
                 game_id=sample_game.id,
                 starting_on_offense=True,
-                won=True,
                 player_ids=player_ids
             )
         )
+        # Finish the point so we can create another
+        points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Opponent won 2 points
     for _ in range(2):
-        points.create_point(
+        point = points.create_point(
             db_session,
             PointCreate(
                 game_id=sample_game.id,
                 starting_on_offense=False,
-                won=False,
                 player_ids=player_ids
             )
         )
+        # Finish the point so we can create another
+        points.finish_point(db_session, point.id, PointFinish(won=False))
 
     our_score, opponent_score = games.get_game_score(db_session, sample_game.id)
 
@@ -165,18 +168,20 @@ def test_get_game_score_with_points(db_session, sample_game, sample_players):
 
 def test_get_game_detail(db_session, sample_game, sample_players):
     """Test getting complete game details with points"""
+    from app.schemas import PointFinish
     player_ids = [p.id for p in sample_players]
 
     # Create a point
-    points.create_point(
+    point = points.create_point(
         db_session,
         PointCreate(
             game_id=sample_game.id,
             starting_on_offense=True,
-            won=True,
             player_ids=player_ids
         )
     )
+    # Finish the point
+    points.finish_point(db_session, point.id, PointFinish(won=True))
 
     game_detail = games.get_game_detail(db_session, sample_game.id)
 

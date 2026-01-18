@@ -50,3 +50,37 @@ def delete_point(point_id: int, db: Session = Depends(get_db)):
     success = crud.delete_point(db, point_id)
     if not success:
         raise HTTPException(status_code=404, detail="Point not found")
+
+
+@router.post("/{point_id}/finish", response_model=schemas.PointWithPlayers)
+def finish_point(point_id: int, finish_data: schemas.PointFinish, db: Session = Depends(get_db)):
+    try:
+        point = crud.finish_point(db, point_id, finish_data)
+        if not point:
+            raise HTTPException(status_code=404, detail="Point not found")
+        return point
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{point_id}/cancel", status_code=204)
+def cancel_point(point_id: int, db: Session = Depends(get_db)):
+    try:
+        success = crud.cancel_point(db, point_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Point not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/games/{game_id}/active", response_model=schemas.PointWithPlayers)
+def get_active_point(game_id: int, db: Session = Depends(get_db)):
+    # Verify game exists
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    point = crud.get_active_point_for_game(db, game_id)
+    if not point:
+        raise HTTPException(status_code=404, detail="No active point found for this game")
+    return point

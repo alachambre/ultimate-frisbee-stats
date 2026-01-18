@@ -77,15 +77,25 @@ export interface GameWithScore extends Game {
 
 export interface PointBase {
   starting_on_offense: boolean;
-  won: boolean;
 }
 
 export interface PointCreate extends PointBase {
   game_id: number;
   player_ids: number[];
+  start_datetime?: string | null; // Defaults to now if null
 }
 
-export interface PointUpdate extends PointBase {
+export interface PointFinish {
+  won: boolean;
+  end_datetime?: string | null; // Defaults to now if null
+}
+
+export interface PointUpdate {
+  starting_on_offense?: boolean;
+  won?: boolean | null;
+  start_datetime?: string | null;
+  end_datetime?: string | null;
+  status?: "active" | "completed";
   player_ids?: number[] | null;
 }
 
@@ -93,11 +103,16 @@ export interface Point extends PointBase {
   id: number;
   game_id: number;
   point_number: number;
+  won: boolean | null; // Nullable while active
+  status: "active" | "completed";
+  start_datetime: string | null;
+  end_datetime: string | null;
   created_at: string;
 }
 
 export interface PointWithPlayers extends Point {
   players: Player[];
+  duration_seconds?: number | null; // Computed property
 }
 
 // ============================================

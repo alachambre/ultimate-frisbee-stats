@@ -130,7 +130,7 @@ def test_delete_team_cascades_to_players(db_session, sample_team, sample_players
 def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sample_players, sample_game):
     """Test that deleting a team cascades to delete games, points, and players"""
     from app.crud import games, points, get_players_by_team
-    from app.schemas import PointCreate
+    from app.schemas import PointCreate, PointFinish
 
     team_id = sample_team.id
     game_id = sample_game.id
@@ -142,19 +142,22 @@ def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sampl
         PointCreate(
             game_id=game_id,
             starting_on_offense=True,
-            won=True,
             player_ids=player_ids
         )
     )
+    # Finish first point before creating the second
+    points.finish_point(db_session, point1.id, PointFinish(won=True))
+
     point2 = points.create_point(
         db_session,
         PointCreate(
             game_id=game_id,
             starting_on_offense=False,
-            won=False,
             player_ids=player_ids
         )
     )
+    # Finish second point
+    points.finish_point(db_session, point2.id, PointFinish(won=False))
 
     # Verify everything exists before deletion
     assert teams.get_team(db_session, team_id) is not None

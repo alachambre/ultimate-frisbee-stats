@@ -51,7 +51,7 @@ describe("GameDetailPage", () => {
 
     // Check empty points message
     expect(
-      screen.getByText(/No points yet. Points will be added during live games in Phase 3./i)
+      screen.getByText(/No points yet. Start tracking points above./i)
     ).toBeInTheDocument();
   });
 

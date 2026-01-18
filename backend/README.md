@@ -42,11 +42,15 @@ backend/
 **Team** → has many Players and Games
 **Player** → belongs to Team, participates in many Points
 **Game** → belongs to Team, has many Points
-**Point** → belongs to Game, has exactly 7 Players (many-to-many)
+**Point** → belongs to Game, has exactly 7 Players (many-to-many), tracks duration
 
 Key features:
 - Auto-incrementing point numbers per game
 - Automatic score calculation from point results
+- **Live point tracking with duration** (Phase 3)
+  - Two-state workflow: active → completed
+  - Timestamp tracking: `start_datetime`, `end_datetime`
+  - Only one active point per game at a time
 - Cascade deletes (deleting a team removes its players and games)
 - Validation: exactly 7 players per point, can't add points to finished games
 
@@ -194,11 +198,21 @@ pytest tests/ -v --tb=short
 - `DELETE /games/{game_id}` - Delete game
 - `GET /games/{game_id}/points` - List all points for a game
 
-### Points
-- `POST /points` - Create a point (requires exactly 7 player IDs)
+### Points (Phase 3: Live Point Tracking)
+- `POST /points` - Start a new point (requires exactly 7 player IDs, creates active point)
 - `GET /points/{point_id}` - Get point with player details
-- `PUT /points/{point_id}` - Update point
+- `PUT /points/{point_id}` - Update point (players, timestamps)
+- `POST /points/{point_id}/finish` - Finish active point (set won/lost outcome)
+- `DELETE /points/{point_id}/cancel` - Cancel active point
 - `DELETE /points/{point_id}` - Delete point
+- `GET /points/games/{game_id}/active` - Get active point for game (404 if none)
+
+**Point Tracking Features:**
+- Two-state workflow: active → completed
+- Timestamp tracking: `start_datetime`, `end_datetime`
+- Duration calculation for playing time stats
+- Only one active point per game allowed
+- Real-time point tracking during live games
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 

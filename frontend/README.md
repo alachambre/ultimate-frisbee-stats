@@ -27,12 +27,21 @@ frontend/
 │   │   │   ├── GameCard.tsx
 │   │   │   ├── GamesGrid.tsx
 │   │   │   └── EmptyGamesState.tsx
+│   │   ├── points/       # Point tracking components (Phase 3)
+│   │   │   ├── LivePointTracker.tsx    # Main live tracking interface
+│   │   │   ├── PointTimer.tsx          # Real-time elapsed time display
+│   │   │   ├── PlayerSelector.tsx      # 7-player selection UI
+│   │   │   ├── PointHistoryList.tsx    # List of all points
+│   │   │   └── PointHistoryItem.tsx    # Individual point display
 │   │   └── modals/       # Modal dialogs
 │   │       ├── CreateTeamModal.tsx
 │   │       ├── AddPlayerModal.tsx
 │   │       ├── EditPlayerModal.tsx
 │   │       ├── CreateGameModal.tsx
-│   │       └── EditGameModal.tsx
+│   │       ├── EditGameModal.tsx
+│   │       ├── StartPointDialog.tsx    # Start point + select players
+│   │       ├── FinishPointDialog.tsx   # Finish active point (won/lost)
+│   │       └── EditPointDialog.tsx     # Edit point timestamps/players
 │   ├── pages/            # Page components (routes)
 │   │   ├── HomePage.tsx       # Landing page
 │   │   ├── TeamsPage.tsx      # Team list/management
@@ -332,11 +341,13 @@ The service layer mirrors the backend CRUD structure. All services are strongly 
 - `deleteGame(gameId: number): Promise<void>`
 - `getGamePoints(gameId: number): Promise<PointWithPlayers[]>`
 
-### Points Service (`services/points.ts`)
-- `createPoint(data: PointCreate): Promise<Point>`
-- `getPoint(pointId: number): Promise<PointWithPlayers>`
-- `updatePoint(pointId, data: PointUpdate): Promise<Point>`
-- `deletePoint(pointId: number): Promise<void>`
+### Points Service (`services/points.ts`) - Phase 3
+- `startPoint(data: PointCreate): Promise<Point>` - Create active point
+- `getActivePoint(gameId: number): Promise<PointWithPlayers | null>` - Get active point
+- `finishPoint(pointId, data: PointFinish): Promise<Point>` - Complete point (won/lost)
+- `cancelPoint(pointId: number): Promise<void>` - Cancel active point
+- `updatePoint(pointId, data: PointUpdate): Promise<Point>` - Edit point details
+- `deletePoint(pointId: number): Promise<void>` - Delete completed point
 
 ## TypeScript Types
 
@@ -448,11 +459,35 @@ npm run build
 - Full CRUD operations for games - **fully tested**
 - MSW mocks for all game endpoints
 
-### 🚧 In Progress / TODO - Phase 3+
-- Point entry form with player selection during live games
-- Live scoring interface
-- Point-by-point gameplay tracking
-- Statistics dashboard
+### 🎉 Mostly Complete - Phase 3: Live Point Tracking
+#### ✅ Implemented Features
+- **Backend (120 tests passing):**
+  - Point model with status (active/completed), start_datetime, end_datetime
+  - Two-state point workflow (active → completed)
+  - New endpoints: POST /points/:id/finish, DELETE /points/:id/cancel, GET /points/games/:id/active
+  - Validation: only one active point per game, exactly 7 players required
+  - Duration calculation for playing time stats
+
+- **Frontend (32 tests passing):**
+  - LivePointTracker component - Main interface for live point tracking
+  - PointTimer component - Real-time elapsed time display
+  - PlayerSelector component - Exactly 7 players required
+  - StartPointDialog - Select players and start point
+  - FinishPointDialog - Mark point as won/lost
+  - EditPointDialog - Edit timestamps and player lineup
+  - PointHistoryList & PointHistoryItem - View all points with durations
+  - Active point polling (every 5 seconds) using React Query
+  - Integration in GameDetailPage with live tracking UI
+
+#### 🐛 Known Issues (To Fix)
+1. **Timer starts at 1H instead of 00:00** - Format bug in PointTimer component
+2. **Point duration not visible** - Duration should display in point history cards
+3. **Edit point button not working** - Dialog not opening when clicking edit
+
+#### 📝 Future Enhancements (Phase 4+)
+- Individual player event tracking (goals, assists, blocks, turnovers)
+- Statistics dashboard (player stats, team stats)
+- Advanced analytics and charts
 - Offline support (PWA features)
 - E2E tests with Playwright (optional)
 

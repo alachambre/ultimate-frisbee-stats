@@ -35,6 +35,9 @@ from app.crud.points import (
     get_points_by_game,
     update_point,
     delete_point,
+    finish_point,
+    get_active_point_for_game,
+    cancel_point,
 )
 
 __all__ = [
@@ -66,4 +69,7 @@ __all__ = [
     "get_points_by_game",
     "update_point",
     "delete_point",
+    "finish_point",
+    "get_active_point_for_game",
+    "cancel_point",
 ]

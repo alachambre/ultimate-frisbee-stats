@@ -1,0 +1,55 @@
+import { useState, useEffect } from "react";
+import { Typography } from "@mui/material";
+
+interface PointTimerProps {
+  startDatetime: string; // ISO string
+}
+
+export default function PointTimer({ startDatetime }: PointTimerProps) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    const calculateElapsed = () => {
+      const start = new Date(startDatetime).getTime();
+      const now = Date.now();
+      const diffMs = now - start;
+      return Math.max(0, Math.floor(diffMs / 1000));
+    };
+
+    // Set initial value
+    setElapsedSeconds(calculateElapsed());
+
+    // Update every second
+    const interval = setInterval(() => {
+      setElapsedSeconds(calculateElapsed());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startDatetime]);
+
+  const formatTime = (totalSeconds: number): string => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, "0")}:${String(
+        seconds
+      ).padStart(2, "0")}`;
+    }
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  return (
+    <Typography
+      variant="h5"
+      fontWeight="bold"
+      sx={{
+        fontFamily: "monospace",
+        color: "primary.main",
+      }}
+    >
+      {formatTime(elapsedSeconds)}
+    </Typography>
+  );
+}

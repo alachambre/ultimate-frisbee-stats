@@ -62,7 +62,10 @@ class Point(Base):
     game_id = Column(Integer, ForeignKey("games.id", ondelete="CASCADE"), nullable=False)
     point_number = Column(Integer, nullable=False)  # Sequential number within the game
     starting_on_offense = Column(Boolean, nullable=False)  # True if we started with the disc
-    won = Column(Boolean, nullable=False)  # True if we won the point
+    won = Column(Boolean, nullable=True)  # True if we won the point (nullable while active)
+    status = Column(String, default="active", nullable=False)  # "active" | "completed"
+    start_datetime = Column(DateTime, nullable=True)  # When point started
+    end_datetime = Column(DateTime, nullable=True)  # When point finished
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships

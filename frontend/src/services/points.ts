@@ -1,10 +1,37 @@
 import { apiClient } from "./api";
-import type { Point, PointCreate, PointUpdate, PointWithPlayers } from "../types";
+import type { PointCreate, PointFinish, PointUpdate, PointWithPlayers } from "../types";
 
-// Create a new point
-export const createPoint = async (data: PointCreate): Promise<Point> => {
-  const response = await apiClient.post<Point>("/points", data);
+// Start a new point (creates an active point)
+export const startPoint = async (data: PointCreate): Promise<PointWithPlayers> => {
+  const response = await apiClient.post<PointWithPlayers>("/points", data);
   return response.data;
+};
+
+// Finish an active point
+export const finishPoint = async (
+  pointId: number,
+  data: PointFinish
+): Promise<PointWithPlayers> => {
+  const response = await apiClient.post<PointWithPlayers>(`/points/${pointId}/finish`, data);
+  return response.data;
+};
+
+// Cancel (delete) an active point
+export const cancelPoint = async (pointId: number): Promise<void> => {
+  await apiClient.delete(`/points/${pointId}/cancel`);
+};
+
+// Get active point for a game (returns null if 404)
+export const getActivePoint = async (gameId: number): Promise<PointWithPlayers | null> => {
+  try {
+    const response = await apiClient.get<PointWithPlayers>(`/points/games/${gameId}/active`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 };
 
 // Get point by ID with player details
@@ -17,8 +44,8 @@ export const getPoint = async (pointId: number): Promise<PointWithPlayers> => {
 export const updatePoint = async (
   pointId: number,
   data: PointUpdate
-): Promise<Point> => {
-  const response = await apiClient.put<Point>(`/points/${pointId}`, data);
+): Promise<PointWithPlayers> => {
+  const response = await apiClient.put<PointWithPlayers>(`/points/${pointId}`, data);
   return response.data;
 };
 

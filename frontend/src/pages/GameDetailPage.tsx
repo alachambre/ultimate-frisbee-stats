@@ -20,10 +20,15 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { getGame, deleteGame, finishGame } from "../services";
+import { getGame, deleteGame, finishGame, getTeam } from "../services";
+import { getActivePoint, deletePoint } from "../services/points";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
 import EditGameModal from "../components/modals/EditGameModal";
+import LivePointTracker from "../components/points/LivePointTracker";
+import PointHistoryList from "../components/points/PointHistoryList";
+import EditPointDialog from "../components/modals/EditPointDialog";
+import type { PointWithPlayers } from "../types";
 
 export default function GameDetailPage() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -32,6 +37,8 @@ export default function GameDetailPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isFinishConfirmOpen, setIsFinishConfirmOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPoint, setEditingPoint] = useState<PointWithPlayers | null>(null);
+  const [deletingPoint, setDeletingPoint] = useState<PointWithPlayers | null>(null);
 
   const {
     data: game,
@@ -41,6 +48,21 @@ export default function GameDetailPage() {
     queryKey: ["game", gameId],
     queryFn: () => getGame(Number(gameId)),
     enabled: !!gameId,
+  });
+
+  // Poll for active point every 5 seconds while game is in progress
+  const { data: activePoint } = useQuery({
+    queryKey: ["activePoint", gameId],
+    queryFn: () => getActivePoint(Number(gameId)),
+    enabled: !!gameId && game?.status === "in_progress",
+    refetchInterval: game?.status === "in_progress" ? 5000 : false,
+  });
+
+  // Get team data to access players for point tracking
+  const { data: team } = useQuery({
+    queryKey: ["team", game?.team_id],
+    queryFn: () => getTeam(game!.team_id),
+    enabled: !!game?.team_id,
   });
 
   const deleteMutation = useMutation({
@@ -60,6 +82,15 @@ export default function GameDetailPage() {
     },
   });
 
+  const deletePointMutation = useMutation({
+    mutationFn: (pointId: number) => deletePoint(pointId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      setDeletingPoint(null);
+    },
+  });
+
   if (isLoading) {
     return <LoadingState message="Loading game..." />;
   }
@@ -74,6 +105,25 @@ export default function GameDetailPage() {
 
   const handleFinish = () => {
     finishMutation.mutate();
+  };
+
+  const handlePointUpdated = () => {
+    queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+    queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+  };
+
+  const handleEditPoint = (point: PointWithPlayers) => {
+    setEditingPoint(point);
+  };
+
+  const handleDeletePoint = (point: PointWithPlayers) => {
+    setDeletingPoint(point);
+  };
+
+  const confirmDeletePoint = () => {
+    if (deletingPoint) {
+      deletePointMutation.mutate(deletingPoint.id);
+    }
   };
 
   return (
@@ -175,32 +225,30 @@ export default function GameDetailPage() {
         </Box>
       </Paper>
 
+      {/* Live Point Tracker */}
+      {team && (
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint || null}
+          players={team.players}
+          onPointUpdated={handlePointUpdated}
+        />
+      )}
+
       {/* Points Section */}
       <Paper>
         <Box p={3} borderBottom="1px solid" borderColor="divider">
           <Typography variant="h6">
-            Points ({game.points.length})
+            Point History ({game.points.length})
           </Typography>
         </Box>
 
         <Box p={3}>
-          {game.points.length === 0 ? (
-            <Box textAlign="center" py={4}>
-              <Typography variant="body1" color="text.secondary">
-                No points yet. Points will be added during live games in Phase 3.
-              </Typography>
-            </Box>
-          ) : (
-            <Box>
-              {game.points.map((point) => (
-                <Box key={point.id} mb={2}>
-                  <Typography>
-                    Point #{point.point_number}: {point.won ? "Won" : "Lost"}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
+          <PointHistoryList
+            points={game.points}
+            onEditPoint={handleEditPoint}
+            onDeletePoint={handleDeletePoint}
+          />
         </Box>
       </Paper>
 
@@ -282,6 +330,56 @@ export default function GameDetailPage() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           game={game}
+        />
+      )}
+
+      {/* Delete Point Confirmation Dialog */}
+      <Dialog
+        open={!!deletingPoint}
+        onClose={() => setDeletingPoint(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete Point?</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Delete Point #{deletingPoint?.point_number}? This cannot be undone.
+          </Typography>
+          {deletePointMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Error deleting point. Please try again.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeletingPoint(null)}
+            disabled={deletePointMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeletePoint}
+            variant="contained"
+            color="error"
+            disabled={deletePointMutation.isPending}
+          >
+            {deletePointMutation.isPending ? "Deleting..." : "Delete Point"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Point Dialog */}
+      {editingPoint && team && (
+        <EditPointDialog
+          open={!!editingPoint}
+          onClose={() => setEditingPoint(null)}
+          point={editingPoint}
+          players={team.players}
+          onSuccess={() => {
+            handlePointUpdated();
+            setEditingPoint(null);
+          }}
         />
       )}
     </Container>

@@ -94,15 +94,25 @@ class GameWithScore(Game):
 
 class PointBase(BaseModel):
     starting_on_offense: bool
-    won: bool
 
 
 class PointCreate(PointBase):
     game_id: int
     player_ids: List[int] = Field(..., min_length=7, max_length=7)
+    start_datetime: Optional[datetime] = None  # Defaults to now if None
 
 
-class PointUpdate(PointBase):
+class PointFinish(BaseModel):
+    won: bool
+    end_datetime: Optional[datetime] = None  # Defaults to now if None
+
+
+class PointUpdate(BaseModel):
+    starting_on_offense: Optional[bool] = None
+    won: Optional[bool] = None
+    start_datetime: Optional[datetime] = None
+    end_datetime: Optional[datetime] = None
+    status: Optional[str] = Field(None, pattern="^(active|completed)$")
     player_ids: Optional[List[int]] = Field(None, min_length=7, max_length=7)
 
 
@@ -110,6 +120,10 @@ class Point(PointBase):
     id: int
     game_id: int
     point_number: int
+    won: Optional[bool]  # Nullable while active
+    status: str  # "active" | "completed"
+    start_datetime: Optional[datetime]
+    end_datetime: Optional[datetime]
     created_at: datetime
 
     class Config:
@@ -119,6 +133,14 @@ class Point(PointBase):
 class PointWithPlayers(Point):
     """Point with full player information"""
     players: List[Player]
+
+    @property
+    def duration_seconds(self) -> Optional[int]:
+        """Calculate duration in seconds between start and end datetime"""
+        if self.start_datetime and self.end_datetime:
+            delta = self.end_datetime - self.start_datetime
+            return int(delta.total_seconds())
+        return None
 
 
 # ============================================
