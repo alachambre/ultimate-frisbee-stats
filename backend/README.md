@@ -214,6 +214,7 @@ pytest tests/ -v --tb=short
 - Only one active point per game allowed
 - Real-time point tracking during live games
 - Proper ISO8601 datetime serialization with 'Z' suffix for UTC times
+- Points ordered descending by point_number (most recent first)
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 

@@ -71,12 +71,13 @@ frontend/
 
 ### Design Principles
 
+- **Mobile-first design**: Optimized for use on the sidelines during games
 - **Clean separation of concerns**: Pages → Components → Services → API
 - **Domain-driven organization**: Code organized by business domain (teams, players, games, points)
 - **Type safety**: TypeScript types matching backend Pydantic schemas exactly
 - **Server state management**: TanStack Query for caching and synchronization
 - **Testing infrastructure**: Vitest + React Testing Library (ready for comprehensive tests)
-- **Styling**: Material UI for professional, accessible components
+- **Styling**: Material UI for professional, accessible, responsive components
 
 ### Technology Stack
 
@@ -236,6 +237,33 @@ Comprehensive test coverage for critical user flows:
 - Edits game successfully
 - Finishes game successfully
 - Deletes game with confirmation
+
+**Phase 3 - Live Point Tracking:**
+
+**PointTimer:**
+- Displays elapsed time correctly
+- Updates timer every second
+- Formats time as MM:SS or H:MM:SS
+
+**PlayerSelector:**
+- Allows selecting exactly 7 players
+- Shows validation error when not enough players selected
+- Displays selected player count
+- Allows deselecting players
+
+**FinishPointDialog:**
+- Opens and closes correctly
+- Validates outcome selection (won/lost)
+- Submits finish point request
+- Handles API errors
+
+**EditPointDialog:**
+- Displays point number in title
+- Initializes form with point data
+- Allows changing starting position and outcome
+- Validates player selection (exactly 7)
+- Validates end time is after start time
+- Handles successful updates
 
 ### Test Architecture
 
@@ -484,6 +512,14 @@ npm run build
 - Fixed timezone handling - timer now correctly starts at 00:00 instead of 1H offset
 - Fixed duration_seconds computation using @computed_field decorator
 - Fixed EditPointDialog prop mismatch preventing dialog from opening
+
+#### 📱 Mobile-First UI Enhancements
+- Point cards with offense/defense icons (Sports/Shield icons)
+- Strategic context badges: "Break!" (win on defense), "Broken" (lose on offense)
+- Responsive action buttons (icon-only on mobile, full text on desktop)
+- Points ordered descending (most recent first)
+- Clean mobile layout optimized for sideline use during live games
+- Mobile-responsive layouts using MUI breakpoints (xs, sm, md, lg)
 
 #### 📝 Future Enhancements (Phase 4+)
 - Individual player event tracking (goals, assists, blocks, turnovers)
