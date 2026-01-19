@@ -68,7 +68,7 @@ def get_point(db: Session, point_id: int) -> Optional[models.Point]:
 def get_points_by_game(db: Session, game_id: int) -> List[models.Point]:
     return db.query(models.Point).options(joinedload(models.Point.players)).filter(
         models.Point.game_id == game_id
-    ).order_by(models.Point.point_number).all()
+    ).order_by(models.Point.point_number.desc()).all()
 
 
 def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) -> Optional[models.Point]:

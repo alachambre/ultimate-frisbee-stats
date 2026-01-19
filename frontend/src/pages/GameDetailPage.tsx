@@ -138,7 +138,13 @@ export default function GameDetailPage() {
         >
           Back to Games
         </Button>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          flexDirection={{ xs: "column", sm: "row" }}
+          gap={{ xs: 2, sm: 0 }}
+        >
           <Box>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
               vs {game.opponent_name}
@@ -155,7 +161,7 @@ export default function GameDetailPage() {
                   : "Date not set"}
               </Typography>
             </Box>
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} flexWrap="wrap">
               <Chip
                 label={game.status === "in_progress" ? "In Progress" : "Finished"}
                 color={game.status === "in_progress" ? "primary" : "success"}
@@ -169,8 +175,14 @@ export default function GameDetailPage() {
               variant="outlined"
               startIcon={<EditIcon />}
               onClick={() => setIsEditModalOpen(true)}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
             >
-              Edit
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                Edit
+              </Box>
             </Button>
             {game.status === "in_progress" && (
               <Button
@@ -178,8 +190,14 @@ export default function GameDetailPage() {
                 color="success"
                 startIcon={<CheckCircleIcon />}
                 onClick={() => setIsFinishConfirmOpen(true)}
+                sx={{
+                  minWidth: { xs: "auto", sm: "auto" },
+                  "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+                }}
               >
-                Finish
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  Finish
+                </Box>
               </Button>
             )}
             <Button
@@ -187,8 +205,14 @@ export default function GameDetailPage() {
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setIsDeleteConfirmOpen(true)}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
             >
-              Delete
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                Delete
+              </Box>
             </Button>
           </Box>
         </Box>

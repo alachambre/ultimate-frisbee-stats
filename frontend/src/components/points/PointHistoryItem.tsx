@@ -15,6 +15,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import SportsIcon from "@mui/icons-material/Sports";
+import ShieldIcon from "@mui/icons-material/Shield";
 import type { PointWithPlayers } from "../../types";
 
 interface PointHistoryItemProps {
@@ -40,31 +42,26 @@ export default function PointHistoryItem({
   const isWon = point.won === true;
   const isActive = point.status === "active";
 
+  // Break logic: winning on defense = break (positive), losing on offense = broken (negative)
+  const isBreak = !isActive && isWon && !point.starting_on_offense;
+  const isBroken = !isActive && !isWon && point.starting_on_offense;
+
   return (
     <Card variant="outlined">
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+        {/* Title row with icon and action buttons */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
           <Box display="flex" alignItems="center" gap={1}>
+            {point.starting_on_offense ? (
+              <SportsIcon color="warning" />
+            ) : (
+              <ShieldIcon color="info" />
+            )}
             <Typography variant="h6" fontWeight="bold">
               Point #{point.point_number}
             </Typography>
-            {!isActive && (
-              <Chip
-                icon={isWon ? <CheckCircleIcon /> : <CancelIcon />}
-                label={isWon ? "Won" : "Lost"}
-                color={isWon ? "success" : "error"}
-                size="small"
-              />
-            )}
-            {isActive && (
-              <Chip
-                label="Active"
-                color="primary"
-                size="small"
-              />
-            )}
           </Box>
-          <Box>
+          <Box display="flex" alignItems="center" gap={0.5}>
             <IconButton
               size="small"
               onClick={() => onEdit(point)}
@@ -83,15 +80,47 @@ export default function PointHistoryItem({
           </Box>
         </Box>
 
-        <Box display="flex" gap={2} mb={1}>
-          <Typography variant="body2" color="text.secondary">
-            Duration: <strong>{formatDuration(point.duration_seconds)}</strong>
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Players: <strong>{point.players.length}</strong>
-          </Typography>
+        {/* Status badges row */}
+        <Box display="flex" alignItems="center" gap={1} mb={1} flexWrap="wrap">
+          {!isActive && (
+            <Chip
+              icon={isWon ? <CheckCircleIcon /> : <CancelIcon />}
+              label={isWon ? "Won" : "Lost"}
+              color={isWon ? "success" : "error"}
+              size="small"
+            />
+          )}
+          {isBreak && (
+            <Chip
+              label="Break!"
+              color="primary"
+              size="small"
+              sx={{ fontWeight: "bold" }}
+            />
+          )}
+          {isBroken && (
+            <Chip
+              label="Broken"
+              color="warning"
+              size="small"
+              sx={{ fontWeight: "bold" }}
+            />
+          )}
+          {isActive && (
+            <Chip
+              label="Active"
+              color="primary"
+              size="small"
+            />
+          )}
+        </Box>
+
+        <Box display="flex" gap={2} mb={1} alignItems="center" flexWrap="wrap">
           <Typography variant="body2" color="text.secondary">
             {point.starting_on_offense ? "Offense" : "Defense"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Duration: <strong>{formatDuration(point.duration_seconds)}</strong>
           </Typography>
         </Box>
 

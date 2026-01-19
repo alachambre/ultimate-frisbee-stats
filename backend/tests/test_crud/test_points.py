@@ -139,10 +139,10 @@ def test_get_points_by_game(db_session, sample_game, sample_players):
     game_points = points.get_points_by_game(db_session, sample_game.id)
 
     assert len(game_points) == 3
-    # Points should be ordered by point_number
-    assert game_points[0].point_number == 1
+    # Points should be ordered by point_number descending (most recent first)
+    assert game_points[0].point_number == 3
     assert game_points[1].point_number == 2
-    assert game_points[2].point_number == 3
+    assert game_points[2].point_number == 1
 
 
 def test_get_points_by_game_empty(db_session, sample_game):
