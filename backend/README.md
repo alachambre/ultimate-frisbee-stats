@@ -209,10 +209,11 @@ pytest tests/ -v --tb=short
 
 **Point Tracking Features:**
 - Two-state workflow: active → completed
-- Timestamp tracking: `start_datetime`, `end_datetime`
-- Duration calculation for playing time stats
+- Timestamp tracking: `start_datetime`, `end_datetime` with timezone awareness
+- Duration calculation for playing time stats (via @computed_field)
 - Only one active point per game allowed
 - Real-time point tracking during live games
+- Proper ISO8601 datetime serialization with 'Z' suffix for UTC times
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 

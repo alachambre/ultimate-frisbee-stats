@@ -459,7 +459,7 @@ npm run build
 - Full CRUD operations for games - **fully tested**
 - MSW mocks for all game endpoints
 
-### 🎉 Mostly Complete - Phase 3: Live Point Tracking
+### 🎉 Complete - Phase 3: Live Point Tracking
 #### ✅ Implemented Features
 - **Backend (120 tests passing):**
   - Point model with status (active/completed), start_datetime, end_datetime
@@ -467,22 +467,23 @@ npm run build
   - New endpoints: POST /points/:id/finish, DELETE /points/:id/cancel, GET /points/games/:id/active
   - Validation: only one active point per game, exactly 7 players required
   - Duration calculation for playing time stats
+  - Timezone-aware datetime handling with proper 'Z' suffix serialization
 
-- **Frontend (32 tests passing):**
+- **Frontend (43 tests passing):**
   - LivePointTracker component - Main interface for live point tracking
-  - PointTimer component - Real-time elapsed time display
+  - PointTimer component - Real-time elapsed time display with correct timezone handling
   - PlayerSelector component - Exactly 7 players required
   - StartPointDialog - Select players and start point
-  - FinishPointDialog - Mark point as won/lost
-  - EditPointDialog - Edit timestamps and player lineup
+  - FinishPointDialog - Mark point as won/lost (fully tested with 6 tests)
+  - EditPointDialog - Edit timestamps and player lineup (fully tested with 11 tests)
   - PointHistoryList & PointHistoryItem - View all points with durations
   - Active point polling (every 5 seconds) using React Query
   - Integration in GameDetailPage with live tracking UI
 
-#### 🐛 Known Issues (To Fix)
-1. **Timer starts at 1H instead of 00:00** - Format bug in PointTimer component
-2. **Point duration not visible** - Duration should display in point history cards
-3. **Edit point button not working** - Dialog not opening when clicking edit
+#### 🐛 Bug Fixes Applied
+- Fixed timezone handling - timer now correctly starts at 00:00 instead of 1H offset
+- Fixed duration_seconds computation using @computed_field decorator
+- Fixed EditPointDialog prop mismatch preventing dialog from opening
 
 #### 📝 Future Enhancements (Phase 4+)
 - Individual player event tracking (goals, assists, blocks, turnovers)
