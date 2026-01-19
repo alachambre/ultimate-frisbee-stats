@@ -22,7 +22,7 @@ interface EditPointDialogProps {
   open: boolean;
   onClose: () => void;
   point: PointWithPlayers;
-  allPlayers: Player[];
+  players: Player[];
   onSuccess?: () => void;
 }
 
@@ -30,7 +30,7 @@ export default function EditPointDialog({
   open,
   onClose,
   point,
-  allPlayers,
+  players,
   onSuccess,
 }: EditPointDialogProps) {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
@@ -203,7 +203,7 @@ export default function EditPointDialog({
 
         {/* Players */}
         <PlayerSelector
-          players={allPlayers}
+          players={players}
           selectedIds={selectedPlayerIds}
           onChange={setSelectedPlayerIds}
           required

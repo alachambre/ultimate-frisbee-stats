@@ -1,7 +1,17 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from app import models, schemas
+
+
+def _ensure_timezone_aware(dt: Optional[datetime]) -> Optional[datetime]:
+    """Convert timezone-naive datetime to timezone-aware UTC."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        # Assume naive datetime is UTC
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def get_active_point_for_game(db: Session, game_id: int) -> Optional[models.Point]:
@@ -32,7 +42,7 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
         starting_on_offense=point.starting_on_offense,
         won=None,  # Nullable while active
         status="active",
-        start_datetime=point.start_datetime if point.start_datetime else datetime.utcnow()
+        start_datetime=point.start_datetime if point.start_datetime else datetime.now(timezone.utc)
     )
     db.add(db_point)
     db.flush()  # Get the ID without committing
@@ -114,11 +124,13 @@ def finish_point(db: Session, point_id: int, finish_data: schemas.PointFinish) -
 
     # Set the result and end datetime
     db_point.won = finish_data.won
-    db_point.end_datetime = finish_data.end_datetime if finish_data.end_datetime else datetime.utcnow()
+    db_point.end_datetime = finish_data.end_datetime if finish_data.end_datetime else datetime.now(timezone.utc)
     db_point.status = "completed"
 
     # Validate end datetime is after start datetime
-    if db_point.start_datetime and db_point.end_datetime <= db_point.start_datetime:
+    start_aware = _ensure_timezone_aware(db_point.start_datetime)
+    end_aware = _ensure_timezone_aware(db_point.end_datetime)
+    if start_aware and end_aware and end_aware <= start_aware:
         db.rollback()
         raise ValueError("end_datetime must be after start_datetime")
 

@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from pydantic import BaseModel, Field, computed_field, field_serializer
+from datetime import datetime, timezone
 from typing import List, Optional
 
 
@@ -126,6 +126,15 @@ class Point(PointBase):
     end_datetime: Optional[datetime]
     created_at: datetime
 
+    @field_serializer('start_datetime', 'end_datetime', 'created_at')
+    def serialize_dt(self, dt: Optional[datetime], _info) -> Optional[str]:
+        if dt is None:
+            return None
+        # Ensure timezone-aware and serialize to ISO format with Z suffix
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
+
     class Config:
         from_attributes = True
 
@@ -134,6 +143,7 @@ class PointWithPlayers(Point):
     """Point with full player information"""
     players: List[Player]
 
+    @computed_field
     @property
     def duration_seconds(self) -> Optional[int]:
         """Calculate duration in seconds between start and end datetime"""

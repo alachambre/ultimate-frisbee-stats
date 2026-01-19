@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from datetime import datetime, timezone
 
 Base = declarative_base()
 
@@ -19,7 +19,7 @@ class Team(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     players = relationship("Player", back_populates="team", cascade="all, delete-orphan")
@@ -33,7 +33,7 @@ class Player(Base):
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False)
     number = Column(Integer, nullable=True)  # Jersey number (optional)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     team = relationship("Team", back_populates="players")
@@ -46,9 +46,9 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
     opponent_name = Column(String, nullable=False)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     status = Column(String, default="in_progress", nullable=False)  # in_progress | finished
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     team = relationship("Team", back_populates="games")
@@ -66,7 +66,7 @@ class Point(Base):
     status = Column(String, default="active", nullable=False)  # "active" | "completed"
     start_datetime = Column(DateTime, nullable=True)  # When point started
     end_datetime = Column(DateTime, nullable=True)  # When point finished
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     game = relationship("Game", back_populates="points")
