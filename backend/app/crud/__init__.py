@@ -9,6 +9,17 @@ from app.crud.teams import (
     delete_team,
 )
 
+from app.crud.competitions import (
+    create_competition,
+    get_competition,
+    get_competitions,
+    update_competition,
+    delete_competition,
+    add_players_to_competition,
+    remove_players_from_competition,
+    get_competition_players,
+)
+
 from app.crud.players import (
     create_player,
     get_player,
@@ -22,6 +33,7 @@ from app.crud.games import (
     get_game,
     get_all_games,
     get_games_by_team,
+    get_games_by_competition,
     update_game,
     finish_game,
     delete_game,
@@ -47,6 +59,15 @@ __all__ = [
     "get_teams",
     "update_team",
     "delete_team",
+    # Competitions
+    "create_competition",
+    "get_competition",
+    "get_competitions",
+    "update_competition",
+    "delete_competition",
+    "add_players_to_competition",
+    "remove_players_from_competition",
+    "get_competition_players",
     # Players
     "create_player",
     "get_player",
@@ -58,6 +79,7 @@ __all__ = [
     "get_game",
     "get_all_games",
     "get_games_by_team",
+    "get_games_by_competition",
     "update_game",
     "finish_game",
     "delete_game",

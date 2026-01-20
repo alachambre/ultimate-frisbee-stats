@@ -2,10 +2,10 @@ import pytest
 from datetime import datetime
 
 
-def test_create_game_api(client, sample_team):
+def test_create_game_api(client, sample_competition):
     """Test POST /games"""
     response = client.post("/games", json={
-        "team_id": sample_team.id,
+        "competition_id": sample_competition.id,
         "opponent_name": "Rival Team",
         "date": datetime.now().isoformat()
     })
@@ -13,21 +13,21 @@ def test_create_game_api(client, sample_team):
     assert response.status_code == 201
     data = response.json()
     assert data["opponent_name"] == "Rival Team"
-    assert data["team_id"] == sample_team.id
+    assert data["competition_id"] == sample_competition.id
     assert data["status"] == "in_progress"
     assert "id" in data
 
 
-def test_create_game_team_not_found_api(client):
-    """Test POST /games with invalid team_id"""
+def test_create_game_competition_not_found_api(client):
+    """Test POST /games with invalid competition_id"""
     response = client.post("/games", json={
-        "team_id": 999,
+        "competition_id": 999,
         "opponent_name": "Rival Team",
         "date": datetime.now().isoformat()
     })
 
     assert response.status_code == 404
-    assert "team not found" in response.json()["detail"].lower()
+    assert "competition not found" in response.json()["detail"].lower()
 
 
 def test_get_game_api(client, sample_game):
@@ -137,10 +137,10 @@ def test_get_game_points_api(client, sample_game, sample_players):
     assert "players" in data[0]
 
 
-def test_create_game_validation_error_api(client, sample_team):
+def test_create_game_validation_error_api(client, sample_competition):
     """Test POST /games with invalid data"""
     response = client.post("/games", json={
-        "team_id": sample_team.id,
+        "competition_id": sample_competition.id,
         "opponent_name": "",  # Empty name
         "date": datetime.now().isoformat()
     })

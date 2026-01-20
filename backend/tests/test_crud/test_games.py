@@ -4,10 +4,10 @@ from app.crud import games, points
 from app.schemas import GameCreate, GameUpdate, PointCreate
 
 
-def test_create_game(db_session, sample_team):
+def test_create_game(db_session, sample_competition):
     """Test creating a game and verify it's persisted in DB"""
     game_data = GameCreate(
-        team_id=sample_team.id,
+        competition_id=sample_competition.id,
         opponent_name="Rival Team",
         date=datetime.now()
     )
@@ -15,7 +15,7 @@ def test_create_game(db_session, sample_team):
 
     # Verify returned object
     assert game.id is not None
-    assert game.team_id == sample_team.id
+    assert game.competition_id == sample_competition.id
     assert game.opponent_name == "Rival Team"
     assert game.status == "in_progress"
     assert game.date is not None
@@ -44,14 +44,14 @@ def test_get_game_not_found(db_session):
     assert game is None
 
 
-def test_get_games_by_team(db_session, sample_team):
-    """Test listing all games for a team"""
-    # Create multiple games
+def test_get_games_by_team(db_session, sample_team, sample_competition):
+    """Test listing all games for a team across competitions"""
+    # Create multiple games in the same competition
     for i in range(3):
         games.create_game(
             db_session,
             GameCreate(
-                team_id=sample_team.id,
+                competition_id=sample_competition.id,
                 opponent_name=f"Opponent {i+1}",
                 date=datetime.now()
             )

@@ -50,6 +50,15 @@ def list_team_players(team_id: int, db: Session = Depends(get_db)):
     return crud.get_players_by_team(db, team_id)
 
 
+@router.get("/{team_id}/competitions", response_model=List[schemas.Competition])
+def list_team_competitions(team_id: int, db: Session = Depends(get_db)):
+    team = crud.get_team(db, team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    return crud.get_competitions(db, team_id=team_id)
+
+
 @router.get("/{team_id}/games", response_model=List[schemas.GameWithScore])
 def list_team_games(team_id: int, db: Session = Depends(get_db)):
     team = crud.get_team(db, team_id)
@@ -57,15 +66,17 @@ def list_team_games(team_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Team not found")
 
     games = crud.get_games_by_team(db, team_id)
-    # Add scores and team name to each game
+    # Add scores, team name, and competition name to each game
     result = []
     for game in games:
         our_score, opponent_score = crud.get_game_score(db, game.id)
+        competition = crud.get_competition(db, game.competition_id)
         game_dict = {
             **game.__dict__,
             "our_score": our_score,
             "opponent_score": opponent_score,
-            "team_name": team.name
+            "team_name": team.name,
+            "competition_name": competition.name if competition else "Unknown"
         }
         result.append(game_dict)
     return result

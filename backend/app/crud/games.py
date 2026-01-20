@@ -5,7 +5,7 @@ from app import models, schemas
 
 def create_game(db: Session, game: schemas.GameCreate) -> models.Game:
     db_game = models.Game(
-        team_id=game.team_id,
+        competition_id=game.competition_id,
         opponent_name=game.opponent_name,
         date=game.date,
         status="in_progress"
@@ -24,8 +24,19 @@ def get_all_games(db: Session) -> List[models.Game]:
     return db.query(models.Game).order_by(models.Game.date.desc()).all()
 
 
+def get_games_by_competition(db: Session, competition_id: int) -> List[models.Game]:
+    return db.query(models.Game).filter(
+        models.Game.competition_id == competition_id
+    ).order_by(models.Game.date.desc()).all()
+
+
 def get_games_by_team(db: Session, team_id: int) -> List[models.Game]:
-    return db.query(models.Game).filter(models.Game.team_id == team_id).order_by(models.Game.date.desc()).all()
+    """Get all games for a team across all competitions"""
+    return db.query(models.Game).join(
+        models.Competition
+    ).filter(
+        models.Competition.team_id == team_id
+    ).order_by(models.Game.date.desc()).all()
 
 
 def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> Optional[models.Game]:
@@ -65,19 +76,20 @@ def get_game_score(db: Session, game_id: int) -> tuple[int, int]:
 def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
     """Get complete game information with score and all points"""
     from app.crud.points import get_points_by_game
-    from app.crud.teams import get_team
+    from app.crud.competitions import get_competition
     game = get_game(db, game_id)
     if not game:
         return None
 
     points = get_points_by_game(db, game_id)
     our_score, opponent_score = get_game_score(db, game_id)
-    team = get_team(db, game.team_id)
+    competition = get_competition(db, game.competition_id)
 
     return {
         **game.__dict__,
         "our_score": our_score,
         "opponent_score": opponent_score,
-        "team_name": team.name if team else "Unknown",
+        "team_name": competition.team.name if competition and competition.team else "Unknown",
+        "competition_name": competition.name if competition else "Unknown",
         "points": points
     }

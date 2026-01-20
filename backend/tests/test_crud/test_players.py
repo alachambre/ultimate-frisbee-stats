@@ -1,11 +1,11 @@
 import pytest
 from app.crud import players
-from app.schemas import PlayerCreate, PlayerUpdate
+from app.schemas import PlayerCreate, PlayerUpdate, Gender
 
 
 def test_create_player(db_session, sample_team):
     """Test creating a player and verify it's persisted in DB"""
-    player_data = PlayerCreate(team_id=sample_team.id, name="Alice", number=7)
+    player_data = PlayerCreate(team_id=sample_team.id, name="Alice", number=7, gender=Gender.W)
     player = players.create_player(db_session, player_data)
 
     # Verify returned object
@@ -13,6 +13,7 @@ def test_create_player(db_session, sample_team):
     assert player.team_id == sample_team.id
     assert player.name == "Alice"
     assert player.number == 7
+    assert player.gender.value == Gender.W.value
     assert player.created_at is not None
 
     # Explicitly verify it's actually in the database with a fresh query
@@ -21,16 +22,18 @@ def test_create_player(db_session, sample_team):
     assert fetched_player.id == player.id
     assert fetched_player.name == "Alice"
     assert fetched_player.number == 7
+    assert fetched_player.gender.value == Gender.W.value
 
 
 def test_create_player_without_number(db_session, sample_team):
     """Test creating a player without a jersey number"""
-    player_data = PlayerCreate(team_id=sample_team.id, name="Bob", number=None)
+    player_data = PlayerCreate(team_id=sample_team.id, name="Bob", number=None, gender=Gender.M)
     player = players.create_player(db_session, player_data)
 
     assert player.id is not None
     assert player.name == "Bob"
     assert player.number is None
+    assert player.gender.value == Gender.M.value
 
 
 def test_get_player(db_session, sample_players):

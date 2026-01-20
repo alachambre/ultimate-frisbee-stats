@@ -11,16 +11,30 @@ backend/
 ├── app/
 │   ├── routers/           # API endpoints organized by domain
 │   │   ├── teams.py       # Team management endpoints
+│   │   ├── competitions.py # Competition management endpoints (Phase 4)
 │   │   ├── players.py     # Player management endpoints
 │   │   ├── games.py       # Game management endpoints
 │   │   └── points.py      # Point tracking endpoints
 │   ├── crud/              # Database operations by domain
 │   │   ├── teams.py       # Team CRUD operations
+│   │   ├── competitions.py # Competition CRUD operations (Phase 4)
 │   │   ├── players.py     # Player CRUD operations
 │   │   ├── games.py       # Game CRUD operations
 │   │   └── points.py      # Point CRUD operations
-│   ├── models.py          # SQLAlchemy database models
-│   ├── schemas.py         # Pydantic request/response schemas
+│   ├── models/            # SQLAlchemy database models organized by domain
+│   │   ├── base.py        # Base model, enums, association tables
+│   │   ├── team.py        # Team model
+│   │   ├── competition.py # Competition model
+│   │   ├── player.py      # Player model
+│   │   ├── game.py        # Game model
+│   │   └── point.py       # Point model
+│   ├── schemas/           # Pydantic request/response schemas organized by domain
+│   │   ├── enums.py       # Shared enums (Gender, CompetitionStatus)
+│   │   ├── team.py        # Team schemas
+│   │   ├── competition.py # Competition schemas
+│   │   ├── player.py      # Player schemas
+│   │   ├── game.py        # Game schemas
+│   │   └── point.py       # Point schemas
 │   ├── database.py        # Database connection & session management
 │   └── main.py            # FastAPI application setup
 ├── tests/
@@ -39,20 +53,25 @@ backend/
 
 ### Data Model
 
-**Team** → has many Players and Games
-**Player** → belongs to Team, participates in many Points
-**Game** → belongs to Team, has many Points
-**Point** → belongs to Game, has exactly 7 Players (many-to-many), tracks duration
+**Phase 4 - Competition Hierarchy:**
+- **Team** → has many Players and Competitions
+- **Competition** → belongs to Team, has many Games, has player roster (M:N with Players)
+- **Player** → belongs to Team, has gender (M/W), participates in Competitions and Points
+- **Game** → belongs to Competition, has many Points
+- **Point** → belongs to Game, has exactly 7 Players (many-to-many), tracks duration
 
 Key features:
+- **Competition-based hierarchy** (Phase 4): Team → Competition → Game → Point
+- **Player gender tracking** (Phase 4): Required field (M/W) for mixity validation
+- **Competition roster management** (Phase 4): Select players attending each competition
 - Auto-incrementing point numbers per game
 - Automatic score calculation from point results
 - **Live point tracking with duration** (Phase 3)
   - Two-state workflow: active → completed
   - Timestamp tracking: `start_datetime`, `end_datetime`
   - Only one active point per game at a time
-- Cascade deletes (deleting a team removes its players and games)
-- Validation: exactly 7 players per point, can't add points to finished games
+- Cascade deletes (deleting a team removes all related data)
+- Validation: exactly 7 players per point, strict player selection hierarchy
 
 ## Prerequisites
 
@@ -181,22 +200,48 @@ pytest tests/ -v --tb=short
 - `PUT /teams/{team_id}` - Update team
 - `DELETE /teams/{team_id}` - Delete team
 - `GET /teams/{team_id}/players` - List team players
-- `GET /teams/{team_id}/games` - List team games with scores
+- `GET /teams/{team_id}/competitions` - List team competitions (Phase 4)
+- `GET /teams/{team_id}/games` - List all team games across competitions
+
+### Competitions (Phase 4)
+- `POST /competitions` - Create a competition (with optional player roster)
+- `GET /competitions` - List all competitions (filter by team_id)
+- `GET /competitions/{competition_id}` - Get competition with player roster
+- `PUT /competitions/{competition_id}` - Update competition (name, dates, status)
+- `DELETE /competitions/{competition_id}` - Delete competition
+- `GET /competitions/{competition_id}/players` - Get competition roster
+- `POST /competitions/{competition_id}/players` - Add players to roster
+- `DELETE /competitions/{competition_id}/players` - Remove players from roster
+- `GET /competitions/{competition_id}/games` - List games in competition
+
+**Competition Features:**
+- Tournament/event management with start/end dates
+- Status tracking: ongoing ↔ completed (reversible for corrections)
+- Player roster selection (only rostered players can play in games)
+- Automatic cascade to games when competition is deleted
 
 ### Players
-- `POST /players` - Create a player
+- `POST /players` - Create a player (requires gender: M or W)
 - `GET /players/{player_id}` - Get player details
-- `PUT /players/{player_id}` - Update player
+- `PUT /players/{player_id}` - Update player (including gender)
 - `DELETE /players/{player_id}` - Delete player
 
+**Player Features (Phase 4):**
+- Gender field required (M/W) for mixity tracking
+- Used for 4M+3W or 3M+4W point validation
+
 ### Games
-- `POST /games` - Create a game
-- `GET /games` - List all games with scores and team names
+- `POST /games` - Create a game (requires competition_id)
+- `GET /games` - List all games with scores, team, and competition names
 - `GET /games/{game_id}` - Get game with score and points
 - `PUT /games/{game_id}` - Update game
 - `POST /games/{game_id}/finish` - Mark game as finished
 - `DELETE /games/{game_id}` - Delete game
 - `GET /games/{game_id}/points` - List all points for a game
+
+**Game Changes (Phase 4):**
+- Games now belong to competitions (not directly to teams)
+- Game responses include both team_name and competition_name
 
 ### Points (Phase 3: Live Point Tracking)
 - `POST /points` - Start a new point (requires exactly 7 player IDs, creates active point)
@@ -254,8 +299,18 @@ git commit -m "Your commit message"
 
 ### Test Fixtures
 - Each test gets a fresh in-memory database
-- Sample fixtures available: `sample_team`, `sample_players`, `sample_game`
+- Sample fixtures available:
+  - `sample_team` - A test team
+  - `sample_competition` - A test competition (Phase 4)
+  - `sample_players` - 7 players (4 men, 3 women) with gender (Phase 4)
+  - `sample_game` - A test game
 - Complete test isolation - no side effects between tests
+
+### Test Coverage
+- **150 tests passing** (Phase 4)
+  - 30 new competition tests (CRUD + API)
+  - All existing tests updated for new schema
+- Comprehensive coverage of core functionality and edge cases
 
 ## Troubleshooting
 
@@ -284,14 +339,26 @@ Change the port:
 uvicorn app.main:app --reload --port 8001
 ```
 
-## Future Enhancements (V2)
+## Development Phases
 
-The architecture is designed to support these upcoming features:
-- **Event tracking**: Goals, assists, turnovers, blocks per point
-- **Player statistics**: Individual performance metrics
-- **Multi-team support**: Manage multiple teams
-- **User accounts**: Authentication and authorization
-- **Offline support**: PWA with local data sync
+### ✅ Phase 1-3: Basic Functionality (Completed)
+- Team and player management
+- Game tracking with scores
+- Live point tracking with duration
+
+### ✅ Phase 4: Competition & Gender Tracking (Completed)
+- Competition hierarchy (Team → Competition → Game → Point)
+- Player gender tracking (M/W)
+- Competition roster management
+- Updated all 150 tests
+
+### 🚧 Future Enhancements (Phase 5+)
+Planned features from `requirements.md`:
+- **Phase 5**: Lines (player groups), enhanced game model with 3 statuses, player selection per game
+- **Phase 6**: Strategy tracking, 4-status point lifecycle (ready/running/scored/completed), mixity validation
+- **Phase 7**: Calls and turnovers tracking during points
+- **Phase 8**: Comprehensive statistics dashboard
+- **Beyond**: User accounts, multi-team support, PWA offline capabilities
 
 ## Contributing
 

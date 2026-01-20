@@ -67,22 +67,43 @@ def sample_team(db_session):
 
 @pytest.fixture
 def sample_players(db_session, sample_team):
-    """Create 7 sample players for testing"""
+    """Create 7 sample players for testing (4 men, 3 women)"""
     from app.crud import create_player
-    from app.schemas import PlayerCreate
+    from app.schemas import PlayerCreate, Gender
 
     players = []
     for i in range(1, 8):
+        gender = Gender.M if i <= 4 else Gender.W  # First 4 are men, last 3 are women
         player = create_player(
             db_session,
-            PlayerCreate(team_id=sample_team.id, name=f"Player {i}", number=i)
+            PlayerCreate(team_id=sample_team.id, name=f"Player {i}", number=i, gender=gender)
         )
         players.append(player)
     return players
 
 
 @pytest.fixture
-def sample_game(db_session, sample_team):
+def sample_competition(db_session, sample_team):
+    """Create a sample competition for testing"""
+    from app.crud import create_competition
+    from app.schemas import CompetitionCreate
+    from datetime import date
+
+    competition = create_competition(
+        db_session,
+        CompetitionCreate(
+            team_id=sample_team.id,
+            name="Test Tournament",
+            description="A test tournament",
+            start_date=date(2026, 1, 20),
+            end_date=date(2026, 1, 22)
+        )
+    )
+    return competition
+
+
+@pytest.fixture
+def sample_game(db_session, sample_competition):
     """Create a sample game for testing"""
     from app.crud import create_game
     from app.schemas import GameCreate
@@ -90,6 +111,6 @@ def sample_game(db_session, sample_team):
 
     game = create_game(
         db_session,
-        GameCreate(team_id=sample_team.id, opponent_name="Opponent Team", date=datetime.now())
+        GameCreate(competition_id=sample_competition.id, opponent_name="Opponent Team", date=datetime.now())
     )
     return game

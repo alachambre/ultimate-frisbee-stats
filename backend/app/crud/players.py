@@ -7,7 +7,8 @@ def create_player(db: Session, player: schemas.PlayerCreate) -> models.Player:
     db_player = models.Player(
         team_id=player.team_id,
         name=player.name,
-        number=player.number
+        number=player.number,
+        gender=player.gender
     )
     db.add(db_player)
     db.commit()
@@ -26,8 +27,12 @@ def get_players_by_team(db: Session, team_id: int) -> List[models.Player]:
 def update_player(db: Session, player_id: int, player_update: schemas.PlayerUpdate) -> Optional[models.Player]:
     db_player = get_player(db, player_id)
     if db_player:
-        db_player.name = player_update.name
-        db_player.number = player_update.number
+        if player_update.name is not None:
+            db_player.name = player_update.name
+        if player_update.number is not None:
+            db_player.number = player_update.number
+        if player_update.gender is not None:
+            db_player.gender = player_update.gender
         db.commit()
         db.refresh(db_player)
     return db_player

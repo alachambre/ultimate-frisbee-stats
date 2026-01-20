@@ -6,13 +6,15 @@ def test_create_player_api(client, sample_team):
     response = client.post("/players", json={
         "team_id": sample_team.id,
         "name": "Alice",
-        "number": 7
+        "number": 7,
+        "gender": "W"
     })
 
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Alice"
     assert data["number"] == 7
+    assert data["gender"] == "W"
     assert data["team_id"] == sample_team.id
     assert "id" in data
 
@@ -22,13 +24,15 @@ def test_create_player_without_number_api(client, sample_team):
     response = client.post("/players", json={
         "team_id": sample_team.id,
         "name": "Bob",
-        "number": None
+        "number": None,
+        "gender": "M"
     })
 
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Bob"
     assert data["number"] is None
+    assert data["gender"] == "M"
 
 
 def test_create_player_team_not_found_api(client):
@@ -36,7 +40,8 @@ def test_create_player_team_not_found_api(client):
     response = client.post("/players", json={
         "team_id": 999,
         "name": "Alice",
-        "number": 7
+        "number": 7,
+        "gender": "W"
     })
 
     assert response.status_code == 404
