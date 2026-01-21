@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Container, Typography, GridLegacy as Grid, Card, CardActionArea, CardContent, Box } from "@mui/material";
+import { Container, Typography, Grid, Card, CardActionArea, CardContent, Box } from "@mui/material";
 import GroupIcon from "@mui/icons-material/Group";
 import SportsIcon from "@mui/icons-material/Sports";
 
@@ -16,7 +16,7 @@ export default function HomePage() {
       </Box>
 
       <Grid container spacing={4}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Card>
             <CardActionArea component={Link} to="/teams" sx={{ height: "100%" }}>
               <CardContent sx={{ textAlign: "center", py: 4 }}>
@@ -32,7 +32,7 @@ export default function HomePage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Card>
             <CardActionArea component={Link} to="/games" sx={{ height: "100%" }}>
               <CardContent sx={{ textAlign: "center", py: 4 }}>

@@ -1,4 +1,4 @@
-import { GridLegacy as Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 import type { Player } from "../../types";
 import PlayerCard from "./PlayerCard";
 
@@ -16,7 +16,7 @@ export default function PlayersGrid({
   return (
     <Grid container spacing={2}>
       {players.map((player) => (
-        <Grid item xs={12} sm={6} key={player.id}>
+        <Grid size={{ xs: 12, sm: 6 }} key={player.id}>
           <PlayerCard
             player={player}
             onEdit={onEditPlayer ? () => onEditPlayer(player) : undefined}
