@@ -339,27 +339,6 @@ Change the port:
 uvicorn app.main:app --reload --port 8001
 ```
 
-## Development Phases
-
-### ✅ Phase 1-3: Basic Functionality (Completed)
-- Team and player management
-- Game tracking with scores
-- Live point tracking with duration
-
-### ✅ Phase 4: Competition & Gender Tracking (Completed)
-- Competition hierarchy (Team → Competition → Game → Point)
-- Player gender tracking (M/W)
-- Competition roster management
-- Updated all 150 tests
-
-### 🚧 Future Enhancements (Phase 5+)
-Planned features from `requirements.md`:
-- **Phase 5**: Lines (player groups), enhanced game model with 3 statuses, player selection per game
-- **Phase 6**: Strategy tracking, 4-status point lifecycle (ready/running/scored/completed), mixity validation
-- **Phase 7**: Calls and turnovers tracking during points
-- **Phase 8**: Comprehensive statistics dashboard
-- **Beyond**: User accounts, multi-team support, PWA offline capabilities
-
 ## Contributing
 
 1. Write tests for new features

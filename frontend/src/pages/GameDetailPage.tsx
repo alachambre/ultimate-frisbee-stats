@@ -20,8 +20,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { getGame, deleteGame, finishGame, getTeam } from "../services";
+import { getGame, deleteGame, finishGame } from "../services";
 import { getActivePoint, deletePoint } from "../services/points";
+import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
 import EditGameModal from "../components/modals/EditGameModal";
@@ -58,11 +59,11 @@ export default function GameDetailPage() {
     refetchInterval: game?.status === "in_progress" ? 5000 : false,
   });
 
-  // Get team data to access players for point tracking
-  const { data: team } = useQuery({
-    queryKey: ["team", game?.team_id],
-    queryFn: () => getTeam(game!.team_id),
-    enabled: !!game?.team_id,
+  // Get competition data to access players for point tracking
+  const { data: competition } = useQuery({
+    queryKey: ["competition", game?.competition_id],
+    queryFn: () => getCompetition(game!.competition_id),
+    enabled: !!game?.competition_id,
   });
 
   const deleteMutation = useMutation({
@@ -250,11 +251,11 @@ export default function GameDetailPage() {
       </Paper>
 
       {/* Live Point Tracker */}
-      {team && (
+      {competition && (
         <LivePointTracker
           game={game}
           activePoint={activePoint || null}
-          players={team.players}
+          players={competition.players}
           onPointUpdated={handlePointUpdated}
         />
       )}
@@ -394,12 +395,12 @@ export default function GameDetailPage() {
       </Dialog>
 
       {/* Edit Point Dialog */}
-      {editingPoint && team && (
+      {editingPoint && competition && (
         <EditPointDialog
           open={!!editingPoint}
           onClose={() => setEditingPoint(null)}
           point={editingPoint}
-          players={team.players}
+          players={competition.players}
           onSuccess={() => {
             handlePointUpdated();
             setEditingPoint(null);

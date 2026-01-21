@@ -1,14 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { http, HttpResponse } from "msw";
-import { setupServer } from "msw/node";
 import TeamDetailPage from "../TeamDetailPage";
-import { handlers } from "../../test/mocks/handlers";
-import type { Team } from "../../types";
-
-// Create a server instance for these tests
-const server = setupServer(...handlers);
 
 // Mock useParams to provide teamId
 vi.mock("react-router-dom", async () => {

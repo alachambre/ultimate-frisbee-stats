@@ -1,15 +1,20 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, waitFor, within, fireEvent } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { createTeam } from "../../services";
+import { createTeam, createCompetition } from "../../services";
 import GamesPage from "../GamesPage";
 
 describe("GamesPage", () => {
-  let testTeam: any;
-
   beforeEach(async () => {
-    // Create a test team before each test so we can create games
-    testTeam = await createTeam({ name: "Test Team" });
+    // Create a test team and competition before each test so we can create games
+    const team = await createTeam({ name: "Test Team" });
+    await createCompetition({
+      team_id: team.id,
+      name: "Test Competition",
+      description: "A test competition",
+      start_date: "2024-06-01",
+      end_date: "2024-06-30",
+    });
   });
 
   it("shows empty state when no games exist", async () => {
@@ -43,15 +48,15 @@ describe("GamesPage", () => {
     });
     expect(screen.getByText(/create new game/i)).toBeInTheDocument();
 
-    // Select team from dropdown - use fireEvent.mouseDown for MUI Select
-    const teamSelect = document.getElementById("team-select");
-    if (teamSelect) {
-      fireEvent.mouseDown(teamSelect);
+    // Select competition from dropdown - use fireEvent.mouseDown for MUI Select
+    const competitionSelect = document.getElementById("competition-select");
+    if (competitionSelect) {
+      fireEvent.mouseDown(competitionSelect);
     }
 
-    // Find and click the team option in the dropdown menu
-    const teamOption = await screen.findByText("Test Team");
-    await user.click(teamOption);
+    // Find and click the competition option in the dropdown menu
+    const competitionOption = await screen.findByText("Test Competition");
+    await user.click(competitionOption);
 
     // Fill in opponent name
     const opponentInput = screen.getByLabelText(/opponent name/i);
@@ -84,12 +89,12 @@ describe("GamesPage", () => {
     let createButton = screen.getByRole("button", { name: /create your first game/i });
     await user.click(createButton);
 
-    let teamSelect = document.getElementById("team-select");
-    if (teamSelect) {
-      fireEvent.mouseDown(teamSelect);
+    let competitionSelect = document.getElementById("competition-select");
+    if (competitionSelect) {
+      fireEvent.mouseDown(competitionSelect);
     }
-    let teamOption = await screen.findByText("Test Team");
-    await user.click(teamOption);
+    let competitionOption = await screen.findByText("Test Competition");
+    await user.click(competitionOption);
 
     let opponentInput = screen.getByLabelText(/opponent name/i);
     await user.type(opponentInput, "Team Alpha");
@@ -111,14 +116,14 @@ describe("GamesPage", () => {
     createButton = screen.getByRole("button", { name: /new game/i });
     await user.click(createButton);
 
-    teamSelect = document.getElementById("team-select");
-    if (teamSelect) {
-      fireEvent.mouseDown(teamSelect);
+    competitionSelect = document.getElementById("competition-select");
+    if (competitionSelect) {
+      fireEvent.mouseDown(competitionSelect);
     }
-    // Find the listbox and then find Test Team within it
+    // Find the listbox and then find Test Competition within it
     const listbox = await screen.findByRole('listbox');
-    teamOption = within(listbox).getByText("Test Team");
-    await user.click(teamOption);
+    competitionOption = within(listbox).getByText("Test Competition");
+    await user.click(competitionOption);
 
     opponentInput = screen.getByLabelText(/opponent name/i);
     await user.type(opponentInput, "Team Beta");
@@ -149,12 +154,12 @@ describe("GamesPage", () => {
     const createButton = screen.getByRole("button", { name: /create your first game/i });
     await user.click(createButton);
 
-    const teamSelect = document.getElementById("team-select");
-    if (teamSelect) {
-      fireEvent.mouseDown(teamSelect);
+    const competitionSelect = document.getElementById("competition-select");
+    if (competitionSelect) {
+      fireEvent.mouseDown(competitionSelect);
     }
-    const teamOption = await screen.findByText("Test Team");
-    await user.click(teamOption);
+    const competitionOption = await screen.findByText("Test Competition");
+    await user.click(competitionOption);
 
     const opponentInput = screen.getByLabelText(/opponent name/i);
     await user.type(opponentInput, "Test Opponent");

@@ -1,15 +1,18 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
 // In-memory data store for tests
 let teams: Team[] = [];
 let players: Player[] = [];
+let competitions: Competition[] = [];
+let competitionPlayers: Map<number, number[]> = new Map(); // competitionId -> playerIds[]
 let games: Game[] = [];
 let points: PointWithPlayers[] = [];
 let nextTeamId = 1;
 let nextPlayerId = 1;
+let nextCompetitionId = 1;
 let nextGameId = 1;
 let nextPointId = 1;
 
@@ -17,10 +20,13 @@ let nextPointId = 1;
 export function resetMockData() {
   teams = [];
   players = [];
+  competitions = [];
+  competitionPlayers = new Map();
   games = [];
   points = [];
   nextTeamId = 1;
   nextPlayerId = 1;
+  nextCompetitionId = 1;
   nextGameId = 1;
   nextPointId = 1;
 }
@@ -59,6 +65,13 @@ export const handlers = [
     return HttpResponse.json(teamWithPlayers);
   }),
 
+  // GET /teams/:id/players - Get players for a team
+  http.get(`${BASE_URL}/teams/:id/players`, ({ params }) => {
+    const teamId = Number(params.id);
+    const teamPlayers = players.filter((p) => p.team_id === teamId);
+    return HttpResponse.json(teamPlayers);
+  }),
+
   // DELETE /teams/:id - Delete team
   http.delete(`${BASE_URL}/teams/:id`, ({ params }) => {
     const teamId = Number(params.id);
@@ -67,9 +80,224 @@ export const handlers = [
       return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
     }
     teams.splice(index, 1);
-    // Also delete associated players
+    // Also delete associated players and competitions
     players = players.filter((p) => p.team_id !== teamId);
+    competitions = competitions.filter((c) => c.team_id !== teamId);
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // POST /competitions - Create a competition
+  http.post(`${BASE_URL}/competitions`, async ({ request }) => {
+    const body = (await request.json()) as CompetitionCreate;
+    const newCompetition: Competition = {
+      id: nextCompetitionId++,
+      team_id: body.team_id,
+      name: body.name,
+      description: body.description ?? null,
+      start_date: body.start_date,
+      end_date: body.end_date,
+      status: "ongoing",
+      created_at: new Date().toISOString(),
+    };
+    competitions.push(newCompetition);
+
+    // Set initial roster if provided
+    if (body.player_ids && body.player_ids.length > 0) {
+      competitionPlayers.set(newCompetition.id, body.player_ids);
+    } else {
+      competitionPlayers.set(newCompetition.id, []);
+    }
+
+    return HttpResponse.json(newCompetition, { status: 201 });
+  }),
+
+  // GET /competitions - List competitions
+  http.get(`${BASE_URL}/competitions`, ({ request }) => {
+    const url = new URL(request.url);
+    const teamId = url.searchParams.get("team_id");
+
+    let filteredCompetitions = competitions;
+    if (teamId) {
+      filteredCompetitions = competitions.filter(
+        (c) => c.team_id === Number(teamId)
+      );
+    }
+
+    return HttpResponse.json(filteredCompetitions);
+  }),
+
+  // GET /competitions/:id - Get competition with players
+  http.get(`${BASE_URL}/competitions/:id`, ({ params }) => {
+    const competitionId = Number(params.id);
+    const competition = competitions.find((c) => c.id === competitionId);
+    if (!competition) {
+      return HttpResponse.json(
+        { detail: "Competition not found" },
+        { status: 404 }
+      );
+    }
+
+    // Get players in roster
+    const rosterPlayerIds = competitionPlayers.get(competitionId) || [];
+    const rosterPlayers = players.filter((p) => rosterPlayerIds.includes(p.id));
+
+    const competitionWithPlayers: CompetitionWithPlayers = {
+      ...competition,
+      players: rosterPlayers,
+    };
+    return HttpResponse.json(competitionWithPlayers);
+  }),
+
+  // PUT /competitions/:id - Update competition
+  http.put(`${BASE_URL}/competitions/:id`, async ({ request, params }) => {
+    const competitionId = Number(params.id);
+    const body = (await request.json()) as CompetitionUpdate;
+    const competition = competitions.find((c) => c.id === competitionId);
+    if (!competition) {
+      return HttpResponse.json(
+        { detail: "Competition not found" },
+        { status: 404 }
+      );
+    }
+
+    if (body.name !== undefined) competition.name = body.name;
+    if (body.description !== undefined) competition.description = body.description;
+    if (body.start_date !== undefined) competition.start_date = body.start_date;
+    if (body.end_date !== undefined) competition.end_date = body.end_date;
+    if (body.status !== undefined) competition.status = body.status;
+
+    return HttpResponse.json(competition);
+  }),
+
+  // DELETE /competitions/:id - Delete competition
+  http.delete(`${BASE_URL}/competitions/:id`, ({ params }) => {
+    const competitionId = Number(params.id);
+    const index = competitions.findIndex((c) => c.id === competitionId);
+    if (index === -1) {
+      return HttpResponse.json(
+        { detail: "Competition not found" },
+        { status: 404 }
+      );
+    }
+    competitions.splice(index, 1);
+    competitionPlayers.delete(competitionId);
+    // Also delete associated games
+    games = games.filter((g) => g.competition_id !== competitionId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // GET /competitions/:id/players - Get competition roster
+  http.get(`${BASE_URL}/competitions/:competitionId/players`, ({ params }) => {
+    const competitionId = Number(params.competitionId);
+    const competition = competitions.find((c) => c.id === competitionId);
+    if (!competition) {
+      return HttpResponse.json(
+        { detail: "Competition not found" },
+        { status: 404 }
+      );
+    }
+
+    const rosterPlayerIds = competitionPlayers.get(competitionId) || [];
+    const rosterPlayers = players.filter((p) => rosterPlayerIds.includes(p.id));
+    return HttpResponse.json(rosterPlayers);
+  }),
+
+  // POST /competitions/:id/players - Add players to roster
+  http.post(
+    `${BASE_URL}/competitions/:competitionId/players`,
+    async ({ request, params }) => {
+      const competitionId = Number(params.competitionId);
+      const body = (await request.json()) as PlayerIdsRequest;
+      const competition = competitions.find((c) => c.id === competitionId);
+      if (!competition) {
+        return HttpResponse.json(
+          { detail: "Competition not found" },
+          { status: 404 }
+        );
+      }
+
+      const currentRoster = competitionPlayers.get(competitionId) || [];
+      const newRoster = [...new Set([...currentRoster, ...body.player_ids])];
+      competitionPlayers.set(competitionId, newRoster);
+
+      const rosterPlayers = players.filter((p) => newRoster.includes(p.id));
+      const competitionWithPlayers: CompetitionWithPlayers = {
+        ...competition,
+        players: rosterPlayers,
+      };
+      return HttpResponse.json(competitionWithPlayers);
+    }
+  ),
+
+  // DELETE /competitions/:id/players - Remove players from roster
+  http.delete(
+    `${BASE_URL}/competitions/:competitionId/players`,
+    async ({ request, params }) => {
+      const competitionId = Number(params.competitionId);
+      const body = (await request.json()) as PlayerIdsRequest;
+      const competition = competitions.find((c) => c.id === competitionId);
+      if (!competition) {
+        return HttpResponse.json(
+          { detail: "Competition not found" },
+          { status: 404 }
+        );
+      }
+
+      const currentRoster = competitionPlayers.get(competitionId) || [];
+      const newRoster = currentRoster.filter(
+        (id) => !body.player_ids.includes(id)
+      );
+      competitionPlayers.set(competitionId, newRoster);
+
+      const rosterPlayers = players.filter((p) => newRoster.includes(p.id));
+      const competitionWithPlayers: CompetitionWithPlayers = {
+        ...competition,
+        players: rosterPlayers,
+      };
+      return HttpResponse.json(competitionWithPlayers);
+    }
+  ),
+
+  // GET /competitions/:id/games - Get competition games
+  http.get(`${BASE_URL}/competitions/:competitionId/games`, ({ params }) => {
+    const competitionId = Number(params.competitionId);
+    const competition = competitions.find((c) => c.id === competitionId);
+    if (!competition) {
+      return HttpResponse.json(
+        { detail: "Competition not found" },
+        { status: 404 }
+      );
+    }
+
+    const team = teams.find((t) => t.id === competition.team_id);
+    const competitionGames = games.filter(
+      (g) => g.competition_id === competitionId
+    );
+
+    const gamesWithScores: GameWithScore[] = competitionGames.map((game) => {
+      const gamePoints = points.filter((p) => p.game_id === game.id);
+      let ourScore = 0;
+      let opponentScore = 0;
+      gamePoints.forEach((point) => {
+        if (point.status === "completed" && point.won !== null) {
+          if (point.won) {
+            ourScore++;
+          } else {
+            opponentScore++;
+          }
+        }
+      });
+
+      return {
+        ...game,
+        our_score: ourScore,
+        opponent_score: opponentScore,
+        team_name: team?.name || "Unknown",
+        competition_name: competition.name,
+      };
+    });
+
+    return HttpResponse.json(gamesWithScores);
   }),
 
   // POST /players - Create a player
@@ -79,6 +307,7 @@ export const handlers = [
       id: nextPlayerId++,
       name: body.name,
       number: body.number ?? null,
+      gender: body.gender,
       team_id: body.team_id,
       created_at: new Date().toISOString(),
     };
@@ -94,8 +323,9 @@ export const handlers = [
     if (!player) {
       return HttpResponse.json({ detail: "Player not found" }, { status: 404 });
     }
-    player.name = body.name;
-    player.number = body.number ?? null;
+    if (body.name !== undefined) player.name = body.name;
+    if (body.number !== undefined) player.number = body.number ?? null;
+    if (body.gender !== undefined) player.gender = body.gender;
     return HttpResponse.json(player);
   }),
 
@@ -113,12 +343,14 @@ export const handlers = [
   // GET /games - List all games with scores
   http.get(`${BASE_URL}/games`, () => {
     const gamesWithScores: GameWithScore[] = games.map((game) => {
-      const team = teams.find((t) => t.id === game.team_id);
+      const competition = competitions.find((c) => c.id === game.competition_id);
+      const team = teams.find((t) => t.id === competition?.team_id);
       return {
         ...game,
         our_score: 0,
         opponent_score: 0,
         team_name: team?.name || "Unknown",
+        competition_name: competition?.name || "Unknown",
       };
     });
     return HttpResponse.json(gamesWithScores);
@@ -129,7 +361,7 @@ export const handlers = [
     const body = (await request.json()) as GameCreate;
     const newGame: Game = {
       id: nextGameId++,
-      team_id: body.team_id,
+      competition_id: body.competition_id,
       opponent_name: body.opponent_name,
       date: body.date || null,
       status: "in_progress",
@@ -146,7 +378,8 @@ export const handlers = [
     if (!game) {
       return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
     }
-    const team = teams.find((t) => t.id === game.team_id);
+    const competition = competitions.find((c) => c.id === game.competition_id);
+    const team = teams.find((t) => t.id === competition?.team_id);
     const gamePoints = points.filter((p) => p.game_id === gameId);
 
     // Calculate scores from completed points
@@ -167,6 +400,7 @@ export const handlers = [
       our_score: ourScore,
       opponent_score: opponentScore,
       team_name: team?.name || "Unknown",
+      competition_name: competition?.name || "Unknown",
       points: gamePoints,
     };
     return HttpResponse.json(gameDetail);

@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { GridLegacy as Grid } from "@mui/material";
 import type { Team } from "../../types";
 import TeamCard from "./TeamCard";
 

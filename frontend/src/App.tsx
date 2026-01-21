@@ -6,6 +6,8 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import TeamsPage from "./pages/TeamsPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
+import CompetitionsPage from "./pages/CompetitionsPage";
+import CompetitionDetailPage from "./pages/CompetitionDetailPage";
 import GamesPage from "./pages/GamesPage";
 import GameDetailPage from "./pages/GameDetailPage";
 
@@ -41,6 +43,8 @@ function App() {
               <Route index element={<HomePage />} />
               <Route path="teams" element={<TeamsPage />} />
               <Route path="teams/:teamId" element={<TeamDetailPage />} />
+              <Route path="competitions" element={<CompetitionsPage />} />
+              <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
               <Route path="games" element={<GamesPage />} />
               <Route path="games/:gameId" element={<GameDetailPage />} />
             </Route>

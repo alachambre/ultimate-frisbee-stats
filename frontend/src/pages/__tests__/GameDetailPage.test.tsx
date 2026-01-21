@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { createTeam, createGame } from "../../services";
+import { createTeam, createCompetition, createGame } from "../../services";
 import GameDetailPage from "../GameDetailPage";
 
 // Mock useParams and useNavigate
@@ -15,14 +15,17 @@ vi.mock("react-router-dom", async () => {
 });
 
 describe("GameDetailPage", () => {
-  let testTeam: any;
-  let testGame: any;
-
   beforeEach(async () => {
-    // Create a test team and game before each test
-    testTeam = await createTeam({ name: "Test Team" });
-    testGame = await createGame({
+    // Create a test team, competition, and game before each test
+    const testTeam = await createTeam({ name: "Test Team" });
+    const testCompetition = await createCompetition({
       team_id: testTeam.id,
+      name: "Test Competition",
+      start_date: "2024-01-01",
+      end_date: "2024-12-31",
+    });
+    await createGame({
+      competition_id: testCompetition.id,
       opponent_name: "Rival Team",
       date: "2024-01-15",
     });
@@ -134,7 +137,8 @@ describe("GameDetailPage", () => {
     const mockNavigate = vi.fn();
 
     // Update the mock to use our mockNavigate
-    vi.mocked(await import("react-router-dom")).useNavigate = () => mockNavigate;
+    // @ts-expect-error - Mocking useNavigate for test purposes
+    vi.mocked(await import("react-router-dom")).useNavigate = () => mockNavigate as any;
 
     render(<GameDetailPage />);
 

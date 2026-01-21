@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Container, Typography, Grid, Card, CardActionArea, CardContent, Box } from "@mui/material";
+import { Container, Typography, GridLegacy as Grid, Card, CardActionArea, CardContent, Box } from "@mui/material";
 import GroupIcon from "@mui/icons-material/Group";
 import SportsIcon from "@mui/icons-material/Sports";
 

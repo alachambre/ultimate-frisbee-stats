@@ -1,4 +1,11 @@
 // ============================================
+// Enum Types
+// ============================================
+
+export type Gender = "M" | "W";
+export type CompetitionStatus = "ongoing" | "completed";
+
+// ============================================
 // Team Types
 // ============================================
 
@@ -26,18 +33,62 @@ export interface TeamWithPlayers extends Team {
 export interface PlayerBase {
   name: string;
   number?: number | null;
+  gender: Gender;
 }
 
 export interface PlayerCreate extends PlayerBase {
   team_id: number;
 }
 
-export interface PlayerUpdate extends PlayerBase {}
+export interface PlayerUpdate {
+  name?: string;
+  number?: number | null;
+  gender?: Gender;
+}
 
 export interface Player extends PlayerBase {
   id: number;
   team_id: number;
   created_at: string;
+}
+
+// ============================================
+// Competition Types
+// ============================================
+
+export interface CompetitionBase {
+  name: string;
+  description?: string | null;
+  start_date: string; // ISO date string (YYYY-MM-DD)
+  end_date: string; // ISO date string (YYYY-MM-DD)
+}
+
+export interface CompetitionCreate extends CompetitionBase {
+  team_id: number;
+  player_ids?: number[];
+}
+
+export interface CompetitionUpdate {
+  name?: string;
+  description?: string | null;
+  start_date?: string;
+  end_date?: string;
+  status?: CompetitionStatus;
+}
+
+export interface Competition extends CompetitionBase {
+  id: number;
+  team_id: number;
+  status: CompetitionStatus;
+  created_at: string;
+}
+
+export interface CompetitionWithPlayers extends Competition {
+  players: Player[];
+}
+
+export interface PlayerIdsRequest {
+  player_ids: number[];
 }
 
 // ============================================
@@ -50,7 +101,7 @@ export interface GameBase {
 }
 
 export interface GameCreate extends GameBase {
-  team_id: number;
+  competition_id: number;
 }
 
 export interface GameUpdate {
@@ -60,7 +111,7 @@ export interface GameUpdate {
 
 export interface Game extends GameBase {
   id: number;
-  team_id: number;
+  competition_id: number;
   status: "in_progress" | "finished";
   created_at: string;
 }
@@ -69,6 +120,7 @@ export interface GameWithScore extends Game {
   our_score: number;
   opponent_score: number;
   team_name: string;
+  competition_name: string;
 }
 
 // ============================================

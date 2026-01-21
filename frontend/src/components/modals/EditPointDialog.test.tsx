@@ -4,18 +4,18 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EditPointDialog from "./EditPointDialog";
 import type { PointWithPlayers, Player } from "../../types";
-import { createTeam, createGame, createPlayer } from "../../services";
+import { createTeam, createCompetition, createGame, createPlayer } from "../../services";
 import { startPoint } from "../../services/points";
 
 const mockPlayers: Player[] = [
-  { id: 1, name: "Player 1", number: 10, team_id: 1, created_at: "2024-01-01" },
-  { id: 2, name: "Player 2", number: 20, team_id: 1, created_at: "2024-01-01" },
-  { id: 3, name: "Player 3", number: 30, team_id: 1, created_at: "2024-01-01" },
-  { id: 4, name: "Player 4", number: 40, team_id: 1, created_at: "2024-01-01" },
-  { id: 5, name: "Player 5", number: 50, team_id: 1, created_at: "2024-01-01" },
-  { id: 6, name: "Player 6", number: 60, team_id: 1, created_at: "2024-01-01" },
-  { id: 7, name: "Player 7", number: 70, team_id: 1, created_at: "2024-01-01" },
-  { id: 8, name: "Player 8", number: 80, team_id: 1, created_at: "2024-01-01" },
+  { id: 1, name: "Player 1", number: 10, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 2, name: "Player 2", number: 20, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 3, name: "Player 3", number: 30, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 4, name: "Player 4", number: 40, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 5, name: "Player 5", number: 50, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 6, name: "Player 6", number: 60, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 7, name: "Player 7", number: 70, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 8, name: "Player 8", number: 80, gender: "M", team_id: 1, created_at: "2024-01-01" },
 ];
 
 const mockCompletedPoint: PointWithPlayers = {
@@ -318,8 +318,14 @@ describe("EditPointDialog", () => {
 
     // Create real test data via API to ensure MSW has the point
     const team = await createTeam({ name: "Test Team" });
-    const game = await createGame({
+    const competition = await createCompetition({
       team_id: team.id,
+      name: "Test Competition",
+      start_date: "2024-01-01",
+      end_date: "2024-12-31",
+    });
+    const game = await createGame({
+      competition_id: competition.id,
       opponent_name: "Rival",
       date: "2024-01-15",
     });
@@ -330,6 +336,7 @@ describe("EditPointDialog", () => {
         createPlayer({
           name: `Player ${i + 1}`,
           number: (i + 1) * 10,
+          gender: "M",
           team_id: team.id,
         })
       )

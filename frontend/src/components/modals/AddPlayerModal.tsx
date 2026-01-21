@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -9,8 +9,10 @@ import {
   Button,
   Alert,
   Box,
+  MenuItem,
 } from "@mui/material";
 import { createPlayer } from "../../services";
+import type { Gender } from "../../types";
 
 interface AddPlayerModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ export default function AddPlayerModal({
 }: AddPlayerModalProps) {
   const [playerName, setPlayerName] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
+  const [gender, setGender] = useState<Gender>("M");
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -33,6 +36,7 @@ export default function AddPlayerModal({
       queryClient.invalidateQueries({ queryKey: ["team", teamId.toString()] });
       setPlayerName("");
       setPlayerNumber("");
+      setGender("M");
       onClose();
     },
   });
@@ -44,6 +48,7 @@ export default function AddPlayerModal({
         team_id: teamId,
         name: playerName.trim(),
         number: playerNumber ? Number(playerNumber) : undefined,
+        gender: gender,
       });
     }
   };
@@ -51,6 +56,7 @@ export default function AddPlayerModal({
   const handleClose = () => {
     setPlayerName("");
     setPlayerNumber("");
+    setGender("M");
     mutation.reset();
     onClose();
   };
@@ -73,6 +79,18 @@ export default function AddPlayerModal({
               inputProps={{ maxLength: 100 }}
               required
             />
+            <TextField
+              select
+              label="Gender"
+              fullWidth
+              variant="outlined"
+              value={gender}
+              onChange={(e) => setGender(e.target.value as Gender)}
+              required
+            >
+              <MenuItem value="M">Male</MenuItem>
+              <MenuItem value="W">Female</MenuItem>
+            </TextField>
             <TextField
               label="Jersey Number (Optional)"
               type="number"

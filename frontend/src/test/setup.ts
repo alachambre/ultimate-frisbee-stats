@@ -1,3 +1,4 @@
+// @ts-expect-error - expect is used to extend global test matchers
 import { expect, afterEach, beforeAll, afterAll } from "vitest";
 import { cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";

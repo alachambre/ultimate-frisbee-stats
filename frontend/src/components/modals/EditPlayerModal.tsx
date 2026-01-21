@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, type FormEvent, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -9,9 +9,10 @@ import {
   Button,
   Alert,
   Box,
+  MenuItem,
 } from "@mui/material";
 import { updatePlayer, deletePlayer } from "../../services";
-import type { Player } from "../../types";
+import type { Player, Gender } from "../../types";
 
 interface EditPlayerModalProps {
   isOpen: boolean;
@@ -30,16 +31,18 @@ export default function EditPlayerModal({
   const [playerNumber, setPlayerNumber] = useState(
     player.number?.toString() || ""
   );
+  const [gender, setGender] = useState<Gender>(player.gender);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setPlayerName(player.name);
     setPlayerNumber(player.number?.toString() || "");
+    setGender(player.gender);
   }, [player]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { name: string; number?: number | null }) =>
+    mutationFn: (data: { name: string; number?: number | null; gender?: Gender }) =>
       updatePlayer(player.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team", teamId.toString()] });
@@ -61,6 +64,7 @@ export default function EditPlayerModal({
       updateMutation.mutate({
         name: playerName.trim(),
         number: playerNumber ? Number(playerNumber) : null,
+        gender: gender,
       });
     }
   };
@@ -72,6 +76,7 @@ export default function EditPlayerModal({
   const handleClose = () => {
     setPlayerName(player.name);
     setPlayerNumber(player.number?.toString() || "");
+    setGender(player.gender);
     setShowDeleteConfirm(false);
     updateMutation.reset();
     deleteMutation.reset();
@@ -130,6 +135,18 @@ export default function EditPlayerModal({
               inputProps={{ maxLength: 100 }}
               required
             />
+            <TextField
+              select
+              label="Gender"
+              fullWidth
+              variant="outlined"
+              value={gender}
+              onChange={(e) => setGender(e.target.value as Gender)}
+              required
+            >
+              <MenuItem value="M">Male</MenuItem>
+              <MenuItem value="W">Female</MenuItem>
+            </TextField>
             <TextField
               label="Jersey Number (Optional)"
               type="number"

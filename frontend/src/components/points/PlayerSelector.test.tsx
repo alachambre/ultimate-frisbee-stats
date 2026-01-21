@@ -5,9 +5,9 @@ import PlayerSelector from "./PlayerSelector";
 import type { Player } from "../../types";
 
 const mockPlayers: Player[] = [
-  { id: 1, name: "Player 1", number: 10, team_id: 1, created_at: "2024-01-01" },
-  { id: 2, name: "Player 2", number: 20, team_id: 1, created_at: "2024-01-01" },
-  { id: 3, name: "Player 3", number: null, team_id: 1, created_at: "2024-01-01" },
+  { id: 1, name: "Player 1", number: 10, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 2, name: "Player 2", number: 20, gender: "M", team_id: 1, created_at: "2024-01-01" },
+  { id: 3, name: "Player 3", number: null, gender: "M", team_id: 1, created_at: "2024-01-01" },
 ];
 
 describe("PlayerSelector", () => {

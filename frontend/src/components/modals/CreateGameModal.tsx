@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -13,32 +13,36 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { createGame, getTeams } from "../../services";
+import { createGame, getCompetitions } from "../../services";
 
 interface CreateGameModalProps {
   isOpen: boolean;
   onClose: () => void;
+  competitionId?: number; // Optional: if provided, competition is pre-selected
 }
 
 export default function CreateGameModal({
   isOpen,
   onClose,
+  competitionId,
 }: CreateGameModalProps) {
-  const [teamId, setTeamId] = useState<number | "">("");
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | "">("");
   const [opponentName, setOpponentName] = useState("");
   const [date, setDate] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: teams } = useQuery({
-    queryKey: ["teams"],
-    queryFn: getTeams,
+  const { data: competitions } = useQuery({
+    queryKey: ["competitions"],
+    queryFn: () => getCompetitions(),
+    enabled: !competitionId, // Only fetch if no competitionId provided
   });
 
   const mutation = useMutation({
     mutationFn: createGame,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["games"] });
-      setTeamId("");
+      queryClient.invalidateQueries({ queryKey: ["competition-games"] });
+      setSelectedCompetitionId("");
       setOpponentName("");
       setDate("");
       onClose();
@@ -47,9 +51,10 @@ export default function CreateGameModal({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (teamId && opponentName.trim()) {
+    const finalCompetitionId = competitionId || selectedCompetitionId;
+    if (finalCompetitionId && opponentName.trim()) {
       mutation.mutate({
-        team_id: Number(teamId),
+        competition_id: Number(finalCompetitionId),
         opponent_name: opponentName.trim(),
         date: date || null,
       });
@@ -57,34 +62,38 @@ export default function CreateGameModal({
   };
 
   const handleClose = () => {
-    setTeamId("");
+    setSelectedCompetitionId("");
     setOpponentName("");
     setDate("");
     mutation.reset();
     onClose();
   };
 
+  const finalCompetitionId = competitionId || selectedCompetitionId;
+
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Create New Game</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="dense" required>
-            <InputLabel id="team-label">Team</InputLabel>
-            <Select
-              labelId="team-label"
-              id="team-select"
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value as number)}
-              label="Team"
-            >
-              {teams?.map((team) => (
-                <MenuItem key={team.id} value={team.id}>
-                  {team.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {!competitionId && (
+            <FormControl fullWidth margin="dense" required>
+              <InputLabel id="competition-label">Competition</InputLabel>
+              <Select
+                labelId="competition-label"
+                id="competition-select"
+                value={selectedCompetitionId}
+                onChange={(e) => setSelectedCompetitionId(e.target.value as number)}
+                label="Competition"
+              >
+                {competitions?.map((competition) => (
+                  <MenuItem key={competition.id} value={competition.id}>
+                    {competition.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           <TextField
             margin="dense"
@@ -125,7 +134,7 @@ export default function CreateGameModal({
           <Button
             type="submit"
             variant="contained"
-            disabled={mutation.isPending || !teamId || !opponentName.trim()}
+            disabled={mutation.isPending || !finalCompetitionId || !opponentName.trim()}
           >
             {mutation.isPending ? "Creating..." : "Create Game"}
           </Button>

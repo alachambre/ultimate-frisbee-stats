@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,9 +16,9 @@ const mockActivePoint: PointWithPlayers = {
   end_datetime: null,
   created_at: "2024-01-01T00:00:00Z",
   players: [
-    { id: 1, name: "Player 1", number: 10, team_id: 1, created_at: "2024-01-01" },
-    { id: 2, name: "Player 2", number: 20, team_id: 1, created_at: "2024-01-01" },
-    { id: 3, name: "Player 3", number: null, team_id: 1, created_at: "2024-01-01" },
+    { id: 1, name: "Player 1", number: 10, gender: "M", team_id: 1, created_at: "2024-01-01" },
+    { id: 2, name: "Player 2", number: 20, gender: "M", team_id: 1, created_at: "2024-01-01" },
+    { id: 3, name: "Player 3", number: null, gender: "M", team_id: 1, created_at: "2024-01-01" },
   ],
 };
 

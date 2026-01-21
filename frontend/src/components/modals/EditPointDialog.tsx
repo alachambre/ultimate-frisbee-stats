@@ -187,9 +187,9 @@ export default function EditPointDialog({
             sx={{ mb: 3 }}
             InputLabelProps={{ shrink: true }}
             error={
-              startDatetime &&
+              !!(startDatetime &&
               endDatetime &&
-              new Date(endDatetime) <= new Date(startDatetime)
+              new Date(endDatetime) <= new Date(startDatetime))
             }
             helperText={
               startDatetime &&

@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { GridLegacy as Grid } from "@mui/material";
 import type { GameWithScore } from "../../types";
 import GameCard from "./GameCard";
 

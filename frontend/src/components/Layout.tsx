@@ -31,6 +31,13 @@ export default function Layout() {
             </Button>
             <Button
               component={Link}
+              to="/competitions"
+              color={location.pathname.startsWith("/competitions") ? "primary" : "inherit"}
+            >
+              Competitions
+            </Button>
+            <Button
+              component={Link}
               to="/games"
               color={location.pathname.startsWith("/games") ? "primary" : "inherit"}
             >

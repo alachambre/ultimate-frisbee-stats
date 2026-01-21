@@ -1,6 +1,53 @@
 # Ultimate Frisbee Stats - Frontend
 
-React + TypeScript Progressive Web App for tracking ultimate frisbee team statistics, built with clean architecture and comprehensive testing.
+React + TypeScript Progressive Web App for tracking ultimate frisbee team statistics during games.
+
+## Overview
+
+A mobile-first application designed for use on the sidelines during ultimate frisbee games. Track your team's performance in real-time with comprehensive game statistics.
+
+### Core Functionalities
+
+**Team & Player Management:**
+- Create and manage multiple teams
+- Add players with jersey numbers and gender
+- Organize players across different teams
+
+**Competition Organization:**
+- Create competitions (tournaments, leagues, seasons)
+- Build competition rosters from your team players
+- Track multiple games within each competition
+
+**Game Management:**
+- Schedule games with opponent information and dates
+- Start games and track live scores
+- View game history with final scores and statistics
+
+**Live Point Tracking:**
+- Real-time point-by-point tracking during games
+- Select 7 players for each point
+- Mark points as offense or defense
+- Record point outcomes (won/lost)
+- View strategic context (breaks, holds)
+- Edit point details and player lineups
+
+**Statistics & Analytics:**
+- View point history with durations
+- Track offensive and defensive performance
+- Analyze player participation across games
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Application runs at http://localhost:5173
+# Ensure backend is running at http://localhost:8000
+```
 
 ## Architecture
 
@@ -23,11 +70,15 @@ frontend/
 │   │   │   ├── PlayerCard.tsx
 │   │   │   ├── PlayersGrid.tsx
 │   │   │   └── EmptyPlayersState.tsx
+│   │   ├── competitions/ # Competition domain components
+│   │   │   ├── CompetitionCard.tsx
+│   │   │   ├── CompetitionsGrid.tsx
+│   │   │   └── EmptyCompetitionsState.tsx
 │   │   ├── games/        # Game domain components
 │   │   │   ├── GameCard.tsx
 │   │   │   ├── GamesGrid.tsx
 │   │   │   └── EmptyGamesState.tsx
-│   │   ├── points/       # Point tracking components (Phase 3)
+│   │   ├── points/       # Point tracking components
 │   │   │   ├── LivePointTracker.tsx    # Main live tracking interface
 │   │   │   ├── PointTimer.tsx          # Real-time elapsed time display
 │   │   │   ├── PlayerSelector.tsx      # 7-player selection UI
@@ -37,20 +88,26 @@ frontend/
 │   │       ├── CreateTeamModal.tsx
 │   │       ├── AddPlayerModal.tsx
 │   │       ├── EditPlayerModal.tsx
+│   │       ├── CreateCompetitionModal.tsx
+│   │       ├── EditCompetitionModal.tsx
+│   │       ├── AddPlayersToRosterModal.tsx
 │   │       ├── CreateGameModal.tsx
 │   │       ├── EditGameModal.tsx
-│   │       ├── StartPointDialog.tsx    # Start point + select players
-│   │       ├── FinishPointDialog.tsx   # Finish active point (won/lost)
-│   │       └── EditPointDialog.tsx     # Edit point timestamps/players
+│   │       ├── StartPointDialog.tsx
+│   │       ├── FinishPointDialog.tsx
+│   │       └── EditPointDialog.tsx
 │   ├── pages/            # Page components (routes)
-│   │   ├── HomePage.tsx       # Landing page
-│   │   ├── TeamsPage.tsx      # Team list/management
-│   │   ├── TeamDetailPage.tsx # Individual team with players
-│   │   ├── GamesPage.tsx      # Game list/management
-│   │   └── GameDetailPage.tsx # Individual game with score and points
+│   │   ├── HomePage.tsx            # Landing page
+│   │   ├── TeamsPage.tsx           # Team list/management
+│   │   ├── TeamDetailPage.tsx      # Individual team with players
+│   │   ├── CompetitionsPage.tsx    # Competition list/management
+│   │   ├── CompetitionDetailPage.tsx # Individual competition with roster and games
+│   │   ├── GamesPage.tsx           # Game list/management
+│   │   └── GameDetailPage.tsx      # Individual game with score and points
 │   ├── services/         # API layer (mirrors backend CRUD)
 │   │   ├── api.ts        # Axios client configuration
 │   │   ├── teams.ts      # Team API calls
+│   │   ├── competitions.ts # Competition API calls
 │   │   ├── players.ts    # Player API calls
 │   │   ├── games.ts      # Game API calls
 │   │   ├── points.ts     # Point API calls
@@ -186,146 +243,6 @@ The application will be available at:
 
 Vite provides instant HMR (Hot Module Replacement) when you modify files.
 
-## Running Tests
-
-### Run all tests
-
-```bash
-npm test
-```
-
-### Run tests with UI
-
-```bash
-npm run test:ui
-```
-
-### Run tests with coverage
-
-```bash
-npm run test:coverage
-```
-
-### Current Test Coverage
-
-Comprehensive test coverage for critical user flows:
-
-**Phase 1 - Team & Player Management:**
-
-**TeamsPage:**
-- Shows empty state when no teams exist
-- Allows user to create a new team
-- Displays multiple teams in a grid
-
-**TeamDetailPage:**
-- Shows empty state when team has no players
-- Allows user to add a player to the team
-- Allows user to edit a player
-- Allows user to delete a player
-
-**Phase 2 - Game Management:**
-
-**GamesPage:**
-- Shows empty state when no games exist
-- Creates new game successfully with team selection
-- Displays games in grid when games exist
-- Navigates to game detail on card click
-
-**GameDetailPage:**
-- Displays game information correctly
-- Shows score and empty points list
-- Edits game successfully
-- Finishes game successfully
-- Deletes game with confirmation
-
-**Phase 3 - Live Point Tracking:**
-
-**PointTimer:**
-- Displays elapsed time correctly
-- Updates timer every second
-- Formats time as MM:SS or H:MM:SS
-
-**PlayerSelector:**
-- Allows selecting exactly 7 players
-- Shows validation error when not enough players selected
-- Displays selected player count
-- Allows deselecting players
-
-**FinishPointDialog:**
-- Opens and closes correctly
-- Validates outcome selection (won/lost)
-- Submits finish point request
-- Handles API errors
-
-**EditPointDialog:**
-- Displays point number in title
-- Initializes form with point data
-- Allows changing starting position and outcome
-- Validates player selection (exactly 7)
-- Validates end time is after start time
-- Handles successful updates
-
-### Test Architecture
-
-Tests use modern React testing best practices:
-- **Testing Library** (`@testing-library/react`): User-centric component testing
-- **MSW (Mock Service Worker)** (`msw`): API mocking with HTTP request interception
-- **Happy DOM** (`happy-dom`): Lightweight DOM implementation for tests
-- **Vitest**: Fast test runner with native ESM support
-
-**Test Structure:**
-```
-src/
-├── test/
-│   ├── setup.ts              # MSW server setup, global test config
-│   ├── test-utils.tsx        # Custom render with providers
-│   ├── vitest-env.d.ts       # TypeScript declarations
-│   └── mocks/
-│       └── handlers.ts       # MSW request handlers (API mocks)
-├── pages/
-│   └── __tests__/
-│       ├── TeamsPage.test.tsx
-│       ├── TeamDetailPage.test.tsx
-│       ├── GamesPage.test.tsx
-│       └── GameDetailPage.test.tsx
-```
-
-**Mock API with MSW:**
-The test suite uses MSW to intercept HTTP requests and provide realistic API responses:
-- In-memory data store simulates backend state
-- Full CRUD operations for teams and players
-- Automatic state management between tests
-- No actual backend required for tests
-
-Example test:
-```typescript
-import { render, screen, waitFor } from '../../test/test-utils';
-import userEvent from '@testing-library/user-event';
-import TeamsPage from '../TeamsPage';
-
-test('allows user to create a new team', async () => {
-  const user = userEvent.setup();
-  render(<TeamsPage />);
-
-  // Click create button
-  const createButton = screen.getByRole('button', { name: /create your first team/i });
-  await user.click(createButton);
-
-  // Fill form
-  const nameInput = screen.getByLabelText(/team name/i);
-  await user.type(nameInput, 'Test Team');
-
-  // Submit
-  const submitButton = screen.getByRole('button', { name: /create team/i });
-  await user.click(submitButton);
-
-  // Verify team appears
-  await waitFor(() => {
-    expect(screen.getByText('Test Team')).toBeInTheDocument();
-  });
-});
-```
-
 ## Building for Production
 
 ### Create production build
@@ -355,6 +272,17 @@ The service layer mirrors the backend CRUD structure. All services are strongly 
 - `getTeamPlayers(teamId: number): Promise<Player[]>`
 - `getTeamGames(teamId: number): Promise<GameWithScore[]>`
 
+### Competitions Service (`services/competitions.ts`)
+- `createCompetition(data: CompetitionCreate): Promise<Competition>`
+- `getCompetitions(): Promise<Competition[]>`
+- `getCompetition(competitionId: number): Promise<CompetitionWithPlayers>`
+- `updateCompetition(competitionId, data: CompetitionUpdate): Promise<Competition>`
+- `deleteCompetition(competitionId: number): Promise<void>`
+- `getCompetitionPlayers(competitionId: number): Promise<Player[]>`
+- `addPlayersToRoster(competitionId: number, data: PlayerIdsRequest): Promise<void>`
+- `removePlayersFromRoster(competitionId: number, data: PlayerIdsRequest): Promise<void>`
+- `getCompetitionGames(competitionId: number): Promise<GameWithScore[]>`
+
 ### Players Service (`services/players.ts`)
 - `createPlayer(data: PlayerCreate): Promise<Player>`
 - `getPlayer(playerId: number): Promise<Player>`
@@ -369,7 +297,7 @@ The service layer mirrors the backend CRUD structure. All services are strongly 
 - `deleteGame(gameId: number): Promise<void>`
 - `getGamePoints(gameId: number): Promise<PointWithPlayers[]>`
 
-### Points Service (`services/points.ts`) - Phase 3
+### Points Service (`services/points.ts`)
 - `startPoint(data: PointCreate): Promise<Point>` - Create active point
 - `getActivePoint(gameId: number): Promise<PointWithPlayers | null>` - Get active point
 - `finishPoint(pointId, data: PointFinish): Promise<Point>` - Complete point (won/lost)
@@ -382,7 +310,8 @@ The service layer mirrors the backend CRUD structure. All services are strongly 
 All types in `src/types/index.ts` exactly match the backend Pydantic schemas:
 
 - **Team types**: `Team`, `TeamCreate`, `TeamUpdate`, `TeamWithPlayers`
-- **Player types**: `Player`, `PlayerCreate`, `PlayerUpdate`
+- **Competition types**: `Competition`, `CompetitionCreate`, `CompetitionUpdate`, `CompetitionWithPlayers`, `PlayerIdsRequest`, `CompetitionStatus`, `Gender`
+- **Player types**: `Player`, `PlayerCreate`, `PlayerUpdate` (includes `gender: Gender` field)
 - **Game types**: `Game`, `GameCreate`, `GameUpdate`, `GameWithScore`, `GameDetail`
 - **Point types**: `Point`, `PointCreate`, `PointUpdate`, `PointWithPlayers`
 
@@ -437,96 +366,24 @@ const theme = createTheme({
 - **Emotion**: CSS-in-JS for dynamic styling
 - **No custom CSS**: MUI handles all styling needs
 
-## Development Workflow
+## Development
 
-### 1. Make code changes
-Edit files in `src/` directory
+### Running Tests
 
-### 2. Run tests
 ```bash
-npm test
+npm test                  # Run all tests
+npm run test:ui          # Run tests with UI
+npm run test:coverage    # Run tests with coverage
 ```
 
-### 3. Check the app
-- Browser auto-refreshes at http://localhost:5173
-- Test API endpoints with backend running on http://localhost:8000
+The project uses Vitest with React Testing Library and MSW for API mocking.
 
-### 4. Build for production
-```bash
-npm run build
-```
+### Development Workflow
 
-## Current Implementation Status
-
-### ✅ Completed - Phase 1: Team & Player Management
-- Project setup with Vite + React + TypeScript
-- Complete TypeScript types matching backend schemas
-- API service layer with all endpoints
-- Testing infrastructure:
-  - Vitest + React Testing Library + MSW
-  - Happy DOM for lightweight test environment
-  - TypeScript support with @testing-library/jest-dom matchers
-- Routing with React Router
-- TanStack Query for server state
-- Material UI styling with theme configuration
-- Layout component with AppBar navigation
-- Team management (CRUD operations) - **fully tested**
-- Player management with modals - **fully tested**
-- Shared components (PageHeader, LoadingState, ErrorState)
-- Component architecture: domain-driven folders (teams/, players/, modals/)
-
-### ✅ Completed - Phase 2: Game Management
-- Games list page with grid layout - **fully tested**
-- Game creation modal with team selection
-- Game detail page with scores and actions
-- Edit game modal
-- Finish game functionality (changes status from "In Progress" to "Finished")
-- Delete game with confirmation dialog
-- Game cards showing opponent, date, score, status badges, and team names
-- Empty state components for games
-- Full CRUD operations for games - **fully tested**
-- MSW mocks for all game endpoints
-
-### 🎉 Complete - Phase 3: Live Point Tracking
-#### ✅ Implemented Features
-- **Backend (120 tests passing):**
-  - Point model with status (active/completed), start_datetime, end_datetime
-  - Two-state point workflow (active → completed)
-  - New endpoints: POST /points/:id/finish, DELETE /points/:id/cancel, GET /points/games/:id/active
-  - Validation: only one active point per game, exactly 7 players required
-  - Duration calculation for playing time stats
-  - Timezone-aware datetime handling with proper 'Z' suffix serialization
-
-- **Frontend (43 tests passing):**
-  - LivePointTracker component - Main interface for live point tracking
-  - PointTimer component - Real-time elapsed time display with correct timezone handling
-  - PlayerSelector component - Exactly 7 players required
-  - StartPointDialog - Select players and start point
-  - FinishPointDialog - Mark point as won/lost (fully tested with 6 tests)
-  - EditPointDialog - Edit timestamps and player lineup (fully tested with 11 tests)
-  - PointHistoryList & PointHistoryItem - View all points with durations
-  - Active point polling (every 5 seconds) using React Query
-  - Integration in GameDetailPage with live tracking UI
-
-#### 🐛 Bug Fixes Applied
-- Fixed timezone handling - timer now correctly starts at 00:00 instead of 1H offset
-- Fixed duration_seconds computation using @computed_field decorator
-- Fixed EditPointDialog prop mismatch preventing dialog from opening
-
-#### 📱 Mobile-First UI Enhancements
-- Point cards with offense/defense icons (Sports/Shield icons)
-- Strategic context badges: "Break!" (win on defense), "Broken" (lose on offense)
-- Responsive action buttons (icon-only on mobile, full text on desktop)
-- Points ordered descending (most recent first)
-- Clean mobile layout optimized for sideline use during live games
-- Mobile-responsive layouts using MUI breakpoints (xs, sm, md, lg)
-
-#### 📝 Future Enhancements (Phase 4+)
-- Individual player event tracking (goals, assists, blocks, turnovers)
-- Statistics dashboard (player stats, team stats)
-- Advanced analytics and charts
-- Offline support (PWA features)
-- E2E tests with Playwright (optional)
+1. Make code changes in `src/` directory
+2. Run tests: `npm test`
+3. Check the app at http://localhost:5173 (auto-refreshes)
+4. Build for production: `npm run build`
 
 ## Troubleshooting
 
@@ -547,13 +404,15 @@ uvicorn app.main:app --reload
 ### CORS errors
 Backend is configured to allow all origins in development. If you still see CORS errors, check the backend's CORS middleware configuration in `app/main.py`.
 
-## Progressive Web App (Future)
+## Future Enhancements
 
-The application is designed to become a PWA with:
-- Offline data access
-- Install prompt on mobile devices
-- Service worker for caching
-- Background sync when online
+The application roadmap includes:
+- **Lines**: User-defined player groups (O-line, D-line) for quick selection
+- **Strategies**: Named plays (offensive/defensive) assignable to points
+- **Enhanced Point Tracking**: Mixity validation, field side tracking, pull statistics
+- **Calls & Turnovers**: Track fouls, violations, and turnover events
+- **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics
+- **PWA Features**: Offline support, install prompt, service worker caching
 
 ## Contributing
 
