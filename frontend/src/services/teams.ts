@@ -15,8 +15,8 @@ export const createTeam = async (data: TeamCreate): Promise<Team> => {
 };
 
 // Get all teams
-export const getTeams = async (): Promise<Team[]> => {
-  const response = await apiClient.get<Team[]>("/teams");
+export const getTeams = async (): Promise<TeamWithPlayers[]> => {
+  const response = await apiClient.get<TeamWithPlayers[]>("/teams");
   return response.data;
 };
 

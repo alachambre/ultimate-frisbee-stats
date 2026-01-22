@@ -8,13 +8,16 @@ import {
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import GroupIcon from "@mui/icons-material/Group";
-import type { Team } from "../../types";
+import type { TeamWithPlayers } from "../../types";
 
 interface TeamCardProps {
-  team: Team;
+  team: TeamWithPlayers;
 }
 
 export default function TeamCard({ team }: TeamCardProps) {
+  const menCount = team.players.filter(p => p.gender === "M").length;
+  const womenCount = team.players.filter(p => p.gender === "W").length;
+
   return (
     <Card
       elevation={0}
@@ -41,6 +44,10 @@ export default function TeamCard({ team }: TeamCardProps) {
 
           <Typography variant="h4" component="h2" fontWeight="bold" mb={2}>
             {team.name}
+          </Typography>
+
+          <Typography variant="body1" color="text.secondary" mb={2}>
+            {menCount} {menCount === 1 ? "Man" : "Men"}, {womenCount} {womenCount === 1 ? "Woman" : "Women"}
           </Typography>
 
           <Box display="flex" alignItems="center" justifyContent="center" gap={1}>

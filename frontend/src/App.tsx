@@ -15,14 +15,14 @@ const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#667eea",
-      light: "#8797f0",
-      dark: "#4a5bb8",
+      main: "#1e3a8a",
+      light: "#3b82f6",
+      dark: "#1e40af",
     },
     secondary: {
-      main: "#764ba2",
-      light: "#9168bd",
-      dark: "#533571",
+      main: "#38bdf8",
+      light: "#7dd3fc",
+      dark: "#0284c7",
     },
     background: {
       default: "#f5f7fa",
@@ -31,9 +31,10 @@ const theme = createTheme({
   },
   // Custom theme extensions
   gradients: {
-    primary: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    primaryReverse: "linear-gradient(180deg, #667eea 0%, #764ba2 100%)",
+    primary: "linear-gradient(135deg, #1e3a8a 0%, #38bdf8 100%)",
+    primaryReverse: "linear-gradient(180deg, #1e3a8a 0%, #38bdf8 100%)",
     light: "linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%)",
+    middle: "#2b7cc1", // Middle color between primary and secondary for visual progression
   },
 });
 

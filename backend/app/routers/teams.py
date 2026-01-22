@@ -16,7 +16,7 @@ def create_team(team: schemas.TeamCreate, db: Session = Depends(get_db)):
     return crud.create_team(db, team)
 
 
-@router.get("", response_model=List[schemas.Team])
+@router.get("", response_model=List[schemas.TeamWithPlayers])
 def list_teams(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_teams(db, skip=skip, limit=limit)
 

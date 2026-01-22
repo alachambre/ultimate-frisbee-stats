@@ -33,9 +33,19 @@ def create_competition(competition: schemas.CompetitionCreate, db: Session = Dep
     return crud.create_competition(db, competition)
 
 
-@router.get("", response_model=List[schemas.Competition])
+@router.get("", response_model=List[schemas.CompetitionWithTeam])
 def list_competitions(team_id: Optional[int] = None, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud.get_competitions(db, team_id=team_id, skip=skip, limit=limit)
+    competitions = crud.get_competitions(db, team_id=team_id, skip=skip, limit=limit)
+    # Add team_name to each competition
+    result = []
+    for competition in competitions:
+        team = crud.get_team(db, competition.team_id)
+        competition_dict = {
+            **competition.__dict__,
+            "team_name": team.name if team else "Unknown"
+        }
+        result.append(competition_dict)
+    return result
 
 
 @router.get("/{competition_id}", response_model=schemas.CompetitionWithPlayers)

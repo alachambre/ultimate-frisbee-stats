@@ -9,10 +9,10 @@ import {
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import type { Competition } from "../../types";
+import type { CompetitionWithTeam } from "../../types";
 
 interface CompetitionCardProps {
-  competition: Competition;
+  competition: CompetitionWithTeam;
 }
 
 export default function CompetitionCard({ competition }: CompetitionCardProps) {
@@ -49,7 +49,7 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
         }}
       >
         <CardContent sx={{ width: "100%", flexGrow: 1, textAlign: "center", py: 4 }}>
-          <EmojiEventsIcon sx={{ fontSize: 60, color: "secondary.main", mb: 2 }} />
+          <EmojiEventsIcon sx={{ fontSize: 60, color: (theme) => theme.gradients.middle, mb: 2 }} />
 
           <Typography variant="h5" component="h2" fontWeight="bold" mb={1}>
             {competition.name}
@@ -80,12 +80,19 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
             </Typography>
           </Box>
 
-          <Chip
-            label={competition.status}
-            size="small"
-            color={competition.status === "ongoing" ? "success" : "default"}
-            sx={{ textTransform: "capitalize" }}
-          />
+          <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
+            <Chip
+              label={competition.status}
+              size="small"
+              color={competition.status === "ongoing" ? "success" : "default"}
+              sx={{ textTransform: "capitalize" }}
+            />
+            <Chip
+              label={competition.team_name}
+              variant="outlined"
+              size="small"
+            />
+          </Box>
         </CardContent>
       </CardActionArea>
     </Card>

@@ -41,3 +41,8 @@ class Competition(CompetitionBase):
 class CompetitionWithPlayers(Competition):
     """Competition with its player roster"""
     players: List['Player']  # Forward reference to avoid circular import
+
+
+class CompetitionWithTeam(Competition):
+    """Competition with team name"""
+    team_name: str

@@ -8,7 +8,7 @@ All schemas are re-exported here for backward compatibility with existing import
 
 from .enums import Gender, CompetitionStatus
 from .team import Team, TeamCreate, TeamUpdate, TeamWithPlayers
-from .competition import Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers
+from .competition import Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, CompetitionWithTeam
 from .player import Player, PlayerCreate, PlayerUpdate
 from .game import Game, GameCreate, GameUpdate, GameWithScore, GameDetail
 from .point import Point, PointCreate, PointUpdate, PointFinish, PointWithPlayers
@@ -34,6 +34,7 @@ __all__ = [
     "CompetitionCreate",
     "CompetitionUpdate",
     "CompetitionWithPlayers",
+    "CompetitionWithTeam",
     # Players
     "Player",
     "PlayerCreate",

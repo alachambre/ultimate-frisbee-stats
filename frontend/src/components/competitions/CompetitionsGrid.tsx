@@ -1,9 +1,9 @@
 import { Grid } from "@mui/material";
-import type { Competition } from "../../types";
+import type { CompetitionWithTeam } from "../../types";
 import CompetitionCard from "./CompetitionCard";
 
 interface CompetitionsGridProps {
-  competitions: Competition[];
+  competitions: CompetitionWithTeam[];
 }
 
 export default function CompetitionsGrid({

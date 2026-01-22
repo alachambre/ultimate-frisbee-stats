@@ -34,7 +34,12 @@ export function resetMockData() {
 export const handlers = [
   // GET /teams - List all teams
   http.get(`${BASE_URL}/teams`, () => {
-    return HttpResponse.json(teams);
+    // Include players for each team
+    const teamsWithPlayers: TeamWithPlayers[] = teams.map(team => ({
+      ...team,
+      players: players.filter(p => p.team_id === team.id),
+    }));
+    return HttpResponse.json(teamsWithPlayers);
   }),
 
   // POST /teams - Create a team
@@ -123,7 +128,16 @@ export const handlers = [
       );
     }
 
-    return HttpResponse.json(filteredCompetitions);
+    // Add team_name to each competition
+    const competitionsWithTeam = filteredCompetitions.map(comp => {
+      const team = teams.find(t => t.id === comp.team_id);
+      return {
+        ...comp,
+        team_name: team?.name || "Unknown Team"
+      };
+    });
+
+    return HttpResponse.json(competitionsWithTeam);
   }),
 
   // GET /competitions/:id - Get competition with players

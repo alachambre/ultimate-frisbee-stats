@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import ScoreboardIcon from "@mui/icons-material/Scoreboard";
 import type { GameWithScore } from "../../types";
 
 interface GameCardProps {
@@ -38,9 +39,12 @@ export default function GameCard({ game }: GameCardProps) {
         sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start" }}
       >
         <CardContent sx={{ width: "100%", flexGrow: 1, textAlign: "center", py: 3 }}>
-          <Typography variant="h5" component="h2" fontWeight="bold" mb={1}>
-            {game.opponent_name}
-          </Typography>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+            <ScoreboardIcon sx={{ fontSize: 36, color: "secondary.main" }} />
+            <Typography variant="h5" component="h2" fontWeight="bold">
+              {game.opponent_name}
+            </Typography>
+          </Box>
 
           <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} mb={1.5}>
             <EmojiEventsIcon sx={{ fontSize: 14, color: "text.secondary" }} />

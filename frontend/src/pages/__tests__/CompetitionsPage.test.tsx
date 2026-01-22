@@ -143,7 +143,7 @@ describe("CompetitionsPage", () => {
     teamSelect = screen.getByLabelText(/team/i);
     await user.click(teamSelect);
 
-    teamOption = await screen.findByText("Test Team", {}, { timeout: 3000 });
+    teamOption = await screen.findByRole("option", { name: "Test Team" }, { timeout: 3000 });
     await user.click(teamOption);
 
     nameInput = screen.getByLabelText(/competition name/i);

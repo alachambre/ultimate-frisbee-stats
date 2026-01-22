@@ -87,6 +87,10 @@ export interface CompetitionWithPlayers extends Competition {
   players: Player[];
 }
 
+export interface CompetitionWithTeam extends Competition {
+  team_name: string;
+}
+
 export interface PlayerIdsRequest {
   player_ids: number[];
 }

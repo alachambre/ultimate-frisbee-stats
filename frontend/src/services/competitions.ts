@@ -4,6 +4,7 @@ import type {
   CompetitionCreate,
   CompetitionUpdate,
   CompetitionWithPlayers,
+  CompetitionWithTeam,
   Player,
   PlayerIdsRequest,
   GameWithScore,
@@ -20,9 +21,9 @@ export const createCompetition = async (
 // Get all competitions (optionally filtered by team)
 export const getCompetitions = async (
   teamId?: number
-): Promise<Competition[]> => {
+): Promise<CompetitionWithTeam[]> => {
   const params = teamId ? { team_id: teamId } : {};
-  const response = await apiClient.get<Competition[]>("/competitions", {
+  const response = await apiClient.get<CompetitionWithTeam[]>("/competitions", {
     params,
   });
   return response.data;

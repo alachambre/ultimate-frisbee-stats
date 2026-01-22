@@ -39,7 +39,7 @@ describe("GameDetailPage", () => {
     });
 
     expect(screen.getAllByText(/Test Team/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/In Progress/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ongoing/i)).toBeInTheDocument();
   });
 
   it("shows score and empty points list", async () => {
@@ -103,8 +103,8 @@ describe("GameDetailPage", () => {
       expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
     });
 
-    // Initially should be in progress
-    expect(screen.getByText(/In Progress/i)).toBeInTheDocument();
+    // Initially should be in progress (displays as "Ongoing")
+    expect(screen.getByText(/Ongoing/i)).toBeInTheDocument();
 
     // Click Finish button
     const finishButton = screen.getByRole("button", { name: /finish/i });

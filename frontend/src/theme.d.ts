@@ -6,6 +6,7 @@ declare module "@mui/material/styles" {
       primary: string;
       primaryReverse: string;
       light: string;
+      middle: string;
     };
   }
   interface ThemeOptions {
@@ -13,6 +14,7 @@ declare module "@mui/material/styles" {
       primary?: string;
       primaryReverse?: string;
       light?: string;
+      middle?: string;
     };
   }
 }

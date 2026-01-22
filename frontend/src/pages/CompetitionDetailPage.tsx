@@ -254,7 +254,7 @@ export default function CompetitionDetailPage() {
                       </Typography>
                     ) : (
                       <PlayersGrid
-                        players={competition.players.filter(p => p.gender === "M")}
+                        players={competition.players.filter(p => p.gender === "M").sort((a, b) => a.name.localeCompare(b.name))}
                         onDeletePlayer={handleRemovePlayer}
                       />
                     )}
@@ -290,7 +290,7 @@ export default function CompetitionDetailPage() {
                       </Typography>
                     ) : (
                       <PlayersGrid
-                        players={competition.players.filter(p => p.gender === "W")}
+                        players={competition.players.filter(p => p.gender === "W").sort((a, b) => a.name.localeCompare(b.name))}
                         onDeletePlayer={handleRemovePlayer}
                       />
                     )}

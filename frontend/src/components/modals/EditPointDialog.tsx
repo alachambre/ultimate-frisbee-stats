@@ -203,7 +203,7 @@ export default function EditPointDialog({
 
         {/* Players */}
         <PlayerSelector
-          players={players}
+          players={[...players].sort((a, b) => a.name.localeCompare(b.name))}
           selectedIds={selectedPlayerIds}
           onChange={setSelectedPlayerIds}
           required

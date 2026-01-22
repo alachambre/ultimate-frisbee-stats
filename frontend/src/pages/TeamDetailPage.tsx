@@ -150,7 +150,7 @@ export default function TeamDetailPage() {
                     </Typography>
                   ) : (
                     <PlayersGrid
-                      players={team.players.filter(p => p.gender === "M")}
+                      players={team.players.filter(p => p.gender === "M").sort((a, b) => a.name.localeCompare(b.name))}
                       onEditPlayer={setEditingPlayer}
                     />
                   )}
@@ -186,7 +186,7 @@ export default function TeamDetailPage() {
                     </Typography>
                   ) : (
                     <PlayersGrid
-                      players={team.players.filter(p => p.gender === "W")}
+                      players={team.players.filter(p => p.gender === "W").sort((a, b) => a.name.localeCompare(b.name))}
                       onEditPlayer={setEditingPlayer}
                     />
                   )}
