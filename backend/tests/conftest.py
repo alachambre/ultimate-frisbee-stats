@@ -114,3 +114,23 @@ def sample_game(db_session, sample_competition):
         GameCreate(competition_id=sample_competition.id, opponent_name="Opponent Team", date=datetime.now())
     )
     return game
+
+
+@pytest.fixture
+def sample_line(db_session, sample_team, sample_players):
+    """Create a sample line with 3 players for testing"""
+    from app.crud import create_line
+    from app.schemas import LineCreate
+
+    # Use first 3 players
+    player_ids = [p.id for p in sample_players[:3]]
+    line = create_line(
+        db_session,
+        LineCreate(
+            team_id=sample_team.id,
+            name="O-Line",
+            description="Offensive line",
+            player_ids=player_ids
+        )
+    )
+    return line

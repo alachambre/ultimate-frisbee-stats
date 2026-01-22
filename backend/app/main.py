@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
-from app.routers import teams, players, games, points, competitions
+from app.routers import teams, players, games, points, competitions, lines
 
 app = FastAPI(
     title="Ultimate Frisbee Stats API",
@@ -37,3 +37,4 @@ app.include_router(competitions.router)
 app.include_router(players.router)
 app.include_router(games.router)
 app.include_router(points.router)
+app.include_router(lines.router)

@@ -6,12 +6,13 @@ All schemas are re-exported here for backward compatibility with existing import
     from app import schemas
 """
 
-from .enums import Gender, CompetitionStatus
+from .enums import Gender, CompetitionStatus, GameStatus
 from .team import Team, TeamCreate, TeamUpdate, TeamWithPlayers
 from .competition import Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, CompetitionWithTeam
 from .player import Player, PlayerCreate, PlayerUpdate
 from .game import Game, GameCreate, GameUpdate, GameWithScore, GameDetail
 from .point import Point, PointCreate, PointUpdate, PointFinish, PointWithPlayers
+from .line import Line, LineCreate, LineUpdate, LineWithPlayers
 
 # Rebuild models with forward references after all models are imported
 TeamWithPlayers.model_rebuild()
@@ -19,11 +20,13 @@ CompetitionWithPlayers.model_rebuild()
 GameWithScore.model_rebuild()
 GameDetail.model_rebuild()
 PointWithPlayers.model_rebuild()
+LineWithPlayers.model_rebuild()
 
 __all__ = [
     # Enums
     "Gender",
     "CompetitionStatus",
+    "GameStatus",
     # Teams
     "Team",
     "TeamCreate",
@@ -51,4 +54,9 @@ __all__ = [
     "PointUpdate",
     "PointFinish",
     "PointWithPlayers",
+    # Lines
+    "Line",
+    "LineCreate",
+    "LineUpdate",
+    "LineWithPlayers",
 ]

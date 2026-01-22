@@ -18,3 +18,4 @@ class Team(Base):
     # Relationships
     players = relationship("Player", back_populates="team", cascade="all, delete-orphan")
     competitions = relationship("Competition", back_populates="team", cascade="all, delete-orphan")
+    lines = relationship("Line", back_populates="team", cascade="all, delete-orphan")

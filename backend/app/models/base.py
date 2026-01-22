@@ -19,6 +19,12 @@ class CompetitionStatusEnum(enum.Enum):
     completed = "completed"
 
 
+class GameStatusEnum(enum.Enum):
+    ready = "ready"
+    started = "started"
+    ended = "ended"
+
+
 # Association Tables
 point_players = Table(
     'point_players',
@@ -31,5 +37,19 @@ competition_players = Table(
     'competition_players',
     Base.metadata,
     Column('competition_id', Integer, ForeignKey('competitions.id', ondelete='CASCADE'), primary_key=True),
+    Column('player_id', Integer, ForeignKey('players.id', ondelete='CASCADE'), primary_key=True)
+)
+
+line_players = Table(
+    'line_players',
+    Base.metadata,
+    Column('line_id', Integer, ForeignKey('lines.id', ondelete='CASCADE'), primary_key=True),
+    Column('player_id', Integer, ForeignKey('players.id', ondelete='CASCADE'), primary_key=True)
+)
+
+game_players = Table(
+    'game_players',
+    Base.metadata,
+    Column('game_id', Integer, ForeignKey('games.id', ondelete='CASCADE'), primary_key=True),
     Column('player_id', Integer, ForeignKey('players.id', ondelete='CASCADE'), primary_key=True)
 )

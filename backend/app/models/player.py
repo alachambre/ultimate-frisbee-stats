@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
-from .base import Base, GenderEnum, point_players, competition_players
+from .base import Base, GenderEnum, point_players, competition_players, line_players, game_players
 
 
 class Player(Base):
@@ -22,3 +22,5 @@ class Player(Base):
     team = relationship("Team", back_populates="players")
     points = relationship("Point", secondary=point_players, back_populates="players")
     competitions = relationship("Competition", secondary=competition_players, back_populates="players")
+    lines = relationship("Line", secondary=line_players, back_populates="players")
+    games = relationship("Game", secondary=game_players, back_populates="players")

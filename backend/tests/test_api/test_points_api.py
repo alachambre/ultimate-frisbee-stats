@@ -78,7 +78,7 @@ def test_create_point_finished_game_api(client, sample_game, sample_players):
     })
 
     assert response.status_code == 400
-    assert "finished game" in response.json()["detail"].lower()
+    assert "ended game" in response.json()["detail"].lower()
 
 
 def test_create_point_wrong_player_count_api(client, sample_game, sample_players):

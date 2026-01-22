@@ -39,6 +39,8 @@ from app.crud.games import (
     delete_game,
     get_game_score,
     get_game_detail,
+    add_players_to_game,
+    remove_players_from_game,
 )
 
 from app.crud.points import (
@@ -50,6 +52,17 @@ from app.crud.points import (
     finish_point,
     get_active_point_for_game,
     cancel_point,
+)
+
+from app.crud.lines import (
+    create_line,
+    get_line,
+    get_lines,
+    update_line,
+    delete_line,
+    add_players_to_line,
+    remove_players_from_line,
+    get_line_players,
 )
 
 __all__ = [
@@ -85,6 +98,8 @@ __all__ = [
     "delete_game",
     "get_game_score",
     "get_game_detail",
+    "add_players_to_game",
+    "remove_players_from_game",
     # Points
     "create_point",
     "get_point",
@@ -94,4 +109,13 @@ __all__ = [
     "finish_point",
     "get_active_point_for_game",
     "cancel_point",
+    # Lines
+    "create_line",
+    "get_line",
+    "get_lines",
+    "update_line",
+    "delete_line",
+    "add_players_to_line",
+    "remove_players_from_line",
+    "get_line_players",
 ]

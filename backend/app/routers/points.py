@@ -17,8 +17,8 @@ def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
     game = crud.get_game(db, point.game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    if game.status == "finished":
-        raise HTTPException(status_code=400, detail="Cannot add points to a finished game")
+    if game.status.value == "ended":
+        raise HTTPException(status_code=400, detail="Cannot add points to an ended game")
 
     try:
         return crud.create_point(db, point)

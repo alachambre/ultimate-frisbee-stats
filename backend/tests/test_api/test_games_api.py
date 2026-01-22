@@ -14,7 +14,7 @@ def test_create_game_api(client, sample_competition):
     data = response.json()
     assert data["opponent_name"] == "Rival Team"
     assert data["competition_id"] == sample_competition.id
-    assert data["status"] == "in_progress"
+    assert data["status"] == "ready"
     assert "id" in data
 
 
@@ -67,12 +67,12 @@ def test_update_game_status_api(client, sample_game):
     """Test PUT /games/{game_id} to change status"""
     response = client.put(
         f"/games/{sample_game.id}",
-        json={"status": "finished"}
+        json={"status": "ended"}
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "finished"
+    assert data["status"] == "ended"
 
 
 def test_update_game_not_found_api(client):
@@ -88,7 +88,7 @@ def test_finish_game_api(client, sample_game):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "finished"
+    assert data["status"] == "ended"
 
 
 def test_finish_game_not_found_api(client):

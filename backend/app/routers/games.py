@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 
 from app import schemas, crud
 from app.database import get_db
@@ -34,6 +35,17 @@ def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
     competition = crud.get_competition(db, game.competition_id)
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
+
+    # Verify all players are in competition roster
+    if game.player_ids:
+        roster_player_ids = {p.id for p in competition.players}
+        invalid_players = set(game.player_ids) - roster_player_ids
+        if invalid_players:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Players {invalid_players} not found in competition roster"
+            )
+
     return crud.create_game(db, game)
 
 
@@ -72,3 +84,47 @@ def delete_game(game_id: int, db: Session = Depends(get_db)):
 @router.get("/{game_id}/points", response_model=List[schemas.PointWithPlayers])
 def list_game_points(game_id: int, db: Session = Depends(get_db)):
     return crud.get_points_by_game(db, game_id)
+
+
+@router.get("/{game_id}/players", response_model=List[schemas.Player])
+def list_game_players(game_id: int, db: Session = Depends(get_db)):
+    """Get all selected players for this game"""
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game.players
+
+
+class PlayerIdsRequest(BaseModel):
+    player_ids: List[int]
+
+
+@router.post("/{game_id}/players", response_model=schemas.Game)
+def add_players_to_game(game_id: int, request: PlayerIdsRequest, db: Session = Depends(get_db)):
+    """Add players to game (must be from competition roster)"""
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    # Verify all players are in competition roster
+    if request.player_ids:
+        competition = crud.get_competition(db, game.competition_id)
+        roster_player_ids = {p.id for p in competition.players}
+        invalid_players = set(request.player_ids) - roster_player_ids
+        if invalid_players:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Players {invalid_players} not found in competition roster"
+            )
+
+    return crud.add_players_to_game(db, game_id, request.player_ids)
+
+
+@router.delete("/{game_id}/players", response_model=schemas.Game)
+def remove_players_from_game(game_id: int, request: PlayerIdsRequest, db: Session = Depends(get_db)):
+    """Remove players from game"""
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    return crud.remove_players_from_game(db, game_id, request.player_ids)

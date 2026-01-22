@@ -12,3 +12,9 @@ class Gender(str, Enum):
 class CompetitionStatus(str, Enum):
     ongoing = "ongoing"
     completed = "completed"
+
+
+class GameStatus(str, Enum):
+    ready = "ready"
+    started = "started"
+    ended = "ended"

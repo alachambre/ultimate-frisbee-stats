@@ -11,30 +11,34 @@ backend/
 ├── app/
 │   ├── routers/           # API endpoints organized by domain
 │   │   ├── teams.py       # Team management endpoints
-│   │   ├── competitions.py # Competition management endpoints (Phase 4)
+│   │   ├── competitions.py # Competition management endpoints
 │   │   ├── players.py     # Player management endpoints
 │   │   ├── games.py       # Game management endpoints
-│   │   └── points.py      # Point tracking endpoints
+│   │   ├── points.py      # Point tracking endpoints
+│   │   └── lines.py       # Line management endpoints (Phase 5)
 │   ├── crud/              # Database operations by domain
 │   │   ├── teams.py       # Team CRUD operations
-│   │   ├── competitions.py # Competition CRUD operations (Phase 4)
+│   │   ├── competitions.py # Competition CRUD operations
 │   │   ├── players.py     # Player CRUD operations
 │   │   ├── games.py       # Game CRUD operations
-│   │   └── points.py      # Point CRUD operations
+│   │   ├── points.py      # Point CRUD operations
+│   │   └── lines.py       # Line CRUD operations (Phase 5)
 │   ├── models/            # SQLAlchemy database models organized by domain
 │   │   ├── base.py        # Base model, enums, association tables
 │   │   ├── team.py        # Team model
 │   │   ├── competition.py # Competition model
 │   │   ├── player.py      # Player model
 │   │   ├── game.py        # Game model
-│   │   └── point.py       # Point model
+│   │   ├── point.py       # Point model
+│   │   └── line.py        # Line model (Phase 5)
 │   ├── schemas/           # Pydantic request/response schemas organized by domain
-│   │   ├── enums.py       # Shared enums (Gender, CompetitionStatus)
+│   │   ├── enums.py       # Shared enums (Gender, CompetitionStatus, GameStatus)
 │   │   ├── team.py        # Team schemas
 │   │   ├── competition.py # Competition schemas
 │   │   ├── player.py      # Player schemas
 │   │   ├── game.py        # Game schemas
-│   │   └── point.py       # Point schemas
+│   │   ├── point.py       # Point schemas
+│   │   └── line.py        # Line schemas (Phase 5)
 │   ├── database.py        # Database connection & session management
 │   └── main.py            # FastAPI application setup
 ├── tests/
@@ -53,20 +57,28 @@ backend/
 
 ### Data Model
 
-**Phase 4 - Competition Hierarchy:**
-- **Team** → has many Players and Competitions
+**Phase 5 - Lines & Enhanced Game Model:**
+- **Team** → has many Players, Competitions, and Lines
 - **Competition** → belongs to Team, has many Games, has player roster (M:N with Players)
-- **Player** → belongs to Team, has gender (M/W), participates in Competitions and Points
-- **Game** → belongs to Competition, has many Points
+- **Player** → belongs to Team, has gender (M/W), participates in Competitions, Points, Lines, and Games
+- **Game** → belongs to Competition, has many Points, has 3-status lifecycle, comments, and optional player selection
 - **Point** → belongs to Game, has exactly 7 Players (many-to-many), tracks duration
+- **Line** → belongs to Team, has many Players (many-to-many), user-defined player groups (e.g., O-line, D-line)
 
 Key features:
-- **Competition-based hierarchy** (Phase 4): Team → Competition → Game → Point
-- **Player gender tracking** (Phase 4): Required field (M/W) for mixity validation
-- **Competition roster management** (Phase 4): Select players attending each competition
+- **Competition-based hierarchy**: Team → Competition → Game → Point
+- **Player gender tracking**: Required field (M/W) for mixity validation
+- **Competition roster management**: Select players attending each competition
+- **Line management** (Phase 5): Create custom player groups for quick selection
+  - Unique line names per team
+  - Many-to-many with players (team validation enforced)
+- **Enhanced game model** (Phase 5):
+  - 3-status lifecycle: ready → started → ended
+  - Optional comments field for game notes
+  - Optional player selection from competition roster
 - Auto-incrementing point numbers per game
 - Automatic score calculation from point results
-- **Live point tracking with duration** (Phase 3)
+- **Live point tracking with duration**:
   - Two-state workflow: active → completed
   - Timestamp tracking: `start_datetime`, `end_datetime`
   - Only one active point per game at a time
@@ -231,17 +243,40 @@ pytest tests/ -v --tb=short
 - Used for 4M+3W or 3M+4W point validation
 
 ### Games
-- `POST /games` - Create a game (requires competition_id)
+- `POST /games` - Create a game (requires competition_id, optional: player_ids, comments)
 - `GET /games` - List all games with scores, team, and competition names
-- `GET /games/{game_id}` - Get game with score and points
-- `PUT /games/{game_id}` - Update game
-- `POST /games/{game_id}/finish` - Mark game as finished
+- `GET /games/{game_id}` - Get game with score, points, and selected players
+- `PUT /games/{game_id}` - Update game (status, comments, opponent_name)
+- `POST /games/{game_id}/finish` - Mark game as ended (status: ended)
 - `DELETE /games/{game_id}` - Delete game
 - `GET /games/{game_id}/points` - List all points for a game
+- `GET /games/{game_id}/players` - List selected players for game (Phase 5)
+- `POST /games/{game_id}/players` - Add players to game (must be in roster) (Phase 5)
+- `DELETE /games/{game_id}/players` - Remove players from game (Phase 5)
 
-**Game Changes (Phase 4):**
-- Games now belong to competitions (not directly to teams)
-- Game responses include both team_name and competition_name
+**Game Features (Phase 5):**
+- 3-status lifecycle: ready → started → ended
+- Optional comments field for game notes
+- Optional player selection from competition roster (M:N relationship)
+- Status defaults to "ready" on creation
+- Games belong to competitions (not directly to teams)
+
+### Lines (Phase 5)
+- `POST /lines` - Create a line (requires team_id, name, optional: description, player_ids)
+- `GET /lines` - List all lines (filter by team_id)
+- `GET /lines/{line_id}` - Get line with players
+- `PUT /lines/{line_id}` - Update line (name, description)
+- `DELETE /lines/{line_id}` - Delete line
+- `GET /lines/{line_id}/players` - List players in line
+- `POST /lines/{line_id}/players` - Add players to line
+- `DELETE /lines/{line_id}/players` - Remove players from line
+
+**Line Features:**
+- User-defined player groups (e.g., "O-Line", "D-Line", "Handlers")
+- Line names must be unique per team
+- Many-to-many relationship with players
+- Players must belong to the line's team
+- Quick player selection for game planning
 
 ### Points (Phase 3: Live Point Tracking)
 - `POST /points` - Start a new point (requires exactly 7 player IDs, creates active point)
@@ -301,16 +336,19 @@ git commit -m "Your commit message"
 - Each test gets a fresh in-memory database
 - Sample fixtures available:
   - `sample_team` - A test team
-  - `sample_competition` - A test competition (Phase 4)
-  - `sample_players` - 7 players (4 men, 3 women) with gender (Phase 4)
+  - `sample_competition` - A test competition
+  - `sample_players` - 7 players (4 men, 3 women) with gender
   - `sample_game` - A test game
+  - `sample_line` - A test line with 3 players (Phase 5)
 - Complete test isolation - no side effects between tests
 
 ### Test Coverage
-- **150 tests passing** (Phase 4)
-  - 30 new competition tests (CRUD + API)
-  - All existing tests updated for new schema
-- Comprehensive coverage of core functionality and edge cases
+- **225 tests passing** (Phase 5)
+  - 31 Line CRUD tests (Phase 5)
+  - 27 Line API tests (Phase 5)
+  - 17 enhanced Game tests (Phase 5)
+  - Comprehensive coverage of all domains and edge cases
+  - Tests include CRUD operations, M2M relationships, cascade deletes, unique constraints
 
 ## Troubleshooting
 

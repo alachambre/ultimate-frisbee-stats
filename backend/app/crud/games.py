@@ -8,8 +8,23 @@ def create_game(db: Session, game: schemas.GameCreate) -> models.Game:
         competition_id=game.competition_id,
         opponent_name=game.opponent_name,
         date=game.date,
-        status="in_progress"
+        status=models.GameStatusEnum.ready,
+        comments=game.comments
     )
+
+    # Add players to game if provided (must be from competition roster)
+    if game.player_ids:
+        from app.crud.competitions import get_competition
+        competition = get_competition(db, game.competition_id)
+        if competition:
+            roster_player_ids = {p.id for p in competition.players}
+            valid_player_ids = [pid for pid in game.player_ids if pid in roster_player_ids]
+            if valid_player_ids:
+                players = db.query(models.Player).filter(
+                    models.Player.id.in_(valid_player_ids)
+                ).all()
+                db_game.players = players
+
     db.add(db_game)
     db.commit()
     db.refresh(db_game)
@@ -45,14 +60,17 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> O
         if game_update.opponent_name is not None:
             db_game.opponent_name = game_update.opponent_name
         if game_update.status is not None:
-            db_game.status = game_update.status
+            # Convert GameStatus enum to GameStatusEnum
+            db_game.status = models.GameStatusEnum[game_update.status.value]
+        if game_update.comments is not None:
+            db_game.comments = game_update.comments
         db.commit()
         db.refresh(db_game)
     return db_game
 
 
 def finish_game(db: Session, game_id: int) -> Optional[models.Game]:
-    return update_game(db, game_id, schemas.GameUpdate(status="finished"))
+    return update_game(db, game_id, schemas.GameUpdate(status=schemas.GameStatus.ended))
 
 
 def delete_game(db: Session, game_id: int) -> bool:
@@ -91,5 +109,45 @@ def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
         "opponent_score": opponent_score,
         "team_name": competition.team.name if competition and competition.team else "Unknown",
         "competition_name": competition.name if competition else "Unknown",
-        "points": points
+        "points": points,
+        "players": game.players
     }
+
+
+def add_players_to_game(db: Session, game_id: int, player_ids: List[int]) -> Optional[models.Game]:
+    """Add players to game (must be from competition roster)"""
+    from app.crud.competitions import get_competition
+    db_game = get_game(db, game_id)
+    if db_game:
+        competition = get_competition(db, db_game.competition_id)
+        if competition:
+            # Only add players from competition roster
+            roster_player_ids = {p.id for p in competition.players}
+            valid_player_ids = [pid for pid in player_ids if pid in roster_player_ids]
+
+            if valid_player_ids:
+                players = db.query(models.Player).filter(
+                    models.Player.id.in_(valid_player_ids)
+                ).all()
+
+                # Add only new players (avoid duplicates)
+                existing_player_ids = {p.id for p in db_game.players}
+                for player in players:
+                    if player.id not in existing_player_ids:
+                        db_game.players.append(player)
+
+                db.commit()
+                db.refresh(db_game)
+    return db_game
+
+
+def remove_players_from_game(db: Session, game_id: int, player_ids: List[int]) -> Optional[models.Game]:
+    """Remove players from game"""
+    db_game = get_game(db, game_id)
+    if db_game:
+        db_game.players = [
+            p for p in db_game.players if p.id not in player_ids
+        ]
+        db.commit()
+        db.refresh(db_game)
+    return db_game
