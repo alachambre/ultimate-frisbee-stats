@@ -164,23 +164,52 @@ export default function EditPlayerModal({
             )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "space-between" }}>
+        <DialogActions
+          sx={{
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: { xs: "stretch", sm: "space-between" },
+            gap: 1,
+            p: 2,
+          }}
+        >
           <Button
             onClick={() => setShowDeleteConfirm(true)}
             color="error"
             disabled={updateMutation.isPending}
+            sx={{
+              order: { xs: 3, sm: 1 },
+              width: { xs: "100%", sm: "auto" },
+            }}
           >
             Delete Player
           </Button>
-          <Box>
-            <Button onClick={handleClose} disabled={updateMutation.isPending}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 1,
+              width: { xs: "100%", sm: "auto" },
+              order: { xs: 1, sm: 2 },
+            }}
+          >
+            <Button
+              onClick={handleClose}
+              disabled={updateMutation.isPending}
+              sx={{
+                order: { xs: 2, sm: 1 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
               disabled={updateMutation.isPending || !playerName.trim()}
-              sx={{ ml: 1 }}
+              sx={{
+                order: { xs: 1, sm: 2 },
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>

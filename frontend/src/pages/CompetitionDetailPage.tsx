@@ -13,6 +13,10 @@ import {
   DialogActions,
   Alert,
   Chip,
+  Collapse,
+  IconButton,
+  Grid,
+  alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -20,6 +24,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EventIcon from "@mui/icons-material/Event";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import {
   getCompetition,
   deleteCompetition,
@@ -46,6 +52,7 @@ export default function CompetitionDetailPage() {
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [isCreateGameModalOpen, setIsCreateGameModalOpen] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
+  const [showRoster, setShowRoster] = useState(false);
 
   const {
     data: competition,
@@ -182,11 +189,24 @@ export default function CompetitionDetailPage() {
 
       {/* Roster Section */}
       <Paper sx={{ mb: 3 }}>
-        <Box p={3} borderBottom="1px solid" borderColor="divider">
+        <Box
+          p={3}
+          borderBottom={showRoster ? "1px solid" : "none"}
+          borderColor="divider"
+        >
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">
-              Roster ({competition.players.length})
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="h6">
+                Roster ({competition.players.length})
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setShowRoster(!showRoster)}
+                aria-label={showRoster ? "Hide roster" : "Show roster"}
+              >
+                {showRoster ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
             <Button
               variant="contained"
               startIcon={<PersonAddIcon />}
@@ -197,18 +217,89 @@ export default function CompetitionDetailPage() {
           </Box>
         </Box>
 
-        <Box p={3}>
-          {competition.players.length === 0 ? (
-            <EmptyPlayersState
-              onAddClick={() => setIsAddPlayersModalOpen(true)}
-            />
-          ) : (
-            <PlayersGrid
-              players={competition.players}
-              onDeletePlayer={handleRemovePlayer}
-            />
-          )}
-        </Box>
+        <Collapse in={showRoster}>
+          <Box p={3}>
+            {competition.players.length === 0 ? (
+              <EmptyPlayersState
+                onAddClick={() => setIsAddPlayersModalOpen(true)}
+              />
+            ) : (
+              <Grid container spacing={3}>
+                {/* Men Column */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2.5,
+                      borderColor: "primary.main",
+                      borderWidth: 2,
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.02),
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{
+                        color: "primary.main",
+                        fontWeight: "bold",
+                        mb: 2
+                      }}
+                    >
+                      Men ({competition.players.filter(p => p.gender === "M").length})
+                    </Typography>
+                    {competition.players.filter(p => p.gender === "M").length === 0 ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                        No male players yet
+                      </Typography>
+                    ) : (
+                      <PlayersGrid
+                        players={competition.players.filter(p => p.gender === "M")}
+                        onDeletePlayer={handleRemovePlayer}
+                      />
+                    )}
+                  </Paper>
+                </Grid>
+
+                {/* Women Column */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2.5,
+                      borderColor: "secondary.main",
+                      borderWidth: 2,
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.secondary.main, 0.02),
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{
+                        color: "secondary.main",
+                        fontWeight: "bold",
+                        mb: 2
+                      }}
+                    >
+                      Women ({competition.players.filter(p => p.gender === "W").length})
+                    </Typography>
+                    {competition.players.filter(p => p.gender === "W").length === 0 ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                        No female players yet
+                      </Typography>
+                    ) : (
+                      <PlayersGrid
+                        players={competition.players.filter(p => p.gender === "W")}
+                        onDeletePlayer={handleRemovePlayer}
+                      />
+                    )}
+                  </Paper>
+                </Grid>
+              </Grid>
+            )}
+          </Box>
+        </Collapse>
       </Paper>
 
       {/* Games Section */}

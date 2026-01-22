@@ -8,9 +8,9 @@ interface TeamsGridProps {
 
 export default function TeamsGrid({ teams }: TeamsGridProps) {
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={4}>
       {teams.map((team) => (
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={team.id}>
+        <Grid size={{ xs: 12, sm: 6 }} key={team.id}>
           <TeamCard team={team} />
         </Grid>
       ))}

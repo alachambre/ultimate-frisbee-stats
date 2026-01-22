@@ -15,11 +15,20 @@ export default function PageHeader({
   return (
     <Box
       display="flex"
+      flexDirection={{ xs: "column", sm: "row" }}
       justifyContent="space-between"
-      alignItems="center"
+      alignItems={{ xs: "stretch", sm: "center" }}
+      gap={2}
       mb={4}
     >
-      <Typography variant="h3" component="h1" fontWeight="bold">
+      <Typography
+        variant="h4"
+        component="h1"
+        fontWeight="bold"
+        sx={{
+          fontSize: { xs: "1.75rem", sm: "2.125rem" },
+        }}
+      >
         {title}
       </Typography>
       {onActionClick && (
@@ -28,6 +37,10 @@ export default function PageHeader({
           startIcon={<AddIcon />}
           onClick={onActionClick}
           size="large"
+          sx={{
+            whiteSpace: "nowrap",
+            minWidth: { xs: "100%", sm: "auto" },
+          }}
         >
           {actionLabel}
         </Button>

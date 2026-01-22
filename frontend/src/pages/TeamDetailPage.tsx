@@ -12,6 +12,8 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  Grid,
+  alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -118,10 +120,79 @@ export default function TeamDetailPage() {
               onAddClick={() => setIsAddPlayerModalOpen(true)}
             />
           ) : (
-            <PlayersGrid
-              players={team.players}
-              onEditPlayer={setEditingPlayer}
-            />
+            <Grid container spacing={3}>
+              {/* Men Column */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2.5,
+                    borderColor: "primary.main",
+                    borderWidth: 2,
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.primary.main, 0.02),
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      color: "primary.main",
+                      fontWeight: "bold",
+                      mb: 2
+                    }}
+                  >
+                    Men ({team.players.filter(p => p.gender === "M").length})
+                  </Typography>
+                  {team.players.filter(p => p.gender === "M").length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                      No male players yet
+                    </Typography>
+                  ) : (
+                    <PlayersGrid
+                      players={team.players.filter(p => p.gender === "M")}
+                      onEditPlayer={setEditingPlayer}
+                    />
+                  )}
+                </Paper>
+              </Grid>
+
+              {/* Women Column */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2.5,
+                    borderColor: "secondary.main",
+                    borderWidth: 2,
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.secondary.main, 0.02),
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      color: "secondary.main",
+                      fontWeight: "bold",
+                      mb: 2
+                    }}
+                  >
+                    Women ({team.players.filter(p => p.gender === "W").length})
+                  </Typography>
+                  {team.players.filter(p => p.gender === "W").length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                      No female players yet
+                    </Typography>
+                  ) : (
+                    <PlayersGrid
+                      players={team.players.filter(p => p.gender === "W")}
+                      onEditPlayer={setEditingPlayer}
+                    />
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
           )}
         </Box>
       </Paper>

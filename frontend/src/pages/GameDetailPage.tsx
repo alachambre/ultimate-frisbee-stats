@@ -164,8 +164,8 @@ export default function GameDetailPage() {
             </Box>
             <Box display="flex" gap={1} flexWrap="wrap">
               <Chip
-                label={game.status === "in_progress" ? "In Progress" : "Finished"}
-                color={game.status === "in_progress" ? "primary" : "success"}
+                label={game.status === "in_progress" ? "Ongoing" : "Finished"}
+                color={game.status === "in_progress" ? "success" : "default"}
                 size="small"
               />
               <Chip label={game.team_name} variant="outlined" size="small" />

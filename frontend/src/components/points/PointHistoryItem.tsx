@@ -15,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import SportsIcon from "@mui/icons-material/Sports";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import type { PointWithPlayers } from "../../types";
 
@@ -53,7 +53,7 @@ export default function PointHistoryItem({
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
           <Box display="flex" alignItems="center" gap={1}>
             {point.starting_on_offense ? (
-              <SportsIcon color="warning" />
+              <FlashOnIcon color="warning" />
             ) : (
               <ShieldIcon color="info" />
             )}

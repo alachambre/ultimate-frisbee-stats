@@ -343,27 +343,70 @@ The application uses Material UI (MUI) for all UI components, providing:
 - `CircularProgress` - Loading indicators
 - `Chip` - Tags and labels
 
-### Theme Customization
+### Theme System
 
-Edit the theme in `App.tsx`:
+The application uses a centralized theme configuration in `App.tsx` with custom extensions:
+
 ```typescript
 const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#1976d2", // Blue
+      main: "#667eea",      // Purple
+      light: "#8797f0",
+      dark: "#4a5bb8",
     },
     secondary: {
-      main: "#dc004e", // Pink
+      main: "#764ba2",      // Deep purple
+      light: "#9168bd",
+      dark: "#533571",
     },
+    background: {
+      default: "#f5f7fa",
+      paper: "#ffffff",
+    },
+  },
+  // Custom gradient definitions (see src/theme.d.ts)
+  gradients: {
+    primary: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    primaryReverse: "linear-gradient(180deg, #667eea 0%, #764ba2 100%)",
+    light: "linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%)",
   },
 });
 ```
 
+**Theme Features:**
+- **Centralized colors**: Single source of truth for all colors across the app
+- **Custom gradients**: Reusable gradient definitions via theme extensions
+- **Type-safe access**: TypeScript declarations in `src/theme.d.ts`
+- **Consistent styling**: All components use theme values, no hardcoded colors
+
+### Card Design System
+
+All entity cards (teams, competitions, games) follow a consistent visual pattern:
+
+**Common Features:**
+- Gradient borders from theme
+- Elevation-free design with border-box gradient technique
+- Smooth hover animations (translateY + box shadow)
+- Centered content layout
+- Icon at top representing the entity type
+
+**Size Hierarchy:**
+- **Team cards**: Largest (h4 title, 72px icon, py: 6)
+- **Competition cards**: Medium (h5 title, 60px icon, py: 4)
+- **Game cards**: Smallest (h5 title, no icon, py: 3)
+
+**Status Consistency:**
+- "Ongoing" status: Green (success color)
+- "Completed"/"Finished" status: Gray (default color)
+
 ### Styling Approach
 
-- **sx prop**: Inline styles with theme access
+- **sx prop**: Inline styles with theme access via callback functions
 - **Emotion**: CSS-in-JS for dynamic styling
+- **alpha utility**: MUI's alpha function for transparent overlays
+- **Theme-first**: All colors and gradients from centralized theme
 - **No custom CSS**: MUI handles all styling needs
 
 ## Development

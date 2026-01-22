@@ -13,15 +13,6 @@ const mockMalePlayer: Player = {
   created_at: "2024-01-01T00:00:00Z",
 };
 
-const mockFemalePlayer: Player = {
-  id: 2,
-  name: "Jane Smith",
-  number: 23,
-  gender: "W",
-  team_id: 1,
-  created_at: "2024-01-01T00:00:00Z",
-};
-
 const mockPlayerWithoutNumber: Player = {
   id: 3,
   name: "Alex Johnson",
@@ -48,34 +39,6 @@ describe("PlayerCard", () => {
     render(<PlayerCard player={mockPlayerWithoutNumber} onEdit={vi.fn()} />);
 
     expect(screen.queryByText(/#\d+/)).not.toBeInTheDocument();
-  });
-
-  it("displays gender chip for male player", () => {
-    render(<PlayerCard player={mockMalePlayer} onEdit={vi.fn()} />);
-
-    const genderChip = screen.getByText("M");
-    expect(genderChip).toBeInTheDocument();
-  });
-
-  it("displays gender chip for female player", () => {
-    render(<PlayerCard player={mockFemalePlayer} onEdit={vi.fn()} />);
-
-    const genderChip = screen.getByText("W");
-    expect(genderChip).toBeInTheDocument();
-  });
-
-  it("displays male gender chip with primary color", () => {
-    render(<PlayerCard player={mockMalePlayer} onEdit={vi.fn()} />);
-
-    const genderChip = screen.getByText("M").closest(".MuiChip-root");
-    expect(genderChip).toHaveClass("MuiChip-colorPrimary");
-  });
-
-  it("displays female gender chip with secondary color", () => {
-    render(<PlayerCard player={mockFemalePlayer} onEdit={vi.fn()} />);
-
-    const genderChip = screen.getByText("W").closest(".MuiChip-root");
-    expect(genderChip).toHaveClass("MuiChip-colorSecondary");
   });
 
   it("calls onEdit when edit button is clicked", async () => {

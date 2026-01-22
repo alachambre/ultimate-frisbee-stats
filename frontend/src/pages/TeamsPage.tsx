@@ -30,7 +30,7 @@ export default function TeamsPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
         title="Teams"
         actionLabel="Add Team"

@@ -30,7 +30,7 @@ export default function GamesPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
         title="Games"
         actionLabel="New Game"

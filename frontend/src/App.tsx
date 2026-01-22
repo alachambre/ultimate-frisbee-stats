@@ -15,11 +15,25 @@ const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#1976d2",
+      main: "#667eea",
+      light: "#8797f0",
+      dark: "#4a5bb8",
     },
     secondary: {
-      main: "#dc004e",
+      main: "#764ba2",
+      light: "#9168bd",
+      dark: "#533571",
     },
+    background: {
+      default: "#f5f7fa",
+      paper: "#ffffff",
+    },
+  },
+  // Custom theme extensions
+  gradients: {
+    primary: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    primaryReverse: "linear-gradient(180deg, #667eea 0%, #764ba2 100%)",
+    light: "linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%)",
   },
 });
 

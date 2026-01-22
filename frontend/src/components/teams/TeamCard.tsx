@@ -7,7 +7,7 @@ import {
   CardActionArea,
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import GroupIcon from "@mui/icons-material/Group";
 import type { Team } from "../../types";
 
 interface TeamCardProps {
@@ -17,12 +17,17 @@ interface TeamCardProps {
 export default function TeamCard({ team }: TeamCardProps) {
   return (
     <Card
+      elevation={0}
       sx={{
         height: "100%",
-        transition: "all 0.3s",
+        border: "2px solid transparent",
+        background: (theme) =>
+          `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+        transition: "transform 0.2s, box-shadow 0.2s",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: 6,
+          boxShadow: (theme) =>
+            `0 8px 24px ${theme.palette.primary.main}4D`,
         },
       }}
     >
@@ -31,18 +36,17 @@ export default function TeamCard({ team }: TeamCardProps) {
         to={`/teams/${team.id}`}
         sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start" }}
       >
-        <CardContent sx={{ width: "100%", flexGrow: 1 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-            <Typography variant="h5" component="h2" fontWeight="bold">
-              {team.name}
-            </Typography>
-            <ChevronRightIcon color="action" />
-          </Box>
+        <CardContent sx={{ width: "100%", flexGrow: 1, textAlign: "center", py: 6 }}>
+          <GroupIcon sx={{ fontSize: 72, color: "primary.main", mb: 3 }} />
 
-          <Box display="flex" alignItems="center" gap={1}>
-            <CalendarTodayIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-            <Typography variant="caption" color="text.secondary">
-              {new Date(team.created_at).toLocaleDateString("en-US", {
+          <Typography variant="h4" component="h2" fontWeight="bold" mb={2}>
+            {team.name}
+          </Typography>
+
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+            <CalendarTodayIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+            <Typography variant="body2" color="text.secondary">
+              Created {new Date(team.created_at).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",

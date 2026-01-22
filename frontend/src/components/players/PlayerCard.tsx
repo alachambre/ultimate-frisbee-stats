@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, IconButton, Box, Chip } from "@mui/material";
+import { Card, CardContent, Typography, IconButton, Box } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Player } from "../../types";
@@ -15,17 +15,9 @@ export default function PlayerCard({ player, onEdit, onDelete }: PlayerCardProps
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box flex={1}>
-            <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-              <Typography variant="body1" fontWeight="medium">
-                {player.name}
-              </Typography>
-              <Chip
-                label={player.gender}
-                size="small"
-                color={player.gender === "M" ? "primary" : "secondary"}
-                sx={{ height: 20, fontSize: "0.75rem" }}
-              />
-            </Box>
+            <Typography variant="body1" fontWeight="medium" mb={0.5}>
+              {player.name}
+            </Typography>
             {player.number !== null && player.number !== undefined && (
               <Typography variant="body2" color="text.secondary">
                 #{player.number}

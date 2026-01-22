@@ -8,7 +8,7 @@ import {
   Chip,
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import type { Competition } from "../../types";
 
 interface CompetitionCardProps {
@@ -24,12 +24,17 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
 
   return (
     <Card
+      elevation={0}
       sx={{
         height: "100%",
-        transition: "all 0.3s",
+        border: "2px solid transparent",
+        background: (theme) =>
+          `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+        transition: "transform 0.2s, box-shadow 0.2s",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: 6,
+          boxShadow: (theme) =>
+            `0 8px 24px ${theme.palette.primary.main}4D`,
         },
       }}
     >
@@ -43,18 +48,12 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
           alignItems: "flex-start",
         }}
       >
-        <CardContent sx={{ width: "100%", flexGrow: 1 }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="flex-start"
-            mb={1}
-          >
-            <Typography variant="h5" component="h2" fontWeight="bold">
-              {competition.name}
-            </Typography>
-            <ChevronRightIcon color="action" />
-          </Box>
+        <CardContent sx={{ width: "100%", flexGrow: 1, textAlign: "center", py: 4 }}>
+          <EmojiEventsIcon sx={{ fontSize: 60, color: "secondary.main", mb: 2 }} />
+
+          <Typography variant="h5" component="h2" fontWeight="bold" mb={1}>
+            {competition.name}
+          </Typography>
 
           {competition.description && (
             <Typography
@@ -67,15 +66,16 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: "vertical",
+                minHeight: "2.5em",
               }}
             >
               {competition.description}
             </Typography>
           )}
 
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={2}>
             <EventIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="body2" color="text.secondary">
               {formatDateRange(competition.start_date, competition.end_date)}
             </Typography>
           </Box>
