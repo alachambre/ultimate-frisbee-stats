@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 from app.crud import games, points
-from app.schemas import GameCreate, GameUpdate, PointCreate, GameStatus
+from app.schemas import GameCreate, GameUpdate, PointCreate, GameStatus, PointUpdate, PointStatus, PointFinish
 
 
 def test_create_game(db_session, sample_competition):
@@ -145,6 +145,7 @@ def test_get_game_score_with_points(db_session, sample_game, sample_players):
             )
         )
         # Finish the point so we can create another
+        points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
         points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Opponent won 2 points
@@ -158,6 +159,7 @@ def test_get_game_score_with_points(db_session, sample_game, sample_players):
             )
         )
         # Finish the point so we can create another
+        points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
         points.finish_point(db_session, point.id, PointFinish(won=False))
 
     our_score, opponent_score = games.get_game_score(db_session, sample_game.id)
@@ -181,6 +183,7 @@ def test_get_game_detail(db_session, sample_game, sample_players):
         )
     )
     # Finish the point
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     game_detail = games.get_game_detail(db_session, sample_game.id)

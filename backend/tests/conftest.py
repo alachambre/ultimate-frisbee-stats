@@ -134,3 +134,37 @@ def sample_line(db_session, sample_team, sample_players):
         )
     )
     return line
+
+
+@pytest.fixture
+def sample_strategy(db_session):
+    """Create a sample offensive strategy for testing"""
+    from app.crud import create_strategy
+    from app.schemas import StrategyCreate, StrategyCategory
+
+    strategy = create_strategy(
+        db_session,
+        StrategyCreate(
+            name="Vertical Stack",
+            description="Basic vertical offensive stack",
+            category=StrategyCategory.offense
+        )
+    )
+    return strategy
+
+
+@pytest.fixture
+def sample_defense_strategy(db_session):
+    """Create a sample defensive strategy for testing"""
+    from app.crud import create_strategy
+    from app.schemas import StrategyCreate, StrategyCategory
+
+    strategy = create_strategy(
+        db_session,
+        StrategyCreate(
+            name="Person Defense",
+            description="Basic person-to-person defense",
+            category=StrategyCategory.defense
+        )
+    )
+    return strategy

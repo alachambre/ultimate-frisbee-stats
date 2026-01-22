@@ -15,14 +15,16 @@ backend/
 │   │   ├── players.py     # Player management endpoints
 │   │   ├── games.py       # Game management endpoints
 │   │   ├── points.py      # Point tracking endpoints
-│   │   └── lines.py       # Line management endpoints (Phase 5)
+│   │   ├── lines.py       # Line management endpoints (Phase 5)
+│   │   └── strategies.py  # Strategy management endpoints (Phase 6)
 │   ├── crud/              # Database operations by domain
 │   │   ├── teams.py       # Team CRUD operations
 │   │   ├── competitions.py # Competition CRUD operations
 │   │   ├── players.py     # Player CRUD operations
 │   │   ├── games.py       # Game CRUD operations
 │   │   ├── points.py      # Point CRUD operations
-│   │   └── lines.py       # Line CRUD operations (Phase 5)
+│   │   ├── lines.py       # Line CRUD operations (Phase 5)
+│   │   └── strategies.py  # Strategy CRUD operations (Phase 6)
 │   ├── models/            # SQLAlchemy database models organized by domain
 │   │   ├── base.py        # Base model, enums, association tables
 │   │   ├── team.py        # Team model
@@ -30,15 +32,17 @@ backend/
 │   │   ├── player.py      # Player model
 │   │   ├── game.py        # Game model
 │   │   ├── point.py       # Point model
-│   │   └── line.py        # Line model (Phase 5)
+│   │   ├── line.py        # Line model (Phase 5)
+│   │   └── strategy.py    # Strategy model (Phase 6)
 │   ├── schemas/           # Pydantic request/response schemas organized by domain
-│   │   ├── enums.py       # Shared enums (Gender, CompetitionStatus, GameStatus)
+│   │   ├── enums.py       # Shared enums (Gender, CompetitionStatus, GameStatus, PointStatus, StrategyCategory)
 │   │   ├── team.py        # Team schemas
 │   │   ├── competition.py # Competition schemas
 │   │   ├── player.py      # Player schemas
 │   │   ├── game.py        # Game schemas
 │   │   ├── point.py       # Point schemas
-│   │   └── line.py        # Line schemas (Phase 5)
+│   │   ├── line.py        # Line schemas (Phase 5)
+│   │   └── strategy.py    # Strategy schemas (Phase 6)
 │   ├── database.py        # Database connection & session management
 │   └── main.py            # FastAPI application setup
 ├── tests/
@@ -57,13 +61,14 @@ backend/
 
 ### Data Model
 
-**Phase 5 - Lines & Enhanced Game Model:**
+**Phase 6 - Strategy & Enhanced Point Model:**
 - **Team** → has many Players, Competitions, and Lines
 - **Competition** → belongs to Team, has many Games, has player roster (M:N with Players)
 - **Player** → belongs to Team, has gender (M/W), participates in Competitions, Points, Lines, and Games
 - **Game** → belongs to Competition, has many Points, has 3-status lifecycle, comments, and optional player selection
-- **Point** → belongs to Game, has exactly 7 Players (many-to-many), tracks duration
-- **Line** → belongs to Team, has many Players (many-to-many), user-defined player groups (e.g., O-line, D-line)
+- **Point** → belongs to Game, has exactly 7 Players (M2M), optional Strategy, tracks duration, has 4-status lifecycle
+- **Line** → belongs to Team, has many Players (M2M), user-defined player groups (e.g., O-line, D-line)
+- **Strategy** → global entity, has optional Points, named plays with offense/defense category
 
 Key features:
 - **Competition-based hierarchy**: Team → Competition → Game → Point
@@ -76,12 +81,17 @@ Key features:
   - 3-status lifecycle: ready → started → ended
   - Optional comments field for game notes
   - Optional player selection from competition roster
+- **Strategy management** (Phase 6):
+  - Named plays for offense and defense
+  - Optional assignment to points for tactical tracking
+  - Category-based filtering (offense/defense)
 - Auto-incrementing point numbers per game
 - Automatic score calculation from point results
-- **Live point tracking with duration**:
-  - Two-state workflow: active → completed
+- **Live point tracking with duration** (Phase 6):
+  - 4-status lifecycle: ready → running → scored → completed
   - Timestamp tracking: `start_datetime`, `end_datetime`
-  - Only one active point per game at a time
+  - Only one running point per game at a time
+  - Additional fields: field_side, pull, strategy_id, comments
 - Cascade deletes (deleting a team removes all related data)
 - Validation: exactly 7 players per point, strict player selection hierarchy
 
@@ -278,23 +288,42 @@ pytest tests/ -v --tb=short
 - Players must belong to the line's team
 - Quick player selection for game planning
 
-### Points (Phase 3: Live Point Tracking)
-- `POST /points` - Start a new point (requires exactly 7 player IDs, creates active point)
-- `GET /points/{point_id}` - Get point with player details
-- `PUT /points/{point_id}` - Update point (players, timestamps)
-- `POST /points/{point_id}/finish` - Finish active point (set won/lost outcome)
-- `DELETE /points/{point_id}/cancel` - Cancel active point
-- `DELETE /points/{point_id}` - Delete point
-- `GET /points/games/{game_id}/active` - Get active point for game (404 if none)
+### Strategies (Phase 6)
+- `POST /strategies` - Create a strategy (requires name, category, optional: description)
+- `GET /strategies` - List all strategies (filter by category: offense/defense)
+- `GET /strategies/{strategy_id}` - Get strategy details
+- `PUT /strategies/{strategy_id}` - Update strategy (name, description, category)
+- `DELETE /strategies/{strategy_id}` - Delete strategy
 
-**Point Tracking Features:**
-- Two-state workflow: active → completed
+**Strategy Features:**
+- Named plays for offense and defense (e.g., "Vertical Stack", "Zone Defense")
+- Global entity (not team-specific, reusable across teams)
+- Category field: offense or defense (enum)
+- Optional assignment to points for tactical tracking
+- ON DELETE SET NULL: Deleting strategy preserves points but clears strategy_id
+- Unique constraint on strategy name
+
+### Points (Phase 3: Live Point Tracking, Phase 6: Enhanced)
+- `POST /points` - Start a new point (requires exactly 7 player IDs, optional: field_side, pull, strategy_id, comments)
+- `GET /points/{point_id}` - Get point with player details and strategy
+- `PUT /points/{point_id}` - Update point (players, timestamps, field_side, pull, strategy_id, comments, status)
+- `POST /points/{point_id}/finish` - Finish point (set won/lost outcome, optional: comments)
+- `DELETE /points/{point_id}/cancel` - Cancel point (ready or running status)
+- `DELETE /points/{point_id}` - Delete point
+- `GET /points/games/{game_id}/running` - Get running point for game (404 if none)
+- `GET /points/games/{game_id}/active` - Deprecated alias for /running (backward compatibility)
+
+**Point Tracking Features (Phase 6):**
+- 4-status lifecycle: ready → running → scored → completed
 - Timestamp tracking: `start_datetime`, `end_datetime` with timezone awareness
 - Duration calculation for playing time stats (via @computed_field)
-- Only one active point per game allowed
+- Only one running point per game allowed
 - Real-time point tracking during live games
+- Strategy assignment for tactical analysis
+- Additional tracking: field_side, pull (boolean), comments
 - Proper ISO8601 datetime serialization with 'Z' suffix for UTC times
 - Points ordered descending by point_number (most recent first)
+- finish_point() transitions point to completed status
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 
@@ -340,15 +369,21 @@ git commit -m "Your commit message"
   - `sample_players` - 7 players (4 men, 3 women) with gender
   - `sample_game` - A test game
   - `sample_line` - A test line with 3 players (Phase 5)
+  - `sample_strategy` - An offense strategy (Phase 6)
+  - `sample_defense_strategy` - A defense strategy (Phase 6)
 - Complete test isolation - no side effects between tests
 
 ### Test Coverage
-- **225 tests passing** (Phase 5)
+- **270 tests passing** (Phase 6)
+  - 20 Strategy CRUD tests (Phase 6)
+  - 20 Strategy API tests (Phase 6)
+  - ~35 enhanced Point tests (Phase 6 - 4-status lifecycle, new fields)
+  - ~10 Point API tests (Phase 6)
   - 31 Line CRUD tests (Phase 5)
   - 27 Line API tests (Phase 5)
   - 17 enhanced Game tests (Phase 5)
   - Comprehensive coverage of all domains and edge cases
-  - Tests include CRUD operations, M2M relationships, cascade deletes, unique constraints
+  - Tests include CRUD operations, M2M relationships, cascade deletes, unique constraints, enum handling
 
 ## Troubleshooting
 

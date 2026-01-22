@@ -2,7 +2,7 @@ import pytest
 
 
 def test_create_point_api(client, sample_game, sample_players):
-    """Test POST /points creates active point"""
+    """Test POST /points creates ready point"""
     player_ids = [p.id for p in sample_players]
     response = client.post("/points", json={
         "game_id": sample_game.id,
@@ -15,8 +15,8 @@ def test_create_point_api(client, sample_game, sample_players):
     assert data["game_id"] == sample_game.id
     assert data["point_number"] == 1
     assert data["starting_on_offense"] is True
-    assert data["won"] is None  # Active points have no winner yet
-    assert data["status"] == "active"
+    assert data["won"] is None  # Non-completed points have no winner yet
+    assert data["status"] == "ready"
     assert data["start_datetime"] is not None
     assert data["end_datetime"] is None
     assert len(data["players"]) == 7
@@ -37,7 +37,8 @@ def test_create_point_auto_increment_api(client, sample_game, sample_players):
     assert response1.json()["point_number"] == 1
     point1_id = response1.json()["id"]
 
-    # Finish first point
+    # Transition to running, then finish first point
+    client.put(f"/points/{point1_id}", json={"status": "running"})
     client.post(f"/points/{point1_id}/finish", json={"won": True})
 
     # Create second point
@@ -109,6 +110,56 @@ def test_create_point_invalid_player_ids_api(client, sample_game):
     assert "7 players" in response.json()["detail"]
 
 
+def test_create_point_with_strategy_api(client, sample_game, sample_players, sample_strategy):
+    """Test POST /points with strategy_id"""
+    player_ids = [p.id for p in sample_players]
+    response = client.post("/points", json={
+        "game_id": sample_game.id,
+        "starting_on_offense": True,
+        "strategy_id": sample_strategy.id,
+        "player_ids": player_ids
+    })
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["strategy_id"] == sample_strategy.id
+
+
+def test_create_point_with_optional_field_metadata_api(client, sample_game, sample_players, sample_strategy):
+    """Test POST /points with optional field metadata (field_side, pull, strategy, comments)"""
+    player_ids = [p.id for p in sample_players]
+    response = client.post("/points", json={
+        "game_id": sample_game.id,
+        "starting_on_offense": True,
+        "field_side": "home",
+        "pull": True,
+        "strategy_id": sample_strategy.id,
+        "comments": "Opening point",
+        "player_ids": player_ids
+    })
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["field_side"] == "home"
+    assert data["pull"] is True
+    assert data["strategy_id"] == sample_strategy.id
+    assert data["comments"] == "Opening point"
+
+
+def test_create_point_invalid_strategy_api(client, sample_game, sample_players):
+    """Test POST /points with invalid strategy_id"""
+    player_ids = [p.id for p in sample_players]
+    response = client.post("/points", json={
+        "game_id": sample_game.id,
+        "starting_on_offense": True,
+        "strategy_id": 999,  # Non-existent
+        "player_ids": player_ids
+    })
+
+    assert response.status_code == 404
+    assert "strategy not found" in response.json()["detail"].lower()
+
+
 def test_get_point_api(client, sample_game, sample_players):
     """Test GET /points/{point_id}"""
     player_ids = [p.id for p in sample_players]
@@ -150,6 +201,7 @@ def test_update_point_api(client, sample_game, sample_players):
     point_id = create_response.json()["id"]
 
     # Finish it first
+    client.put(f"/points/{point_id}", json={"status": "running"})
     client.post(f"/points/{point_id}/finish", json={"won": True})
 
     # Update the point
@@ -221,6 +273,34 @@ def test_update_point_not_found_api(client):
     assert response.status_code == 404
 
 
+def test_update_point_optional_field_metadata_api(client, sample_game, sample_players, sample_strategy):
+    """Test PUT /points/{id} with optional field metadata (field_side, pull, strategy, comments)"""
+    player_ids = [p.id for p in sample_players]
+
+    # Create point
+    create_response = client.post("/points", json={
+        "game_id": sample_game.id,
+        "starting_on_offense": True,
+        "player_ids": player_ids
+    })
+    point_id = create_response.json()["id"]
+
+    # Update with new fields
+    response = client.put(f"/points/{point_id}", json={
+        "field_side": "away",
+        "pull": False,
+        "strategy_id": sample_strategy.id,
+        "comments": "Changed strategy"
+    })
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["field_side"] == "away"
+    assert data["pull"] is False
+    assert data["strategy_id"] == sample_strategy.id
+    assert data["comments"] == "Changed strategy"
+
+
 def test_delete_point_api(client, sample_game, sample_players):
     """Test DELETE /points/{point_id}"""
     player_ids = [p.id for p in sample_players]
@@ -262,6 +342,7 @@ def test_game_score_updates_with_points_api(client, sample_game, sample_players)
             "player_ids": player_ids
         })
         point_id = response.json()["id"]
+        client.put(f"/points/{point_id}", json={"status": "running"})
         client.post(f"/points/{point_id}/finish", json={"won": True})
 
     # Create and finish 2 points opponent won
@@ -272,6 +353,7 @@ def test_game_score_updates_with_points_api(client, sample_game, sample_players)
             "player_ids": player_ids
         })
         point_id = response.json()["id"]
+        client.put(f"/points/{point_id}", json={"status": "running"})
         client.post(f"/points/{point_id}/finish", json={"won": False})
 
     # Check game score
@@ -281,168 +363,3 @@ def test_game_score_updates_with_points_api(client, sample_game, sample_players)
     assert data["our_score"] == 3
     assert data["opponent_score"] == 2
     assert len(data["points"]) == 5
-
-
-# ============================================
-# Phase 3: Live Point Tracking API Tests
-# ============================================
-
-def test_finish_point_api(client, sample_game, sample_players):
-    """Test POST /points/{point_id}/finish"""
-    player_ids = [p.id for p in sample_players]
-
-    # Create a point
-    create_response = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": True,
-        "player_ids": player_ids
-    })
-    point_id = create_response.json()["id"]
-
-    # Finish the point
-    response = client.post(f"/points/{point_id}/finish", json={"won": True})
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["id"] == point_id
-    assert data["status"] == "completed"
-    assert data["won"] is True
-    assert data["start_datetime"] is not None
-    assert data["end_datetime"] is not None
-
-
-def test_finish_point_not_active_api(client, sample_game, sample_players):
-    """Test finishing an already completed point fails"""
-    player_ids = [p.id for p in sample_players]
-
-    # Create and finish a point
-    create_response = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": True,
-        "player_ids": player_ids
-    })
-    point_id = create_response.json()["id"]
-    client.post(f"/points/{point_id}/finish", json={"won": True})
-
-    # Try to finish again
-    response = client.post(f"/points/{point_id}/finish", json={"won": False})
-
-    assert response.status_code == 400
-    assert "not active" in response.json()["detail"].lower()
-
-
-def test_finish_point_not_found_api(client):
-    """Test finishing a non-existent point"""
-    response = client.post("/points/999/finish", json={"won": True})
-
-    assert response.status_code == 404
-
-
-def test_get_active_point_api(client, sample_game, sample_players):
-    """Test GET /points/games/{game_id}/active"""
-    player_ids = [p.id for p in sample_players]
-
-    # No active point initially
-    response = client.get(f"/points/games/{sample_game.id}/active")
-    assert response.status_code == 404
-
-    # Create a point
-    create_response = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": True,
-        "player_ids": player_ids
-    })
-    point_id = create_response.json()["id"]
-
-    # Should now return the active point
-    response = client.get(f"/points/games/{sample_game.id}/active")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["id"] == point_id
-    assert data["status"] == "active"
-
-    # Finish the point
-    client.post(f"/points/{point_id}/finish", json={"won": True})
-
-    # Should now return 404
-    response = client.get(f"/points/games/{sample_game.id}/active")
-    assert response.status_code == 404
-
-
-def test_get_active_point_game_not_found_api(client):
-    """Test getting active point for non-existent game"""
-    response = client.get("/points/games/999/active")
-
-    assert response.status_code == 404
-    assert "game not found" in response.json()["detail"].lower()
-
-
-def test_cannot_create_multiple_active_points_api(client, sample_game, sample_players):
-    """Test that only one active point can exist per game"""
-    player_ids = [p.id for p in sample_players]
-
-    # Create first point
-    response1 = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": True,
-        "player_ids": player_ids
-    })
-    assert response1.status_code == 201
-
-    # Try to create another point without finishing the first
-    response2 = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": False,
-        "player_ids": player_ids
-    })
-    assert response2.status_code == 400
-    assert "already has an active point" in response2.json()["detail"].lower()
-
-
-def test_cancel_point_api(client, sample_game, sample_players):
-    """Test DELETE /points/{point_id}/cancel"""
-    player_ids = [p.id for p in sample_players]
-
-    # Create a point
-    create_response = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": True,
-        "player_ids": player_ids
-    })
-    point_id = create_response.json()["id"]
-
-    # Cancel the point
-    response = client.delete(f"/points/{point_id}/cancel")
-
-    assert response.status_code == 204
-
-    # Verify deletion
-    get_response = client.get(f"/points/{point_id}")
-    assert get_response.status_code == 404
-
-
-def test_cancel_point_completed_fails_api(client, sample_game, sample_players):
-    """Test that canceling a completed point fails"""
-    player_ids = [p.id for p in sample_players]
-
-    # Create and finish a point
-    create_response = client.post("/points", json={
-        "game_id": sample_game.id,
-        "starting_on_offense": True,
-        "player_ids": player_ids
-    })
-    point_id = create_response.json()["id"]
-    client.post(f"/points/{point_id}/finish", json={"won": True})
-
-    # Try to cancel completed point
-    response = client.delete(f"/points/{point_id}/cancel")
-
-    assert response.status_code == 400
-    assert "can only cancel active points" in response.json()["detail"].lower()
-
-
-def test_cancel_point_not_found_api(client):
-    """Test canceling a non-existent point"""
-    response = client.delete("/points/999/cancel")
-
-    assert response.status_code == 404

@@ -6,19 +6,22 @@ All models are re-exported here for backward compatibility with existing imports
     from app import models
 """
 
-from .base import Base, GenderEnum, CompetitionStatusEnum, GameStatusEnum, point_players, competition_players, line_players, game_players
+from .base import Base, GenderEnum, CompetitionStatusEnum, GameStatusEnum, PointStatusEnum, StrategyCategory, point_players, competition_players, line_players, game_players
 from .team import Team
 from .competition import Competition
 from .player import Player
 from .game import Game
 from .point import Point
 from .line import Line
+from .strategy import Strategy
 
 __all__ = [
     "Base",
     "GenderEnum",
     "CompetitionStatusEnum",
     "GameStatusEnum",
+    "PointStatusEnum",
+    "StrategyCategory",
     "point_players",
     "competition_players",
     "line_players",
@@ -29,4 +32,5 @@ __all__ = [
     "Game",
     "Point",
     "Line",
+    "Strategy",
 ]

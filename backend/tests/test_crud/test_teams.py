@@ -1,6 +1,6 @@
 import pytest
-from app.crud import teams
-from app.schemas import TeamCreate, TeamUpdate
+from app.crud import teams, points
+from app.schemas import TeamCreate, TeamUpdate, PointCreate, PointFinish, PointUpdate, PointStatus
 
 
 def test_create_team(db_session):
@@ -146,6 +146,7 @@ def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sampl
         )
     )
     # Finish first point before creating the second
+    points.update_point(db_session, point1.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point1.id, PointFinish(won=True))
 
     point2 = points.create_point(
@@ -157,6 +158,7 @@ def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sampl
         )
     )
     # Finish second point
+    points.update_point(db_session, point2.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point2.id, PointFinish(won=False))
 
     # Verify everything exists before deletion

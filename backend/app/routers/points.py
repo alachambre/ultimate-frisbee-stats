@@ -20,6 +20,12 @@ def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
     if game.status.value == "ended":
         raise HTTPException(status_code=400, detail="Cannot add points to an ended game")
 
+    # Verify strategy exists if provided
+    if point.strategy_id:
+        strategy = crud.get_strategy(db, point.strategy_id)
+        if not strategy:
+            raise HTTPException(status_code=404, detail="Strategy not found")
+
     try:
         return crud.create_point(db, point)
     except ValueError as e:
@@ -73,14 +79,16 @@ def cancel_point(point_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/games/{game_id}/active", response_model=schemas.PointWithPlayers)
-def get_active_point(game_id: int, db: Session = Depends(get_db)):
+@router.get("/games/{game_id}/running", response_model=schemas.PointWithPlayers)
+def get_running_point(game_id: int, db: Session = Depends(get_db)):
+    """Get the running point for a game"""
     # Verify game exists
     game = crud.get_game(db, game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
 
-    point = crud.get_active_point_for_game(db, game_id)
+    point = crud.get_running_point_for_game(db, game_id)
     if not point:
-        raise HTTPException(status_code=404, detail="No active point found for this game")
+        raise HTTPException(status_code=404, detail="No running point found for this game")
     return point
+

@@ -18,3 +18,15 @@ class GameStatus(str, Enum):
     ready = "ready"
     started = "started"
     ended = "ended"
+
+
+class PointStatus(str, Enum):
+    ready = "ready"
+    running = "running"
+    scored = "scored"
+    completed = "completed"
+
+
+class StrategyCategory(str, Enum):
+    offense = "offense"
+    defense = "defense"

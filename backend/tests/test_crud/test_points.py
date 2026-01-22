@@ -1,7 +1,8 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as tz
 from app.crud import points
-from app.schemas import PointCreate, PointUpdate, PointFinish
+from app.schemas import PointCreate, PointUpdate, PointFinish, PointStatus
+from app import models
 
 
 def test_create_point(db_session, sample_game, sample_players):
@@ -19,8 +20,8 @@ def test_create_point(db_session, sample_game, sample_players):
     assert point.game_id == sample_game.id
     assert point.point_number == 1
     assert point.starting_on_offense is True
-    assert point.won is None  # Nullable while active
-    assert point.status == "active"
+    assert point.won is None  # Nullable while not completed
+    assert point.status == models.PointStatusEnum.ready
     assert point.start_datetime is not None
     assert point.end_datetime is None
     assert len(point.players) == 7
@@ -32,7 +33,7 @@ def test_create_point(db_session, sample_game, sample_players):
     assert fetched_point.id == point.id
     assert fetched_point.game_id == sample_game.id
     assert fetched_point.point_number == 1
-    assert fetched_point.status == "active"
+    assert fetched_point.status == models.PointStatusEnum.ready
     assert len(fetched_point.players) == 7
     # Verify all player IDs match
     fetched_player_ids = sorted([p.id for p in fetched_point.players])
@@ -55,7 +56,8 @@ def test_create_point_auto_increment_number(db_session, sample_game, sample_play
         )
         assert point.point_number == i + 1
 
-        # Finish the point so we can create another
+        # Transition to running, then finish the point so we can create another
+        points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
         points.finish_point(
             db_session,
             point.id,
@@ -133,7 +135,8 @@ def test_get_points_by_game(db_session, sample_game, sample_players):
                 player_ids=player_ids
             )
         )
-        # Finish the point so we can create another
+        # Transition to running, then finish the point so we can create another
+        points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
         points.finish_point(db_session, point.id, PointFinish(won=(i % 2 == 0)))
 
     game_points = points.get_points_by_game(db_session, sample_game.id)
@@ -163,7 +166,8 @@ def test_update_point(db_session, sample_game, sample_players):
         )
     )
 
-    # Finish the point first
+    # Transition to running, then finish the point first
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Update the point
@@ -271,7 +275,7 @@ def test_delete_point_not_found(db_session):
 # ============================================
 
 def test_finish_point(db_session, sample_game, sample_players):
-    """Test finishing an active point"""
+    """Test finishing a running point"""
     player_ids = [p.id for p in sample_players]
     point = points.create_point(
         db_session,
@@ -282,8 +286,11 @@ def test_finish_point(db_session, sample_game, sample_players):
         )
     )
 
-    assert point.status == "active"
+    assert point.status == models.PointStatusEnum.ready
     assert point.won is None
+
+    # Transition to running status
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
 
     # Finish the point
     finished_point = points.finish_point(
@@ -293,7 +300,7 @@ def test_finish_point(db_session, sample_game, sample_players):
     )
 
     assert finished_point is not None
-    assert finished_point.status == "completed"
+    assert finished_point.status == models.PointStatusEnum.completed
     assert finished_point.won is True
     assert finished_point.start_datetime is not None
     assert finished_point.end_datetime is not None
@@ -315,6 +322,9 @@ def test_finish_point_with_custom_end_datetime(db_session, sample_game, sample_p
             start_datetime=start_time
         )
     )
+
+    # Transition to running
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
 
     finished_point = points.finish_point(
         db_session,
@@ -343,6 +353,9 @@ def test_finish_point_invalid_end_datetime(db_session, sample_game, sample_playe
         )
     )
 
+    # Transition to running
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+
     with pytest.raises(ValueError, match="end_datetime must be after start_datetime"):
         points.finish_point(
             db_session,
@@ -351,7 +364,7 @@ def test_finish_point_invalid_end_datetime(db_session, sample_game, sample_playe
         )
 
 
-def test_finish_point_not_active(db_session, sample_game, sample_players):
+def test_finish_point_not_running_or_scored(db_session, sample_game, sample_players):
     """Test finishing an already completed point fails"""
     player_ids = [p.id for p in sample_players]
     point = points.create_point(
@@ -363,11 +376,12 @@ def test_finish_point_not_active(db_session, sample_game, sample_players):
         )
     )
 
-    # Finish the point
+    # Transition to running and finish the point
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Try to finish again
-    with pytest.raises(ValueError, match="not active"):
+    with pytest.raises(ValueError, match="cannot be finished"):
         points.finish_point(db_session, point.id, PointFinish(won=False))
 
 
@@ -381,15 +395,15 @@ def test_finish_point_not_found(db_session):
     assert finished_point is None
 
 
-def test_get_active_point_for_game(db_session, sample_game, sample_players):
-    """Test getting active point for a game"""
+def test_get_running_point_for_game(db_session, sample_game, sample_players):
+    """Test getting running point for a game"""
     player_ids = [p.id for p in sample_players]
 
-    # No active point initially
-    active_point = points.get_active_point_for_game(db_session, sample_game.id)
-    assert active_point is None
+    # No running point initially
+    running_point = points.get_running_point_for_game(db_session, sample_game.id)
+    assert running_point is None
 
-    # Create a point
+    # Create a point (starts as ready)
     point = points.create_point(
         db_session,
         PointCreate(
@@ -399,25 +413,32 @@ def test_get_active_point_for_game(db_session, sample_game, sample_players):
         )
     )
 
-    # Should now return the active point
-    active_point = points.get_active_point_for_game(db_session, sample_game.id)
-    assert active_point is not None
-    assert active_point.id == point.id
-    assert active_point.status == "active"
+    # Still no running point (it's in ready status)
+    running_point = points.get_running_point_for_game(db_session, sample_game.id)
+    assert running_point is None
+
+    # Transition to running
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+
+    # Should now return the running point
+    running_point = points.get_running_point_for_game(db_session, sample_game.id)
+    assert running_point is not None
+    assert running_point.id == point.id
+    assert running_point.status == models.PointStatusEnum.running
 
     # Finish the point
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Should now return None
-    active_point = points.get_active_point_for_game(db_session, sample_game.id)
-    assert active_point is None
+    running_point = points.get_running_point_for_game(db_session, sample_game.id)
+    assert running_point is None
 
 
-def test_cannot_create_multiple_active_points(db_session, sample_game, sample_players):
-    """Test that only one active point can exist per game"""
+def test_cannot_create_multiple_running_points(db_session, sample_game, sample_players):
+    """Test that only one running point can exist per game"""
     player_ids = [p.id for p in sample_players]
 
-    # Create first point
+    # Create first point and transition to running
     point1 = points.create_point(
         db_session,
         PointCreate(
@@ -426,10 +447,11 @@ def test_cannot_create_multiple_active_points(db_session, sample_game, sample_pl
             player_ids=player_ids
         )
     )
+    points.update_point(db_session, point1.id, PointUpdate(status=PointStatus.running))
 
-    # Try to create another point without finishing the first
-    with pytest.raises(ValueError, match="already has an active point"):
-        points.create_point(
+    # Try to create another point while first is running
+    with pytest.raises(ValueError, match="already has a running point"):
+        point2 = points.create_point(
             db_session,
             PointCreate(
                 game_id=sample_game.id,
@@ -437,11 +459,12 @@ def test_cannot_create_multiple_active_points(db_session, sample_game, sample_pl
                 player_ids=player_ids
             )
         )
+        points.update_point(db_session, point2.id, PointUpdate(status=PointStatus.running))
 
     # Finish the first point
     points.finish_point(db_session, point1.id, PointFinish(won=True))
 
-    # Now we should be able to create another
+    # Now we should be able to create another and run it
     point2 = points.create_point(
         db_session,
         PointCreate(
@@ -453,8 +476,8 @@ def test_cannot_create_multiple_active_points(db_session, sample_game, sample_pl
     assert point2.point_number == 2
 
 
-def test_cancel_point(db_session, sample_game, sample_players):
-    """Test canceling an active point"""
+def test_cancel_point_ready(db_session, sample_game, sample_players):
+    """Test canceling a ready point"""
     player_ids = [p.id for p in sample_players]
     point = points.create_point(
         db_session,
@@ -465,7 +488,31 @@ def test_cancel_point(db_session, sample_game, sample_players):
         )
     )
 
-    # Cancel the point
+    # Cancel the point (still in ready status)
+    success = points.cancel_point(db_session, point.id)
+    assert success is True
+
+    # Verify it's deleted
+    deleted_point = points.get_point(db_session, point.id)
+    assert deleted_point is None
+
+
+def test_cancel_point_running(db_session, sample_game, sample_players):
+    """Test canceling a running point"""
+    player_ids = [p.id for p in sample_players]
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+
+    # Transition to running
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+
+    # Cancel the running point
     success = points.cancel_point(db_session, point.id)
     assert success is True
 
@@ -486,11 +533,12 @@ def test_cancel_point_completed_fails(db_session, sample_game, sample_players):
         )
     )
 
-    # Finish the point
+    # Transition to running and finish the point
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Try to cancel completed point
-    with pytest.raises(ValueError, match="Can only cancel active points"):
+    with pytest.raises(ValueError, match="Can only cancel ready or running points"):
         points.cancel_point(db_session, point.id)
 
 
@@ -515,7 +563,8 @@ def test_update_point_timestamps(db_session, sample_game, sample_players):
         )
     )
 
-    # Finish the point
+    # Transition to running and finish the point
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Update timestamps
@@ -547,7 +596,8 @@ def test_update_point_invalid_timestamps(db_session, sample_game, sample_players
         )
     )
 
-    # Finish the point
+    # Transition to running and finish the point
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
     points.finish_point(db_session, point.id, PointFinish(won=True))
 
     # Try to update with end before start
@@ -563,3 +613,163 @@ def test_update_point_invalid_timestamps(db_session, sample_game, sample_players
                 end_datetime=end_time
             )
         )
+
+
+# ============================================
+# Phase 6: Enhanced Point Model Tests
+# ============================================
+
+def test_create_point_with_strategy(db_session, sample_game, sample_players, sample_strategy):
+    """Test creating a point with a strategy"""
+    player_ids = [p.id for p in sample_players]
+    point_data = PointCreate(
+        game_id=sample_game.id,
+        starting_on_offense=True,
+        strategy_id=sample_strategy.id,
+        player_ids=player_ids
+    )
+    point = points.create_point(db_session, point_data)
+
+    assert point.strategy_id == sample_strategy.id
+    assert point.strategy is not None
+    assert point.strategy.name == sample_strategy.name
+
+
+def test_create_point_with_optional_field_metadata(db_session, sample_game, sample_players, sample_strategy):
+    """Test creating a point with optional field metadata (field_side, pull, strategy, comments)"""
+    player_ids = [p.id for p in sample_players]
+    point_data = PointCreate(
+        game_id=sample_game.id,
+        starting_on_offense=True,
+        field_side="home",
+        pull=True,
+        strategy_id=sample_strategy.id,
+        comments="Opening point strategy",
+        player_ids=player_ids
+    )
+    point = points.create_point(db_session, point_data)
+
+    assert point.field_side == "home"
+    assert point.pull is True
+    assert point.strategy_id == sample_strategy.id
+    assert point.comments == "Opening point strategy"
+
+
+def test_create_point_with_invalid_strategy(db_session, sample_game, sample_players):
+    """Test creating a point with non-existent strategy fails"""
+    player_ids = [p.id for p in sample_players]
+    point_data = PointCreate(
+        game_id=sample_game.id,
+        starting_on_offense=True,
+        strategy_id=999,  # Non-existent
+        player_ids=player_ids
+    )
+
+    with pytest.raises(ValueError, match="Strategy.*not found"):
+        points.create_point(db_session, point_data)
+
+
+def test_update_point_optional_field_metadata(db_session, sample_game, sample_players, sample_strategy):
+    """Test updating a point with optional field metadata (field_side, pull, strategy, comments)"""
+    player_ids = [p.id for p in sample_players]
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+
+    # Update with new fields
+    update_data = PointUpdate(
+        field_side="away",
+        pull=False,
+        strategy_id=sample_strategy.id,
+        comments="Switched to zone defense"
+    )
+    updated_point = points.update_point(db_session, point.id, update_data)
+
+    assert updated_point.field_side == "away"
+    assert updated_point.pull is False
+    assert updated_point.strategy_id == sample_strategy.id
+    assert updated_point.comments == "Switched to zone defense"
+
+
+def test_finish_point_with_comments(db_session, sample_game, sample_players):
+    """Test finishing a point with comments"""
+    player_ids = [p.id for p in sample_players]
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+
+    # Transition to running
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+
+    # Finish with comments
+    finished_point = points.finish_point(
+        db_session,
+        point.id,
+        PointFinish(won=True, comments="Great teamwork on this point!")
+    )
+
+    assert finished_point.comments == "Great teamwork on this point!"
+    assert finished_point.won is True
+
+
+def test_point_status_transitions(db_session, sample_game, sample_players):
+    """Test 4-status lifecycle transitions"""
+    player_ids = [p.id for p in sample_players]
+
+    # Create point (starts as ready)
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+    assert point.status == models.PointStatusEnum.ready
+
+    # Transition to running
+    point = points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+    assert point.status == models.PointStatusEnum.running
+
+    # Transition to scored
+    point = points.update_point(db_session, point.id, PointUpdate(status=PointStatus.scored))
+    assert point.status == models.PointStatusEnum.scored
+
+    # Finish to completed
+    point = points.finish_point(db_session, point.id, PointFinish(won=True))
+    assert point.status == models.PointStatusEnum.completed
+
+
+def test_strategy_deletion_sets_null(db_session, sample_game, sample_players, sample_strategy):
+    """Test that deleting a strategy sets strategy_id to NULL on points"""
+    from app.crud import delete_strategy
+
+    player_ids = [p.id for p in sample_players]
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            strategy_id=sample_strategy.id,
+            player_ids=player_ids
+        )
+    )
+    assert point.strategy_id == sample_strategy.id
+
+    # Delete strategy
+    delete_strategy(db_session, sample_strategy.id)
+
+    # Reload point
+    db_session.expire(point)
+    updated_point = points.get_point(db_session, point.id)
+    assert updated_point.strategy_id is None

@@ -25,6 +25,18 @@ class GameStatusEnum(enum.Enum):
     ended = "ended"
 
 
+class PointStatusEnum(enum.Enum):
+    ready = "ready"
+    running = "running"
+    scored = "scored"
+    completed = "completed"
+
+
+class StrategyCategory(enum.Enum):
+    offense = "offense"
+    defense = "defense"
+
+
 # Association Tables
 point_players = Table(
     'point_players',
