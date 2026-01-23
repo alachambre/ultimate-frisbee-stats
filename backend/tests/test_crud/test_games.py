@@ -507,3 +507,97 @@ def test_get_game_detail_includes_players(db_session, sample_game, sample_player
     assert sample_players[0].id in player_ids
     assert sample_players[1].id in player_ids
     assert sample_players[2].id in player_ids
+
+
+# =====================================================
+# Game Chrono Tests (Timestamps)
+# =====================================================
+
+def test_create_game_no_timestamps(db_session, sample_competition):
+    """Test that new games have null start/end timestamps"""
+    game_data = GameCreate(
+        competition_id=sample_competition.id,
+        opponent_name="Rival Team",
+        date=datetime.now()
+    )
+    game = games.create_game(db_session, game_data)
+
+    assert game.start_datetime is None
+    assert game.end_datetime is None
+
+
+def test_start_game_sets_start_datetime(db_session, sample_game):
+    """Test that changing status to started sets start_datetime"""
+    from app.schemas import GameStatus
+
+    # Initially no timestamp
+    assert sample_game.start_datetime is None
+
+    # Start the game
+    update_data = GameUpdate(status=GameStatus.started)
+    updated_game = games.update_game(db_session, sample_game.id, update_data)
+
+    assert updated_game is not None
+    assert updated_game.status.value == "started"
+    assert updated_game.start_datetime is not None
+    assert updated_game.end_datetime is None
+
+
+def test_end_game_sets_end_datetime(db_session, sample_game):
+    """Test that changing status to ended sets end_datetime"""
+    from app.schemas import GameStatus
+
+    # Start the game first
+    games.update_game(db_session, sample_game.id, GameUpdate(status=GameStatus.started))
+
+    # Fetch to get updated game
+    started_game = games.get_game(db_session, sample_game.id)
+    assert started_game.start_datetime is not None
+    assert started_game.end_datetime is None
+
+    # End the game
+    update_data = GameUpdate(status=GameStatus.ended)
+    updated_game = games.update_game(db_session, sample_game.id, update_data)
+
+    assert updated_game is not None
+    assert updated_game.status.value == "ended"
+    assert updated_game.start_datetime is not None
+    assert updated_game.end_datetime is not None
+    # End time should be after start time
+    assert updated_game.end_datetime > updated_game.start_datetime
+
+
+def test_finish_game_sets_end_datetime(db_session, sample_game):
+    """Test that finish_game() sets end_datetime"""
+    from app.schemas import GameStatus
+
+    # Start the game first
+    games.update_game(db_session, sample_game.id, GameUpdate(status=GameStatus.started))
+
+    # Fetch to get updated game
+    started_game = games.get_game(db_session, sample_game.id)
+    assert started_game.start_datetime is not None
+
+    # Finish the game
+    finished_game = games.finish_game(db_session, sample_game.id)
+
+    assert finished_game is not None
+    assert finished_game.status.value == "ended"
+    assert finished_game.start_datetime is not None
+    assert finished_game.end_datetime is not None
+    assert finished_game.end_datetime > finished_game.start_datetime
+
+
+def test_invalid_status_transition_no_timestamp(db_session, sample_game):
+    """Test that invalid transitions don't set timestamps"""
+    from app.schemas import GameStatus
+
+    # Try to go directly from ready to ended (skipping started)
+    update_data = GameUpdate(status=GameStatus.ended)
+    updated_game = games.update_game(db_session, sample_game.id, update_data)
+
+    # Status changes but end_datetime should not be set (only ready->started sets start, started->ended sets end)
+    assert updated_game is not None
+    assert updated_game.status.value == "ended"
+    assert updated_game.start_datetime is None
+    assert updated_game.end_datetime is None

@@ -38,6 +38,7 @@ import PointHistoryList from "../components/points/PointHistoryList";
 import EditPointDialog from "../components/modals/EditPointDialog";
 import PlayersGrid from "../components/players/PlayersGrid";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
+import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player } from "../types";
 
 export default function GameDetailPage() {
@@ -283,11 +284,25 @@ export default function GameDetailPage() {
       <Paper sx={{ mb: 3 }}>
         <Box p={4} textAlign="center">
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            Final Score
+            {game.status === "ended" ? "Final Score" : "Score"}
           </Typography>
           <Typography variant="h2" fontWeight="bold">
             {game.our_score} - {game.opponent_score}
           </Typography>
+
+          {/* Game Timer */}
+          {game.start_datetime && (
+            <Box mt={2}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Game Duration
+              </Typography>
+              <GameTimer
+                startDatetime={game.start_datetime}
+                endDatetime={game.end_datetime}
+              />
+            </Box>
+          )}
+
           <Box mt={2} display="flex" justifyContent="center" gap={4}>
             <Box>
               <Typography variant="body2" color="text.secondary">

@@ -405,6 +405,8 @@ export const handlers = [
       date: body.date || null,
       comments: body.comments || null,
       status: "ready",
+      start_datetime: null,
+      end_datetime: null,
       created_at: new Date().toISOString(),
     };
     games.push(newGame);
@@ -469,8 +471,21 @@ export const handlers = [
     if (body.opponent_name !== undefined) {
       game.opponent_name = body.opponent_name;
     }
+    if (body.comments !== undefined) {
+      game.comments = body.comments;
+    }
     if (body.status !== undefined) {
-      game.status = body.status;
+      const oldStatus = game.status;
+      const newStatus = body.status;
+
+      // Set timestamps based on status transitions
+      if (newStatus === "started" && oldStatus === "ready") {
+        game.start_datetime = new Date().toISOString();
+      } else if (newStatus === "ended" && oldStatus === "started") {
+        game.end_datetime = new Date().toISOString();
+      }
+
+      game.status = newStatus;
     }
     return HttpResponse.json(game);
   }),
@@ -481,6 +496,9 @@ export const handlers = [
     const game = games.find((g) => g.id === gameId);
     if (!game) {
       return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+    if (game.status === "started") {
+      game.end_datetime = new Date().toISOString();
     }
     game.status = "ended";
     return HttpResponse.json(game);

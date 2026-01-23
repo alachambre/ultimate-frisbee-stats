@@ -16,6 +16,8 @@ class Game(Base):
     opponent_name = Column(String, nullable=False)
     date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     status = Column(Enum(GameStatusEnum), default=GameStatusEnum.ready, nullable=False)
+    start_datetime = Column(DateTime, nullable=True)
+    end_datetime = Column(DateTime, nullable=True)
     comments = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 

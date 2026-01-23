@@ -150,6 +150,8 @@ export interface Game extends GameBase {
   id: number;
   competition_id: number;
   status: GameStatus;
+  start_datetime?: string | null;
+  end_datetime?: string | null;
   created_at: string;
 }
 

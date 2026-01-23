@@ -29,6 +29,8 @@ class Game(GameBase):
     id: int
     competition_id: int
     status: GameStatus
+    start_datetime: Optional[datetime] = None
+    end_datetime: Optional[datetime] = None
     created_at: datetime
 
     class Config:

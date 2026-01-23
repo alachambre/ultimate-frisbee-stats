@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
+from datetime import datetime, timezone
 from app import models, schemas
 
 
@@ -61,7 +62,16 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> O
             db_game.opponent_name = game_update.opponent_name
         if game_update.status is not None:
             # Convert GameStatus enum to GameStatusEnum
-            db_game.status = models.GameStatusEnum[game_update.status.value]
+            new_status = models.GameStatusEnum[game_update.status.value]
+            old_status = db_game.status
+
+            # Set timestamps based on status transitions
+            if new_status == models.GameStatusEnum.started and old_status == models.GameStatusEnum.ready:
+                db_game.start_datetime = datetime.now(timezone.utc)
+            elif new_status == models.GameStatusEnum.ended and old_status == models.GameStatusEnum.started:
+                db_game.end_datetime = datetime.now(timezone.utc)
+
+            db_game.status = new_status
         if game_update.comments is not None:
             db_game.comments = game_update.comments
         db.commit()
