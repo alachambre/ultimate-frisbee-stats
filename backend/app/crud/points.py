@@ -44,6 +44,14 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
 
     next_point_number = (max_point.point_number + 1) if max_point else 1
 
+    # If this is the first point, set (or reset) the game's start_datetime
+    if next_point_number == 1:
+        from app.crud.games import get_game
+        game = get_game(db, point.game_id)
+        if game:
+            game.start_datetime = datetime.now(timezone.utc)
+            db.flush()  # Save the game start time
+
     # Create the point with ready status
     db_point = models.Point(
         game_id=point.game_id,
@@ -139,7 +147,21 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
 def delete_point(db: Session, point_id: int) -> bool:
     db_point = get_point(db, point_id)
     if db_point:
+        game_id = db_point.game_id
         db.delete(db_point)
+        db.flush()  # Commit the delete first
+
+        # Check if this was the last point - if so, reset game's start_datetime
+        remaining_points = db.query(models.Point).filter(
+            models.Point.game_id == game_id
+        ).count()
+
+        if remaining_points == 0:
+            from app.crud.games import get_game
+            game = get_game(db, game_id)
+            if game:
+                game.start_datetime = None
+
         db.commit()
         return True
     return False

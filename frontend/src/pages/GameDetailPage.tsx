@@ -28,7 +28,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import AddIcon from "@mui/icons-material/Add";
 import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame } from "../services";
-import { getActivePoint, deletePoint } from "../services/points";
+import { getRunningPoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
@@ -64,10 +64,10 @@ export default function GameDetailPage() {
     enabled: !!gameId,
   });
 
-  // Poll for active point every 5 seconds while game is in progress
-  const { data: activePoint } = useQuery({
-    queryKey: ["activePoint", gameId],
-    queryFn: () => getActivePoint(Number(gameId)),
+  // Poll for running point every 5 seconds while game is started
+  const { data: runningPoint } = useQuery({
+    queryKey: ["runningPoint", gameId],
+    queryFn: () => getRunningPoint(Number(gameId)),
     enabled: !!gameId && game?.status === "started",
     refetchInterval: game?.status === "started" ? 5000 : false,
   });
@@ -108,7 +108,7 @@ export default function GameDetailPage() {
     mutationFn: (pointId: number) => deletePoint(pointId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["runningPoint", gameId] });
       setDeletingPoint(null);
     },
   });
@@ -140,7 +140,7 @@ export default function GameDetailPage() {
 
   const handlePointUpdated = () => {
     queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-    queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+    queryClient.invalidateQueries({ queryKey: ["runningPoint", gameId] });
   };
 
   const handleEditPoint = (point: PointWithPlayers) => {
@@ -363,6 +363,7 @@ export default function GameDetailPage() {
                 startIcon={<AddIcon />}
                 onClick={() => setIsAddPlayersModalOpen(true)}
                 size="small"
+                disabled={game.status === "ended"}
               >
                 Add Players
               </Button>
@@ -404,7 +405,7 @@ export default function GameDetailPage() {
                         players={game.players
                           .filter((p) => p.gender === "M")
                           .sort((a, b) => a.name.localeCompare(b.name))}
-                        onDeletePlayer={handleRemovePlayer}
+                        onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
                       />
                     )}
                   </Paper>
@@ -442,7 +443,7 @@ export default function GameDetailPage() {
                         players={game.players
                           .filter((p) => p.gender === "W")
                           .sort((a, b) => a.name.localeCompare(b.name))}
-                        onDeletePlayer={handleRemovePlayer}
+                        onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
                       />
                     )}
                   </Paper>
@@ -457,8 +458,9 @@ export default function GameDetailPage() {
       {competition && (
         <LivePointTracker
           game={game}
-          activePoint={activePoint || null}
+          activePoint={runningPoint || null}
           players={game.players}
+          teamId={competition.team_id}
           onPointUpdated={handlePointUpdated}
         />
       )}

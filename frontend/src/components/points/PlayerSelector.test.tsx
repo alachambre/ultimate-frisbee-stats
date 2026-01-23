@@ -30,7 +30,7 @@ describe("PlayerSelector", () => {
       <PlayerSelector players={mockPlayers} selectedIds={[1, 2]} onChange={onChange} />
     );
 
-    expect(screen.getByText("2/7 players selected")).toBeInTheDocument();
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
   });
 
   it("shows checked state for selected players", () => {

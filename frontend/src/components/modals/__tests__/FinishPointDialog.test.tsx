@@ -2,16 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import FinishPointDialog from "./FinishPointDialog";
-import type { PointWithPlayers } from "../../types";
+import FinishPointDialog from "../FinishPointDialog";
+import type { PointWithPlayers } from "../../../types";
 
-const mockActivePoint: PointWithPlayers = {
+const mockRunningPoint: PointWithPlayers = {
   id: 1,
   game_id: 1,
   point_number: 1,
   starting_on_offense: true,
   won: null,
-  status: "active",
+  status: "running",
   start_datetime: new Date(Date.now() - 120000).toISOString(), // 2 minutes ago
   end_datetime: null,
   created_at: "2024-01-01T00:00:00Z",
@@ -37,7 +37,7 @@ describe("FinishPointDialog", () => {
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
-        activePoint={mockActivePoint}
+        activePoint={mockRunningPoint}
       />
     );
 
@@ -50,7 +50,7 @@ describe("FinishPointDialog", () => {
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
-        activePoint={mockActivePoint}
+        activePoint={mockRunningPoint}
       />
     );
 
@@ -62,7 +62,7 @@ describe("FinishPointDialog", () => {
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
-        activePoint={mockActivePoint}
+        activePoint={mockRunningPoint}
       />
     );
 
@@ -76,7 +76,7 @@ describe("FinishPointDialog", () => {
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
-        activePoint={mockActivePoint}
+        activePoint={mockRunningPoint}
       />
     );
 
@@ -90,7 +90,7 @@ describe("FinishPointDialog", () => {
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
-        activePoint={mockActivePoint}
+        activePoint={mockRunningPoint}
       />
     );
 
@@ -110,7 +110,7 @@ describe("FinishPointDialog", () => {
       <FinishPointDialog
         open={true}
         onClose={onClose}
-        activePoint={mockActivePoint}
+        activePoint={mockRunningPoint}
       />
     );
 

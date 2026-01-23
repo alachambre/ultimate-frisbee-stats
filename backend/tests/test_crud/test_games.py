@@ -533,22 +533,32 @@ def test_start_game_sets_start_datetime(db_session, sample_game):
     # Initially no timestamp
     assert sample_game.start_datetime is None
 
-    # Start the game
+    # Start the game (this only changes status, not start_datetime)
     update_data = GameUpdate(status=GameStatus.started)
     updated_game = games.update_game(db_session, sample_game.id, update_data)
 
     assert updated_game is not None
     assert updated_game.status.value == "started"
-    assert updated_game.start_datetime is not None
+    # start_datetime is now set when first point is created, not when game starts
+    assert updated_game.start_datetime is None
     assert updated_game.end_datetime is None
 
 
-def test_end_game_sets_end_datetime(db_session, sample_game):
+def test_end_game_sets_end_datetime(db_session, sample_game, sample_players):
     """Test that changing status to ended sets end_datetime"""
-    from app.schemas import GameStatus
+    from app.schemas import GameStatus, PointCreate
+    from app.crud import points
 
     # Start the game first
     games.update_game(db_session, sample_game.id, GameUpdate(status=GameStatus.started))
+
+    # Create first point to set start_datetime
+    point_data = PointCreate(
+        game_id=sample_game.id,
+        starting_on_offense=True,
+        player_ids=[p.id for p in sample_players[:7]]
+    )
+    points.create_point(db_session, point_data)
 
     # Fetch to get updated game
     started_game = games.get_game(db_session, sample_game.id)
@@ -567,12 +577,21 @@ def test_end_game_sets_end_datetime(db_session, sample_game):
     assert updated_game.end_datetime > updated_game.start_datetime
 
 
-def test_finish_game_sets_end_datetime(db_session, sample_game):
+def test_finish_game_sets_end_datetime(db_session, sample_game, sample_players):
     """Test that finish_game() sets end_datetime"""
-    from app.schemas import GameStatus
+    from app.schemas import GameStatus, PointCreate
+    from app.crud import points
 
     # Start the game first
     games.update_game(db_session, sample_game.id, GameUpdate(status=GameStatus.started))
+
+    # Create first point to set start_datetime
+    point_data = PointCreate(
+        game_id=sample_game.id,
+        starting_on_offense=True,
+        player_ids=[p.id for p in sample_players[:7]]
+    )
+    points.create_point(db_session, point_data)
 
     # Fetch to get updated game
     started_game = games.get_game(db_session, sample_game.id)

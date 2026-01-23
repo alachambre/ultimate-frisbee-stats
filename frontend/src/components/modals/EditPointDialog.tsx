@@ -82,7 +82,7 @@ export default function EditPointDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(point.game_id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["runningPoint", point.game_id] });
       handleClose();
       onSuccess?.();
     },
@@ -99,11 +99,11 @@ export default function EditPointDialog({
       return;
     }
 
-    // Validate end is after start if both are provided
+    // Validate end is at or after start if both are provided
     if (startDatetime && endDatetime) {
       const start = new Date(startDatetime);
       const end = new Date(endDatetime);
-      if (end <= start) {
+      if (end < start) {
         return;
       }
     }
@@ -115,7 +115,7 @@ export default function EditPointDialog({
     selectedPlayerIds.length === 7 &&
     (!startDatetime ||
       !endDatetime ||
-      new Date(endDatetime) > new Date(startDatetime));
+      new Date(endDatetime) >= new Date(startDatetime));
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -189,13 +189,13 @@ export default function EditPointDialog({
             error={
               !!(startDatetime &&
               endDatetime &&
-              new Date(endDatetime) <= new Date(startDatetime))
+              new Date(endDatetime) < new Date(startDatetime))
             }
             helperText={
               startDatetime &&
               endDatetime &&
-              new Date(endDatetime) <= new Date(startDatetime)
-                ? "End time must be after start time"
+              new Date(endDatetime) < new Date(startDatetime)
+                ? "End time cannot be before start time"
                 : ""
             }
           />

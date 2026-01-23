@@ -78,14 +78,22 @@ export default function GameCard({ game }: GameCardProps) {
                 game.status === "started"
                   ? "Ongoing"
                   : game.status === "ended"
-                    ? "Finished"
+                    ? game.our_score > game.opponent_score
+                      ? "Won"
+                      : game.our_score < game.opponent_score
+                        ? "Lost"
+                        : "Tie"
                     : "Ready"
               }
               color={
                 game.status === "started"
                   ? "success"
                   : game.status === "ended"
-                    ? "default"
+                    ? game.our_score > game.opponent_score
+                      ? "success"
+                      : game.our_score < game.opponent_score
+                        ? "error"
+                        : "warning"
                     : "info"
               }
               size="small"

@@ -21,10 +21,10 @@ export const cancelPoint = async (pointId: number): Promise<void> => {
   await apiClient.delete(`/points/${pointId}/cancel`);
 };
 
-// Get active point for a game (returns null if 404)
-export const getActivePoint = async (gameId: number): Promise<PointWithPlayers | null> => {
+// Get running point for a game (returns null if 404)
+export const getRunningPoint = async (gameId: number): Promise<PointWithPlayers | null> => {
   try {
-    const response = await apiClient.get<PointWithPlayers>(`/points/games/${gameId}/active`);
+    const response = await apiClient.get<PointWithPlayers>(`/points/games/${gameId}/running`);
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) {

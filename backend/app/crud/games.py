@@ -65,10 +65,8 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> O
             new_status = models.GameStatusEnum[game_update.status.value]
             old_status = db_game.status
 
-            # Set timestamps based on status transitions
-            if new_status == models.GameStatusEnum.started and old_status == models.GameStatusEnum.ready:
-                db_game.start_datetime = datetime.now(timezone.utc)
-            elif new_status == models.GameStatusEnum.ended and old_status == models.GameStatusEnum.started:
+            # Set end timestamp when game ends
+            if new_status == models.GameStatusEnum.ended and old_status == models.GameStatusEnum.started:
                 db_game.end_datetime = datetime.now(timezone.utc)
 
             db_game.status = new_status

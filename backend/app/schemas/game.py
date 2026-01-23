@@ -1,8 +1,8 @@
 """
 Game schemas
 """
-from pydantic import BaseModel, Field
-from datetime import datetime
+from pydantic import BaseModel, Field, field_serializer
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from .enums import GameStatus
@@ -32,6 +32,15 @@ class Game(GameBase):
     start_datetime: Optional[datetime] = None
     end_datetime: Optional[datetime] = None
     created_at: datetime
+
+    @field_serializer('date', 'start_datetime', 'end_datetime', 'created_at')
+    def serialize_dt(self, dt: Optional[datetime], _info) -> Optional[str]:
+        if dt is None:
+            return None
+        # Ensure timezone-aware and serialize to ISO format with Z suffix
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
 
     class Config:
         from_attributes = True

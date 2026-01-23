@@ -2,10 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import EditPointDialog from "./EditPointDialog";
-import type { PointWithPlayers, Player } from "../../types";
-import { createTeam, createCompetition, createGame, createPlayer } from "../../services";
-import { startPoint } from "../../services/points";
+import EditPointDialog from "../EditPointDialog";
+import type { PointWithPlayers, Player } from "../../../types";
+import { createTeam, createCompetition, createGame, createPlayer } from "../../../services";
+import { startPoint } from "../../../services/points";
 
 const mockPlayers: Player[] = [
   { id: 1, name: "Player 1", number: 10, gender: "M", team_id: 1, created_at: "2024-01-01" },
@@ -32,13 +32,13 @@ const mockCompletedPoint: PointWithPlayers = {
   players: mockPlayers.slice(0, 7),
 };
 
-const mockActivePoint: PointWithPlayers = {
+const mockRunningPoint: PointWithPlayers = {
   id: 2,
   game_id: 1,
   point_number: 2,
   starting_on_offense: false,
   won: null,
-  status: "active",
+  status: "running",
   start_datetime: "2024-01-15T10:05:00Z",
   end_datetime: null,
   created_at: "2024-01-15T10:05:00Z",
@@ -117,7 +117,7 @@ describe("EditPointDialog", () => {
         <EditPointDialog
           open={true}
           onClose={vi.fn()}
-          point={mockActivePoint}
+          point={mockRunningPoint}
           players={mockPlayers}
         />
       </QueryClientProvider>
@@ -154,7 +154,7 @@ describe("EditPointDialog", () => {
         <EditPointDialog
           open={true}
           onClose={vi.fn()}
-          point={mockActivePoint}
+          point={mockRunningPoint}
           players={mockPlayers}
         />
       </QueryClientProvider>
@@ -174,20 +174,20 @@ describe("EditPointDialog", () => {
     );
 
     // Should show player selector with count
-    expect(screen.getByText("7/7 players selected")).toBeInTheDocument();
+    expect(screen.getByText("7 selected")).toBeInTheDocument();
 
-    // First 7 players should be checked
-    mockPlayers.slice(0, 7).forEach((player) => {
-      const checkbox = screen.getByRole("checkbox", {
-        name: new RegExp(`${player.name} #${player.number}`, "i"),
-      }) as HTMLInputElement;
-      expect(checkbox.checked).toBe(true);
-    });
+    // Get all checkboxes in list items (player checkboxes)
+    const checkboxes = screen.getAllByRole("checkbox");
+    const playerCheckboxes = checkboxes.filter(cb => {
+      const listItem = cb.closest('li');
+      return listItem !== null;
+    }) as HTMLInputElement[];
 
-    // 8th player should not be checked
-    const checkbox8 = screen.getByRole("checkbox", {
-      name: /Player 8 #80/i,
-    }) as HTMLInputElement;
+    // Exactly 7 player checkboxes should be checked
+    const checkedCount = playerCheckboxes.filter(cb => cb.checked).length;
+    expect(checkedCount).toBe(7);
+
+    const checkbox8 = playerCheckboxes[7] as HTMLInputElement;
     expect(checkbox8.checked).toBe(false);
   });
 
@@ -253,11 +253,15 @@ describe("EditPointDialog", () => {
     const saveButton = screen.getByRole("button", { name: /save changes/i });
     expect(saveButton).toBeEnabled();
 
-    // Uncheck one player
-    const checkbox = screen.getByRole("checkbox", {
-      name: /Player 1 #10/i,
+    // Find all checkboxes and uncheck the first one
+    const checkboxes = screen.getAllByRole("checkbox");
+    // Skip the first 2 checkboxes (won/lost radios styled as checkboxes)
+    const playerCheckboxes = checkboxes.filter(cb => {
+      const listItem = cb.closest('li');
+      return listItem !== null;
     });
-    await user.click(checkbox);
+
+    await user.click(playerCheckboxes[0]);
 
     // Save button should be disabled
     expect(saveButton).toBeDisabled();
@@ -286,7 +290,7 @@ describe("EditPointDialog", () => {
 
     // Should show error message
     expect(
-      screen.getByText("End time must be after start time")
+      screen.getByText("End time cannot be before start time")
     ).toBeInTheDocument();
 
     // Save button should be disabled

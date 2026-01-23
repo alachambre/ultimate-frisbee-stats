@@ -2,9 +2,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import EditCompetitionModal from "./EditCompetitionModal";
-import { createTeam, createCompetition } from "../../services";
-import type { Competition } from "../../types";
+import EditCompetitionModal from "../EditCompetitionModal";
+import { createTeam, createCompetition } from "../../../services";
+import type { Competition } from "../../../types";
 
 let mockCompetition: Competition;
 

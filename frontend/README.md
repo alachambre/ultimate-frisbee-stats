@@ -23,6 +23,7 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Create user-defined player groups (O-line, D-line, etc.)
 - Add/remove players from lines
 - Organize lines within teams for quick access
+- Line filtering in StartPointDialog for quick player selection
 
 **Game Management:**
 - Schedule games with opponent information and dates
@@ -32,14 +33,17 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Track live scores with start/end game buttons
 - View game history with final scores and statistics
 - Filter games by team and competition
+- Won/Lost/Tie display on game cards with color-coded outcomes
+- Player management disabled for finished games (prevents accidental changes)
 
 **Live Point Tracking:**
 - Real-time point-by-point tracking during games
-- Select 7 players for each point
+- Select 7 players for each point with line filtering
 - Mark points as offense or defense
 - Record point outcomes (won/lost)
 - View strategic context (breaks, holds)
 - Edit point details and player lineups
+- Validation fixes for points under 1 minute duration
 
 **Statistics & Analytics:**
 - View point history with durations
@@ -71,7 +75,8 @@ frontend/
 │   │   ├── shared/       # Reusable shared components
 │   │   │   ├── PageHeader.tsx
 │   │   │   ├── LoadingState.tsx
-│   │   │   └── ErrorState.tsx
+│   │   │   ├── ErrorState.tsx
+│   │   │   └── PlayerSelectionUI.tsx  # Shared player selection with gender display
 │   │   ├── teams/        # Team domain components
 │   │   │   ├── TeamCard.tsx
 │   │   │   ├── TeamsGrid.tsx
@@ -84,6 +89,10 @@ frontend/
 │   │   │   ├── CompetitionCard.tsx
 │   │   │   ├── CompetitionsGrid.tsx
 │   │   │   └── EmptyCompetitionsState.tsx
+│   │   ├── lines/        # Line domain components
+│   │   │   ├── LineCard.tsx
+│   │   │   ├── LinesGrid.tsx
+│   │   │   └── EmptyLinesState.tsx
 │   │   ├── games/        # Game domain components
 │   │   │   ├── GameCard.tsx
 │   │   │   ├── GamesGrid.tsx
@@ -100,18 +109,25 @@ frontend/
 │   │       ├── EditPlayerModal.tsx
 │   │       ├── CreateCompetitionModal.tsx
 │   │       ├── EditCompetitionModal.tsx
-│   │       ├── AddPlayersToRosterModal.tsx
+│   │       ├── AddPlayersModal.tsx          # Generic player selection component
+│   │       ├── AddPlayersToRosterModal.tsx  # Roster-specific wrapper
+│   │       ├── AddPlayersToLineModal.tsx    # Line-specific wrapper
+│   │       ├── AddPlayersToGameModal.tsx    # Game-specific wrapper
+│   │       ├── CreateLineModal.tsx
+│   │       ├── EditLineModal.tsx
 │   │       ├── CreateGameModal.tsx
 │   │       ├── EditGameModal.tsx
-│   │       ├── StartPointDialog.tsx
+│   │       ├── StartPointDialog.tsx         # Enhanced with line filtering
 │   │       ├── FinishPointDialog.tsx
 │   │       └── EditPointDialog.tsx
 │   ├── pages/            # Page components (routes)
 │   │   ├── HomePage.tsx            # Landing page
 │   │   ├── TeamsPage.tsx           # Team list/management
-│   │   ├── TeamDetailPage.tsx      # Individual team with players
+│   │   ├── TeamDetailPage.tsx      # Individual team with players and lines
 │   │   ├── CompetitionsPage.tsx    # Competition list/management
 │   │   ├── CompetitionDetailPage.tsx # Individual competition with roster and games
+│   │   ├── LinesPage.tsx           # Line list/management (integrated into TeamDetailPage)
+│   │   ├── LineDetailPage.tsx      # Individual line with player management
 │   │   ├── GamesPage.tsx           # Game list/management
 │   │   └── GameDetailPage.tsx      # Individual game with score and points
 │   ├── services/         # API layer (mirrors backend CRUD)
@@ -119,6 +135,7 @@ frontend/
 │   │   ├── teams.ts      # Team API calls
 │   │   ├── competitions.ts # Competition API calls
 │   │   ├── players.ts    # Player API calls
+│   │   ├── lines.ts      # Line API calls
 │   │   ├── games.ts      # Game API calls
 │   │   ├── points.ts     # Point API calls
 │   │   └── index.ts      # Central export point
@@ -127,7 +144,9 @@ frontend/
 │   ├── hooks/            # Custom React hooks
 │   ├── test/             # Testing utilities
 │   │   ├── setup.ts      # Test configuration
-│   │   └── test-utils.tsx # Custom render with providers
+│   │   ├── test-utils.tsx # Custom render with providers
+│   │   └── mocks/        # MSW handlers for API mocking
+│   │       └── handlers.ts  # Request handlers for all API endpoints
 │   ├── App.tsx           # Root component with providers
 │   ├── main.tsx          # Application entry point
 │   └── index.css         # Global CSS styles
@@ -299,13 +318,27 @@ The service layer mirrors the backend CRUD structure. All services are strongly 
 - `updatePlayer(playerId, data: PlayerUpdate): Promise<Player>`
 - `deletePlayer(playerId: number): Promise<void>`
 
+### Lines Service (`services/lines.ts`)
+- `createLine(data: LineCreate): Promise<Line>`
+- `getLines(teamId?: number): Promise<Line[]>`
+- `getLine(lineId: number): Promise<LineWithPlayers>`
+- `updateLine(lineId, data: LineUpdate): Promise<Line>`
+- `deleteLine(lineId: number): Promise<void>`
+- `addPlayersToLine(lineId: number, data: PlayerIdsRequest): Promise<void>`
+- `removePlayersFromLine(lineId: number, data: PlayerIdsRequest): Promise<void>`
+- `getLinePlayers(lineId: number): Promise<Player[]>`
+
 ### Games Service (`services/games.ts`)
 - `createGame(data: GameCreate): Promise<Game>`
 - `getGame(gameId: number): Promise<GameDetail>`
 - `updateGame(gameId, data: GameUpdate): Promise<Game>`
-- `finishGame(gameId: number): Promise<Game>`
+- `startGame(gameId: number): Promise<Game>` - Change status to "started"
+- `finishGame(gameId: number): Promise<Game>` - Change status to "ended"
 - `deleteGame(gameId: number): Promise<void>`
 - `getGamePoints(gameId: number): Promise<PointWithPlayers[]>`
+- `addPlayersToGame(gameId: number, data: PlayerIdsRequest): Promise<void>` - Add players to game roster
+- `removePlayersFromGame(gameId: number, data: PlayerIdsRequest): Promise<void>` - Remove players from game roster
+- `getGamePlayers(gameId: number): Promise<Player[]>` - Get game roster
 
 ### Points Service (`services/points.ts`)
 - `startPoint(data: PointCreate): Promise<Point>` - Create active point
@@ -322,7 +355,8 @@ All types in `src/types/index.ts` exactly match the backend Pydantic schemas:
 - **Team types**: `Team`, `TeamCreate`, `TeamUpdate`, `TeamWithPlayers`
 - **Competition types**: `Competition`, `CompetitionCreate`, `CompetitionUpdate`, `CompetitionWithPlayers`, `PlayerIdsRequest`, `CompetitionStatus`, `Gender`
 - **Player types**: `Player`, `PlayerCreate`, `PlayerUpdate` (includes `gender: Gender` field)
-- **Game types**: `Game`, `GameCreate`, `GameUpdate`, `GameWithScore`, `GameDetail`
+- **Line types**: `Line`, `LineCreate`, `LineUpdate`, `LineWithPlayers`
+- **Game types**: `Game`, `GameCreate`, `GameUpdate`, `GameWithScore`, `GameDetail`, `GameStatus` (ready/started/ended)
 - **Point types**: `Point`, `PointCreate`, `PointUpdate`, `PointWithPlayers`
 
 This ensures type safety across the entire application.
@@ -431,6 +465,13 @@ npm run test:coverage    # Run tests with coverage
 
 The project uses Vitest with React Testing Library and MSW for API mocking.
 
+**Test Organization:**
+- All tests are organized in `__tests__/` subdirectories within their respective component/page directories
+- Page tests: Comprehensive tests for all page components (Teams, Games, Competitions, Lines)
+- Component tests: Unit tests for shared components (PointTimer, PlayerSelector, PlayerCard, PlayerSelectionUI)
+- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog)
+- MSW provides realistic API mocking with request interception for all backend endpoints
+
 ### Development Workflow
 
 1. Make code changes in `src/` directory
@@ -457,13 +498,25 @@ uvicorn app.main:app --reload
 ### CORS errors
 Backend is configured to allow all origins in development. If you still see CORS errors, check the backend's CORS middleware configuration in `app/main.py`.
 
+## Recent Enhancements
+
+**Phase 5 Complete:**
+- ✅ Lines management (create, edit, delete lines with player selection)
+- ✅ Game player selection from competition roster
+- ✅ 3-status game lifecycle (Ready → Started → Ended)
+- ✅ Generic AddPlayersModal component (~1240 lines of code deduplication)
+- ✅ Line filtering in StartPointDialog for quick player selection
+- ✅ Won/Lost/Tie display on game cards with color-coded outcomes
+- ✅ Player management disabled for finished games
+- ✅ EditPointDialog validation fixes for points under 1 minute
+
 ## Future Enhancements
 
 The application roadmap includes:
-- **Strategies**: Named plays (offensive/defensive) assignable to points
-- **Enhanced Point Tracking**: ABBA mixity validation, field side tracking, pull statistics, strategy selection
-- **Calls & Turnovers**: Track fouls, violations, and turnover events
-- **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics
+- **Strategies**: Named plays (offensive/defensive) assignable to points (Phase 6 Backend Complete)
+- **Enhanced Point Tracking**: ABBA mixity validation, field side tracking, pull statistics, strategy selection (Phase 6 Frontend)
+- **Calls & Turnovers**: Track fouls, violations, and turnover events (Phase 7)
+- **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics (Phase 8)
 - **PWA Features**: Offline support, install prompt, service worker caching
 
 ## Contributing

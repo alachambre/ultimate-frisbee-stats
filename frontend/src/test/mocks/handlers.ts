@@ -557,17 +557,17 @@ export const handlers = [
     return HttpResponse.json(game);
   }),
 
-  // POST /points - Start a point (create active point)
+  // POST /points - Create a point (starts with ready status)
   http.post(`${BASE_URL}/points`, async ({ request }) => {
     const body = (await request.json()) as PointCreate;
 
-    // Check for existing active point
-    const existingActivePoint = points.find(
-      (p) => p.game_id === body.game_id && p.status === "active"
+    // Check for existing running point (Phase 6: only one running point allowed)
+    const existingRunningPoint = points.find(
+      (p) => p.game_id === body.game_id && p.status === "running"
     );
-    if (existingActivePoint) {
+    if (existingRunningPoint) {
       return HttpResponse.json(
-        { detail: `Game ${body.game_id} already has an active point` },
+        { detail: `Game ${body.game_id} already has a running point` },
         { status: 400 }
       );
     }
@@ -591,7 +591,7 @@ export const handlers = [
       point_number: pointNumber,
       starting_on_offense: body.starting_on_offense,
       won: null,
-      status: "active",
+      status: "running",  // Create as running for Phase 3 frontend compatibility
       start_datetime: body.start_datetime || new Date().toISOString(),
       end_datetime: null,
       created_at: new Date().toISOString(),
@@ -601,7 +601,7 @@ export const handlers = [
     return HttpResponse.json(newPoint, { status: 201 });
   }),
 
-  // POST /points/:id/finish - Finish an active point
+  // POST /points/:id/finish - Finish a running or scored point
   http.post(`${BASE_URL}/points/:id/finish`, async ({ request, params }) => {
     const pointId = Number(params.id);
     const body = (await request.json()) as PointFinish;
@@ -611,9 +611,10 @@ export const handlers = [
       return HttpResponse.json({ detail: "Point not found" }, { status: 404 });
     }
 
-    if (point.status !== "active") {
+    // Phase 6: Can only finish running or scored points
+    if (point.status !== "running" && point.status !== "scored") {
       return HttpResponse.json(
-        { detail: `Point ${pointId} is not active` },
+        { detail: `Point ${pointId} cannot be finished (status: ${point.status})` },
         { status: 400 }
       );
     }
@@ -632,21 +633,21 @@ export const handlers = [
     return HttpResponse.json(point);
   }),
 
-  // GET /points/games/:gameId/active - Get active point for a game
-  http.get(`${BASE_URL}/points/games/:gameId/active`, ({ params }) => {
+  // GET /points/games/:gameId/running - Get running point for a game
+  http.get(`${BASE_URL}/points/games/:gameId/running`, ({ params }) => {
     const gameId = Number(params.gameId);
-    const activePoint = points.find(
-      (p) => p.game_id === gameId && p.status === "active"
+    const runningPoint = points.find(
+      (p) => p.game_id === gameId && p.status === "running"
     );
 
-    if (!activePoint) {
+    if (!runningPoint) {
       return HttpResponse.json(
-        { detail: "No active point found for this game" },
+        { detail: "No running point found for this game" },
         { status: 404 }
       );
     }
 
-    return HttpResponse.json(activePoint);
+    return HttpResponse.json(runningPoint);
   }),
 
   // PUT /points/:id - Update point
@@ -695,7 +696,7 @@ export const handlers = [
     return HttpResponse.json(point);
   }),
 
-  // DELETE /points/:id/cancel - Cancel (delete) an active point
+  // DELETE /points/:id/cancel - Cancel (delete) a ready or running point
   http.delete(`${BASE_URL}/points/:id/cancel`, ({ params }) => {
     const pointId = Number(params.id);
     const point = points.find((p) => p.id === pointId);
@@ -704,9 +705,10 @@ export const handlers = [
       return HttpResponse.json({ detail: "Point not found" }, { status: 404 });
     }
 
-    if (point.status !== "active") {
+    // Phase 6: Can only cancel ready or running points
+    if (point.status !== "ready" && point.status !== "running") {
       return HttpResponse.json(
-        { detail: "Can only cancel active points" },
+        { detail: `Can only cancel ready or running points. Point ${pointId} has status: ${point.status}` },
         { status: 400 }
       );
     }

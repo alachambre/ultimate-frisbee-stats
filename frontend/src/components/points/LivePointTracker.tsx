@@ -18,6 +18,7 @@ interface LivePointTrackerProps {
   game: GameDetail;
   activePoint: PointWithPlayers | null;
   players: Player[];
+  teamId: number;
   onPointUpdated?: () => void;
 }
 
@@ -25,6 +26,7 @@ export default function LivePointTracker({
   game,
   activePoint,
   players,
+  teamId,
   onPointUpdated,
 }: LivePointTrackerProps) {
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
@@ -112,6 +114,7 @@ export default function LivePointTracker({
         open={isStartDialogOpen}
         onClose={() => setIsStartDialogOpen(false)}
         gameId={game.id}
+        teamId={teamId}
         players={players}
         onSuccess={onPointUpdated}
       />

@@ -2,8 +2,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import AddPlayersToRosterModal from "./AddPlayersToRosterModal";
-import { createTeam, createPlayer, createCompetition } from "../../services";
+import AddPlayersToRosterModal from "../AddPlayersToRosterModal";
+import { createTeam, createPlayer, createCompetition } from "../../../services";
 
 const renderWithQueryClient = (ui: React.ReactElement) => {
   const queryClient = new QueryClient({

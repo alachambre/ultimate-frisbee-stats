@@ -773,3 +773,56 @@ def test_strategy_deletion_sets_null(db_session, sample_game, sample_players, sa
     db_session.expire(point)
     updated_point = points.get_point(db_session, point.id)
     assert updated_point.strategy_id is None
+
+def test_recreate_first_point_resets_game_start_time(db_session, sample_game, sample_players):
+    """Test that deleting the only point resets game start_datetime, and recreating it sets a new time"""
+    from app.crud import games
+    from datetime import datetime, timezone
+    from time import sleep
+    
+    player_ids = [p.id for p in sample_players[:7]]
+    
+    # Initially, game has no start_datetime
+    assert sample_game.start_datetime is None
+    
+    # Create first point - game's start_datetime should be set
+    first_point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+    
+    # Get game and verify start_datetime is set
+    game_after_first_point = games.get_game(db_session, sample_game.id)
+    assert game_after_first_point.start_datetime is not None
+    first_start_time = game_after_first_point.start_datetime
+    
+    # Delete the only point - game's start_datetime should reset to None
+    points.delete_point(db_session, first_point.id)
+    
+    game_after_delete = games.get_game(db_session, sample_game.id)
+    assert game_after_delete.start_datetime is None
+    
+    # Wait a tiny bit to ensure different timestamp
+    sleep(0.01)
+    
+    # Create another first point - game's start_datetime should be set again with new time
+    second_point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=False,
+            player_ids=player_ids
+        )
+    )
+    
+    # Get game and verify start_datetime is set to a new value
+    game_after_second_point = games.get_game(db_session, sample_game.id)
+    assert game_after_second_point.start_datetime is not None
+    second_start_time = game_after_second_point.start_datetime
+    
+    # The new start time should be different (later) than the first
+    assert second_start_time >= first_start_time

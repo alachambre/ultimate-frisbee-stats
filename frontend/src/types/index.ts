@@ -5,6 +5,7 @@
 export type Gender = "M" | "W";
 export type CompetitionStatus = "ongoing" | "completed";
 export type GameStatus = "ready" | "started" | "ended";
+export type PointStatus = "ready" | "running" | "scored" | "completed";
 
 // ============================================
 // Team Types
@@ -186,7 +187,7 @@ export interface PointUpdate {
   won?: boolean | null;
   start_datetime?: string | null;
   end_datetime?: string | null;
-  status?: "active" | "completed";
+  status?: PointStatus;
   player_ids?: number[] | null;
 }
 
@@ -194,8 +195,8 @@ export interface Point extends PointBase {
   id: number;
   game_id: number;
   point_number: number;
-  won: boolean | null; // Nullable while active
-  status: "active" | "completed";
+  won: boolean | null; // Nullable while not completed
+  status: PointStatus;
   start_datetime: string | null;
   end_datetime: string | null;
   created_at: string;

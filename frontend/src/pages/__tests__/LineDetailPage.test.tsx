@@ -239,8 +239,6 @@ describe("LineDetailPage", () => {
   });
 
   it("displays gender-split player sections", async () => {
-    const user = userEvent.setup();
-
     // Add players of both genders
     const teamResponse = await fetch("http://localhost:8000/teams", {
       method: "GET",

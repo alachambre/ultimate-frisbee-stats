@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,16 +11,21 @@ import {
   FormControlLabel,
   Radio,
   Alert,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { startPoint } from "../../services/points";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { startPoint, updatePoint } from "../../services/points";
+import { getLines } from "../../services/lines";
 import PlayerSelector from "../points/PlayerSelector";
-import type { Player } from "../../types";
+import type { Player, Line } from "../../types";
 
 interface StartPointDialogProps {
   open: boolean;
   onClose: () => void;
   gameId: number;
+  teamId: number;
   players: Player[];
   onSuccess?: () => void;
 }
@@ -29,23 +34,54 @@ export default function StartPointDialog({
   open,
   onClose,
   gameId,
+  teamId,
   players,
   onSuccess,
 }: StartPointDialogProps) {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [startingOnOffense, setStartingOnOffense] = useState<boolean>(true);
+  const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const queryClient = useQueryClient();
 
+  // Fetch lines for the team
+  const { data: lines } = useQuery({
+    queryKey: ["lines", teamId],
+    queryFn: () => getLines(teamId),
+    enabled: open,
+  });
+
+  // Filter players based on selected line
+  const filteredPlayers = useMemo(() => {
+    if (typeof selectedLineId !== "number") {
+      return players;
+    }
+
+    // Find the selected line and get its player IDs
+    const selectedLine = lines?.find((line) => line.id === selectedLineId);
+    if (!selectedLine || !selectedLine.players) {
+      return players;
+    }
+
+    const linePlayerIds = selectedLine.players.map((p) => p.id);
+    return players.filter((p) => linePlayerIds.includes(p.id));
+  }, [players, selectedLineId, lines]);
+
   const startMutation = useMutation({
-    mutationFn: () =>
-      startPoint({
+    mutationFn: async () => {
+      // Create point (backend creates with status="ready")
+      const point = await startPoint({
         game_id: gameId,
         starting_on_offense: startingOnOffense,
         player_ids: selectedPlayerIds,
-      }),
+      });
+
+      // Immediately transition to "running" status for Phase 3 compatibility
+      const runningPoint = await updatePoint(point.id, { status: "running" });
+      return runningPoint;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["runningPoint", gameId] });
       handleClose();
       onSuccess?.();
     },
@@ -54,6 +90,7 @@ export default function StartPointDialog({
   const handleClose = () => {
     setSelectedPlayerIds([]);
     setStartingOnOffense(true);
+    setSelectedLineId("");
     startMutation.reset();
     onClose();
   };
@@ -96,8 +133,35 @@ export default function StartPointDialog({
           </RadioGroup>
         </FormControl>
 
+        {/* Line filter */}
+        {lines && lines.length > 0 && (
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel id="line-select-label">Filter by Line (Optional)</InputLabel>
+            <Select
+              labelId="line-select-label"
+              id="line-select"
+              value={selectedLineId}
+              label="Filter by Line (Optional)"
+              onChange={(e) => {
+                setSelectedLineId(e.target.value as number | "");
+                // Clear selected players when changing filter
+                setSelectedPlayerIds([]);
+              }}
+            >
+              <MenuItem value="">
+                <em>All players - No filter</em>
+              </MenuItem>
+              {lines.map((line: Line) => (
+                <MenuItem key={line.id} value={line.id}>
+                  {line.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
         <PlayerSelector
-          players={[...players].sort((a, b) => a.name.localeCompare(b.name))}
+          players={[...filteredPlayers].sort((a, b) => a.name.localeCompare(b.name))}
           selectedIds={selectedPlayerIds}
           onChange={setSelectedPlayerIds}
           required

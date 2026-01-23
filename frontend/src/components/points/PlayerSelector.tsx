@@ -1,10 +1,5 @@
-import {
-  Box,
-  FormControlLabel,
-  Checkbox,
-  Typography,
-  FormHelperText,
-} from "@mui/material";
+import { Box, FormHelperText } from "@mui/material";
+import PlayerSelectionUI from "../shared/PlayerSelectionUI";
 import type { Player } from "../../types";
 
 interface PlayerSelectorProps {
@@ -24,6 +19,9 @@ export default function PlayerSelector({
   error = false,
   helperText,
 }: PlayerSelectorProps) {
+  const selectedCount = selectedIds.length;
+  const isValid = !required || selectedCount === 7;
+
   const handleToggle = (playerId: number) => {
     const newSelected = selectedIds.includes(playerId)
       ? selectedIds.filter((id) => id !== playerId)
@@ -31,46 +29,39 @@ export default function PlayerSelector({
     onChange(newSelected);
   };
 
-  const selectedCount = selectedIds.length;
-  const isValid = !required || selectedCount === 7;
+  const handleSelectAllMen = () => {
+    const menIds = players.filter((p) => p.gender === "M").map((p) => p.id);
+    const womenIds = selectedIds.filter((id) =>
+      players.some((p) => p.id === id && p.gender === "W")
+    );
+    onChange([...new Set([...womenIds, ...menIds])]);
+  };
+
+  const handleSelectAllWomen = () => {
+    const womenIds = players.filter((p) => p.gender === "W").map((p) => p.id);
+    const menIds = selectedIds.filter((id) =>
+      players.some((p) => p.id === id && p.gender === "M")
+    );
+    onChange([...new Set([...menIds, ...womenIds])]);
+  };
+
+  const handleClearAll = () => {
+    onChange([]);
+  };
 
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" mb={1}>
-        {selectedCount}/7 players selected
-      </Typography>
-
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-        {players.map((player) => (
-          <FormControlLabel
-            key={player.id}
-            control={
-              <Checkbox
-                checked={selectedIds.includes(player.id)}
-                onChange={() => handleToggle(player.id)}
-              />
-            }
-            label={
-              <Typography variant="body2">
-                {player.name}
-                {player.number !== null && player.number !== undefined && (
-                  <Typography
-                    component="span"
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ ml: 1 }}
-                  >
-                    #{player.number}
-                  </Typography>
-                )}
-              </Typography>
-            }
-          />
-        ))}
-      </Box>
+      <PlayerSelectionUI
+        players={players}
+        selectedIds={selectedIds}
+        onToggle={handleToggle}
+        onSelectAllMen={handleSelectAllMen}
+        onSelectAllWomen={handleSelectAllWomen}
+        onClearAll={handleClearAll}
+      />
 
       {(error || helperText) && (
-        <FormHelperText error={error}>
+        <FormHelperText error={error} sx={{ mt: 1 }}>
           {helperText || (required && !isValid && "Please select exactly 7 players")}
         </FormHelperText>
       )}

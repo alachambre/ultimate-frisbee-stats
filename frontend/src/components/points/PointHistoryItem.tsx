@@ -40,11 +40,15 @@ export default function PointHistoryItem({
   };
 
   const isWon = point.won === true;
-  const isActive = point.status === "active";
+  const isCompleted = point.status === "completed";
+  const isRunning = point.status === "running";
+  const isScored = point.status === "scored";
+  const isReady = point.status === "ready";
 
   // Break logic: winning on defense = break (positive), losing on offense = broken (negative)
-  const isBreak = !isActive && isWon && !point.starting_on_offense;
-  const isBroken = !isActive && !isWon && point.starting_on_offense;
+  // Only applies to completed points
+  const isBreak = isCompleted && isWon && !point.starting_on_offense;
+  const isBroken = isCompleted && !isWon && point.starting_on_offense;
 
   return (
     <Card variant="outlined">
@@ -82,7 +86,7 @@ export default function PointHistoryItem({
 
         {/* Status badges row */}
         <Box display="flex" alignItems="center" gap={1} mb={1} flexWrap="wrap">
-          {!isActive && (
+          {isCompleted && (
             <Chip
               icon={isWon ? <CheckCircleIcon /> : <CancelIcon />}
               label={isWon ? "Won" : "Lost"}
@@ -106,10 +110,24 @@ export default function PointHistoryItem({
               sx={{ fontWeight: "bold" }}
             />
           )}
-          {isActive && (
+          {isRunning && (
             <Chip
-              label="Active"
+              label="Running"
               color="primary"
+              size="small"
+            />
+          )}
+          {isScored && (
+            <Chip
+              label="Scored"
+              color="success"
+              size="small"
+            />
+          )}
+          {isReady && (
+            <Chip
+              label="Ready"
+              color="default"
               size="small"
             />
           )}

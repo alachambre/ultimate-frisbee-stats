@@ -1,23 +1,28 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { createTeam, createCompetition, createGame } from "../../services";
+import { createTeam, createCompetition, createGame, createPlayer, finishGame } from "../../services";
+import { addPlayersToRoster } from "../../services/competitions";
+import { addPlayersToGame } from "../../services/games";
 import GameDetailPage from "../GameDetailPage";
 
 // Mock useParams and useNavigate
+const mockUseParams = vi.fn();
+const mockUseNavigate = vi.fn();
+
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
-    useParams: () => ({ gameId: "1" }),
-    useNavigate: () => vi.fn(),
+    useParams: () => mockUseParams(),
+    useNavigate: () => mockUseNavigate,
   };
 });
 
 describe("GameDetailPage", () => {
   beforeEach(async () => {
     // Reset the mock to return gameId "1" for each test
-    vi.mocked(await import("react-router-dom")).useParams = () => ({ gameId: "1" });
+    mockUseParams.mockReturnValue({ gameId: "1" });
 
     // Create a test team, competition, and game before each test
     const testTeam = await createTeam({ name: "Test Team" });
@@ -197,7 +202,7 @@ describe("GameDetailPage", () => {
     });
 
     // Need to update the mock to return game 2
-    vi.mocked(await import("react-router-dom")).useParams = () => ({ gameId: "2" });
+    mockUseParams.mockReturnValue({ gameId: "2" });
 
     render(<GameDetailPage />);
 
@@ -360,10 +365,73 @@ describe("GameDetailPage", () => {
 
     // Gender sections should be hidden
     await waitFor(() => {
-      const menSections = screen.queryAllByText(/men \(\d+\)/i);
-      // The section might still exist in DOM but be hidden
       // Just verify the button label changed back
       expect(screen.getByRole("button", { name: /show players/i })).toBeInTheDocument();
     });
+  });
+
+  it("disables player management when game is finished", async () => {
+    const user = userEvent.setup();
+
+    // Create a finished game
+    const testTeam = await createTeam({ name: "Test Team" });
+    const testCompetition = await createCompetition({
+      team_id: testTeam.id,
+      name: "Test Competition",
+      start_date: "2024-01-01",
+      end_date: "2024-12-31",
+    });
+    const testGame = await createGame({
+      competition_id: testCompetition.id,
+      opponent_name: "Rival Team",
+      date: "2024-01-15",
+    });
+
+    // Add some players to the game
+    const player1 = await createPlayer({
+      name: "Player 1",
+      number: 10,
+      gender: "M",
+      team_id: testTeam.id,
+    });
+    const player2 = await createPlayer({
+      name: "Player 2",
+      number: 20,
+      gender: "W",
+      team_id: testTeam.id,
+    });
+
+    await addPlayersToRoster(testCompetition.id, [player1.id, player2.id]);
+    await addPlayersToGame(testGame.id, [player1.id, player2.id]);
+
+    // Finish the game
+    await finishGame(testGame.id);
+
+    mockUseParams.mockReturnValue({ gameId: String(testGame.id) });
+
+    render(<GameDetailPage />);
+
+    // Wait for game to load
+    await waitFor(() => {
+      expect(screen.getByText(/final score/i)).toBeInTheDocument();
+    });
+
+    // Expand players section
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    await user.click(expandButton);
+
+    // Add Players button should be disabled
+    const addButton = screen.getByRole("button", { name: /add players/i });
+    expect(addButton).toBeDisabled();
+
+    // Players should be visible but delete buttons should not appear
+    await waitFor(() => {
+      expect(screen.getByText("Player 1")).toBeInTheDocument();
+      expect(screen.getByText("Player 2")).toBeInTheDocument();
+    });
+
+    // Check that no delete buttons are present
+    const deleteButtons = screen.queryAllByRole("button", { name: /delete/i });
+    expect(deleteButtons.length).toBe(1); // Only the main game delete button
   });
 });
