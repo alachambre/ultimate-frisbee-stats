@@ -6,6 +6,8 @@ import type {
   GameDetail,
   GameWithScore,
   PointWithPlayers,
+  Player,
+  PlayerIdsRequest,
 } from "../types";
 
 // Create a new game
@@ -53,5 +55,34 @@ export const getGamePoints = async (
   const response = await apiClient.get<PointWithPlayers[]>(
     `/games/${gameId}/points`
   );
+  return response.data;
+};
+
+// Get game players
+export const getGamePlayers = async (gameId: number): Promise<Player[]> => {
+  const response = await apiClient.get<Player[]>(`/games/${gameId}/players`);
+  return response.data;
+};
+
+// Add players to game
+export const addPlayersToGame = async (
+  gameId: number,
+  playerIds: number[]
+): Promise<Game> => {
+  const response = await apiClient.post<Game>(
+    `/games/${gameId}/players`,
+    { player_ids: playerIds } as PlayerIdsRequest
+  );
+  return response.data;
+};
+
+// Remove players from game
+export const removePlayersFromGame = async (
+  gameId: number,
+  playerIds: number[]
+): Promise<Game> => {
+  const response = await apiClient.delete<Game>(`/games/${gameId}/players`, {
+    data: { player_ids: playerIds } as PlayerIdsRequest,
+  });
   return response.data;
 };

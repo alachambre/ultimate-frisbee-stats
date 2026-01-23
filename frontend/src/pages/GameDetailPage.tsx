@@ -14,13 +14,20 @@ import {
   Alert,
   Chip,
   Divider,
+  Grid,
+  alpha,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import { getGame, deleteGame, finishGame } from "../services";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import AddIcon from "@mui/icons-material/Add";
+import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame } from "../services";
 import { getActivePoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
@@ -29,7 +36,9 @@ import EditGameModal from "../components/modals/EditGameModal";
 import LivePointTracker from "../components/points/LivePointTracker";
 import PointHistoryList from "../components/points/PointHistoryList";
 import EditPointDialog from "../components/modals/EditPointDialog";
-import type { PointWithPlayers } from "../types";
+import PlayersGrid from "../components/players/PlayersGrid";
+import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
+import type { PointWithPlayers, Player } from "../types";
 
 export default function GameDetailPage() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -40,6 +49,9 @@ export default function GameDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPoint, setEditingPoint] = useState<PointWithPlayers | null>(null);
   const [deletingPoint, setDeletingPoint] = useState<PointWithPlayers | null>(null);
+  const [showPlayers, setShowPlayers] = useState(false);
+  const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
+  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
 
   const {
     data: game,
@@ -55,8 +67,8 @@ export default function GameDetailPage() {
   const { data: activePoint } = useQuery({
     queryKey: ["activePoint", gameId],
     queryFn: () => getActivePoint(Number(gameId)),
-    enabled: !!gameId && game?.status === "in_progress",
-    refetchInterval: game?.status === "in_progress" ? 5000 : false,
+    enabled: !!gameId && game?.status === "started",
+    refetchInterval: game?.status === "started" ? 5000 : false,
   });
 
   // Get competition data to access players for point tracking
@@ -71,6 +83,14 @@ export default function GameDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["games"] });
       navigate("/games");
+    },
+  });
+
+  const startMutation = useMutation({
+    mutationFn: () => updateGame(Number(gameId), { status: "started" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["games"] });
     },
   });
 
@@ -89,6 +109,15 @@ export default function GameDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["game", gameId] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
       setDeletingPoint(null);
+    },
+  });
+
+  const removePlayerMutation = useMutation({
+    mutationFn: (playerId: number) =>
+      removePlayersFromGame(Number(gameId), [playerId]),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+      setPlayerToRemove(null);
     },
   });
 
@@ -124,6 +153,16 @@ export default function GameDetailPage() {
   const confirmDeletePoint = () => {
     if (deletingPoint) {
       deletePointMutation.mutate(deletingPoint.id);
+    }
+  };
+
+  const handleRemovePlayer = (player: Player) => {
+    setPlayerToRemove(player);
+  };
+
+  const confirmRemovePlayer = () => {
+    if (playerToRemove) {
+      removePlayerMutation.mutate(playerToRemove.id);
     }
   };
 
@@ -164,8 +203,14 @@ export default function GameDetailPage() {
             </Box>
             <Box display="flex" gap={1} flexWrap="wrap">
               <Chip
-                label={game.status === "in_progress" ? "Ongoing" : "Finished"}
-                color={game.status === "in_progress" ? "success" : "default"}
+                label={
+                  game.status === "ready"
+                    ? "Not Started"
+                    : game.status === "started"
+                    ? "Ongoing"
+                    : "Finished"
+                }
+                color={game.status === "started" ? "success" : "default"}
                 size="small"
               />
               <Chip label={game.team_name} variant="outlined" size="small" />
@@ -185,7 +230,22 @@ export default function GameDetailPage() {
                 Edit
               </Box>
             </Button>
-            {game.status === "in_progress" && (
+            {game.status === "ready" && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => startMutation.mutate()}
+                disabled={startMutation.isPending}
+                sx={{
+                  minWidth: { xs: "auto", sm: "auto" },
+                }}
+              >
+                <Box component="span">
+                  {startMutation.isPending ? "Starting..." : "Start Game"}
+                </Box>
+              </Button>
+            )}
+            {game.status === "started" && (
               <Button
                 variant="outlined"
                 color="success"
@@ -197,7 +257,7 @@ export default function GameDetailPage() {
                 }}
               >
                 <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                  Finish
+                  End Game
                 </Box>
               </Button>
             )}
@@ -250,12 +310,140 @@ export default function GameDetailPage() {
         </Box>
       </Paper>
 
+      {/* Comments Section */}
+      {game.comments && (
+        <Paper sx={{ mb: 3, p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Comments
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {game.comments}
+          </Typography>
+        </Paper>
+      )}
+
+      {/* Selected Players Section */}
+      {competition && (
+        <Paper sx={{ mb: 3 }}>
+          <Box
+            p={3}
+            borderBottom={showPlayers ? "1px solid" : "none"}
+            borderColor="divider"
+          >
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="h6">
+                  Players ({game.players.length})
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => setShowPlayers(!showPlayers)}
+                  aria-label={showPlayers ? "Hide players" : "Show players"}
+                >
+                  {showPlayers ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </IconButton>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setIsAddPlayersModalOpen(true)}
+                size="small"
+              >
+                Add Players
+              </Button>
+            </Box>
+          </Box>
+
+          <Collapse in={showPlayers}>
+            <Box p={3}>
+              <Grid container spacing={3}>
+                {/* Men Column */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2.5,
+                      borderColor: "primary.main",
+                      borderWidth: 2,
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.02),
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{
+                        color: "primary.main",
+                        fontWeight: "bold",
+                        mb: 2,
+                      }}
+                    >
+                      Men ({game.players.filter((p) => p.gender === "M").length})
+                    </Typography>
+                    {game.players.filter((p) => p.gender === "M").length === 0 ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                        No male players in roster
+                      </Typography>
+                    ) : (
+                      <PlayersGrid
+                        players={game.players
+                          .filter((p) => p.gender === "M")
+                          .sort((a, b) => a.name.localeCompare(b.name))}
+                        onDeletePlayer={handleRemovePlayer}
+                      />
+                    )}
+                  </Paper>
+                </Grid>
+
+                {/* Women Column */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2.5,
+                      borderColor: "secondary.main",
+                      borderWidth: 2,
+                      backgroundColor: (theme) =>
+                        alpha(theme.palette.secondary.main, 0.02),
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{
+                        color: "secondary.main",
+                        fontWeight: "bold",
+                        mb: 2,
+                      }}
+                    >
+                      Women ({game.players.filter((p) => p.gender === "W").length})
+                    </Typography>
+                    {game.players.filter((p) => p.gender === "W").length === 0 ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                        No female players in roster
+                      </Typography>
+                    ) : (
+                      <PlayersGrid
+                        players={game.players
+                          .filter((p) => p.gender === "W")
+                          .sort((a, b) => a.name.localeCompare(b.name))}
+                        onDeletePlayer={handleRemovePlayer}
+                      />
+                    )}
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Box>
+          </Collapse>
+        </Paper>
+      )}
+
       {/* Live Point Tracker */}
       {competition && (
         <LivePointTracker
           game={game}
           activePoint={activePoint || null}
-          players={competition.players}
+          players={game.players}
           onPointUpdated={handlePointUpdated}
         />
       )}
@@ -313,21 +501,21 @@ export default function GameDetailPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Finish Confirmation Dialog */}
+      {/* End Game Confirmation Dialog */}
       <Dialog
         open={isFinishConfirmOpen}
         onClose={() => setIsFinishConfirmOpen(false)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Finish Game?</DialogTitle>
+        <DialogTitle>End Game?</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Mark game as finished? This cannot be undone.
+            Mark game as ended? This cannot be undone.
           </Typography>
           {finishMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error finishing game. Please try again.
+              Error ending game. Please try again.
             </Alert>
           )}
         </DialogContent>
@@ -344,7 +532,7 @@ export default function GameDetailPage() {
             color="success"
             disabled={finishMutation.isPending}
           >
-            {finishMutation.isPending ? "Finishing..." : "Finish Game"}
+            {finishMutation.isPending ? "Ending..." : "End Game"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -405,6 +593,54 @@ export default function GameDetailPage() {
             handlePointUpdated();
             setEditingPoint(null);
           }}
+        />
+      )}
+
+      {/* Remove Player Confirmation Dialog */}
+      <Dialog
+        open={!!playerToRemove}
+        onClose={() => setPlayerToRemove(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Remove Player from Game?</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Remove "{playerToRemove?.name}" from this game? This will not delete
+            the player from the competition roster.
+          </Typography>
+          {removePlayerMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Error removing player from game. Please try again.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setPlayerToRemove(null)}
+            disabled={removePlayerMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmRemovePlayer}
+            variant="contained"
+            color="error"
+            disabled={removePlayerMutation.isPending}
+          >
+            {removePlayerMutation.isPending ? "Removing..." : "Remove Player"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Players to Game Modal */}
+      {competition && (
+        <AddPlayersToGameModal
+          isOpen={isAddPlayersModalOpen}
+          onClose={() => setIsAddPlayersModalOpen(false)}
+          gameId={Number(gameId)}
+          competitionId={competition.id}
+          currentPlayerIds={game.players.map((p) => p.id)}
         />
       )}
     </Container>

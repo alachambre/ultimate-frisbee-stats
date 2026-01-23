@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Container } from "@mui/material";
-import { getAllGames } from "../services";
+import { Container, Box, FormControl, InputLabel, Select, MenuItem, Stack } from "@mui/material";
+import { getAllGames, getTeams, getCompetitions } from "../services";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
@@ -11,6 +11,8 @@ import CreateGameModal from "../components/modals/CreateGameModal";
 
 export default function GamesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | "all">("all");
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | "all">("all");
 
   const {
     data: games,
@@ -20,6 +22,50 @@ export default function GamesPage() {
     queryKey: ["games"],
     queryFn: getAllGames,
   });
+
+  const { data: teams } = useQuery({
+    queryKey: ["teams"],
+    queryFn: () => getTeams(),
+  });
+
+  const { data: competitions } = useQuery({
+    queryKey: ["competitions"],
+    queryFn: () => getCompetitions(),
+  });
+
+  // Filter competitions by selected team
+  const filteredCompetitions = useMemo(() => {
+    if (!competitions) return [];
+    if (selectedTeamId === "all") return competitions;
+    return competitions.filter((c) => c.team_id === selectedTeamId);
+  }, [competitions, selectedTeamId]);
+
+  // Filter games by team and competition
+  const filteredGames = useMemo(() => {
+    if (!games) return [];
+    let result = games;
+
+    // Filter by team (through competition)
+    if (selectedTeamId !== "all") {
+      const teamCompetitionIds = new Set(
+        competitions?.filter((c) => c.team_id === selectedTeamId).map((c) => c.id) || []
+      );
+      result = result.filter((g) => teamCompetitionIds.has(g.competition_id));
+    }
+
+    // Filter by competition
+    if (selectedCompetitionId !== "all") {
+      result = result.filter((g) => g.competition_id === selectedCompetitionId);
+    }
+
+    return result;
+  }, [games, competitions, selectedTeamId, selectedCompetitionId]);
+
+  // Reset competition filter when team changes
+  const handleTeamChange = (teamId: number | "all") => {
+    setSelectedTeamId(teamId);
+    setSelectedCompetitionId("all"); // Reset competition filter
+  };
 
   if (isLoading) {
     return <LoadingState message="Loading games..." />;
@@ -37,10 +83,64 @@ export default function GamesPage() {
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 
+      {/* Filters */}
+      {(teams && teams.length > 0) || (competitions && competitions.length > 0) ? (
+        <Box sx={{ mb: 3 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            {/* Team Filter */}
+            {teams && teams.length > 0 && (
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel>Filter by Team</InputLabel>
+                <Select
+                  value={selectedTeamId}
+                  label="Filter by Team"
+                  onChange={(e) => handleTeamChange(e.target.value as number | "all")}
+                >
+                  <MenuItem value="all">All Teams</MenuItem>
+                  {teams.map((team) => (
+                    <MenuItem key={team.id} value={team.id}>
+                      {team.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
+            {/* Competition Filter */}
+            {competitions && competitions.length > 0 && (
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel>Filter by Competition</InputLabel>
+                <Select
+                  value={selectedCompetitionId}
+                  label="Filter by Competition"
+                  onChange={(e) => setSelectedCompetitionId(e.target.value as number | "all")}
+                  disabled={filteredCompetitions.length === 0}
+                >
+                  <MenuItem value="all">
+                    {selectedTeamId === "all" ? "All Competitions" : "All from Team"}
+                  </MenuItem>
+                  {filteredCompetitions.map((competition) => (
+                    <MenuItem key={competition.id} value={competition.id}>
+                      {competition.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          </Stack>
+        </Box>
+      ) : null}
+
       {games && games.length === 0 ? (
         <EmptyGamesState onCreateClick={() => setIsCreateModalOpen(true)} />
+      ) : filteredGames.length === 0 ? (
+        <Box sx={{ textAlign: "center", py: 8 }}>
+          <Box sx={{ color: "text.secondary" }}>
+            No games found for the selected filters
+          </Box>
+        </Box>
       ) : (
-        <GamesGrid games={games || []} />
+        <GamesGrid games={filteredGames} />
       )}
 
       <CreateGameModal

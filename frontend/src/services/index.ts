@@ -5,5 +5,6 @@ export * from "./api";
 export * from "./teams";
 export * from "./players";
 export * from "./competitions";
+export * from "./lines";
 export * from "./games";
 export * from "./points";

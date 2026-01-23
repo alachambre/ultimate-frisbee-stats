@@ -31,11 +31,6 @@ describe("PointTimer", () => {
     expect(screen.getByText("1:30:45")).toBeInTheDocument();
   });
 
-  it.skip("updates every second", async () => {
-    // Skip: Timer interval testing is complex with fake timers
-    // This will be validated in manual QA
-  });
-
   it("pads minutes and seconds with leading zeros", () => {
     // 5 seconds ago
     const startTime = new Date(Date.now() - 5 * 1000).toISOString();

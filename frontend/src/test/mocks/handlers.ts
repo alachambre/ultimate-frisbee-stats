@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -8,11 +8,15 @@ let teams: Team[] = [];
 let players: Player[] = [];
 let competitions: Competition[] = [];
 let competitionPlayers: Map<number, number[]> = new Map(); // competitionId -> playerIds[]
+let lines: Line[] = [];
+let linePlayers: Map<number, number[]> = new Map(); // lineId -> playerIds[]
 let games: Game[] = [];
+let gamePlayers: Map<number, number[]> = new Map(); // gameId -> playerIds[]
 let points: PointWithPlayers[] = [];
 let nextTeamId = 1;
 let nextPlayerId = 1;
 let nextCompetitionId = 1;
+let nextLineId = 1;
 let nextGameId = 1;
 let nextPointId = 1;
 
@@ -22,11 +26,15 @@ export function resetMockData() {
   players = [];
   competitions = [];
   competitionPlayers = new Map();
+  lines = [];
+  linePlayers = new Map();
   games = [];
+  gamePlayers = new Map();
   points = [];
   nextTeamId = 1;
   nextPlayerId = 1;
   nextCompetitionId = 1;
+  nextLineId = 1;
   nextGameId = 1;
   nextPointId = 1;
 }
@@ -75,6 +83,22 @@ export const handlers = [
     const teamId = Number(params.id);
     const teamPlayers = players.filter((p) => p.team_id === teamId);
     return HttpResponse.json(teamPlayers);
+  }),
+
+  // POST /teams/:id/players - Add player to team
+  http.post(`${BASE_URL}/teams/:id/players`, async ({ params, request }) => {
+    const teamId = Number(params.id);
+    const body = (await request.json()) as PlayerCreate;
+    const newPlayer: Player = {
+      id: nextPlayerId++,
+      team_id: teamId,
+      name: body.name,
+      gender: body.gender,
+      number: body.number,
+      created_at: new Date().toISOString(),
+    };
+    players.push(newPlayer);
+    return HttpResponse.json(newPlayer, { status: 201 });
   }),
 
   // DELETE /teams/:id - Delete team
@@ -373,15 +397,24 @@ export const handlers = [
   // POST /games - Create a game
   http.post(`${BASE_URL}/games`, async ({ request }) => {
     const body = (await request.json()) as GameCreate;
+    const gameId = nextGameId++;
     const newGame: Game = {
-      id: nextGameId++,
+      id: gameId,
       competition_id: body.competition_id,
       opponent_name: body.opponent_name,
       date: body.date || null,
-      status: "in_progress",
+      comments: body.comments || null,
+      status: "ready",
       created_at: new Date().toISOString(),
     };
     games.push(newGame);
+
+    // If no players specified, use all competition roster players
+    const playerIds = body.player_ids && body.player_ids.length > 0
+      ? body.player_ids
+      : (competitionPlayers.get(body.competition_id) || []);
+    gamePlayers.set(gameId, playerIds);
+
     return HttpResponse.json(newGame, { status: 201 });
   }),
 
@@ -409,6 +442,10 @@ export const handlers = [
       }
     });
 
+    // Get game players
+    const gamePlayerIds = gamePlayers.get(gameId) || [];
+    const gamePlayers_list = players.filter((p) => gamePlayerIds.includes(p.id));
+
     const gameDetail: GameDetail = {
       ...game,
       our_score: ourScore,
@@ -416,6 +453,7 @@ export const handlers = [
       team_name: team?.name || "Unknown",
       competition_name: competition?.name || "Unknown",
       points: gamePoints,
+      players: gamePlayers_list,
     };
     return HttpResponse.json(gameDetail);
   }),
@@ -444,7 +482,7 @@ export const handlers = [
     if (!game) {
       return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
     }
-    game.status = "finished";
+    game.status = "ended";
     return HttpResponse.json(game);
   }),
 
@@ -459,6 +497,46 @@ export const handlers = [
     // Also delete associated points
     points = points.filter((p) => p.game_id !== gameId);
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // POST /games/:id/players - Add players to game
+  http.post(`${BASE_URL}/games/:id/players`, async ({ params, request }) => {
+    const gameId = Number(params.id);
+    const body = (await request.json()) as { player_ids: number[] };
+    const game = games.find((g) => g.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    // Get current game players
+    const currentPlayerIds = gamePlayers.get(gameId) || [];
+
+    // Add new players (avoiding duplicates)
+    const newPlayerIds = [...new Set([...currentPlayerIds, ...body.player_ids])];
+    gamePlayers.set(gameId, newPlayerIds);
+
+    return HttpResponse.json(game);
+  }),
+
+  // DELETE /games/:id/players - Remove players from game
+  http.delete(`${BASE_URL}/games/:id/players`, async ({ params, request }) => {
+    const gameId = Number(params.id);
+    const body = (await request.json()) as { player_ids: number[] };
+    const game = games.find((g) => g.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    // Get current game players
+    const currentPlayerIds = gamePlayers.get(gameId) || [];
+
+    // Remove specified players
+    const newPlayerIds = currentPlayerIds.filter(id => !body.player_ids.includes(id));
+    gamePlayers.set(gameId, newPlayerIds);
+
+    return HttpResponse.json(game);
   }),
 
   // POST /points - Start a point (create active point)
@@ -630,5 +708,179 @@ export const handlers = [
 
     points.splice(index, 1);
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ============================================
+  // LINE ENDPOINTS
+  // ============================================
+
+  // POST /lines - Create line
+  http.post(`${BASE_URL}/lines`, async ({ request }) => {
+    const body = (await request.json()) as LineCreate;
+    const newLine: Line = {
+      id: nextLineId++,
+      team_id: body.team_id,
+      name: body.name,
+      description: body.description || null,
+      created_at: new Date().toISOString(),
+    };
+    lines.push(newLine);
+
+    // Add initial players if provided
+    if (body.player_ids && body.player_ids.length > 0) {
+      linePlayers.set(newLine.id, body.player_ids);
+    }
+
+    return HttpResponse.json(newLine, { status: 201 });
+  }),
+
+  // GET /lines - List lines (optionally filtered by team)
+  http.get(`${BASE_URL}/lines`, ({ request }) => {
+    const url = new URL(request.url);
+    const teamIdParam = url.searchParams.get("team_id");
+
+    let filteredLines = lines;
+    if (teamIdParam) {
+      const teamId = Number(teamIdParam);
+      filteredLines = lines.filter((line) => line.team_id === teamId);
+    }
+
+    // Return LineWithPlayers
+    const linesWithPlayers: LineWithPlayers[] = filteredLines.map((line) => {
+      const playerIds = linePlayers.get(line.id) || [];
+      const linePlayersList = playerIds
+        .map((id) => players.find((p) => p.id === id))
+        .filter((p): p is Player => p !== undefined);
+
+      return {
+        ...line,
+        players: linePlayersList,
+      };
+    });
+
+    return HttpResponse.json(linesWithPlayers);
+  }),
+
+  // GET /lines/:id - Get line with players
+  http.get(`${BASE_URL}/lines/:id`, ({ params }) => {
+    const lineId = Number(params.id);
+    const line = lines.find((l) => l.id === lineId);
+
+    if (!line) {
+      return HttpResponse.json({ detail: "Line not found" }, { status: 404 });
+    }
+
+    const playerIds = linePlayers.get(lineId) || [];
+    const linePlayersList = playerIds
+      .map((id) => players.find((p) => p.id === id))
+      .filter((p): p is Player => p !== undefined);
+
+    const lineWithPlayers: LineWithPlayers = {
+      ...line,
+      players: linePlayersList,
+    };
+
+    return HttpResponse.json(lineWithPlayers);
+  }),
+
+  // PUT /lines/:id - Update line
+  http.put(`${BASE_URL}/lines/:id`, async ({ params, request }) => {
+    const lineId = Number(params.id);
+    const line = lines.find((l) => l.id === lineId);
+
+    if (!line) {
+      return HttpResponse.json({ detail: "Line not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as LineUpdate;
+    if (body.name !== undefined) line.name = body.name;
+    if (body.description !== undefined) line.description = body.description;
+
+    return HttpResponse.json(line);
+  }),
+
+  // DELETE /lines/:id - Delete line
+  http.delete(`${BASE_URL}/lines/:id`, ({ params }) => {
+    const lineId = Number(params.id);
+    const index = lines.findIndex((l) => l.id === lineId);
+
+    if (index === -1) {
+      return HttpResponse.json({ detail: "Line not found" }, { status: 404 });
+    }
+
+    lines.splice(index, 1);
+    linePlayers.delete(lineId);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // GET /lines/:id/players - Get line players
+  http.get(`${BASE_URL}/lines/:id/players`, ({ params }) => {
+    const lineId = Number(params.id);
+    const line = lines.find((l) => l.id === lineId);
+
+    if (!line) {
+      return HttpResponse.json({ detail: "Line not found" }, { status: 404 });
+    }
+
+    const playerIds = linePlayers.get(lineId) || [];
+    const linePlayersList = playerIds
+      .map((id) => players.find((p) => p.id === id))
+      .filter((p): p is Player => p !== undefined);
+
+    return HttpResponse.json(linePlayersList);
+  }),
+
+  // POST /lines/:id/players - Add players to line
+  http.post(`${BASE_URL}/lines/:id/players`, async ({ params, request }) => {
+    const lineId = Number(params.id);
+    const line = lines.find((l) => l.id === lineId);
+
+    if (!line) {
+      return HttpResponse.json({ detail: "Line not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as PlayerIdsRequest;
+    const currentPlayerIds = linePlayers.get(lineId) || [];
+    const newPlayerIds = [...new Set([...currentPlayerIds, ...body.player_ids])];
+    linePlayers.set(lineId, newPlayerIds);
+
+    // Return LineWithPlayers
+    const linePlayersList = newPlayerIds
+      .map((id) => players.find((p) => p.id === id))
+      .filter((p): p is Player => p !== undefined);
+
+    const lineWithPlayers: LineWithPlayers = {
+      ...line,
+      players: linePlayersList,
+    };
+
+    return HttpResponse.json(lineWithPlayers);
+  }),
+
+  // DELETE /lines/:id/players - Remove players from line
+  http.delete(`${BASE_URL}/lines/:id/players`, async ({ params, request }) => {
+    const lineId = Number(params.id);
+    const line = lines.find((l) => l.id === lineId);
+
+    if (!line) {
+      return HttpResponse.json({ detail: "Line not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as PlayerIdsRequest;
+    const currentPlayerIds = linePlayers.get(lineId) || [];
+    const updatedPlayerIds = currentPlayerIds.filter((id) => !body.player_ids.includes(id));
+    linePlayers.set(lineId, updatedPlayerIds);
+
+    // Return LineWithPlayers
+    const linePlayersList = updatedPlayerIds
+      .map((id) => players.find((p) => p.id === id))
+      .filter((p): p is Player => p !== undefined);
+
+    const lineWithPlayers: LineWithPlayers = {
+      ...line,
+      players: linePlayersList,
+    };
+
+    return HttpResponse.json(lineWithPlayers);
   }),
 ];

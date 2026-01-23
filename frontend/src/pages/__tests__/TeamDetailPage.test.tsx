@@ -122,6 +122,12 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
 
+    // Expand players section if collapsed
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    if (expandButton) {
+      await user.click(expandButton);
+    }
+
     // Click edit button (IconButton with EditIcon)
     const editButton = await screen.findByRole("button", { name: /edit player/i });
     await user.click(editButton);
@@ -190,6 +196,12 @@ describe("TeamDetailPage - Player Management", () => {
     await waitFor(() => {
       expect(screen.getByText("Bob Johnson")).toBeInTheDocument();
     });
+
+    // Expand players section if collapsed
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    if (expandButton) {
+      await user.click(expandButton);
+    }
 
     // Click edit button to open edit modal
     const editButton = await screen.findByRole("button", { name: /edit player/i });

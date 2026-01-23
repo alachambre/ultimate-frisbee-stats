@@ -36,8 +36,11 @@ def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
 
-    # Verify all players are in competition roster
-    if game.player_ids:
+    # If no players specified, use all competition roster players
+    if not game.player_ids:
+        game.player_ids = [p.id for p in competition.players]
+    else:
+        # Verify all players are in competition roster
         roster_player_ids = {p.id for p in competition.players}
         invalid_players = set(game.player_ids) - roster_player_ids
         if invalid_players:

@@ -74,8 +74,20 @@ export default function GameCard({ game }: GameCardProps) {
 
           <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
             <Chip
-              label={game.status === "in_progress" ? "Ongoing" : "Finished"}
-              color={game.status === "in_progress" ? "success" : "default"}
+              label={
+                game.status === "started"
+                  ? "Ongoing"
+                  : game.status === "ended"
+                    ? "Finished"
+                    : "Ready"
+              }
+              color={
+                game.status === "started"
+                  ? "success"
+                  : game.status === "ended"
+                    ? "default"
+                    : "info"
+              }
               size="small"
             />
             <Chip label={game.team_name} variant="outlined" size="small" />

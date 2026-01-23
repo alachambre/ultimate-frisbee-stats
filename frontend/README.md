@@ -17,11 +17,21 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Create competitions (tournaments, leagues, seasons)
 - Build competition rosters from your team players
 - Track multiple games within each competition
+- Filter competitions by team
+
+**Lines Management:**
+- Create user-defined player groups (O-line, D-line, etc.)
+- Add/remove players from lines
+- Organize lines within teams for quick access
 
 **Game Management:**
 - Schedule games with opponent information and dates
-- Start games and track live scores
+- Select players for game roster from competition
+- Add comments to games for notes
+- 3-status game lifecycle (Ready → Started → Ended)
+- Track live scores with start/end game buttons
 - View game history with final scores and statistics
+- Filter games by team and competition
 
 **Live Point Tracking:**
 - Real-time point-by-point tracking during games
@@ -450,9 +460,8 @@ Backend is configured to allow all origins in development. If you still see CORS
 ## Future Enhancements
 
 The application roadmap includes:
-- **Lines**: User-defined player groups (O-line, D-line) for quick selection
 - **Strategies**: Named plays (offensive/defensive) assignable to points
-- **Enhanced Point Tracking**: Mixity validation, field side tracking, pull statistics
+- **Enhanced Point Tracking**: ABBA mixity validation, field side tracking, pull statistics, strategy selection
 - **Calls & Turnovers**: Track fouls, violations, and turnover events
 - **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics
 - **PWA Features**: Offline support, install prompt, service worker caching

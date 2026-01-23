@@ -36,6 +36,7 @@ describe("AddPlayersToRosterModal", () => {
   });
 
   it("displays available players from the team", async () => {
+    const user = userEvent.setup();
     renderWithQueryClient(
       <AddPlayersToRosterModal
         isOpen={true}
@@ -51,16 +52,23 @@ describe("AddPlayersToRosterModal", () => {
     });
 
     // Wait for players to load - they load asynchronously
+    // Men tab is active by default, so Player One and Player Three should be visible
     await waitFor(() => {
       expect(screen.getByText("Player One")).toBeInTheDocument();
     }, { timeout: 3000 });
-
-    // All three players should be visible
-    expect(screen.getByText("Player Two")).toBeInTheDocument();
     expect(screen.getByText("Player Three")).toBeInTheDocument();
+
+    // Click on Women tab to see Player Two
+    const womenTab = screen.getByRole("tab", { name: /women/i });
+    await user.click(womenTab);
+
+    await waitFor(() => {
+      expect(screen.getByText("Player Two")).toBeInTheDocument();
+    });
   });
 
   it("filters out players already in the roster", async () => {
+    const user = userEvent.setup();
     // Assume Player One has ID 1 (first player created in beforeEach)
     const player1Id = 1;
 
@@ -78,16 +86,22 @@ describe("AddPlayersToRosterModal", () => {
       expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
     });
 
-    // Wait for players to load
+    // Wait for players to load - Men tab is active by default
     await waitFor(() => {
-      expect(screen.getByText("Player Two")).toBeInTheDocument();
+      expect(screen.getByText("Player Three")).toBeInTheDocument();
     }, { timeout: 3000 });
 
     // Player One should not be visible (already in roster)
     expect(screen.queryByText("Player One")).not.toBeInTheDocument();
 
-    // Player Two and Three should be visible
-    expect(screen.getByText("Player Three")).toBeInTheDocument();
+    // Click on Women tab to see Player Two
+    const womenTab = screen.getByRole("tab", { name: /women/i });
+    await user.click(womenTab);
+
+    // Player Two should be visible
+    await waitFor(() => {
+      expect(screen.getByText("Player Two")).toBeInTheDocument();
+    });
   });
 
   it("shows message when all players are already in roster", async () => {
@@ -147,6 +161,15 @@ describe("AddPlayersToRosterModal", () => {
     // Submit button should show "Add 1 Player"
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /add 1 player$/i })).toBeInTheDocument();
+    });
+
+    // Click on Women tab to see Player Two
+    const womenTab = screen.getByRole("tab", { name: /women/i });
+    await user.click(womenTab);
+
+    // Wait for Player Two to be visible
+    await waitFor(() => {
+      expect(screen.getByText("Player Two")).toBeInTheDocument();
     });
 
     // Select Player Two

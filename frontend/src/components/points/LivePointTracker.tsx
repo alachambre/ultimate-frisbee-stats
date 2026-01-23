@@ -30,8 +30,8 @@ export default function LivePointTracker({
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
 
-  // Only show live tracker for in-progress games
-  if (game.status === "finished") {
+  // Only show live tracker for started games (hide for ready and ended)
+  if (game.status !== "started") {
     return null;
   }
 

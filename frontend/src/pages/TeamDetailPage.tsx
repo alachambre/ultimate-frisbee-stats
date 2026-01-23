@@ -14,18 +14,27 @@ import {
   Alert,
   Grid,
   alpha,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { getTeam, deleteTeam } from "../services";
-import type { Player } from "../types";
+import { getLines, deleteLine } from "../services/lines";
+import type { Player, LineWithPlayers } from "../types";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
 import PlayersGrid from "../components/players/PlayersGrid";
 import EmptyPlayersState from "../components/players/EmptyPlayersState";
+import LinesGrid from "../components/lines/LinesGrid";
+import EmptyLinesState from "../components/lines/EmptyLinesState";
 import AddPlayerModal from "../components/modals/AddPlayerModal";
 import EditPlayerModal from "../components/modals/EditPlayerModal";
+import CreateLineModal from "../components/modals/CreateLineModal";
+import EditLineModal from "../components/modals/EditLineModal";
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -34,6 +43,10 @@ export default function TeamDetailPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [isCreateLineModalOpen, setIsCreateLineModalOpen] = useState(false);
+  const [editingLine, setEditingLine] = useState<LineWithPlayers | null>(null);
+  const [deletingLine, setDeletingLine] = useState<LineWithPlayers | null>(null);
+  const [showPlayers, setShowPlayers] = useState(false);
 
   const {
     data: team,
@@ -45,11 +58,25 @@ export default function TeamDetailPage() {
     enabled: !!teamId,
   });
 
+  const { data: lines } = useQuery({
+    queryKey: ["lines", "team", teamId],
+    queryFn: () => getLines(Number(teamId)),
+    enabled: !!teamId,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => deleteTeam(Number(teamId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       navigate("/teams");
+    },
+  });
+
+  const deleteLineMutation = useMutation({
+    mutationFn: (lineId: number) => deleteLine(lineId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lines", "team", teamId] });
+      setDeletingLine(null);
     },
   });
 
@@ -63,6 +90,20 @@ export default function TeamDetailPage() {
 
   const handleDelete = () => {
     deleteMutation.mutate();
+  };
+
+  const handleEditLine = (line: LineWithPlayers) => {
+    setEditingLine(line);
+  };
+
+  const handleDeleteLine = (line: LineWithPlayers) => {
+    setDeletingLine(line);
+  };
+
+  const confirmDeleteLine = () => {
+    if (deletingLine) {
+      deleteLineMutation.mutate(deletingLine.id);
+    }
   };
 
   return (
@@ -99,11 +140,24 @@ export default function TeamDetailPage() {
 
       {/* Players Section */}
       <Paper>
-        <Box p={3} borderBottom="1px solid" borderColor="divider">
+        <Box
+          p={3}
+          borderBottom={showPlayers ? "1px solid" : "none"}
+          borderColor="divider"
+        >
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">
-              Players ({team.players.length})
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="h6">
+                Players ({team.players.length})
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setShowPlayers(!showPlayers)}
+                aria-label={showPlayers ? "Hide players" : "Show players"}
+              >
+                {showPlayers ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -114,7 +168,8 @@ export default function TeamDetailPage() {
           </Box>
         </Box>
 
-        <Box p={3}>
+        <Collapse in={showPlayers}>
+          <Box p={3}>
           {team.players.length === 0 ? (
             <EmptyPlayersState
               onAddClick={() => setIsAddPlayerModalOpen(true)}
@@ -194,6 +249,39 @@ export default function TeamDetailPage() {
               </Grid>
             </Grid>
           )}
+          </Box>
+        </Collapse>
+      </Paper>
+
+      {/* Lines Section */}
+      <Paper sx={{ mt: 3 }}>
+        <Box p={3} borderBottom="1px solid" borderColor="divider">
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">
+              Lines ({lines?.length || 0})
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setIsCreateLineModalOpen(true)}
+            >
+              Create Line
+            </Button>
+          </Box>
+        </Box>
+
+        <Box p={3}>
+          {!lines || lines.length === 0 ? (
+            <EmptyLinesState
+              onCreateLine={() => setIsCreateLineModalOpen(true)}
+            />
+          ) : (
+            <LinesGrid
+              lines={lines}
+              onEdit={handleEditLine}
+              onDelete={handleDeleteLine}
+            />
+          )}
         </Box>
       </Paper>
 
@@ -250,6 +338,58 @@ export default function TeamDetailPage() {
           teamId={Number(teamId)}
         />
       )}
+
+      {/* Line Modals */}
+      <CreateLineModal
+        isOpen={isCreateLineModalOpen}
+        onClose={() => setIsCreateLineModalOpen(false)}
+        teamId={Number(teamId)}
+      />
+
+      {editingLine && (
+        <EditLineModal
+          isOpen={!!editingLine}
+          onClose={() => setEditingLine(null)}
+          line={editingLine}
+        />
+      )}
+
+      {/* Delete Line Confirmation Dialog */}
+      <Dialog
+        open={!!deletingLine}
+        onClose={() => setDeletingLine(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete Line?</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Delete "{deletingLine?.name}"? This will remove the line but not the
+            players from the team.
+          </Typography>
+          {deleteLineMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Error deleting line. Please try again.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeletingLine(null)}
+            disabled={deleteLineMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDeleteLine}
+            variant="contained"
+            color="error"
+            disabled={deleteLineMutation.isPending}
+          >
+            {deleteLineMutation.isPending ? "Deleting..." : "Delete Line"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

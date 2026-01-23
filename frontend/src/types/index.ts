@@ -4,6 +4,7 @@
 
 export type Gender = "M" | "W";
 export type CompetitionStatus = "ongoing" | "completed";
+export type GameStatus = "ready" | "started" | "ended";
 
 // ============================================
 // Team Types
@@ -96,27 +97,59 @@ export interface PlayerIdsRequest {
 }
 
 // ============================================
+// Line Types
+// ============================================
+
+export interface LineBase {
+  name: string;
+  description?: string | null;
+}
+
+export interface LineCreate extends LineBase {
+  team_id: number;
+  player_ids?: number[];
+}
+
+export interface LineUpdate {
+  name?: string;
+  description?: string | null;
+}
+
+export interface Line extends LineBase {
+  id: number;
+  team_id: number;
+  created_at: string;
+}
+
+export interface LineWithPlayers extends Line {
+  players: Player[];
+}
+
+// ============================================
 // Game Types
 // ============================================
 
 export interface GameBase {
   opponent_name: string;
   date?: string | null;
+  comments?: string | null;
 }
 
 export interface GameCreate extends GameBase {
   competition_id: number;
+  player_ids?: number[];
 }
 
 export interface GameUpdate {
   opponent_name?: string;
-  status?: "in_progress" | "finished";
+  status?: GameStatus;
+  comments?: string | null;
 }
 
 export interface Game extends GameBase {
   id: number;
   competition_id: number;
-  status: "in_progress" | "finished";
+  status: GameStatus;
   created_at: string;
 }
 
@@ -177,4 +210,5 @@ export interface PointWithPlayers extends Point {
 
 export interface GameDetail extends GameWithScore {
   points: PointWithPlayers[];
+  players: Player[];
 }

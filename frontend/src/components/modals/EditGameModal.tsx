@@ -28,15 +28,17 @@ export default function EditGameModal({
   const [date, setDate] = useState(
     game.date ? new Date(game.date).toISOString().split("T")[0] : ""
   );
+  const [comments, setComments] = useState(game.comments || "");
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setOpponentName(game.opponent_name);
     setDate(game.date ? new Date(game.date).toISOString().split("T")[0] : "");
+    setComments(game.comments || "");
   }, [game]);
 
   const mutation = useMutation({
-    mutationFn: (data: { opponent_name: string }) =>
+    mutationFn: (data: { opponent_name: string; comments: string | null }) =>
       updateGame(game.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", game.id.toString()] });
@@ -50,6 +52,7 @@ export default function EditGameModal({
     if (opponentName.trim()) {
       mutation.mutate({
         opponent_name: opponentName.trim(),
+        comments: comments.trim() || null,
       });
     }
   };
@@ -57,6 +60,7 @@ export default function EditGameModal({
   const handleClose = () => {
     setOpponentName(game.opponent_name);
     setDate(game.date ? new Date(game.date).toISOString().split("T")[0] : "");
+    setComments(game.comments || "");
     mutation.reset();
     onClose();
   };
@@ -91,6 +95,17 @@ export default function EditGameModal({
               }}
               disabled
               helperText="Date cannot be changed after game creation"
+            />
+            <TextField
+              label="Comments (optional)"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Add any comments about this game"
+              multiline
+              rows={3}
             />
             {mutation.isError && (
               <Alert severity="error">
