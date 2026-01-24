@@ -142,6 +142,37 @@ export default function PointHistoryItem({
           </Typography>
         </Box>
 
+        {/* Strategy */}
+        {point.strategy && (
+          <Box mb={1}>
+            <Typography variant="body2" color="text.secondary" component="span">
+              Strategy:{" "}
+            </Typography>
+            <Chip
+              label={point.strategy.name}
+              size="small"
+              variant="outlined"
+              sx={{ ml: 0.5 }}
+            />
+          </Box>
+        )}
+
+        {/* Additional fields */}
+        {(point.pull !== null || point.comments) && (
+          <Box mb={1}>
+            {point.pull !== null && !point.starting_on_offense && (
+              <Typography variant="body2" color="text.secondary">
+                Pull: <strong>{point.pull ? "Inbound" : "Out of bounds"}</strong>
+              </Typography>
+            )}
+            {point.comments && (
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                {point.comments}
+              </Typography>
+            )}
+          </Box>
+        )}
+
         {/* Expandable player list */}
         <Accordion
           expanded={expanded}

@@ -36,11 +36,16 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Won/Lost/Tie display on game cards with color-coded outcomes
 - Player management disabled for finished games (prevents accidental changes)
 
-**Live Point Tracking:**
+**Live Point Tracking (4-Status Workflow):**
 - Real-time point-by-point tracking during games
+- 4-status lifecycle: Ready → Running → Scored → Completed
 - Select 7 players for each point with line filtering
 - Mark points as offense or defense
+- Assign strategies to points (offense/defense specific)
+- Track pull status (inbound/out of bounds) for defensive points
+- Add comments to points for detailed notes
 - Record point outcomes (won/lost)
+- Resume scored points for late calls or contested outcomes
 - View strategic context (breaks, holds)
 - Edit point details and player lineups
 - Validation fixes for points under 1 minute duration
@@ -98,11 +103,11 @@ frontend/
 │   │   │   ├── GamesGrid.tsx
 │   │   │   └── EmptyGamesState.tsx
 │   │   ├── points/       # Point tracking components
-│   │   │   ├── LivePointTracker.tsx    # Main live tracking interface
-│   │   │   ├── PointTimer.tsx          # Real-time elapsed time display
+│   │   │   ├── LivePointTracker.tsx    # 4-status workflow, pull tracking, resume
+│   │   │   ├── PointTimer.tsx          # Real-time/static elapsed time display
 │   │   │   ├── PlayerSelector.tsx      # 7-player selection UI
 │   │   │   ├── PointHistoryList.tsx    # List of all points
-│   │   │   └── PointHistoryItem.tsx    # Individual point display
+│   │   │   └── PointHistoryItem.tsx    # Point display with strategy/pull/comments
 │   │   └── modals/       # Modal dialogs
 │   │       ├── CreateTeamModal.tsx
 │   │       ├── AddPlayerModal.tsx
@@ -117,8 +122,9 @@ frontend/
 │   │       ├── EditLineModal.tsx
 │   │       ├── CreateGameModal.tsx
 │   │       ├── EditGameModal.tsx
-│   │       ├── StartPointDialog.tsx         # Enhanced with line filtering
-│   │       ├── FinishPointDialog.tsx
+│   │       ├── StartPointDialog.tsx         # Enhanced with strategy, pull, comments
+│   │       ├── FinishPointDialog.tsx        # Transitions to 'scored' status
+│   │       ├── CompletePointDialog.tsx      # Finalizes scored points
 │   │       └── EditPointDialog.tsx
 │   ├── pages/            # Page components (routes)
 │   │   ├── HomePage.tsx            # Landing page
@@ -138,6 +144,7 @@ frontend/
 │   │   ├── lines.ts      # Line API calls
 │   │   ├── games.ts      # Game API calls
 │   │   ├── points.ts     # Point API calls
+│   │   ├── strategies.ts # Strategy API calls
 │   │   └── index.ts      # Central export point
 │   ├── types/            # TypeScript types (mirrors backend schemas)
 │   │   └── index.ts      # All type definitions
@@ -341,12 +348,19 @@ The service layer mirrors the backend CRUD structure. All services are strongly 
 - `getGamePlayers(gameId: number): Promise<Player[]>` - Get game roster
 
 ### Points Service (`services/points.ts`)
-- `startPoint(data: PointCreate): Promise<Point>` - Create active point
-- `getActivePoint(gameId: number): Promise<PointWithPlayers | null>` - Get active point
-- `finishPoint(pointId, data: PointFinish): Promise<Point>` - Complete point (won/lost)
-- `cancelPoint(pointId: number): Promise<void>` - Cancel active point
-- `updatePoint(pointId, data: PointUpdate): Promise<Point>` - Edit point details
-- `deletePoint(pointId: number): Promise<void>` - Delete completed point
+- `startPoint(data: PointCreate): Promise<Point>` - Create point (with strategy, pull, comments)
+- `getRunningPoint(gameId: number): Promise<PointWithPlayers | null>` - Get running point for game
+- `updatePoint(pointId, data: PointUpdate): Promise<Point>` - Update point (status transitions, fields)
+- `cancelPoint(pointId: number): Promise<void>` - Cancel/delete point
+- `getPoint(pointId: number): Promise<PointWithPlayers>` - Get point by ID
+- `deletePoint(pointId: number): Promise<void>` - Delete point
+
+### Strategies Service (`services/strategies.ts`)
+- `createStrategy(data: StrategyCreate): Promise<Strategy>` - Create offensive/defensive strategy
+- `getStrategies(category?: StrategyCategory): Promise<Strategy[]>` - List strategies (optional filter)
+- `getStrategy(strategyId: number): Promise<Strategy>` - Get strategy by ID
+- `updateStrategy(strategyId, data: StrategyUpdate): Promise<Strategy>` - Update strategy
+- `deleteStrategy(strategyId: number): Promise<void>` - Delete strategy
 
 ## TypeScript Types
 
@@ -356,8 +370,10 @@ All types in `src/types/index.ts` exactly match the backend Pydantic schemas:
 - **Competition types**: `Competition`, `CompetitionCreate`, `CompetitionUpdate`, `CompetitionWithPlayers`, `PlayerIdsRequest`, `CompetitionStatus`, `Gender`
 - **Player types**: `Player`, `PlayerCreate`, `PlayerUpdate` (includes `gender: Gender` field)
 - **Line types**: `Line`, `LineCreate`, `LineUpdate`, `LineWithPlayers`
+- **Strategy types**: `Strategy`, `StrategyCreate`, `StrategyUpdate`, `StrategyCategory` (offense/defense)
 - **Game types**: `Game`, `GameCreate`, `GameUpdate`, `GameWithScore`, `GameDetail`, `GameStatus` (ready/started/ended)
-- **Point types**: `Point`, `PointCreate`, `PointUpdate`, `PointWithPlayers`
+- **Point types**: `Point`, `PointCreate`, `PointUpdate`, `PointFinish`, `PointWithPlayers`, `PointStatus` (ready/running/scored/completed)
+  - Includes: `field_side`, `pull`, `strategy_id`, `comments`, `strategy` object
 
 This ensures type safety across the entire application.
 
@@ -469,8 +485,9 @@ The project uses Vitest with React Testing Library and MSW for API mocking.
 - All tests are organized in `__tests__/` subdirectories within their respective component/page directories
 - Page tests: Comprehensive tests for all page components (Teams, Games, Competitions, Lines)
 - Component tests: Unit tests for shared components (PointTimer, PlayerSelector, PlayerCard, PlayerSelectionUI)
-- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog)
-- MSW provides realistic API mocking with request interception for all backend endpoints
+- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog, CompletePointDialog)
+- MSW provides realistic API mocking with request interception for all backend endpoints (including strategies)
+- **Current: 119 tests passing across 19 test files**
 
 ### Development Workflow
 
@@ -500,6 +517,18 @@ Backend is configured to allow all origins in development. If you still see CORS
 
 ## Recent Enhancements
 
+**Phase 6 Frontend (In Progress):**
+- ✅ 4-status point workflow (Ready → Running → Scored → Completed)
+- ✅ Strategy service layer and integration in point tracking
+- ✅ Pull tracking for defensive points (Inbound/Out of Bounds buttons)
+- ✅ Comments field for points
+- ✅ Resume Point feature for late calls/contested scores
+- ✅ CompletePointDialog for finalizing scored points
+- ✅ Enhanced PointHistoryItem with strategy, pull status, comments
+- ✅ 119 tests passing (8 new tests for Phase 6 features)
+- ⏳ ABBA Gender Rule enforcement (not yet implemented)
+- 🐛 Known bug: Resume Point timer doesn't restart in UI (backend works correctly)
+
 **Phase 5 Complete:**
 - ✅ Lines management (create, edit, delete lines with player selection)
 - ✅ Game player selection from competition roster
@@ -513,8 +542,9 @@ Backend is configured to allow all origins in development. If you still see CORS
 ## Future Enhancements
 
 The application roadmap includes:
-- **Strategies**: Named plays (offensive/defensive) assignable to points (Phase 6 Backend Complete)
-- **Enhanced Point Tracking**: ABBA mixity validation, field side tracking, pull statistics, strategy selection (Phase 6 Frontend)
+- **Strategy Management UI**: Pages and modals to create/edit/delete strategies (service layer complete)
+- **ABBA Gender Rule**: Frontend validation for alternating 4M+3W / 3M+4W pattern (Phase 6 Frontend)
+- **Game Timer Fix**: Start timer with first running point, not game start button
 - **Calls & Turnovers**: Track fouls, violations, and turnover events (Phase 7)
 - **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics (Phase 8)
 - **PWA Features**: Offline support, install prompt, service worker caching

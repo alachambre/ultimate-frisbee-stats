@@ -16,7 +16,7 @@ import {
   Chip,
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { finishPoint } from "../../services/points";
+import { updatePoint } from "../../services/points";
 import PointTimer from "../points/PointTimer";
 import type { PointWithPlayers } from "../../types";
 
@@ -38,8 +38,10 @@ export default function FinishPointDialog({
 
   const finishMutation = useMutation({
     mutationFn: () =>
-      finishPoint(activePoint.id, {
+      updatePoint(activePoint.id, {
         won: won!,
+        end_datetime: new Date().toISOString(),
+        status: "scored",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(activePoint.game_id)] });

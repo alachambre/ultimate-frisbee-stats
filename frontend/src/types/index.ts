@@ -6,6 +6,7 @@ export type Gender = "M" | "W";
 export type CompetitionStatus = "ongoing" | "completed";
 export type GameStatus = "ready" | "started" | "ended";
 export type PointStatus = "ready" | "running" | "scored" | "completed";
+export type StrategyCategory = "offense" | "defense";
 
 // ============================================
 // Team Types
@@ -127,6 +128,29 @@ export interface LineWithPlayers extends Line {
 }
 
 // ============================================
+// Strategy Types
+// ============================================
+
+export interface StrategyBase {
+  name: string;
+  description?: string | null;
+  category: StrategyCategory;
+}
+
+export interface StrategyCreate extends StrategyBase {}
+
+export interface StrategyUpdate {
+  name?: string;
+  description?: string | null;
+  category?: StrategyCategory;
+}
+
+export interface Strategy extends StrategyBase {
+  id: number;
+  created_at: string;
+}
+
+// ============================================
 // Game Types
 // ============================================
 
@@ -169,22 +193,31 @@ export interface GameWithScore extends Game {
 
 export interface PointBase {
   starting_on_offense: boolean;
+  field_side?: string | null;
+  pull?: boolean | null;
+  comments?: string | null;
 }
 
 export interface PointCreate extends PointBase {
   game_id: number;
   player_ids: number[];
+  strategy_id?: number | null;
   start_datetime?: string | null; // Defaults to now if null
 }
 
 export interface PointFinish {
   won: boolean;
+  comments?: string | null;
   end_datetime?: string | null; // Defaults to now if null
 }
 
 export interface PointUpdate {
   starting_on_offense?: boolean;
   won?: boolean | null;
+  field_side?: string | null;
+  pull?: boolean | null;
+  strategy_id?: number | null;
+  comments?: string | null;
   start_datetime?: string | null;
   end_datetime?: string | null;
   status?: PointStatus;
@@ -197,6 +230,7 @@ export interface Point extends PointBase {
   point_number: number;
   won: boolean | null; // Nullable while not completed
   status: PointStatus;
+  strategy_id?: number | null;
   start_datetime: string | null;
   end_datetime: string | null;
   created_at: string;
@@ -204,6 +238,7 @@ export interface Point extends PointBase {
 
 export interface PointWithPlayers extends Point {
   players: Player[];
+  strategy?: Strategy | null;
   duration_seconds?: number | null; // Computed property
 }
 

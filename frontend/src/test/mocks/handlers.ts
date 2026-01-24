@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -12,12 +12,14 @@ let lines: Line[] = [];
 let linePlayers: Map<number, number[]> = new Map(); // lineId -> playerIds[]
 let games: Game[] = [];
 let gamePlayers: Map<number, number[]> = new Map(); // gameId -> playerIds[]
+let strategies: Strategy[] = [];
 let points: PointWithPlayers[] = [];
 let nextTeamId = 1;
 let nextPlayerId = 1;
 let nextCompetitionId = 1;
 let nextLineId = 1;
 let nextGameId = 1;
+let nextStrategyId = 1;
 let nextPointId = 1;
 
 // Helper to reset data between tests
@@ -30,12 +32,14 @@ export function resetMockData() {
   linePlayers = new Map();
   games = [];
   gamePlayers = new Map();
+  strategies = [];
   points = [];
   nextTeamId = 1;
   nextPlayerId = 1;
   nextCompetitionId = 1;
   nextLineId = 1;
   nextGameId = 1;
+  nextStrategyId = 1;
   nextPointId = 1;
 }
 
@@ -585,17 +589,28 @@ export const handlers = [
       );
     }
 
+    // Get strategy if provided
+    let strategy: Strategy | null = null;
+    if (body.strategy_id) {
+      strategy = strategies.find((s) => s.id === body.strategy_id) || null;
+    }
+
     const newPoint: PointWithPlayers = {
       id: nextPointId++,
       game_id: body.game_id,
       point_number: pointNumber,
       starting_on_offense: body.starting_on_offense,
+      field_side: body.field_side || null,
+      pull: body.pull || null,
+      comments: body.comments || null,
+      strategy_id: body.strategy_id || null,
       won: null,
-      status: "running",  // Create as running for Phase 3 frontend compatibility
+      status: "ready",  // Phase 6: Create as ready, frontend transitions to running
       start_datetime: body.start_datetime || new Date().toISOString(),
       end_datetime: null,
       created_at: new Date().toISOString(),
       players: pointPlayers,
+      strategy: strategy,
     };
     points.push(newPoint);
     return HttpResponse.json(newPoint, { status: 201 });
@@ -665,6 +680,24 @@ export const handlers = [
     }
     if (body.won !== undefined) {
       point.won = body.won;
+    }
+    if (body.field_side !== undefined) {
+      point.field_side = body.field_side;
+    }
+    if (body.pull !== undefined) {
+      point.pull = body.pull;
+    }
+    if (body.strategy_id !== undefined) {
+      point.strategy_id = body.strategy_id;
+      // Update strategy object
+      if (body.strategy_id) {
+        point.strategy = strategies.find((s) => s.id === body.strategy_id) || null;
+      } else {
+        point.strategy = null;
+      }
+    }
+    if (body.comments !== undefined) {
+      point.comments = body.comments;
     }
     if (body.status !== undefined) {
       point.status = body.status;
@@ -902,5 +935,86 @@ export const handlers = [
     };
 
     return HttpResponse.json(lineWithPlayers);
+  }),
+
+  // ========================================
+  // Strategy Endpoints
+  // ========================================
+
+  // POST /strategies - Create a strategy
+  http.post(`${BASE_URL}/strategies`, async ({ request }) => {
+    const body = (await request.json()) as StrategyCreate;
+    const newStrategy: Strategy = {
+      id: nextStrategyId++,
+      name: body.name,
+      description: body.description || null,
+      category: body.category,
+      created_at: new Date().toISOString(),
+    };
+    strategies.push(newStrategy);
+    return HttpResponse.json(newStrategy, { status: 201 });
+  }),
+
+  // GET /strategies - List all strategies with optional category filter
+  http.get(`${BASE_URL}/strategies`, ({ request }) => {
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
+
+    let filteredStrategies = strategies;
+    if (category) {
+      filteredStrategies = strategies.filter((s) => s.category === category);
+    }
+
+    return HttpResponse.json(filteredStrategies);
+  }),
+
+  // GET /strategies/:id - Get strategy by ID
+  http.get(`${BASE_URL}/strategies/:id`, ({ params }) => {
+    const strategyId = Number(params.id);
+    const strategy = strategies.find((s) => s.id === strategyId);
+    if (!strategy) {
+      return HttpResponse.json({ detail: "Strategy not found" }, { status: 404 });
+    }
+    return HttpResponse.json(strategy);
+  }),
+
+  // PUT /strategies/:id - Update strategy
+  http.put(`${BASE_URL}/strategies/:id`, async ({ request, params }) => {
+    const strategyId = Number(params.id);
+    const body = (await request.json()) as StrategyUpdate;
+    const strategy = strategies.find((s) => s.id === strategyId);
+
+    if (!strategy) {
+      return HttpResponse.json({ detail: "Strategy not found" }, { status: 404 });
+    }
+
+    // Update fields
+    if (body.name !== undefined) strategy.name = body.name;
+    if (body.description !== undefined) strategy.description = body.description;
+    if (body.category !== undefined) strategy.category = body.category;
+
+    return HttpResponse.json(strategy);
+  }),
+
+  // DELETE /strategies/:id - Delete strategy
+  http.delete(`${BASE_URL}/strategies/:id`, ({ params }) => {
+    const strategyId = Number(params.id);
+    const index = strategies.findIndex((s) => s.id === strategyId);
+
+    if (index === -1) {
+      return HttpResponse.json({ detail: "Strategy not found" }, { status: 404 });
+    }
+
+    strategies.splice(index, 1);
+
+    // Set strategy_id to null on points that reference this strategy
+    points.forEach((p) => {
+      if (p.strategy_id === strategyId) {
+        p.strategy_id = null;
+        p.strategy = null;
+      }
+    });
+
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

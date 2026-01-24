@@ -14,12 +14,14 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  TextField,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startPoint, updatePoint } from "../../services/points";
 import { getLines } from "../../services/lines";
+import { getStrategies } from "../../services/strategies";
 import PlayerSelector from "../points/PlayerSelector";
-import type { Player, Line } from "../../types";
+import type { Player, Line, Strategy } from "../../types";
 
 interface StartPointDialogProps {
   open: boolean;
@@ -41,12 +43,21 @@ export default function StartPointDialog({
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [startingOnOffense, setStartingOnOffense] = useState<boolean>(true);
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
+  const [strategyId, setStrategyId] = useState<number | "">("");
+  const [comments, setComments] = useState<string>("");
   const queryClient = useQueryClient();
 
   // Fetch lines for the team
   const { data: lines } = useQuery({
     queryKey: ["lines", teamId],
     queryFn: () => getLines(teamId),
+    enabled: open,
+  });
+
+  // Fetch strategies filtered by category
+  const { data: strategies } = useQuery({
+    queryKey: ["strategies", startingOnOffense ? "offense" : "defense"],
+    queryFn: () => getStrategies(startingOnOffense ? "offense" : "defense"),
     enabled: open,
   });
 
@@ -73,9 +84,11 @@ export default function StartPointDialog({
         game_id: gameId,
         starting_on_offense: startingOnOffense,
         player_ids: selectedPlayerIds,
+        strategy_id: typeof strategyId === "number" ? strategyId : null,
+        comments: comments || null,
       });
 
-      // Immediately transition to "running" status for Phase 3 compatibility
+      // Immediately transition to "running" status
       const runningPoint = await updatePoint(point.id, { status: "running" });
       return runningPoint;
     },
@@ -91,6 +104,8 @@ export default function StartPointDialog({
     setSelectedPlayerIds([]);
     setStartingOnOffense(true);
     setSelectedLineId("");
+    setStrategyId("");
+    setComments("");
     startMutation.reset();
     onClose();
   };
@@ -118,7 +133,11 @@ export default function StartPointDialog({
           <FormLabel component="legend">Starting</FormLabel>
           <RadioGroup
             value={startingOnOffense ? "offense" : "defense"}
-            onChange={(e) => setStartingOnOffense(e.target.value === "offense")}
+            onChange={(e) => {
+              setStartingOnOffense(e.target.value === "offense");
+              // Reset strategy when changing offense/defense
+              setStrategyId("");
+            }}
           >
             <FormControlLabel
               value="offense"
@@ -132,6 +151,41 @@ export default function StartPointDialog({
             />
           </RadioGroup>
         </FormControl>
+
+        {/* Strategy selection */}
+        {strategies && strategies.length > 0 && (
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="strategy-select-label">Strategy (Optional)</InputLabel>
+            <Select
+              labelId="strategy-select-label"
+              id="strategy-select"
+              value={strategyId}
+              label="Strategy (Optional)"
+              onChange={(e) => setStrategyId(e.target.value as number | "")}
+            >
+              <MenuItem value="">
+                <em>No strategy</em>
+              </MenuItem>
+              {strategies.map((strategy: Strategy) => (
+                <MenuItem key={strategy.id} value={strategy.id}>
+                  {strategy.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
+        {/* Comments */}
+        <TextField
+          fullWidth
+          label="Comments (Optional)"
+          placeholder="Add notes about this point..."
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+          multiline
+          rows={2}
+          sx={{ mb: 3 }}
+        />
 
         {/* Line filter */}
         {lines && lines.length > 0 && (

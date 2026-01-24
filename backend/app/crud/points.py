@@ -128,7 +128,9 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
 
         # Validate end datetime is after start datetime
         if db_point.start_datetime and db_point.end_datetime:
-            if db_point.end_datetime <= db_point.start_datetime:
+            start_aware = _ensure_timezone_aware(db_point.start_datetime)
+            end_aware = _ensure_timezone_aware(db_point.end_datetime)
+            if start_aware and end_aware and end_aware <= start_aware:
                 db.rollback()
                 raise ValueError("end_datetime must be after start_datetime")
 
