@@ -15,6 +15,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import CommentIcon from "@mui/icons-material/Comment";
+import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePoint } from "../../services/points";
 import PointTimer from "./PointTimer";
@@ -22,6 +23,7 @@ import StartPointDialog from "../modals/StartPointDialog";
 import FinishPointDialog from "../modals/FinishPointDialog";
 import CompletePointDialog from "../modals/CompletePointDialog";
 import AddCommentDialog from "../modals/AddCommentDialog";
+import SelectStrategyDialog from "../modals/SelectStrategyDialog";
 import type { GameDetail, PointWithPlayers, Player } from "../../types";
 
 interface LivePointTrackerProps {
@@ -43,6 +45,7 @@ export default function LivePointTracker({
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [isStrategyDialogOpen, setIsStrategyDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Find scored points (most recent scored point)
@@ -198,8 +201,16 @@ export default function LivePointTracker({
               </Box>
             )}
 
-            {/* Comment button */}
-            <Box display="flex" justifyContent="center" mt={2}>
+            {/* Strategy and Comment buttons */}
+            <Box display="flex" justifyContent="center" gap={2} mt={2} flexWrap="wrap">
+              <Button
+                variant="outlined"
+                startIcon={<EmojiObjectsIcon />}
+                onClick={() => setIsStrategyDialogOpen(true)}
+                size="medium"
+              >
+                {currentPoint.strategy ? "Change Strategy" : "Select Strategy"}
+              </Button>
               <Button
                 variant="outlined"
                 startIcon={<CommentIcon />}
@@ -250,9 +261,24 @@ export default function LivePointTracker({
               <Typography variant="body2" color="text.secondary">
                 Players on field: {currentPoint.players.length}
               </Typography>
+              {/* Show strategy if selected */}
+              {currentPoint.strategy && (
+                <Box mt={1}>
+                  <Typography variant="body2" color="text.secondary" component="span">
+                    Strategy:{" "}
+                  </Typography>
+                  <Chip
+                    label={currentPoint.strategy.name}
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    sx={{ ml: 0.5 }}
+                  />
+                </Box>
+              )}
               {/* Show pull status if marked */}
               {activePoint && !activePoint.starting_on_offense && activePoint.pull !== null && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" mt={1}>
                   Pull: <strong>{activePoint.pull ? "Inbound" : "Out of Bounds"}</strong>
                 </Typography>
               )}
@@ -293,6 +319,16 @@ export default function LivePointTracker({
         <AddCommentDialog
           open={isCommentDialogOpen}
           onClose={() => setIsCommentDialogOpen(false)}
+          point={currentPoint}
+          gameId={game.id}
+          onSuccess={onPointUpdated}
+        />
+      )}
+
+      {currentPoint && (
+        <SelectStrategyDialog
+          open={isStrategyDialogOpen}
+          onClose={() => setIsStrategyDialogOpen(false)}
           point={currentPoint}
           gameId={game.id}
           onSuccess={onPointUpdated}

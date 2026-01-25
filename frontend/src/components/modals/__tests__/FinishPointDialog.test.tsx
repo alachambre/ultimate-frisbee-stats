@@ -45,7 +45,7 @@ describe("FinishPointDialog", () => {
     expect(screen.getByText("2:00")).toBeInTheDocument();
   });
 
-  it("displays starting position chip", () => {
+  it("displays offense/defense in title", () => {
     renderWithQueryClient(
       <FinishPointDialog
         open={true}
@@ -54,10 +54,10 @@ describe("FinishPointDialog", () => {
       />
     );
 
-    expect(screen.getByText("On Offense (we had the disc)")).toBeInTheDocument();
+    expect(screen.getByText(/finish offense point/i)).toBeInTheDocument();
   });
 
-  it("displays all players as chips", () => {
+  it("has won and lost toggle buttons", () => {
     renderWithQueryClient(
       <FinishPointDialog
         open={true}
@@ -66,22 +66,8 @@ describe("FinishPointDialog", () => {
       />
     );
 
-    expect(screen.getByText("Player 1 #10")).toBeInTheDocument();
-    expect(screen.getByText("Player 2 #20")).toBeInTheDocument();
-    expect(screen.getByText("Player 3")).toBeInTheDocument();
-  });
-
-  it("has won and lost radio buttons", () => {
-    renderWithQueryClient(
-      <FinishPointDialog
-        open={true}
-        onClose={vi.fn()}
-        activePoint={mockRunningPoint}
-      />
-    );
-
-    expect(screen.getByLabelText("We won the point")).toBeInTheDocument();
-    expect(screen.getByLabelText("They won the point")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /won the point/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /lost the point/i })).toBeInTheDocument();
   });
 
   it("enables finish button only when outcome is selected", async () => {
@@ -97,8 +83,8 @@ describe("FinishPointDialog", () => {
     const finishButton = screen.getByRole("button", { name: /finish point/i });
     expect(finishButton).toBeDisabled();
 
-    const wonRadio = screen.getByLabelText("We won the point");
-    await user.click(wonRadio);
+    const wonButton = screen.getByRole("button", { name: /won the point/i });
+    await user.click(wonButton);
 
     expect(finishButton).toBeEnabled();
   });
@@ -134,8 +120,8 @@ describe("FinishPointDialog", () => {
     );
 
     // Select won
-    const wonRadio = screen.getByLabelText("We won the point");
-    await user.click(wonRadio);
+    const wonButton = screen.getByRole("button", { name: /won the point/i });
+    await user.click(wonButton);
 
     // Click finish
     const finishButton = screen.getByRole("button", { name: /finish point/i });

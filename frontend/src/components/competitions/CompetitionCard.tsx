@@ -84,7 +84,7 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
             <Chip
               label={competition.status}
               size="small"
-              color={competition.status === "ongoing" ? "success" : "default"}
+              color={competition.status === "ongoing" ? "primary" : "default"}
               sx={{ textTransform: "capitalize" }}
             />
             <Chip

@@ -87,7 +87,7 @@ export default function GameCard({ game }: GameCardProps) {
               }
               color={
                 game.status === "started"
-                  ? "success"
+                  ? "primary"
                   : game.status === "ended"
                     ? game.our_score > game.opponent_score
                       ? "success"

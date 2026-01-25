@@ -57,9 +57,9 @@ export default function PointHistoryItem({
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
           <Box display="flex" alignItems="center" gap={1}>
             {point.starting_on_offense ? (
-              <FlashOnIcon color="warning" />
+              <FlashOnIcon color="primary" />
             ) : (
-              <ShieldIcon color="info" />
+              <ShieldIcon color="secondary" />
             )}
             <Typography variant="h6" fontWeight="bold">
               Point #{point.point_number}

@@ -21,6 +21,7 @@ export default function Layout() {
 
   const menuItems = [
     { label: "Teams", path: "/teams" },
+    { label: "Strategies", path: "/strategies" },
     { label: "Competitions", path: "/competitions" },
     { label: "Games", path: "/games" },
   ];

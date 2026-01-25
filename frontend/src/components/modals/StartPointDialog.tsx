@@ -5,22 +5,20 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Alert,
-  Select,
-  MenuItem,
-  InputLabel,
+  Box,
+  Typography,
+  ToggleButtonGroup,
+  ToggleButton,
+  Chip,
 } from "@mui/material";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
+import ShieldIcon from "@mui/icons-material/Shield";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startPoint, updatePoint } from "../../services/points";
 import { getLines } from "../../services/lines";
-import { getStrategies } from "../../services/strategies";
 import PlayerSelector from "../points/PlayerSelector";
-import type { Player, Line, Strategy } from "../../types";
+import type { Player, Line } from "../../types";
 
 interface StartPointDialogProps {
   open: boolean;
@@ -42,20 +40,12 @@ export default function StartPointDialog({
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [startingOnOffense, setStartingOnOffense] = useState<boolean>(true);
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
-  const [strategyId, setStrategyId] = useState<number | "">("");
   const queryClient = useQueryClient();
 
   // Fetch lines for the team
   const { data: lines } = useQuery({
     queryKey: ["lines", teamId],
     queryFn: () => getLines(teamId),
-    enabled: open,
-  });
-
-  // Fetch strategies filtered by category
-  const { data: strategies } = useQuery({
-    queryKey: ["strategies", startingOnOffense ? "offense" : "defense"],
-    queryFn: () => getStrategies(startingOnOffense ? "offense" : "defense"),
     enabled: open,
   });
 
@@ -75,6 +65,14 @@ export default function StartPointDialog({
     return players.filter((p) => linePlayerIds.includes(p.id));
   }, [players, selectedLineId, lines]);
 
+  // Count selected by gender
+  const selectedMen = selectedPlayerIds.filter((id) =>
+    players.some((p) => p.id === id && p.gender === "M")
+  ).length;
+  const selectedWomen = selectedPlayerIds.filter((id) =>
+    players.some((p) => p.id === id && p.gender === "W")
+  ).length;
+
   const startMutation = useMutation({
     mutationFn: async () => {
       // Create point (backend creates with status="ready")
@@ -82,7 +80,6 @@ export default function StartPointDialog({
         game_id: gameId,
         starting_on_offense: startingOnOffense,
         player_ids: selectedPlayerIds,
-        strategy_id: typeof strategyId === "number" ? strategyId : null,
       });
 
       // Immediately transition to "running" status
@@ -101,7 +98,6 @@ export default function StartPointDialog({
     setSelectedPlayerIds([]);
     setStartingOnOffense(true);
     setSelectedLineId("");
-    setStrategyId("");
     startMutation.reset();
     onClose();
   };
@@ -125,78 +121,93 @@ export default function StartPointDialog({
           </Alert>
         )}
 
-        <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-          <FormLabel component="legend">Starting</FormLabel>
-          <RadioGroup
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Starting
+          </Typography>
+          <ToggleButtonGroup
             value={startingOnOffense ? "offense" : "defense"}
-            onChange={(e) => {
-              setStartingOnOffense(e.target.value === "offense");
-              // Reset strategy when changing offense/defense
-              setStrategyId("");
+            exclusive
+            onChange={(_, newValue) => {
+              if (newValue !== null) {
+                setStartingOnOffense(newValue === "offense");
+              }
+            }}
+            fullWidth
+            aria-label="starting on offense or defense"
+            sx={{
+              "& .MuiToggleButton-root": {
+                py: 1.5,
+                textTransform: "none",
+                fontWeight: 500,
+                "&.Mui-selected": {
+                  backgroundColor: "primary.main",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "primary.dark",
+                  },
+                },
+              },
             }}
           >
-            <FormControlLabel
-              value="offense"
-              control={<Radio />}
-              label="On Offense (we have the disc)"
-            />
-            <FormControlLabel
-              value="defense"
-              control={<Radio />}
-              label="On Defense (they have the disc)"
-            />
-          </RadioGroup>
-        </FormControl>
-
-        {/* Strategy selection */}
-        {strategies && strategies.length > 0 && (
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="strategy-select-label">Strategy (Optional)</InputLabel>
-            <Select
-              labelId="strategy-select-label"
-              id="strategy-select"
-              value={strategyId}
-              label="Strategy (Optional)"
-              onChange={(e) => setStrategyId(e.target.value as number | "")}
-            >
-              <MenuItem value="">
-                <em>No strategy</em>
-              </MenuItem>
-              {strategies.map((strategy: Strategy) => (
-                <MenuItem key={strategy.id} value={strategy.id}>
-                  {strategy.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
+            <ToggleButton value="offense" aria-label="on offense">
+              <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
+              On Offense
+            </ToggleButton>
+            <ToggleButton value="defense" aria-label="on defense">
+              <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
+              On Defense
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
 
         {/* Line filter */}
         {lines && lines.length > 0 && (
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel id="line-select-label">Filter by Line (Optional)</InputLabel>
-            <Select
-              labelId="line-select-label"
-              id="line-select"
-              value={selectedLineId}
-              label="Filter by Line (Optional)"
-              onChange={(e) => {
-                setSelectedLineId(e.target.value as number | "");
-                // Clear selected players when changing filter
-                setSelectedPlayerIds([]);
-              }}
-            >
-              <MenuItem value="">
-                <em>All players - No filter</em>
-              </MenuItem>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Filter by Line (Optional)
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Chip
+                label="All Players"
+                onClick={() => {
+                  setSelectedLineId("");
+                  setSelectedPlayerIds([]);
+                }}
+                color={selectedLineId === "" ? "primary" : "default"}
+                variant={selectedLineId === "" ? "filled" : "outlined"}
+              />
               {lines.map((line: Line) => (
-                <MenuItem key={line.id} value={line.id}>
-                  {line.name}
-                </MenuItem>
+                <Chip
+                  key={line.id}
+                  label={line.name}
+                  onClick={() => {
+                    setSelectedLineId(line.id);
+                    setSelectedPlayerIds([]);
+                  }}
+                  color={selectedLineId === line.id ? "primary" : "default"}
+                  variant={selectedLineId === line.id ? "filled" : "outlined"}
+                />
               ))}
-            </Select>
-          </FormControl>
+            </Box>
+          </Box>
         )}
+
+        {/* Player selection with count header */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Select 7 Players{" "}
+            <Typography
+              component="span"
+              variant="body2"
+              color={isValid ? "success.main" : selectedPlayerIds.length > 0 ? "error.main" : "text.secondary"}
+              fontWeight={selectedPlayerIds.length > 0 ? 500 : 400}
+            >
+              ({selectedPlayerIds.length}/7
+              {selectedPlayerIds.length > 0 && `: ${selectedMen}M, ${selectedWomen}W`})
+            </Typography>
+          </Typography>
+        </Box>
 
         <PlayerSelector
           players={[...filteredPlayers].sort((a, b) => a.name.localeCompare(b.name))}
@@ -204,6 +215,7 @@ export default function StartPointDialog({
           onChange={setSelectedPlayerIds}
           required
           error={!isValid && selectedPlayerIds.length > 0}
+          showCount={false}
         />
       </DialogContent>
       <DialogActions>

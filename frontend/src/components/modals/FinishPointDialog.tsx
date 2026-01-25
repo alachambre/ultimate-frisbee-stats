@@ -5,16 +5,16 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Alert,
   Box,
   Typography,
-  Chip,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
+import ShieldIcon from "@mui/icons-material/Shield";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePoint } from "../../services/points";
 import PointTimer from "../points/PointTimer";
@@ -63,9 +63,20 @@ export default function FinishPointDialog({
     }
   };
 
+  const isOffense = activePoint.starting_on_offense;
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Finish Point</DialogTitle>
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          {isOffense ? (
+            <FlashOnIcon color="primary" />
+          ) : (
+            <ShieldIcon color="secondary" />
+          )}
+          Finish {isOffense ? "Offense" : "Defense"} Point
+        </Box>
+      </DialogTitle>
       <DialogContent>
         {finishMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -84,62 +95,59 @@ export default function FinishPointDialog({
           )}
         </Box>
 
-        {/* Starting Position */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Started
-          </Typography>
-          <Chip
-            label={
-              activePoint.starting_on_offense
-                ? "On Offense (we had the disc)"
-                : "On Defense (they had the disc)"
-            }
-            size="small"
-            color={activePoint.starting_on_offense ? "primary" : "default"}
-          />
-        </Box>
-
-        {/* Players */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Players ({activePoint.players.length})
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {activePoint.players.map((player) => (
-              <Chip
-                key={player.id}
-                label={
-                  player.number !== null && player.number !== undefined
-                    ? `${player.name} #${player.number}`
-                    : player.name
-                }
-                size="small"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        </Box>
-
         {/* Outcome */}
-        <FormControl component="fieldset" fullWidth required>
-          <FormLabel component="legend">Outcome</FormLabel>
-          <RadioGroup
+        <Box>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Outcome
+          </Typography>
+          <ToggleButtonGroup
             value={won === null ? "" : won ? "won" : "lost"}
-            onChange={(e) => setWon(e.target.value === "won")}
+            exclusive
+            onChange={(_, newValue) => {
+              if (newValue !== null) {
+                setWon(newValue === "won");
+              }
+            }}
+            fullWidth
+            aria-label="point outcome"
+            sx={{
+              "& .MuiToggleButton-root": {
+                py: 1.5,
+                textTransform: "none",
+                fontWeight: 500,
+                "&.Mui-selected": {
+                  fontWeight: "bold",
+                  "&:hover": {
+                    opacity: 0.9,
+                  },
+                },
+                "&.Mui-selected[value='won']": {
+                  backgroundColor: "success.main",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "success.dark",
+                  },
+                },
+                "&.Mui-selected[value='lost']": {
+                  backgroundColor: "error.main",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "error.dark",
+                  },
+                },
+              },
+            }}
           >
-            <FormControlLabel
-              value="won"
-              control={<Radio />}
-              label="We won the point"
-            />
-            <FormControlLabel
-              value="lost"
-              control={<Radio />}
-              label="They won the point"
-            />
-          </RadioGroup>
-        </FormControl>
+            <ToggleButton value="won" aria-label="won the point">
+              <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} />
+              Won
+            </ToggleButton>
+            <ToggleButton value="lost" aria-label="lost the point">
+              <CancelIcon sx={{ mr: 1, fontSize: 20 }} />
+              Lost
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={finishMutation.isPending}>

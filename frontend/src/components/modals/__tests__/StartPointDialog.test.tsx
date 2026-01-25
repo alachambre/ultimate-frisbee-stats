@@ -28,7 +28,7 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
 };
 
 describe("StartPointDialog", () => {
-  it("displays offense/defense radio buttons", () => {
+  it("displays offense/defense toggle buttons", () => {
     renderWithQueryClient(
       <StartPointDialog
         open={true}
@@ -39,8 +39,8 @@ describe("StartPointDialog", () => {
       />
     );
 
-    expect(screen.getByLabelText(/on offense/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/on defense/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /on offense/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /on defense/i })).toBeInTheDocument();
   });
 
   it("displays player selector", () => {
@@ -189,15 +189,13 @@ describe("StartPointDialog", () => {
 
     // Wait for lines to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/filter by line/i)).toBeInTheDocument();
+      expect(screen.getByText(/filter by line \(optional\)/i)).toBeInTheDocument();
     });
 
-    // Should show the line in the dropdown
-    const lineSelect = screen.getByLabelText(/filter by line/i);
-    await userEvent.click(lineSelect);
-
+    // Should show the line chips
     await waitFor(() => {
-      expect(screen.getByText("O-Line")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /all players/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "O-Line" })).toBeInTheDocument();
     });
   });
 
@@ -252,20 +250,16 @@ describe("StartPointDialog", () => {
 
     // Wait for lines to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/filter by line/i)).toBeInTheDocument();
+      expect(screen.getByText(/filter by line \(optional\)/i)).toBeInTheDocument();
     });
 
     // Men tab is active by default, should see male players
     expect(screen.getByText("Bob")).toBeInTheDocument();
     expect(screen.getByText("Henry")).toBeInTheDocument();
 
-    // Open the line filter dropdown
-    const lineSelect = screen.getByLabelText(/filter by line/i);
-    await user.click(lineSelect);
-
-    // Select the O-Line
-    const oLineOption = await screen.findByText("O-Line");
-    await user.click(oLineOption);
+    // Click the O-Line chip to filter
+    const oLineChip = screen.getByRole("button", { name: "O-Line" });
+    await user.click(oLineChip);
 
     // Now should only see players from O-Line (first 4: Alice, Bob, Charlie, Diana)
     // Men tab is active, should see Bob and Charlie (first 4 includes 2 men)
@@ -343,7 +337,7 @@ describe("StartPointDialog", () => {
 
     // Wait for lines to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/filter by line/i)).toBeInTheDocument();
+      expect(screen.getByText(/filter by line \(optional\)/i)).toBeInTheDocument();
     });
 
     // Select 2 players first
@@ -356,21 +350,18 @@ describe("StartPointDialog", () => {
     await user.click(playerCheckboxes[0]);
     await user.click(playerCheckboxes[1]);
 
-    // Should show 2 selected
+    // Should show 2 selected in header
     await waitFor(() => {
-      expect(screen.getByText("2 selected")).toBeInTheDocument();
+      expect(screen.getByText(/\(2\/7/i)).toBeInTheDocument();
     });
 
-    // Now change the line filter
-    const lineSelect = screen.getByLabelText(/filter by line/i);
-    await user.click(lineSelect);
+    // Now change the line filter by clicking O-Line chip
+    const oLineChip = screen.getByRole("button", { name: "O-Line" });
+    await user.click(oLineChip);
 
-    const oLineOption = await screen.findByText("O-Line");
-    await user.click(oLineOption);
-
-    // Selection should be cleared
+    // Selection should be cleared (back to 0/7)
     await waitFor(() => {
-      expect(screen.getByText("0 selected")).toBeInTheDocument();
+      expect(screen.getByText(/\(0\/7\)/i)).toBeInTheDocument();
     });
   });
 
@@ -424,14 +415,12 @@ describe("StartPointDialog", () => {
 
     // Wait for lines to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/filter by line/i)).toBeInTheDocument();
+      expect(screen.getByText(/filter by line \(optional\)/i)).toBeInTheDocument();
     });
 
-    // Select a line first
-    const lineSelect = screen.getByLabelText(/filter by line/i);
-    await user.click(lineSelect);
-    const oLineOption = await screen.findByText("O-Line");
-    await user.click(oLineOption);
+    // Click O-Line chip to filter
+    const oLineChip = screen.getByRole("button", { name: "O-Line" });
+    await user.click(oLineChip);
 
     // Should only see 4 players (2 men visible on Men tab)
     await waitFor(() => {
@@ -440,10 +429,9 @@ describe("StartPointDialog", () => {
       expect(screen.getByText("Charlie")).toBeInTheDocument();
     });
 
-    // Now select "All players - No filter"
-    await user.click(lineSelect);
-    const allPlayersOption = await screen.findByText(/all players - no filter/i);
-    await user.click(allPlayersOption);
+    // Now click "All Players" chip to clear filter
+    const allPlayersChip = screen.getByRole("button", { name: /all players/i });
+    await user.click(allPlayersChip);
 
     // Should see all men again on Men tab
     await waitFor(() => {

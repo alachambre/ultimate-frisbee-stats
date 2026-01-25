@@ -9,6 +9,7 @@ interface PlayerSelectorProps {
   required?: boolean;
   error?: boolean;
   helperText?: string;
+  showCount?: boolean;
 }
 
 export default function PlayerSelector({
@@ -18,6 +19,7 @@ export default function PlayerSelector({
   required = false,
   error = false,
   helperText,
+  showCount = true,
 }: PlayerSelectorProps) {
   const selectedCount = selectedIds.length;
   const isValid = !required || selectedCount === 7;
@@ -58,6 +60,7 @@ export default function PlayerSelector({
         onSelectAllMen={handleSelectAllMen}
         onSelectAllWomen={handleSelectAllWomen}
         onClearAll={handleClearAll}
+        showCount={showCount}
       />
 
       {(error || helperText) && (

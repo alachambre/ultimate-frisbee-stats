@@ -8,3 +8,4 @@ export * from "./competitions";
 export * from "./lines";
 export * from "./games";
 export * from "./points";
+export * from "./strategies";

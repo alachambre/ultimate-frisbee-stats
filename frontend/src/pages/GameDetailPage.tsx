@@ -211,7 +211,7 @@ export default function GameDetailPage() {
                     ? "Ongoing"
                     : "Finished"
                 }
-                color={game.status === "started" ? "success" : "default"}
+                color={game.status === "started" ? "primary" : "default"}
                 size="small"
               />
               <Chip label={game.team_name} variant="outlined" size="small" />
