@@ -43,9 +43,10 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Mark points as offense or defense
 - Assign strategies to points (offense/defense specific)
 - Track pull status (inbound/out of bounds) for defensive points
-- Add comments to points for detailed notes
+- Add/edit comments during live tracking for detailed notes
 - Record point outcomes (won/lost)
 - Resume scored points for late calls or contested outcomes
+- Timer properly restarts when resuming points
 - View strategic context (breaks, holds)
 - Edit point details and player lineups
 - Validation fixes for points under 1 minute duration
@@ -122,9 +123,10 @@ frontend/
 │   │       ├── EditLineModal.tsx
 │   │       ├── CreateGameModal.tsx
 │   │       ├── EditGameModal.tsx
-│   │       ├── StartPointDialog.tsx         # Enhanced with strategy, pull, comments
+│   │       ├── StartPointDialog.tsx         # Enhanced with strategy selection
 │   │       ├── FinishPointDialog.tsx        # Transitions to 'scored' status
 │   │       ├── CompletePointDialog.tsx      # Finalizes scored points
+│   │       ├── AddCommentDialog.tsx         # Add/edit comments during live tracking
 │   │       └── EditPointDialog.tsx
 │   ├── pages/            # Page components (routes)
 │   │   ├── HomePage.tsx            # Landing page
@@ -517,17 +519,20 @@ Backend is configured to allow all origins in development. If you still see CORS
 
 ## Recent Enhancements
 
-**Phase 6 Frontend (In Progress):**
+**Phase 6 Frontend (Complete):**
 - ✅ 4-status point workflow (Ready → Running → Scored → Completed)
 - ✅ Strategy service layer and integration in point tracking
 - ✅ Pull tracking for defensive points (Inbound/Out of Bounds buttons)
-- ✅ Comments field for points
+- ✅ AddCommentDialog for adding/editing comments during live tracking
 - ✅ Resume Point feature for late calls/contested scores
 - ✅ CompletePointDialog for finalizing scored points
 - ✅ Enhanced PointHistoryItem with strategy, pull status, comments
+- ✅ Timer bug fixed: PointTimer properly restarts when resuming scored points
+- ✅ Optimistic cache updates for smooth resume transitions (no UI flicker)
+- ✅ Code cleanup: Simplified timer rendering, consolidated duplicate code
 - ✅ 119 tests passing (8 new tests for Phase 6 features)
 - ⏳ ABBA Gender Rule enforcement (not yet implemented)
-- 🐛 Known bug: Resume Point timer doesn't restart in UI (backend works correctly)
+- ⏳ Strategy Management UI (service layer complete, UI pages/modals not yet built)
 
 **Phase 5 Complete:**
 - ✅ Lines management (create, edit, delete lines with player selection)

@@ -14,7 +14,6 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  TextField,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startPoint, updatePoint } from "../../services/points";
@@ -44,7 +43,6 @@ export default function StartPointDialog({
   const [startingOnOffense, setStartingOnOffense] = useState<boolean>(true);
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const [strategyId, setStrategyId] = useState<number | "">("");
-  const [comments, setComments] = useState<string>("");
   const queryClient = useQueryClient();
 
   // Fetch lines for the team
@@ -85,7 +83,6 @@ export default function StartPointDialog({
         starting_on_offense: startingOnOffense,
         player_ids: selectedPlayerIds,
         strategy_id: typeof strategyId === "number" ? strategyId : null,
-        comments: comments || null,
       });
 
       // Immediately transition to "running" status
@@ -105,7 +102,6 @@ export default function StartPointDialog({
     setStartingOnOffense(true);
     setSelectedLineId("");
     setStrategyId("");
-    setComments("");
     startMutation.reset();
     onClose();
   };
@@ -174,18 +170,6 @@ export default function StartPointDialog({
             </Select>
           </FormControl>
         )}
-
-        {/* Comments */}
-        <TextField
-          fullWidth
-          label="Comments (Optional)"
-          placeholder="Add notes about this point..."
-          value={comments}
-          onChange={(e) => setComments(e.target.value)}
-          multiline
-          rows={2}
-          sx={{ mb: 3 }}
-        />
 
         {/* Line filter */}
         {lines && lines.length > 0 && (

@@ -14,12 +14,14 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import CommentIcon from "@mui/icons-material/Comment";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePoint } from "../../services/points";
 import PointTimer from "./PointTimer";
 import StartPointDialog from "../modals/StartPointDialog";
 import FinishPointDialog from "../modals/FinishPointDialog";
 import CompletePointDialog from "../modals/CompletePointDialog";
+import AddCommentDialog from "../modals/AddCommentDialog";
 import type { GameDetail, PointWithPlayers, Player } from "../../types";
 
 interface LivePointTrackerProps {
@@ -40,6 +42,7 @@ export default function LivePointTracker({
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Find scored points (most recent scored point)
@@ -76,11 +79,23 @@ export default function LivePointTracker({
       });
     },
     onSuccess: async (updatedPoint) => {
-      // Immediately update the runningPoint cache with the resumed point
+      // Optimistically update both caches immediately to avoid UI flicker
+
+      // 1. Update runningPoint cache
       queryClient.setQueryData(["runningPoint", game.id], updatedPoint);
 
-      // Then invalidate game query to refresh history
-      await queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
+      // 2. Update game cache - replace the scored point with the running point
+      queryClient.setQueryData(["game", String(game.id)], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          points: oldData.points.map((p: any) =>
+            p.id === updatedPoint.id ? updatedPoint : p
+          ),
+        };
+      });
+
+      // 3. No need to invalidate - cache is already up to date
       onPointUpdated?.();
     },
   });
@@ -147,9 +162,9 @@ export default function LivePointTracker({
                 </Typography>
                 {currentPoint.start_datetime && (
                   <PointTimer
-                    key={`${currentPoint.id}-${currentPoint.status}-${currentPoint.end_datetime || 'running'}`}
+                    key={`${currentPoint.id}-${currentPoint.status}`}
                     startDatetime={currentPoint.start_datetime}
-                    endDatetime={currentPoint.end_datetime}
+                    endDatetime={currentPoint.status === "scored" ? currentPoint.end_datetime || undefined : undefined}
                   />
                 )}
               </Box>
@@ -182,6 +197,18 @@ export default function LivePointTracker({
                 </ButtonGroup>
               </Box>
             )}
+
+            {/* Comment button */}
+            <Box display="flex" justifyContent="center" mt={2}>
+              <Button
+                variant="outlined"
+                startIcon={<CommentIcon />}
+                onClick={() => setIsCommentDialogOpen(true)}
+                size="medium"
+              >
+                {currentPoint.comments ? "Edit Comment" : "Add Comment"}
+              </Button>
+            </Box>
 
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
               {currentPoint.status === "running" ? (
@@ -258,6 +285,16 @@ export default function LivePointTracker({
           open={isCompleteDialogOpen}
           onClose={() => setIsCompleteDialogOpen(false)}
           scoredPoint={scoredPoint}
+          onSuccess={onPointUpdated}
+        />
+      )}
+
+      {currentPoint && (
+        <AddCommentDialog
+          open={isCommentDialogOpen}
+          onClose={() => setIsCommentDialogOpen(false)}
+          point={currentPoint}
+          gameId={game.id}
           onSuccess={onPointUpdated}
         />
       )}

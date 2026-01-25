@@ -204,12 +204,14 @@ e08da6d - Migrate from deprecated GridLegacy to MUI v7 Grid API
 ```
 
 ### Recent Changes Summary (Uncommitted)
-- **Phase 6 Frontend: Enhanced Point Tracking (MOSTLY COMPLETE) ✅**:
+- **Phase 6 Frontend: Enhanced Point Tracking (COMPLETE) ✅**:
   - ✅ **4-Status Point Workflow**:
     - Ready → Running → Scored → Completed lifecycle
     - FinishPointDialog transitions to "scored" (not "completed")
     - New CompletePointDialog for scored→completed transition
     - Resume Point button for late calls/contested scores (scored→running)
+    - Timer properly restarts when resuming a scored point (fixed)
+    - Optimistic cache updates for smooth UI transitions (no flicker on resume)
   - ✅ **Strategy Integration**:
     - Strategy service layer (services/strategies.ts) with full CRUD
     - TypeScript types for Strategy, StrategyCategory (offense/defense)
@@ -220,17 +222,21 @@ e08da6d - Migrate from deprecated GridLegacy to MUI v7 Grid API
     - Mark pull as Inbound or Out of Bounds during running point
     - Pull status displayed in PointHistoryItem
   - ✅ **Point Comments**:
-    - Comments field in StartPointDialog
+    - AddCommentDialog for adding/editing comments during live point tracking
+    - "Add Comment" / "Edit Comment" button in LivePointTracker
+    - Comments moved from StartPointDialog to live tracking area for better UX
     - Display in PointHistoryItem
   - ✅ **Backend Fixes**:
     - Fixed timezone comparison error in update_point (datetime comparison)
+  - ✅ **Code Quality**:
+    - Simplified PointTimer conditional rendering (consolidated duplicate code)
+    - Cleaned up unnecessary null checks in PointTimer component
+    - Proper React key strategy for timer remounts (`${id}-${status}`)
   - ✅ **Testing**:
     - 119 frontend tests passing (8 new tests for Phase 6)
     - CompletePointDialog: 7 tests (new component)
     - FinishPointDialog: 1 additional test for 'scored' transition
     - Production build passing, all TypeScript errors resolved
-  - 🐛 **Known Bug**:
-    - Resume Point timer doesn't restart in UI (backend data correct, display issue only)
   - ⏳ **Not Yet Implemented**:
     - Strategy Management UI (no pages/modals to create strategies)
     - ABBA Gender Rule enforcement
@@ -250,7 +256,7 @@ src/
 │   ├── points/          # LivePointTracker, PointTimer, PlayerSelector, PointHistoryList, PointHistoryItem
 │   └── modals/          # CreateTeamModal, EditPlayerModal, CreateGameModal, EditGameModal,
 │                        # StartPointDialog, FinishPointDialog, CompletePointDialog, EditPointDialog,
-│                        # CreateCompetitionModal, EditCompetitionModal,
+│                        # AddCommentDialog, CreateCompetitionModal, EditCompetitionModal,
 │                        # CreateLineModal, EditLineModal,
 │                        # AddPlayersModal (generic), AddPlayersToRosterModal, AddPlayersToLineModal,
 │                        # AddPlayersToGameModal
@@ -476,15 +482,6 @@ npm run build                       # Production build
 - Node.js 20.15.0 (Vite recommends 20.19+ or 22.12+ but works fine)
 - Database must be recreated when Point model changes (SQLite, no migrations)
 
-### Phase 6 Known Bugs
-**Bug: Resume Point timer doesn't restart in UI**
-- When resuming a scored point (scored→running), the timer stays frozen at the scored duration
-- Backend data is correct (end_datetime properly cleared)
-- Issue is purely in the frontend display/React rendering
-- Workaround: Score the point again to see updated timer
-- Root cause: PointTimer component not properly detecting endDatetime change from value→null
-- Status: DEFERRED - will fix later
-
 ### Game Timer Issues (Need Fixing)
 **Issue 1: Timer starts at 1 hour** - Timezone issue with datetime handling
 - Backend stores UTC timestamps, frontend may be interpreting incorrectly
@@ -565,16 +562,20 @@ npm run build                       # Production build
   - Backend: 273 tests passing (45 new tests for Strategy & enhanced Point model)
   - Strategy model with offense/defense categories, 5 REST endpoints
   - Point model: 4-status lifecycle (ready→running→scored→completed), new fields (field_side, pull, strategy_id, comments)
-- **Phase 6 Frontend MOSTLY COMPLETE**
+- **Phase 6 Frontend COMPLETE** 🎉
   - ✅ Strategy service layer (services/strategies.ts) with full CRUD
   - ✅ TypeScript types updated for all new fields
-  - ✅ StartPointDialog enhanced: strategy selection, comments
+  - ✅ StartPointDialog enhanced: strategy selection (comments removed - moved to live tracking)
   - ✅ FinishPointDialog updated: transitions to "scored" status
   - ✅ CompletePointDialog created: scored→completed transition
-  - ✅ LivePointTracker updated: 4-status workflow, Resume Point button, pull tracking UI
+  - ✅ AddCommentDialog created: add/edit comments during live tracking
+  - ✅ LivePointTracker updated: 4-status workflow, Resume Point button, pull tracking UI, comment button
   - ✅ Pull tracking: Only for defensive points, marked during live point (Inbound/Out of Bounds buttons)
   - ✅ PointHistoryItem displays: strategy, pull status, comments
   - ✅ Resume Point feature: Allows canceling score due to late calls (scored→running)
+  - ✅ Timer bug fixed: Timer properly restarts when resuming scored point
+  - ✅ Optimistic cache updates: Smooth UI transitions on resume (no flicker)
+  - ✅ Code cleanup: Simplified PointTimer rendering, consolidated duplicate code
   - ✅ MSW mocks updated: Strategy endpoints, new point fields
   - ✅ Backend timezone comparison fix applied (update_point datetime comparison)
   - ✅ Tests updated: 119 tests passing (8 new tests for CompletePointDialog and FinishPointDialog)
@@ -603,7 +604,6 @@ npm run build                       # Production build
   1. **Complete Phase 6 Frontend Remaining**:
      - Strategy Management UI (StrategiesPage + Create/Edit modals)
      - ABBA Gender Rule enforcement (frontend validation)
-     - Fix Resume Point timer UI bug
   2. **Fix Game Timer** - Start timer when first point runs (not game start button)
   3. **Phase 7** - Calls & Turnovers (backend + frontend)
   4. **Phase 8** - Statistics Dashboard

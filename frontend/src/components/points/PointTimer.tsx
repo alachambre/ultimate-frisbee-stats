@@ -10,8 +10,8 @@ export default function PointTimer({ startDatetime, endDatetime }: PointTimerPro
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
-    // If endDatetime is provided (not null/undefined), calculate static duration
-    if (endDatetime !== null && endDatetime !== undefined) {
+    // If endDatetime is provided, calculate static duration
+    if (endDatetime) {
       const start = new Date(startDatetime).getTime();
       const end = new Date(endDatetime).getTime();
       const diffMs = end - start;
