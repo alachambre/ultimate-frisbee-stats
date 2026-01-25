@@ -1,24 +1,13 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "../../test/test-utils";
+import { describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
 import StrategiesPage from "../StrategiesPage";
 import { createStrategy } from "../../services";
-
-const renderWithProviders = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{ui}</MemoryRouter>
-    </QueryClientProvider>
-  );
-};
+import { resetMockData } from "../../test/mocks/handlers";
 
 describe("StrategiesPage", () => {
   beforeEach(async () => {
+    resetMockData();
     // Create test strategies
     await createStrategy({
       name: "Vertical Stack",
@@ -33,24 +22,26 @@ describe("StrategiesPage", () => {
   });
 
   it("displays page header with create button", async () => {
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
-    expect(screen.getByText("Strategies")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Strategies")).toBeInTheDocument();
+    });
     expect(screen.getByRole("button", { name: /new strategy/i })).toBeInTheDocument();
   });
 
   it("displays category filter toggle buttons", async () => {
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /all/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /all strategies/i })).toBeInTheDocument();
     });
-    expect(screen.getByRole("button", { name: /offense/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /defense/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /offense strategies/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /defense strategies/i })).toBeInTheDocument();
   });
 
   it("displays all strategies by default", async () => {
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
@@ -60,7 +51,7 @@ describe("StrategiesPage", () => {
 
   it("filters strategies by offense category", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
@@ -68,7 +59,7 @@ describe("StrategiesPage", () => {
     });
 
     // Click offense filter
-    const offenseButton = screen.getByRole("button", { name: /offense/i });
+    const offenseButton = screen.getByRole("button", { name: /offense strategies/i });
     await user.click(offenseButton);
 
     // Should only see offensive strategy
@@ -80,7 +71,7 @@ describe("StrategiesPage", () => {
 
   it("filters strategies by defense category", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
@@ -88,7 +79,7 @@ describe("StrategiesPage", () => {
     });
 
     // Click defense filter
-    const defenseButton = screen.getByRole("button", { name: /defense/i });
+    const defenseButton = screen.getByRole("button", { name: /defense strategies/i });
     await user.click(defenseButton);
 
     // Should only see defensive strategy
@@ -100,7 +91,7 @@ describe("StrategiesPage", () => {
 
   it("allows creating a new strategy", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Strategies")).toBeInTheDocument();
@@ -112,41 +103,43 @@ describe("StrategiesPage", () => {
 
     // Modal should open
     await waitFor(() => {
-      expect(screen.getByText("Create New Strategy")).toBeInTheDocument();
+      expect(screen.getByText("Create Strategy")).toBeInTheDocument();
     });
   });
 
   it("displays empty state when no strategies exist", async () => {
-    renderWithProviders(<StrategiesPage />);
+    resetMockData();
+    render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Strategies")).toBeInTheDocument();
     });
 
-    // Filter by a category to potentially see empty state
-    // (This test relies on having strategies, so it won't show empty state yet)
-    // The empty state component should be tested separately
+    // Should show empty state
+    await waitFor(() => {
+      expect(screen.getByText(/no strategies yet/i)).toBeInTheDocument();
+    });
   });
 
   it("allows deleting a strategy with confirmation", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<StrategiesPage />);
+    render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
     });
 
-    // Find delete button for the strategy
-    const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
-    await user.click(deleteButtons[0]);
+    // Find all delete icon buttons (they don't have aria-labels)
+    const deleteButtons = screen.getAllByTestId("DeleteIcon").map(icon => icon.closest("button")).filter(Boolean);
+    await user.click(deleteButtons[0]!);
 
     // Confirmation dialog should appear
     await waitFor(() => {
       expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
     });
 
-    // Confirm deletion
-    const confirmButton = screen.getByRole("button", { name: /delete/i });
+    // Confirm deletion - find the "Delete" button in the dialog (not the icon buttons)
+    const confirmButton = screen.getByRole("button", { name: /^delete$/i });
     await user.click(confirmButton);
 
     // Strategy should be removed

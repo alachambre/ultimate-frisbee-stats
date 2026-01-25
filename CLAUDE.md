@@ -196,15 +196,15 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
+be2f4cd - Fix all remaining strategy tests (17 tests)
+2db6239 - Improve StartPointDialog UX and add Strategy Management UI
 bb28267 - Implement Phase 6 backend: Strategy model and enhanced Point tracking (PUSHED)
 23ae5f0 - Implement Phase 5 backend: Lines and enhanced Game model (PUSHED)
 ec7e694 - Enhance UI with theme improvements, roster UX, and home page updates
-ef59597 - Enhance UI with centralized theme and consistent card design
-e08da6d - Migrate from deprecated GridLegacy to MUI v7 Grid API
 ```
 
 ### Recent Changes Summary (Uncommitted)
-- **Phase 6 Frontend: Enhanced Point Tracking (COMPLETE) ✅**:
+- **Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (COMPLETE) ✅**:
   - ✅ **4-Status Point Workflow**:
     - Ready → Running → Scored → Completed lifecycle
     - FinishPointDialog transitions to "scored" (not "completed")
@@ -212,11 +212,17 @@ e08da6d - Migrate from deprecated GridLegacy to MUI v7 Grid API
     - Resume Point button for late calls/contested scores (scored→running)
     - Timer properly restarts when resuming a scored point (fixed)
     - Optimistic cache updates for smooth UI transitions (no flicker on resume)
-  - ✅ **Strategy Integration**:
-    - Strategy service layer (services/strategies.ts) with full CRUD
-    - TypeScript types for Strategy, StrategyCategory (offense/defense)
-    - Strategy selection in StartPointDialog (filtered by category)
-    - Strategy display in PointHistoryItem
+  - ✅ **Strategy Management UI (COMPLETE)**:
+    - StrategiesPage with full CRUD operations (create/edit/delete with confirmation)
+    - Toggle button filters (All/Offense/Defense) with navy blue selection styling
+    - CreateStrategyModal: Name, category (dropdown), optional description
+    - EditStrategyModal: Edit all fields with existing values pre-filled
+    - SelectStrategyDialog: Choose strategy during live point tracking (auto-filtered by offense/defense)
+    - StrategyCard: Display with edit/delete buttons, color-coded icons (navy/sky blue)
+    - StrategiesGrid, EmptyStrategiesState components
+    - Strategy service layer (services/strategies.ts) with full CRUD exported from services/index.ts
+    - Strategy selection in LivePointTracker (moved from StartPointDialog for better UX)
+    - Strategy display in PointHistoryItem with blue chip
   - ✅ **Pull Tracking**:
     - Live buttons in LivePointTracker for defensive points only
     - Mark pull as Inbound or Out of Bounds during running point
@@ -232,14 +238,25 @@ e08da6d - Migrate from deprecated GridLegacy to MUI v7 Grid API
     - Simplified PointTimer conditional rendering (consolidated duplicate code)
     - Cleaned up unnecessary null checks in PointTimer component
     - Proper React key strategy for timer remounts (`${id}-${status}`)
+  - ✅ **UX Improvements**:
+    - StartPointDialog: Line filter now uses wrapping chip buttons (no horizontal scroll)
+    - Player count moved to subtle inline format: "Select 7 Players (X/7: XM, XW)" with color-coded feedback
+    - "Ongoing" status chips now blue (was green) for consistency
+    - Offense/defense icons use gradient colors throughout (navy/sky blue)
+    - FinishPointDialog cleaner UI (removed player list, offense/defense in title, color-coded toggle buttons)
   - ✅ **Testing**:
-    - 119 frontend tests passing (8 new tests for Phase 6)
+    - 147 frontend tests passing (29 new tests for Phase 6)
     - CompletePointDialog: 7 tests (new component)
-    - FinishPointDialog: 1 additional test for 'scored' transition
+    - FinishPointDialog: 7 tests (updated for toggle buttons and cleaner UI)
+    - StartPointDialog: 9 tests (updated for chip-based line filter)
+    - CreateStrategyModal: 6 tests
+    - EditStrategyModal: 8 tests
+    - SelectStrategyDialog: 8 tests
+    - StrategiesPage: 8 tests
+    - All tests use proper setup with resetMockData() and data hierarchy
     - Production build passing, all TypeScript errors resolved
   - ⏳ **Not Yet Implemented**:
-    - Strategy Management UI (no pages/modals to create strategies)
-    - ABBA Gender Rule enforcement
+    - ABBA Gender Rule enforcement (frontend validation only)
 
 ## Architecture Patterns Established
 
@@ -247,21 +264,24 @@ e08da6d - Migrate from deprecated GridLegacy to MUI v7 Grid API
 ```
 src/
 ├── components/
-│   ├── shared/          # PageHeader, LoadingState, ErrorState
+│   ├── shared/          # PageHeader, LoadingState, ErrorState, PlayerSelectionUI
 │   ├── teams/           # TeamCard, TeamsGrid, EmptyTeamsState
 │   ├── competitions/    # CompetitionCard, CompetitionsGrid, EmptyCompetitionsState
 │   ├── lines/           # LineCard, LinesGrid, EmptyLinesState (Phase 5)
+│   ├── strategies/      # StrategyCard, StrategiesGrid, EmptyStrategiesState (Phase 6)
 │   ├── players/         # PlayerCard, PlayersGrid, EmptyPlayersState
 │   ├── games/           # GameCard, GamesGrid, EmptyGamesState
 │   ├── points/          # LivePointTracker, PointTimer, PlayerSelector, PointHistoryList, PointHistoryItem
 │   └── modals/          # CreateTeamModal, EditPlayerModal, CreateGameModal, EditGameModal,
 │                        # StartPointDialog, FinishPointDialog, CompletePointDialog, EditPointDialog,
-│                        # AddCommentDialog, CreateCompetitionModal, EditCompetitionModal,
+│                        # AddCommentDialog, SelectStrategyDialog,
+│                        # CreateCompetitionModal, EditCompetitionModal,
 │                        # CreateLineModal, EditLineModal,
+│                        # CreateStrategyModal, EditStrategyModal,
 │                        # AddPlayersModal (generic), AddPlayersToRosterModal, AddPlayersToLineModal,
 │                        # AddPlayersToGameModal
 ├── pages/               # HomePage, TeamsPage, TeamDetailPage, CompetitionsPage, CompetitionDetailPage,
-│                        # LineDetailPage, GamesPage, GameDetailPage
+│                        # LineDetailPage, GamesPage, GameDetailPage, StrategiesPage
 ├── services/            # API calls (teams.ts, competitions.ts, players.ts, lines.ts, games.ts, points.ts, strategies.ts)
 ├── types/               # TypeScript types matching backend schemas (includes Line types, updated GameStatus)
 └── test/
@@ -285,19 +305,23 @@ src/
 - **Card System**: Consistent gradient borders, full-width teams, responsive competition/game grids
 
 ### Testing Strategy
-- **Frontend**: 119 tests passing - 19/19 test files (Phase 1-6 tested)
+- **Frontend**: 147 tests passing - 23/23 test files (Phase 1-6 fully tested)
   - Phase 1: Teams & Players
   - Phase 2: Games
   - Phase 3: Live Point Tracking
   - Phase 4: Competitions & Roster Management
   - Phase 5: Lines & Enhanced Game Management
-    - LinesPage tests (6/6) - CRUD, filtering, navigation
-    - LineDetailPage tests (6/6) - player management, editing, gender-split
-    - GameDetailPage tests (10/10) - player management, status lifecycle, finished game restrictions
-    - StartPointDialog tests (9/9) - line filtering, player selection, validation
-  - Phase 6: Enhanced Point Tracking
-    - CompletePointDialog tests (7/7) - New component for scored→completed transition
-    - FinishPointDialog tests (7/7) - Updated for 'scored' status transition
+    - LinesPage tests (6) - CRUD, filtering, navigation
+    - LineDetailPage tests (6) - player management, editing, gender-split
+    - GameDetailPage tests (10) - player management, status lifecycle, finished game restrictions
+    - StartPointDialog tests (9) - chip-based line filtering, player selection, validation
+  - Phase 6: Enhanced Point Tracking & Strategy Management
+    - CompletePointDialog tests (7) - New component for scored→completed transition
+    - FinishPointDialog tests (6) - Updated for toggle buttons and cleaner UI
+    - CreateStrategyModal tests (6) - Form validation, category selection, CRUD
+    - EditStrategyModal tests (8) - Pre-filled values, dropdown interaction, updates
+    - SelectStrategyDialog tests (8) - Category filtering, proper test setup with data hierarchy
+    - StrategiesPage tests (8) - Filtering, CRUD operations, delete confirmation
   - Test organization: All tests in `__tests__/` subdirectories for consistency
 - **Backend**: 273 tests passing - 100% (118 new tests added in Phases 5-6)
   - Phase 5: 31 Line CRUD tests + 27 Line API tests + 17 enhanced Game tests
@@ -342,8 +366,8 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - **Call** - Fouls/violations with duration tracking
 - **Turnover** - Turnover events with player responsibility
 
-**Remaining Enhancements (Phase 6 Frontend):**
-- **ABBA Gender Rule** - Mixity validation (4M+3W or 3M+4W) with ABBA rule enforcement (frontend-only)
+**Remaining Enhancements:**
+- **ABBA Gender Rule** (Phase 6+) - Mixity validation (4M+3W or 3M+4W) with ABBA rule enforcement (frontend-only)
 
 **Statistics Dashboard (Phase 8):**
 - Comprehensive analytics at game/competition/team/player level
@@ -397,13 +421,17 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - Status: 273 backend tests passing (100%), production-ready
 - Next: Phase 5-6 Frontend implementation
 
-**⏳ Phase 6 Frontend: Strategy UI & 4-Status Point Tracking**
-- Add Strategy management UI (create, list, edit strategies)
-- Update LivePointTracker for 4-status workflow (ready→running→scored→completed)
-- Add strategy selection to StartPointDialog
-- Add field_side, pull, comments fields to point tracking
-- Update PointHistoryItem to show strategy and new fields
-- **ABBA Gender Rule Enforcement (Frontend-only):**
+**✅ Phase 6 Frontend: Strategy UI & 4-Status Point Tracking (COMPLETE)**
+- ✅ Strategy management UI (StrategiesPage, Create/Edit/Delete modals with confirmation)
+- ✅ LivePointTracker updated for 4-status workflow (ready→running→scored→completed)
+- ✅ Strategy selection in LivePointTracker (SelectStrategyDialog, auto-filtered by category)
+- ✅ Pull tracking, comments fields in point tracking (AddCommentDialog)
+- ✅ PointHistoryItem displays strategy, pull status, comments
+- ✅ StartPointDialog UX: Chip-based line filter, inline player count with color-coding
+- ✅ FinishPointDialog: Cleaner UI with toggle buttons, color-coded Won/Lost
+- ✅ Resume Point: scored→running with optimistic cache updates (no UI flicker)
+- ✅ All 147 tests passing (29 new Phase 6 tests)
+- ⏳ **ABBA Gender Rule Enforcement (Frontend-only):**
   - Implement ABBA alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
   - Each point must alternate between 4M+3W and 3M+4W following the sequence
   - First point's gender ratio defines which is "A" and which is "B"
@@ -505,26 +533,18 @@ npm run build                       # Production build
 
 ## Git Status
 - Currently on `main` branch
-- **Working tree has changes** - Phase 6 Frontend enhanced point tracking
-- Latest commits pushed: Phase 5 Backend, Phase 6 Backend
+- **Working tree clean** - All Phase 6 Frontend work committed
+- Latest commits:
+  - `be2f4cd` - Fix all remaining strategy tests (17 tests)
+  - `2db6239` - Improve StartPointDialog UX and add Strategy Management UI
+  - `bb28267` - Implement Phase 6 backend: Strategy model and enhanced Point tracking (PUSHED)
 - Branch is synced with origin/main
-- **Uncommitted Changes:**
-  - **Phase 6 Frontend (MOSTLY COMPLETE)**:
-    - 4-status point workflow: Ready → Running → Scored → Completed
-    - CompletePointDialog: New component for scored→completed transition
-    - Resume Point feature: Allows canceling scores for late calls (scored→running)
-    - Strategy integration: Service layer (services/strategies.ts), selection in StartPointDialog, display in history
-    - Pull tracking: Live Inbound/Out of Bounds buttons for defensive points
-    - Point comments: Field in StartPointDialog, display in history
-    - FinishPointDialog: Updated to transition to "scored" status
-    - LivePointTracker: Updated for 4-status workflow, pull tracking UI, resume button
-    - PointHistoryItem: Displays strategy, pull status, comments
-    - MSW mocks: All 5 Strategy endpoints, updated point fields
-    - Backend fix: Timezone comparison in update_point
-    - Testing: 119 tests passing (8 new tests for CompletePointDialog and FinishPointDialog)
-    - Production build passing
-    - Known bug: Resume Point timer UI (deferred)
-    - Missing: Strategy Management UI, ABBA Gender Rule
+- **Phase 6 Frontend COMPLETE** ✅:
+  - All 147 tests passing
+  - Strategy Management UI fully implemented
+  - 4-status point workflow with all dialogs
+  - UX improvements (chip-based filters, color-coded player count)
+  - Production build passing
 
 ## Development Notes
 - Backend runs on port 8000
@@ -601,9 +621,7 @@ npm run build                       # Production build
 - Active point polling every 5 seconds using React Query
 - Timezone-aware datetimes with proper 'Z' suffix serialization
 - **Next Steps:**
-  1. **Complete Phase 6 Frontend Remaining**:
-     - Strategy Management UI (StrategiesPage + Create/Edit modals)
-     - ABBA Gender Rule enforcement (frontend validation)
+  1. **ABBA Gender Rule** - Frontend validation for alternating 4M+3W / 3M+4W pattern
   2. **Fix Game Timer** - Start timer when first point runs (not game start button)
   3. **Phase 7** - Calls & Turnovers (backend + frontend)
   4. **Phase 8** - Statistics Dashboard

@@ -1,17 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EditStrategyModal from "../EditStrategyModal";
+import { createStrategy } from "../../../services";
+import { resetMockData } from "../../../test/mocks/handlers";
 import type { Strategy } from "../../../types";
 
-const mockStrategy: Strategy = {
-  id: 1,
-  name: "Vertical Stack",
-  category: "offense",
-  description: "Standard offensive formation",
-  created_at: "2024-01-01T00:00:00Z",
-};
+let mockStrategy: Strategy;
 
 const renderWithQueryClient = (ui: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -23,6 +19,16 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
 };
 
 describe("EditStrategyModal", () => {
+  beforeEach(async () => {
+    resetMockData();
+    // Create a strategy to edit
+    mockStrategy = await createStrategy({
+      name: "Vertical Stack",
+      category: "offense",
+      description: "Standard offensive formation",
+    });
+  });
+
   it("displays all form fields with existing values", () => {
     renderWithQueryClient(
       <EditStrategyModal
@@ -46,8 +52,8 @@ describe("EditStrategyModal", () => {
       />
     );
 
-    const offenseButton = screen.getByRole("button", { name: /offense/i });
-    expect(offenseButton).toHaveAttribute("aria-pressed", "true");
+    const categorySelect = screen.getByRole("combobox", { name: /category/i });
+    expect(categorySelect).toHaveTextContent("Offense");
   });
 
   it("allows editing strategy name", async () => {
@@ -77,10 +83,13 @@ describe("EditStrategyModal", () => {
       />
     );
 
-    const defenseButton = screen.getByRole("button", { name: /defense/i });
-    await user.click(defenseButton);
+    const categorySelect = screen.getByRole("combobox", { name: /category/i });
+    await user.click(categorySelect);
 
-    expect(defenseButton).toHaveAttribute("aria-pressed", "true");
+    const defenseOption = await screen.findByText("Defense");
+    await user.click(defenseOption);
+
+    expect(categorySelect).toHaveTextContent("Defense");
   });
 
   it("allows editing description", async () => {
@@ -113,7 +122,7 @@ describe("EditStrategyModal", () => {
     const nameInput = screen.getByLabelText(/strategy name/i);
     await user.clear(nameInput);
 
-    const saveButton = screen.getByRole("button", { name: /^save$/i });
+    const saveButton = screen.getByRole("button", { name: /save changes/i });
     expect(saveButton).toBeDisabled();
   });
 
@@ -151,7 +160,7 @@ describe("EditStrategyModal", () => {
     await user.type(nameInput, "Ho Stack");
 
     // Submit
-    const saveButton = screen.getByRole("button", { name: /^save$/i });
+    const saveButton = screen.getByRole("button", { name: /save changes/i });
     await user.click(saveButton);
 
     // Should close the modal

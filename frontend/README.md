@@ -25,6 +25,14 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Organize lines within teams for quick access
 - Line filtering in StartPointDialog for quick player selection
 
+**Strategy Management:**
+- Create and manage offensive and defensive strategies
+- Organize plays with names and descriptions
+- Filter strategies by category (All/Offense/Defense)
+- Assign strategies to points during live tracking
+- Auto-filtering by point type (offense/defense)
+- Delete strategies with confirmation dialog
+
 **Game Management:**
 - Schedule games with opponent information and dates
 - Select players for game roster from competition
@@ -39,17 +47,19 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 **Live Point Tracking (4-Status Workflow):**
 - Real-time point-by-point tracking during games
 - 4-status lifecycle: Ready → Running → Scored → Completed
-- Select 7 players for each point with line filtering
+- Select 7 players for each point with chip-based line filtering
+- Inline player count with color-coded feedback (green when 7/7)
 - Mark points as offense or defense
-- Assign strategies to points (offense/defense specific)
+- Assign strategies during live tracking (auto-filtered by offense/defense)
 - Track pull status (inbound/out of bounds) for defensive points
 - Add/edit comments during live tracking for detailed notes
-- Record point outcomes (won/lost)
+- Record point outcomes with color-coded Won/Lost toggle buttons
 - Resume scored points for late calls or contested outcomes
 - Timer properly restarts when resuming points
-- View strategic context (breaks, holds)
+- Optimistic cache updates prevent UI flicker
+- View strategic context (breaks, holds, strategies)
 - Edit point details and player lineups
-- Validation fixes for points under 1 minute duration
+- Cleaner dialog UIs with offense/defense icons
 
 **Statistics & Analytics:**
 - View point history with durations
@@ -99,6 +109,10 @@ frontend/
 │   │   │   ├── LineCard.tsx
 │   │   │   ├── LinesGrid.tsx
 │   │   │   └── EmptyLinesState.tsx
+│   │   ├── strategies/   # Strategy domain components
+│   │   │   ├── StrategyCard.tsx
+│   │   │   ├── StrategiesGrid.tsx
+│   │   │   └── EmptyLinesState.tsx
 │   │   ├── games/        # Game domain components
 │   │   │   ├── GameCard.tsx
 │   │   │   ├── GamesGrid.tsx
@@ -121,17 +135,21 @@ frontend/
 │   │       ├── AddPlayersToGameModal.tsx    # Game-specific wrapper
 │   │       ├── CreateLineModal.tsx
 │   │       ├── EditLineModal.tsx
+│   │       ├── CreateStrategyModal.tsx       # Create offense/defense strategies
+│   │       ├── EditStrategyModal.tsx         # Edit existing strategies
+│   │       ├── SelectStrategyDialog.tsx      # Select strategy during live tracking
 │   │       ├── CreateGameModal.tsx
 │   │       ├── EditGameModal.tsx
-│   │       ├── StartPointDialog.tsx         # Enhanced with strategy selection
-│   │       ├── FinishPointDialog.tsx        # Transitions to 'scored' status
-│   │       ├── CompletePointDialog.tsx      # Finalizes scored points
-│   │       ├── AddCommentDialog.tsx         # Add/edit comments during live tracking
+│   │       ├── StartPointDialog.tsx          # Chip-based line filter, inline player count
+│   │       ├── FinishPointDialog.tsx         # Clean UI, color-coded Won/Lost toggles
+│   │       ├── CompletePointDialog.tsx       # Finalizes scored points
+│   │       ├── AddCommentDialog.tsx          # Add/edit comments during live tracking
 │   │       └── EditPointDialog.tsx
 │   ├── pages/            # Page components (routes)
 │   │   ├── HomePage.tsx            # Landing page
 │   │   ├── TeamsPage.tsx           # Team list/management
 │   │   ├── TeamDetailPage.tsx      # Individual team with players and lines
+│   │   ├── StrategiesPage.tsx      # Strategy list/management with CRUD
 │   │   ├── CompetitionsPage.tsx    # Competition list/management
 │   │   ├── CompetitionDetailPage.tsx # Individual competition with roster and games
 │   │   ├── LinesPage.tsx           # Line list/management (integrated into TeamDetailPage)
@@ -487,9 +505,9 @@ The project uses Vitest with React Testing Library and MSW for API mocking.
 - All tests are organized in `__tests__/` subdirectories within their respective component/page directories
 - Page tests: Comprehensive tests for all page components (Teams, Games, Competitions, Lines)
 - Component tests: Unit tests for shared components (PointTimer, PlayerSelector, PlayerCard, PlayerSelectionUI)
-- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog, CompletePointDialog)
+- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog, CompletePointDialog, Strategy modals)
 - MSW provides realistic API mocking with request interception for all backend endpoints (including strategies)
-- **Current: 119 tests passing across 19 test files**
+- **Current: 147 tests passing across 23 test files**
 
 ### Development Workflow
 
@@ -520,19 +538,25 @@ Backend is configured to allow all origins in development. If you still see CORS
 ## Recent Enhancements
 
 **Phase 6 Frontend (Complete):**
-- ✅ 4-status point workflow (Ready → Running → Scored → Completed)
-- ✅ Strategy service layer and integration in point tracking
-- ✅ Pull tracking for defensive points (Inbound/Out of Bounds buttons)
-- ✅ AddCommentDialog for adding/editing comments during live tracking
-- ✅ Resume Point feature for late calls/contested scores
-- ✅ CompletePointDialog for finalizing scored points
-- ✅ Enhanced PointHistoryItem with strategy, pull status, comments
-- ✅ Timer bug fixed: PointTimer properly restarts when resuming scored points
-- ✅ Optimistic cache updates for smooth resume transitions (no UI flicker)
-- ✅ Code cleanup: Simplified timer rendering, consolidated duplicate code
-- ✅ 119 tests passing (8 new tests for Phase 6 features)
-- ⏳ ABBA Gender Rule enforcement (not yet implemented)
-- ⏳ Strategy Management UI (service layer complete, UI pages/modals not yet built)
+- ✅ **Strategy Management UI**: StrategiesPage with full CRUD, CreateStrategyModal, EditStrategyModal
+- ✅ **4-Status Point Workflow**: Ready → Running → Scored → Completed with all dialogs
+- ✅ **Strategy Integration**: SelectStrategyDialog during live tracking (auto-filtered by category)
+- ✅ **Pull Tracking**: Inbound/Out of Bounds buttons for defensive points
+- ✅ **Comments**: AddCommentDialog for adding/editing comments during live tracking
+- ✅ **Resume Point**: Scored→Running for late calls/contested scores
+- ✅ **CompletePointDialog**: Scored→Completed transition
+- ✅ **UX Improvements**:
+  - StartPointDialog: Chip-based line filter (wrapping, mobile-friendly)
+  - Inline player count with color-coded feedback (green at 7/7)
+  - FinishPointDialog: Cleaner UI, color-coded Won/Lost toggle buttons
+  - Blue "Ongoing" status chips (was green)
+  - Gradient-colored offense/defense icons (navy/sky blue)
+- ✅ **Technical Improvements**:
+  - Timer properly restarts when resuming scored points
+  - Optimistic cache updates for smooth transitions (no UI flicker)
+  - Code cleanup: Simplified timer rendering, consolidated duplicate code
+- ✅ **Testing**: 147 tests passing (29 new Phase 6 tests)
+- ⏳ **ABBA Gender Rule**: Not yet implemented (frontend validation only)
 
 **Phase 5 Complete:**
 - ✅ Lines management (create, edit, delete lines with player selection)
