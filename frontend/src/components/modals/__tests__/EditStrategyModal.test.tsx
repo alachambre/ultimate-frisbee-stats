@@ -52,8 +52,9 @@ describe("EditStrategyModal", () => {
       />
     );
 
-    const categorySelect = screen.getByRole("combobox", { name: /category/i });
-    expect(categorySelect).toHaveTextContent("Offense");
+    const buttons = screen.getAllByRole("button");
+    const offenseButton = buttons.find(btn => btn.getAttribute("value") === "offense");
+    expect(offenseButton).toHaveAttribute("aria-pressed", "true");
   });
 
   it("allows editing strategy name", async () => {
@@ -83,13 +84,11 @@ describe("EditStrategyModal", () => {
       />
     );
 
-    const categorySelect = screen.getByRole("combobox", { name: /category/i });
-    await user.click(categorySelect);
+    const buttons = screen.getAllByRole("button");
+    const defenseButton = buttons.find(btn => btn.getAttribute("value") === "defense");
+    await user.click(defenseButton!);
 
-    const defenseOption = await screen.findByText("Defense");
-    await user.click(defenseOption);
-
-    expect(categorySelect).toHaveTextContent("Defense");
+    expect(defenseButton).toHaveAttribute("aria-pressed", "true");
   });
 
   it("allows editing description", async () => {

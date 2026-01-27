@@ -5,15 +5,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
   Alert,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
 } from "@mui/material";
 import { updateStrategy } from "../../services/strategies";
+import StrategyForm from "../strategies/StrategyForm";
 import type { Strategy, StrategyUpdate, StrategyCategory } from "../../types";
 
 interface EditStrategyModalProps {
@@ -89,50 +85,20 @@ export default function EditStrategyModal({
             </Alert>
           )}
 
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Strategy Name"
-            type="text"
-            fullWidth
-            required
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
+          <StrategyForm
+            strategyName={formData.name}
+            onStrategyNameChange={(name) =>
+              setFormData({ ...formData, name })
             }
-            placeholder="e.g., Vertical Stack, Zone Defense"
-          />
-
-          <FormControl fullWidth margin="dense" required>
-            <InputLabel id="category-label">Category</InputLabel>
-            <Select
-              labelId="category-label"
-              value={formData.category}
-              label="Category"
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  category: e.target.value as StrategyCategory,
-                })
-              }
-            >
-              <MenuItem value="offense">Offense</MenuItem>
-              <MenuItem value="defense">Defense</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            margin="dense"
-            label="Description (Optional)"
-            type="text"
-            fullWidth
-            multiline
-            rows={3}
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
+            category={formData.category}
+            onCategoryChange={(category) =>
+              setFormData({ ...formData, category })
             }
-            placeholder="Describe the strategy..."
+            description={formData.description}
+            onDescriptionChange={(description) =>
+              setFormData({ ...formData, description })
+            }
+            autoFocus={true}
           />
         </DialogContent>
         <DialogActions>

@@ -20,8 +20,8 @@ describe("CreateStrategyModal", () => {
     );
 
     expect(screen.getByText("Create Strategy")).toBeInTheDocument();
+    expect(screen.getByText("Category")).toBeInTheDocument();
     expect(screen.getByLabelText(/strategy name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/category/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
   });
 
@@ -45,10 +45,9 @@ describe("CreateStrategyModal", () => {
     await user.type(nameInput, "Vertical Stack");
 
     // Select offense category
-    const categorySelect = screen.getByLabelText(/category/i);
-    await user.click(categorySelect);
-    const offenseOption = await screen.findByText("Offense");
-    await user.click(offenseOption);
+    const buttons = screen.getAllByRole("button");
+    const offenseButton = buttons.find(btn => btn.getAttribute("value") === "offense");
+    await user.click(offenseButton!);
 
     // Button should be enabled
     await waitFor(() => {
@@ -82,10 +81,9 @@ describe("CreateStrategyModal", () => {
     await user.type(nameInput, "Vertical Stack");
 
     // Select offense category
-    const categorySelect = screen.getByLabelText(/category/i);
-    await user.click(categorySelect);
-    const offenseOption = await screen.findByText("Offense");
-    await user.click(offenseOption);
+    const buttons = screen.getAllByRole("button");
+    const offenseButton = buttons.find(btn => btn.getAttribute("value") === "offense");
+    await user.click(offenseButton!);
 
     // Fill in description
     const descriptionInput = screen.getByLabelText(/description/i);
@@ -113,10 +111,9 @@ describe("CreateStrategyModal", () => {
     await user.type(nameInput, "Zone Defense");
 
     // Select defense category
-    const categorySelect = screen.getByLabelText(/category/i);
-    await user.click(categorySelect);
-    const defenseOption = await screen.findByText("Defense");
-    await user.click(defenseOption);
+    const buttons = screen.getAllByRole("button");
+    const defenseButton = buttons.find(btn => btn.getAttribute("value") === "defense");
+    await user.click(defenseButton!);
 
     // Fill in description (optional)
     const descriptionInput = screen.getByLabelText(/description/i);
