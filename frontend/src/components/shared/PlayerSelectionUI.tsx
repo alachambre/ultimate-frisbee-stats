@@ -142,16 +142,16 @@ export default function PlayerSelectionUI({
                 label={`${selectedMen} Men`}
                 size="small"
                 sx={{
-                  backgroundColor: "#e3f2fd",
-                  color: "#1976d2",
+                  backgroundColor: "primary.light",
+                  color: "primary.main",
                 }}
               />
               <Chip
                 label={`${selectedWomen} Women`}
                 size="small"
                 sx={{
-                  backgroundColor: "#fce4ec",
-                  color: "#c2185b",
+                  backgroundColor: "secondary.light",
+                  color: "secondary.main",
                 }}
               />
             </>
@@ -193,9 +193,12 @@ export default function PlayerSelectionUI({
             variant="outlined"
             onClick={onSelectAllMen}
             sx={{
-              borderColor: "#1976d2",
-              color: "#1976d2",
-              "&:hover": { borderColor: "#1565c0", backgroundColor: "#e3f2fd" },
+              borderColor: "primary.main",
+              color: "primary.main",
+              "&:hover": {
+                borderColor: "primary.dark",
+                backgroundColor: "primary.light",
+              },
             }}
           >
             All Men
@@ -207,9 +210,12 @@ export default function PlayerSelectionUI({
             variant="outlined"
             onClick={onSelectAllWomen}
             sx={{
-              borderColor: "#c2185b",
-              color: "#c2185b",
-              "&:hover": { borderColor: "#ad1457", backgroundColor: "#fce4ec" },
+              borderColor: "secondary.main",
+              color: "secondary.main",
+              "&:hover": {
+                borderColor: "secondary.dark",
+                backgroundColor: "secondary.light",
+              },
             }}
           >
             All Women
