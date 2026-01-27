@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -46,6 +46,25 @@ export default function StartPointDialog({
     queryFn: () => getGame(gameId),
     enabled: open,
   });
+
+  // Preselect offense/defense based on previous point result
+  useEffect(() => {
+    if (!open || !game?.points || game.points.length === 0) {
+      return;
+    }
+
+    // Get the most recent completed point
+    const completedPoints = game.points
+      .filter((p: PointWithPlayers) => p.status === "completed")
+      .sort((a: PointWithPlayers, b: PointWithPlayers) => b.point_number - a.point_number);
+
+    if (completedPoints.length > 0) {
+      const lastPoint = completedPoints[0];
+      // If we won the previous point, we start on defense (opponent gets possession)
+      // If we lost the previous point, we start on offense (we get possession back)
+      setStartingOnOffense(!lastPoint.won);
+    }
+  }, [open, game]);
 
   // Calculate required gender ratio based on ABBA pattern
   const requiredGenderRatio = useMemo(() => {
