@@ -84,34 +84,6 @@ export default function PointHistoryItem({
             <Typography variant="h6" fontWeight="bold">
               Point #{point.point_number}
             </Typography>
-            {/* Subtle mixity icon badge */}
-            {(isMixityMen || isMixityWomen) && (
-              <Box
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  ml: 0.5,
-                }}
-              >
-                {isMixityMen ? (
-                  <MaleIcon
-                    sx={{
-                      fontSize: 20,
-                      color: "primary.main",
-                      opacity: 0.7,
-                    }}
-                  />
-                ) : (
-                  <FemaleIcon
-                    sx={{
-                      fontSize: 20,
-                      color: "secondary.main",
-                      opacity: 0.7,
-                    }}
-                  />
-                )}
-              </Box>
-            )}
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
             <IconButton
@@ -229,9 +201,36 @@ export default function PointHistoryItem({
           sx={{ mt: 1 }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="body2">
-              {expanded ? "Hide" : "Show"} Players
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body2">
+                {expanded ? "Hide" : "Show"} Players
+              </Typography>
+              {(isMixityMen || isMixityWomen) && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                  }}
+                >
+                  (Mixity:
+                  {isMixityMen ? (
+                    <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
+                      <MaleIcon sx={{ fontSize: 16, mr: 0.25 }} />
+                      Men
+                    </Box>
+                  ) : (
+                    <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
+                      <FemaleIcon sx={{ fontSize: 16, mr: 0.25 }} />
+                      Women
+                    </Box>
+                  )}
+                  )
+                </Typography>
+              )}
+            </Box>
           </AccordionSummary>
           <AccordionDetails>
             <Box display="flex" flexWrap="wrap" gap={0.5}>
