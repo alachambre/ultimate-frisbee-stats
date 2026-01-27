@@ -10,7 +10,7 @@
 ## Project Overview
 Building a PWA for tracking ultimate frisbee statistics with:
 - **Backend**: FastAPI + SQLAlchemy + SQLite (273 tests passing)
-- **Frontend**: React + TypeScript + Material UI + TanStack Query (179 tests passing)
+- **Frontend**: React + TypeScript + Material UI + TanStack Query (186 tests passing)
 - **Primary Target**: Mobile devices (used on the sidelines during games)
 
 ## Current Status
@@ -152,7 +152,8 @@ Building a PWA for tracking ultimate frisbee statistics with:
   - Consolidated duplicate code: Generic AddPlayersModal component (~1000 lines saved)
   - Created PointPlayerSelection component shared by StartPointDialog and EditPointDialog (~200 lines saved)
   - Created PlayerForm component shared by AddPlayerModal and EditPlayerModal (~100 lines saved)
-  - Total code duplication eliminated: ~1300 lines across all phases
+  - Created StrategyForm component shared by CreateStrategyModal and EditStrategyModal (~100 lines saved)
+  - Total code duplication eliminated: ~1400 lines across all phases
   - Three "add players" modals now thin wrappers around generic component
   - MSW mocks for all 8 Line endpoints + 3 Game player management endpoints
   - POST /teams/:id/players handler added for test support
@@ -201,19 +202,21 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
+2d03caa - Extract shared StrategyForm component and replace dropdown with toggle buttons
 c10cf47 - Add mandatory tests for PlayerForm and player modals (27 new tests)
+ec5354a - Remove unused imports from player modal tests
 0bf2aa9 - Extract shared PlayerForm component from player modals
-4d1a3e1 - Update CLAUDE.md with refactoring work and test improvements
 [recent] - Extract shared PointPlayerSelection component and add comprehensive tests
-e07a132 - Enhance EditPointDialog and remove timing section
 ```
 
 ### Recent Changes Summary (Committed)
-- **Latest commit**: `c10cf47` - Add mandatory tests for PlayerForm and player modals
-  - PlayerForm: 7 tests (gender toggle, field callbacks, autofocus, value display)
-  - AddPlayerModal: 8 tests (initialization, validation, gender toggle, submit)
-  - EditPlayerModal: 12 tests (pre-fill, editing, delete workflow, form reset)
-  - 179 tests passing (27 new tests added)
+- **Latest commit**: `2d03caa` - Extract shared StrategyForm component and replace dropdown with toggle buttons
+  - Created StrategyForm component eliminating ~100 lines of duplicate code
+  - Replaced category dropdown with ToggleButtonGroup (Offense/Defense toggle buttons)
+  - Category buttons moved to top (before name field) with theme colors
+  - Both strategy modals now use shared component
+  - StrategyForm: 7 tests covering all form behaviors
+  - 186 tests passing (7 new tests added)
 
 - **Recent refactoring**: Code deduplication across dialogs and forms
   - Created PointPlayerSelection component (~230 lines) shared by StartPointDialog and EditPointDialog
@@ -302,7 +305,7 @@ src/
 │   ├── teams/           # TeamCard, TeamsGrid, EmptyTeamsState
 │   ├── competitions/    # CompetitionCard, CompetitionsGrid, EmptyCompetitionsState
 │   ├── lines/           # LineCard, LinesGrid, EmptyLinesState (Phase 5)
-│   ├── strategies/      # StrategyCard, StrategiesGrid, EmptyStrategiesState (Phase 6)
+│   ├── strategies/      # StrategyCard, StrategiesGrid, EmptyStrategiesState, StrategyForm (Phase 6)
 │   ├── players/         # PlayerCard, PlayersGrid, EmptyPlayersState, PlayerForm
 │   ├── games/           # GameCard, GamesGrid, EmptyGamesState
 │   ├── points/          # LivePointTracker, PointTimer, PlayerSelector, PointHistoryList, PointHistoryItem,
@@ -340,7 +343,7 @@ src/
 - **Card System**: Consistent gradient borders, full-width teams, responsive competition/game grids
 
 ### Testing Strategy
-- **Frontend**: 179 tests passing - 27/27 test files (Phase 1-6 fully tested)
+- **Frontend**: 186 tests passing - 28/28 test files (Phase 1-6 fully tested)
   - Phase 1: Teams & Players
     - PlayerForm tests (7) - Shared component for gender/name/number fields
     - AddPlayerModal tests (8) - Form initialization, validation, submission
@@ -356,8 +359,9 @@ src/
   - Phase 6: Enhanced Point Tracking & Strategy Management
     - CompletePointDialog tests (7) - New component for scored→completed transition
     - FinishPointDialog tests (6) - Updated for toggle buttons and cleaner UI
-    - CreateStrategyModal tests (6) - Form validation, category selection, CRUD
-    - EditStrategyModal tests (8) - Pre-filled values, dropdown interaction, updates
+    - StrategyForm tests (7) - Shared component for category/name/description fields
+    - CreateStrategyModal tests (6) - Form validation, toggle button selection, CRUD
+    - EditStrategyModal tests (8) - Pre-filled values, toggle button interaction, updates
     - SelectStrategyDialog tests (8) - Category filtering, proper test setup with data hierarchy
     - StrategiesPage tests (8) - Filtering, CRUD operations, delete confirmation
   - Test organization: All tests in `__tests__/` subdirectories for consistency
