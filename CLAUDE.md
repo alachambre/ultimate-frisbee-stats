@@ -462,6 +462,13 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - Estimated effort: 11-18 hours
 - **Why now?**: Better to add before codebase grows with Phases 7-8
 - **Scope**: All UI strings (buttons, labels, headers, messages, forms, empty states)
+- **Ultimate Frisbee Terminology**:
+  - Create GLOSSARY.md documenting sport-specific terms that stay in English
+  - Mark sport terms in translation files with comments (e.g., "Pull", "Turnover", "Handler")
+  - Terms like "Pull", "Turnover", "O-line/D-line", "Break" remain English in both languages
+  - General UI terms translated (Team → "Équipe", Player → "Joueur", etc.)
+  - User reviews translations and confirms which sport terms stay English
+  - Workflow: Glossary upfront → Translation → User review → Documentation
 
 **⏳ Phase 7: Calls & Turnovers**
 - Add Call model (with timing)
