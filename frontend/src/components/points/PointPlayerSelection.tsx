@@ -164,7 +164,7 @@ export default function PointPlayerSelection({
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             <Chip
-              label={t('common:players')}
+              label={t('common:allPlayers')}
               onClick={() => handleLineChange("")}
               color={selectedLineId === "" ? "primary" : "default"}
               variant={selectedLineId === "" ? "filled" : "outlined"}

@@ -1,10 +1,12 @@
 {
   "modal": {
     "add": {
-      "title": "Add Player to {{teamName}}"
+      "title": "Add Player to {{teamName}}",
+      "submit": "Add Player"
     },
     "edit": {
-      "title": "Edit Player"
+      "title": "Edit Player",
+      "delete": "Delete Player"
     },
     "addMultiple": {
       "title": "Add Players",

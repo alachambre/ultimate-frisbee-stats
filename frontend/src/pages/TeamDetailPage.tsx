@@ -157,7 +157,7 @@ export default function TeamDetailPage() {
               startIcon={<AddIcon />}
               onClick={() => setIsAddPlayerModalOpen(true)}
             >
-              {t("common:action.add")}
+              {t("teams:detail.addPlayer")}
             </Button>
           </Box>
         </Box>

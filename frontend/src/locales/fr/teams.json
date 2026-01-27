@@ -10,6 +10,7 @@
   },
   "detail": {
     "roster": "Effectif",
+    "addPlayer": "Ajouter un joueur",
     "competitions": "Compétitions",
     "lines": "Lignes",
     "strategies": "Stratégies",
@@ -17,7 +18,8 @@
   },
   "modal": {
     "create": {
-      "title": "Créer une nouvelle équipe"
+      "title": "Créer une nouvelle équipe",
+      "submit": "Créer l'équipe"
     },
     "edit": {
       "title": "Modifier l'équipe"

@@ -10,7 +10,8 @@
   },
   "modal": {
     "create": {
-      "title": "Create New Strategy"
+      "title": "Create Strategy",
+      "submit": "Create"
     },
     "edit": {
       "title": "Edit Strategy"

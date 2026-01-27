@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Lines",
-    "createLine": "Create Line"
+    "createLine": "New Line"
   },
   "detail": {
     "players": "Players",
@@ -9,7 +9,8 @@
   },
   "modal": {
     "create": {
-      "title": "Create New Line"
+      "title": "Create New Line",
+      "submit": "Create Line"
     },
     "edit": {
       "title": "Edit Line"

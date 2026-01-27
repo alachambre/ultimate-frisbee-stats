@@ -80,7 +80,7 @@ export default function CreateTeamModal({
             variant="contained"
             disabled={mutation.isPending || !teamName.trim()}
           >
-            {mutation.isPending ? `${t("common:action.create")}...` : t("common:action.create")}
+            {mutation.isPending ? `${t("teams:modal.create.submit")}...` : t("teams:modal.create.submit")}
           </Button>
         </DialogActions>
       </form>

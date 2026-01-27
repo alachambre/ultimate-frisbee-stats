@@ -23,7 +23,8 @@
       "title": "Edit Competition"
     },
     "addPlayers": {
-      "title": "Add Players to Roster"
+      "title": "Add Players to Roster",
+      "allInRoster": "All team players are already in the roster"
     }
   },
   "form": {

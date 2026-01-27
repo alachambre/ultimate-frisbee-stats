@@ -10,6 +10,7 @@
   },
   "detail": {
     "roster": "Roster",
+    "addPlayer": "Add Player",
     "competitions": "Competitions",
     "lines": "Lines",
     "strategies": "Strategies",
@@ -17,7 +18,8 @@
   },
   "modal": {
     "create": {
-      "title": "Create New Team"
+      "title": "Create New Team",
+      "submit": "Create Team"
     },
     "edit": {
       "title": "Edit Team"

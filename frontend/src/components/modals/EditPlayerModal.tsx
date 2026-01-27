@@ -111,7 +111,7 @@ export default function EditPlayerModal({
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? `${t("common:action.delete")}...` : t("common:action.delete")}
+            {deleteMutation.isPending ? `${t("players:modal.edit.delete")}...` : t("players:modal.edit.delete")}
           </Button>
         </DialogActions>
       </Dialog>

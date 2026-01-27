@@ -97,7 +97,7 @@ export default function CreateStrategyModal({
             variant="contained"
             disabled={!isFormValid || mutation.isPending}
           >
-            {mutation.isPending ? t('common:action.saving') : t('common:action.create')}
+            {mutation.isPending ? t('common:action.saving') : t('strategies:modal.create.submit')}
           </Button>
         </DialogActions>
       </form>

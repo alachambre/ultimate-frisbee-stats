@@ -280,7 +280,7 @@ export default function GameDetailPage() {
       <Paper sx={{ mb: 3 }}>
         <Box p={4} textAlign="center">
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            {t("games:detail.score")}
+            {game.status === "ended" ? t("games:detail.finalScore") : t("games:detail.score")}
           </Typography>
           <Typography variant="h2" fontWeight="bold">
             {game.our_score} - {game.opponent_score}
@@ -344,12 +344,12 @@ export default function GameDetailPage() {
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box display="flex" alignItems="center" gap={1}>
                 <Typography variant="h6">
-                  {t("games:detail.roster")} ({game.players.length})
+                  {t("games:detail.rosterSection", { count: game.players.length })}
                 </Typography>
                 <IconButton
                   size="small"
                   onClick={() => setShowPlayers(!showPlayers)}
-                  aria-label={showPlayers ? "Hide players" : "Show players"}
+                  aria-label={showPlayers ? t("games:detail.hidePlayers") : t("games:detail.showPlayers")}
                 >
                   {showPlayers ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
@@ -361,7 +361,7 @@ export default function GameDetailPage() {
                 size="small"
                 disabled={game.status === "ended"}
               >
-                {t("common:action.add")}
+                {t("games:detail.addPlayers")}
               </Button>
             </Box>
           </Box>
@@ -390,7 +390,7 @@ export default function GameDetailPage() {
                         mb: 2,
                       }}
                     >
-                      {t("common:labels.male")} ({game.players.filter((p) => p.gender === "M").length})
+                      {t("games:detail.men")} ({game.players.filter((p) => p.gender === "M").length})
                     </Typography>
                     {game.players.filter((p) => p.gender === "M").length === 0 ? (
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
@@ -428,7 +428,7 @@ export default function GameDetailPage() {
                         mb: 2,
                       }}
                     >
-                      {t("common:labels.female")} ({game.players.filter((p) => p.gender === "W").length})
+                      {t("games:detail.women")} ({game.players.filter((p) => p.gender === "W").length})
                     </Typography>
                     {game.players.filter((p) => p.gender === "W").length === 0 ? (
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
@@ -485,7 +485,7 @@ export default function GameDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>{t("games:detail.deleteConfirm")}</DialogTitle>
+        <DialogTitle>{t("games:detail.deleteConfirmTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
             {t("games:detail.deleteConfirm")}
@@ -509,7 +509,7 @@ export default function GameDetailPage() {
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? t("common:action.loading") : t("common:action.delete")}
+            {deleteMutation.isPending ? t("common:action.loading") : t("games:detail.deleteGameButton")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -521,7 +521,7 @@ export default function GameDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>{t("games:detail.endGameConfirm")}</DialogTitle>
+        <DialogTitle>{t("games:detail.endGameConfirmTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
             {t("games:detail.endGameConfirm")}

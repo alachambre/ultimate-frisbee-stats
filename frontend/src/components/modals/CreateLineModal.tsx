@@ -143,7 +143,7 @@ export default function CreateLineModal({
             variant="contained"
             disabled={mutation.isPending || !isFormValid}
           >
-            {mutation.isPending ? t('common:action.saving') : t('common:action.create')}
+            {mutation.isPending ? t('common:action.saving') : t('lines:modal.create.submit')}
           </Button>
         </DialogActions>
       </form>

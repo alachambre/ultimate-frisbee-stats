@@ -11,28 +11,38 @@
   "detail": {
     "info": "Infos match",
     "score": "Score",
+    "finalScore": "Score final",
     "us": "Nous",
     "them": "Eux",
     "roster": "Effectif du match",
+    "rosterSection": "Joueurs ({{count}})",
+    "men": "Hommes",
+    "women": "Femmes",
+    "showPlayers": "Afficher les joueurs",
+    "hidePlayers": "Masquer les joueurs",
     "points": "Points",
     "startGame": "Démarrer le match",
     "endGame": "Terminer le match",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce match ?",
-    "endGameConfirm": "Êtes-vous sûr de vouloir terminer ce match ?",
+    "deleteConfirmTitle": "Confirmer la suppression",
+    "endGameConfirm": "Marquer le match comme terminé ?",
+    "endGameConfirmTitle": "Confirmer la fin",
     "editGame": "Modifier le match",
     "deleteGame": "Supprimer le match",
+    "deleteGameButton": "Supprimer le match",
     "addPlayers": "Ajouter des joueurs",
     "removePlayers": "Retirer des joueurs"
   },
   "modal": {
     "create": {
-      "title": "Créer un nouveau match"
+      "title": "Créer un nouveau match",
+      "submit": "Créer le match"
     },
     "edit": {
       "title": "Modifier le match"
     },
     "addPlayers": {
-      "title": "Sélectionner les joueurs pour le match"
+      "title": "Ajouter des joueurs au match"
     }
   },
   "form": {
@@ -52,6 +62,6 @@
   "status": {
     "ready": "Pas commencé",
     "started": "En cours",
-    "ended": "Terminé"
+    "ended": "Fini"
   }
 }

@@ -449,7 +449,7 @@ export default function CreateGameModal({
             variant="contained"
             disabled={mutation.isPending || !finalCompetitionId || !opponentName.trim()}
           >
-            {mutation.isPending ? `${t("common:action.create")}...` : t("common:action.create")}
+            {mutation.isPending ? `${t("games:modal.create.submit")}...` : t("games:modal.create.submit")}
           </Button>
         </DialogActions>
       </form>

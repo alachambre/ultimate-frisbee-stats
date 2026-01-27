@@ -23,7 +23,8 @@
       "title": "Modifier la compétition"
     },
     "addPlayers": {
-      "title": "Ajouter des joueurs à l'effectif"
+      "title": "Ajouter des joueurs à l'effectif",
+      "allInRoster": "Tous les joueurs de l'équipe sont déjà dans l'effectif"
     }
   },
   "form": {
