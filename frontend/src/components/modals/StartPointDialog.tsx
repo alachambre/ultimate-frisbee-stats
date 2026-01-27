@@ -180,24 +180,15 @@ export default function StartPointDialog({
         {/* Mixity indicator */}
         {requiredGenderRatio && (
           <Chip
+            icon={requiredGenderRatio.men === 4 ? <MaleIcon /> : <FemaleIcon />}
             label={
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Typography variant="caption" fontWeight={500}>
                   Mixity:
                 </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-                  <Typography variant="body2" fontWeight={600}>
-                    {requiredGenderRatio.men}
-                  </Typography>
-                  <MaleIcon sx={{ fontSize: 16 }} />
-                  <Typography variant="body2" sx={{ mx: 0.25 }}>
-                    /
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {requiredGenderRatio.women}
-                  </Typography>
-                  <FemaleIcon sx={{ fontSize: 16 }} />
-                </Box>
+                <Typography variant="body2" fontWeight={600}>
+                  {requiredGenderRatio.men === 4 ? "Men" : "Women"}
+                </Typography>
               </Box>
             }
             size="small"
