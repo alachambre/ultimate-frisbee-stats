@@ -1,7 +1,7 @@
 {
   "tracker": {
     "title": "Live Point Tracking",
-    "newPoint": "New Point",
+    "newPoint": "Start Point",
     "offense": "Offense",
     "defense": "Defense",
     "score": "Score!",
@@ -11,7 +11,7 @@
     "resume": "Resume",
     "resuming": "Resuming...",
     "strategy": "Strategy",
-    "noStrategy": "No strategy selected",
+    "noStrategy": "No strategy",
     "changeStrategy": "Change Strategy",
     "selectStrategy": "Select Strategy",
     "addComment": "Add Comment",
@@ -33,7 +33,7 @@
       "pull": "Pull",
       "inbounds": "Inbounds",
       "outOfBounds": "Out of Bounds",
-      "line": "Line",
+      "line": "Filter by line (optional)",
       "selectLine": "Select a line (optional)",
       "strategy": "Strategy",
       "selectStrategy": "Select a strategy (optional)",

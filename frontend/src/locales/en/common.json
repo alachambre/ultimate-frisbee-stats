@@ -4,7 +4,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "cancel": "Cancel",
-    "save": "Save",
+    "save": "Save Changes",
     "saving": "Saving...",
     "add": "Add",
     "remove": "Remove",
@@ -18,11 +18,12 @@
     "search": "Search",
     "filter": "Filter",
     "loading": "Loading...",
-    "submit": "Submit",
+    "submit": "Save",
     "show": "Show",
     "hide": "Hide"
   },
   "status": {
+    "label": "Status",
     "active": "Active",
     "inactive": "Inactive",
     "ready": "Ready",
@@ -68,6 +69,7 @@
   "validation": {
     "required": "This field is required",
     "invalid": "Invalid value",
+    "endDateAfterStart": "End date must be after start date",
     "tooShort": "Value is too short",
     "tooLong": "Value is too long"
   },

@@ -55,7 +55,7 @@ export default function EmptyCompetitionsState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        {t('competitions:page.empty.title')}
+        {t('competitions:page.empty.button')}
       </Button>
     </Paper>
   );

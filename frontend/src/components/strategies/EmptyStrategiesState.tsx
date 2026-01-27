@@ -51,7 +51,7 @@ export default function EmptyStrategiesState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        {t('strategies:page.empty.title')}
+        {t('strategies:page.empty.button')}
       </Button>
     </Paper>
   );

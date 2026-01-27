@@ -4,7 +4,8 @@
     "addTeam": "Add Team",
     "empty": {
       "title": "No teams yet",
-      "description": "Create your first team to get started"
+      "description": "Get started by creating your first team",
+      "button": "Create Your First Team"
     }
   },
   "detail": {

@@ -71,8 +71,8 @@ export default function CompletePointDialog({
             <Chip
               label={
                 scoredPoint.starting_on_offense
-                  ? t("points:tracker.offense")
-                  : t("points:tracker.defense")
+                  ? `Started on ${t("points:tracker.offense")}`
+                  : `Started on ${t("points:tracker.defense")}`
               }
               size="small"
               color={scoredPoint.starting_on_offense ? "primary" : "default"}

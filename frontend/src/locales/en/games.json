@@ -1,9 +1,11 @@
 {
   "page": {
     "title": "Games",
+    "newGame": "New Game",
     "empty": {
       "title": "No games yet",
-      "description": "Create your first game to get started"
+      "description": "Get started by creating your first game",
+      "button": "Create Your First Game"
     }
   },
   "detail": {
@@ -14,9 +16,13 @@
     "roster": "Game Roster",
     "points": "Points",
     "startGame": "Start Game",
-    "endGame": "End Game",
+    "endGame": "Finish Game",
     "deleteConfirm": "Are you sure you want to delete this game?",
-    "endGameConfirm": "Are you sure you want to end this game?"
+    "endGameConfirm": "Are you sure you want to finish this game?",
+    "editGame": "Edit Game",
+    "deleteGame": "Delete Game",
+    "addPlayers": "Add Players",
+    "removePlayers": "Remove Players"
   },
   "modal": {
     "create": {
@@ -30,7 +36,7 @@
     }
   },
   "form": {
-    "opponent": "Opponent",
+    "opponent": "Opponent Name",
     "opponentPlaceholder": "Enter opponent name",
     "date": "Date",
     "competition": "Competition",
@@ -44,8 +50,8 @@
     "players_plural": "{{count}} players"
   },
   "status": {
-    "ready": "Ready",
-    "started": "Started",
+    "ready": "Not Started",
+    "started": "Ongoing",
     "ended": "Ended"
   }
 }

@@ -1,9 +1,11 @@
 {
   "page": {
     "title": "Matchs",
+    "newGame": "Nouveau match",
     "empty": {
       "title": "Aucun match pour le moment",
-      "description": "Créez votre premier match pour commencer"
+      "description": "Créez votre premier match pour commencer",
+      "button": "Créer votre premier match"
     }
   },
   "detail": {
@@ -16,7 +18,11 @@
     "startGame": "Démarrer le match",
     "endGame": "Terminer le match",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce match ?",
-    "endGameConfirm": "Êtes-vous sûr de vouloir terminer ce match ?"
+    "endGameConfirm": "Êtes-vous sûr de vouloir terminer ce match ?",
+    "editGame": "Modifier le match",
+    "deleteGame": "Supprimer le match",
+    "addPlayers": "Ajouter des joueurs",
+    "removePlayers": "Retirer des joueurs"
   },
   "modal": {
     "create": {
@@ -30,7 +36,7 @@
     }
   },
   "form": {
-    "opponent": "Adversaire",
+    "opponent": "Nom de l'adversaire",
     "opponentPlaceholder": "Entrez le nom de l'adversaire",
     "date": "Date",
     "competition": "Compétition",
@@ -44,8 +50,8 @@
     "players_plural": "{{count}} joueurs"
   },
   "status": {
-    "ready": "Prêt",
-    "started": "Commencé",
+    "ready": "Pas commencé",
+    "started": "En cours",
     "ended": "Terminé"
   }
 }

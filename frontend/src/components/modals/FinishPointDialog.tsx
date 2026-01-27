@@ -76,7 +76,7 @@ export default function FinishPointDialog({
           ) : (
             <ShieldIcon color="secondary" />
           )}
-          {t("points:dialog.finish.title")} {isOffense ? t("points:tracker.offense") : t("points:tracker.defense")}
+          Finish {isOffense ? t("points:tracker.offense") : t("points:tracker.defense")} Point
         </Box>
       </DialogTitle>
       <DialogContent>

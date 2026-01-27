@@ -127,7 +127,7 @@ export default function SelectStrategyDialog({
           variant="contained"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? t("common:action.saving") : t("common:action.save")}
+          {updateMutation.isPending ? t("common:action.saving") : t("common:action.submit")}
         </Button>
       </DialogActions>
     </Dialog>

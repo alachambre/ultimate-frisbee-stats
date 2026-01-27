@@ -150,7 +150,7 @@ export default function EditCompetitionModal({
               formData.start_date &&
               formData.end_date &&
               formData.end_date < formData.start_date
-                ? t("common:validation.invalid")
+                ? t("common:validation.endDateAfterStart")
                 : ""
             }
           />
@@ -158,7 +158,7 @@ export default function EditCompetitionModal({
           <TextField
             select
             margin="dense"
-            label={t("common:status.active")}
+            label={t("common:status.label")}
             fullWidth
             variant="outlined"
             value={formData.status}

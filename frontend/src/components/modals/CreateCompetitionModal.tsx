@@ -174,7 +174,7 @@ export default function CreateCompetitionModal({
               formData.start_date &&
               formData.end_date &&
               formData.end_date < formData.start_date
-                ? t("common:validation.invalid")
+                ? t("common:validation.endDateAfterStart")
                 : ""
             }
           />
@@ -194,7 +194,7 @@ export default function CreateCompetitionModal({
             variant="contained"
             disabled={mutation.isPending || !isFormValid}
           >
-            {mutation.isPending ? `${t("common:action.create")}...` : t("common:action.create")}
+            {mutation.isPending ? `${t("competitions:modal.create.submit")}...` : t("competitions:modal.create.submit")}
           </Button>
         </DialogActions>
       </form>

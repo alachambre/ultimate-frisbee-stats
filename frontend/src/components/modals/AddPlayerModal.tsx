@@ -93,7 +93,7 @@ export default function AddPlayerModal({
             variant="contained"
             disabled={mutation.isPending || !playerName.trim()}
           >
-            {mutation.isPending ? `${t("common:action.add")}...` : t("common:action.add")}
+            {mutation.isPending ? `${t("common:action.add")}...` : `${t("common:action.add")} Player`}
           </Button>
         </DialogActions>
       </form>

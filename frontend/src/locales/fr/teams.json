@@ -4,7 +4,8 @@
     "addTeam": "Ajouter une équipe",
     "empty": {
       "title": "Aucune équipe pour le moment",
-      "description": "Créez votre première équipe pour commencer"
+      "description": "Créez votre première équipe pour commencer",
+      "button": "Créer votre première équipe"
     }
   },
   "detail": {

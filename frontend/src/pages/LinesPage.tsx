@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Container,
   FormControl,
@@ -26,6 +27,7 @@ import EditLineModal from "../components/modals/EditLineModal";
 import type { LineWithPlayers } from "../types";
 
 export default function LinesPage() {
+  const { t } = useTranslation(["lines", "common"]);
   const [selectedTeamId, setSelectedTeamId] = useState<number | undefined>();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingLine, setEditingLine] = useState<LineWithPlayers | null>(null);
@@ -71,8 +73,8 @@ export default function LinesPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
-        title="Lines"
-        actionLabel="New Line"
+        title={t("lines:page.title")}
+        actionLabel={t("lines:page.createLine")}
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 

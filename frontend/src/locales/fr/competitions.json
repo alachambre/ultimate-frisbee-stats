@@ -1,9 +1,11 @@
 {
   "page": {
     "title": "Compétitions",
+    "newCompetition": "Nouvelle compétition",
     "empty": {
       "title": "Aucune compétition pour le moment",
-      "description": "Créez votre première compétition pour commencer"
+      "description": "Créez votre première compétition pour commencer",
+      "button": "Créer votre première compétition"
     }
   },
   "detail": {
@@ -14,7 +16,8 @@
   },
   "modal": {
     "create": {
-      "title": "Créer une nouvelle compétition"
+      "title": "Créer une nouvelle compétition",
+      "submit": "Créer la compétition"
     },
     "edit": {
       "title": "Modifier la compétition"

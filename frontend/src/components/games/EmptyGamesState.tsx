@@ -51,7 +51,7 @@ export default function EmptyGamesState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        {t('games:page.empty.title')}
+        {t('games:page.empty.button')}
       </Button>
     </Paper>
   );

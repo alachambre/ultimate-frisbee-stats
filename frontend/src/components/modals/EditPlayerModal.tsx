@@ -90,7 +90,7 @@ export default function EditPlayerModal({
         <DialogTitle>{t("common:action.delete")} Player?</DialogTitle>
         <DialogContent>
           <Box>
-            {t("common:messages.confirmDelete")}
+            Are you sure you want to remove {player.name}?
             {deleteMutation.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {t("common:messages.error")}

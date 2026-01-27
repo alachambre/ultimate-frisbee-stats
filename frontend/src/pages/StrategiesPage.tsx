@@ -80,7 +80,7 @@ export default function StrategiesPage() {
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
         title={t("strategies:page.title")}
-        actionLabel={t("common:action.create")}
+        actionLabel={t("strategies:page.newStrategy")}
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 

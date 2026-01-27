@@ -1,6 +1,7 @@
 {
   "page": {
-    "title": "Lines"
+    "title": "Lines",
+    "createLine": "Create Line"
   },
   "detail": {
     "players": "Players",

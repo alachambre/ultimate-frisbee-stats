@@ -52,7 +52,7 @@ export default function EmptyTeamsState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        {t("common:action.create")}
+        {t("teams:page.empty.button")}
       </Button>
     </Paper>
   );

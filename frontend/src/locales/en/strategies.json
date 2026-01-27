@@ -1,9 +1,11 @@
 {
   "page": {
     "title": "Strategies",
+    "newStrategy": "New Strategy",
     "empty": {
       "title": "No strategies yet",
-      "description": "Create your first strategy to get started"
+      "description": "Create your first strategy to get started",
+      "button": "Create Your First Strategy"
     }
   },
   "modal": {
@@ -17,7 +19,7 @@
   "form": {
     "name": "Strategy Name",
     "namePlaceholder": "Enter strategy name",
-    "type": "Type",
+    "type": "Category",
     "offense": "Offense",
     "defense": "Defense",
     "description": "Description",
