@@ -10,7 +10,7 @@
 ## Project Overview
 Building a PWA for tracking ultimate frisbee statistics with:
 - **Backend**: FastAPI + SQLAlchemy + SQLite (273 tests passing)
-- **Frontend**: React + TypeScript + Material UI + TanStack Query (152 tests passing)
+- **Frontend**: React + TypeScript + Material UI + TanStack Query (179 tests passing)
 - **Primary Target**: Mobile devices (used on the sidelines during games)
 
 ## Current Status
@@ -201,20 +201,19 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
+c10cf47 - Add mandatory tests for PlayerForm and player modals (27 new tests)
 0bf2aa9 - Extract shared PlayerForm component from player modals
+4d1a3e1 - Update CLAUDE.md with refactoring work and test improvements
 [recent] - Extract shared PointPlayerSelection component and add comprehensive tests
 e07a132 - Enhance EditPointDialog and remove timing section
-9ed0705 - Implement ABBA Gender Rule with mixity UX improvements
-6da553e - Improve EditPointDialog and LineCard UX
 ```
 
 ### Recent Changes Summary (Committed)
-- **Latest commit**: `0bf2aa9` - Extract shared PlayerForm component from player modals
-  - Created PlayerForm component eliminating ~100 lines of duplicate code
-  - Both AddPlayerModal and EditPlayerModal now use shared component
-  - Gender selection uses ToggleButtonGroup (navy blue for Man, sky blue for Woman)
-  - Gender moved to first field, labels changed from Male/Female to Man/Woman
-  - 152 tests passing
+- **Latest commit**: `c10cf47` - Add mandatory tests for PlayerForm and player modals
+  - PlayerForm: 7 tests (gender toggle, field callbacks, autofocus, value display)
+  - AddPlayerModal: 8 tests (initialization, validation, gender toggle, submit)
+  - EditPlayerModal: 12 tests (pre-fill, editing, delete workflow, form reset)
+  - 179 tests passing (27 new tests added)
 
 - **Recent refactoring**: Code deduplication across dialogs and forms
   - Created PointPlayerSelection component (~230 lines) shared by StartPointDialog and EditPointDialog
@@ -341,8 +340,11 @@ src/
 - **Card System**: Consistent gradient borders, full-width teams, responsive competition/game grids
 
 ### Testing Strategy
-- **Frontend**: 147 tests passing - 23/23 test files (Phase 1-6 fully tested)
+- **Frontend**: 179 tests passing - 27/27 test files (Phase 1-6 fully tested)
   - Phase 1: Teams & Players
+    - PlayerForm tests (7) - Shared component for gender/name/number fields
+    - AddPlayerModal tests (8) - Form initialization, validation, submission
+    - EditPlayerModal tests (12) - Pre-fill, editing, delete workflow, form reset
   - Phase 2: Games
   - Phase 3: Live Point Tracking
   - Phase 4: Competitions & Roster Management
