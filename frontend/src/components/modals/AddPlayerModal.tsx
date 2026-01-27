@@ -9,8 +9,12 @@ import {
   Button,
   Alert,
   Box,
-  MenuItem,
+  Typography,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
 import { createPlayer } from "../../services";
 import type { Gender } from "../../types";
 
@@ -79,18 +83,57 @@ export default function AddPlayerModal({
               inputProps={{ maxLength: 100 }}
               required
             />
-            <TextField
-              select
-              label="Gender"
-              fullWidth
-              variant="outlined"
-              value={gender}
-              onChange={(e) => setGender(e.target.value as Gender)}
-              required
-            >
-              <MenuItem value="M">Male</MenuItem>
-              <MenuItem value="W">Female</MenuItem>
-            </TextField>
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Gender
+              </Typography>
+              <ToggleButtonGroup
+                value={gender}
+                exclusive
+                onChange={(_, newValue) => {
+                  if (newValue !== null) {
+                    setGender(newValue as Gender);
+                  }
+                }}
+                fullWidth
+                aria-label="player gender"
+                sx={{
+                  "& .MuiToggleButton-root": {
+                    py: 1.5,
+                    textTransform: "none",
+                    fontWeight: 500,
+                    "&.Mui-selected": {
+                      fontWeight: "bold",
+                      color: "white",
+                      "&:hover": {
+                        opacity: 0.9,
+                      },
+                    },
+                    "&.Mui-selected[value='M']": {
+                      backgroundColor: "primary.main",
+                      "&:hover": {
+                        backgroundColor: "primary.dark",
+                      },
+                    },
+                    "&.Mui-selected[value='W']": {
+                      backgroundColor: "secondary.main",
+                      "&:hover": {
+                        backgroundColor: "secondary.dark",
+                      },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="M" aria-label="male">
+                  <MaleIcon sx={{ mr: 1, fontSize: 20 }} />
+                  Male
+                </ToggleButton>
+                <ToggleButton value="W" aria-label="female">
+                  <FemaleIcon sx={{ mr: 1, fontSize: 20 }} />
+                  Female
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
             <TextField
               label="Jersey Number (Optional)"
               type="number"
