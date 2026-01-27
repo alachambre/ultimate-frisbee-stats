@@ -62,6 +62,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -75,6 +76,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -94,6 +96,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -119,6 +122,7 @@ describe("EditPointDialog", () => {
           onClose={vi.fn()}
           point={mockRunningPoint}
           players={mockPlayers}
+          teamId={1}
         />
       </QueryClientProvider>
     );
@@ -126,42 +130,6 @@ describe("EditPointDialog", () => {
     expect(screen.queryByText("Outcome")).not.toBeInTheDocument();
   });
 
-  it("shows end time field only for completed points", () => {
-    const { rerender } = renderWithQueryClient(
-      <EditPointDialog
-        open={true}
-        onClose={vi.fn()}
-        point={mockCompletedPoint}
-        players={mockPlayers}
-      />
-    );
-
-    // Completed point should show end time
-    expect(screen.getByLabelText("End Time")).toBeInTheDocument();
-
-    // Active point should not show end time
-    rerender(
-      <QueryClientProvider
-        client={
-          new QueryClient({
-            defaultOptions: {
-              queries: { retry: false },
-              mutations: { retry: false },
-            },
-          })
-        }
-      >
-        <EditPointDialog
-          open={true}
-          onClose={vi.fn()}
-          point={mockRunningPoint}
-          players={mockPlayers}
-        />
-      </QueryClientProvider>
-    );
-
-    expect(screen.queryByLabelText("End Time")).not.toBeInTheDocument();
-  });
 
   it("displays player selector with correct initial selection", () => {
     renderWithQueryClient(
@@ -170,11 +138,12 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
-    // Should show player selector with count
-    expect(screen.getByText("7 selected")).toBeInTheDocument();
+    // Should show player count in header
+    expect(screen.getByText(/\(7\/7/i)).toBeInTheDocument();
 
     // Get all checkboxes in list items (player checkboxes)
     const checkboxes = screen.getAllByRole("checkbox");
@@ -199,6 +168,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -222,6 +192,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -245,6 +216,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -265,37 +237,6 @@ describe("EditPointDialog", () => {
     expect(saveButton).toBeDisabled();
   });
 
-  it("shows error when end time is before start time", async () => {
-    const user = userEvent.setup();
-    renderWithQueryClient(
-      <EditPointDialog
-        open={true}
-        onClose={vi.fn()}
-        point={mockCompletedPoint}
-        players={mockPlayers}
-      />
-    );
-
-    const startTimeInput = screen.getByLabelText("Start Time");
-    const endTimeInput = screen.getByLabelText("End Time");
-
-    // Set end time before start time
-    await user.clear(startTimeInput);
-    await user.type(startTimeInput, "2024-01-15T10:00");
-
-    await user.clear(endTimeInput);
-    await user.type(endTimeInput, "2024-01-15T09:00");
-
-    // Should show error message
-    expect(
-      screen.getByText("End time cannot be before start time")
-    ).toBeInTheDocument();
-
-    // Save button should be disabled
-    const saveButton = screen.getByRole("button", { name: /save changes/i });
-    expect(saveButton).toBeDisabled();
-  });
-
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
@@ -305,6 +246,7 @@ describe("EditPointDialog", () => {
         onClose={onClose}
         point={mockCompletedPoint}
         players={mockPlayers}
+        teamId={1}
       />
     );
 
@@ -357,6 +299,7 @@ describe("EditPointDialog", () => {
         onClose={vi.fn()}
         point={point}
         players={createdPlayers}
+        teamId={team.id}
         onSuccess={onSuccess}
       />
     );

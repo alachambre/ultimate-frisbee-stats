@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,28 +6,29 @@ import {
   DialogActions,
   Button,
   Alert,
-  TextField,
   Box,
   Typography,
   ToggleButtonGroup,
   ToggleButton,
   Divider,
-  Grid,
+  Chip,
 } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updatePoint } from "../../services/points";
+import { getLines } from "../../services/lines";
 import PlayerSelector from "../points/PlayerSelector";
-import type { PointWithPlayers, Player } from "../../types";
+import type { PointWithPlayers, Player, Line } from "../../types";
 
 interface EditPointDialogProps {
   open: boolean;
   onClose: () => void;
   point: PointWithPlayers;
   players: Player[];
+  teamId: number;
   onSuccess?: () => void;
 }
 
@@ -36,14 +37,21 @@ export default function EditPointDialog({
   onClose,
   point,
   players,
+  teamId,
   onSuccess,
 }: EditPointDialogProps) {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [startingOnOffense, setStartingOnOffense] = useState(true);
   const [won, setWon] = useState<boolean | null>(null);
-  const [startDatetime, setStartDatetime] = useState("");
-  const [endDatetime, setEndDatetime] = useState("");
+  const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const queryClient = useQueryClient();
+
+  // Fetch lines for the team
+  const { data: lines } = useQuery({
+    queryKey: ["lines", teamId],
+    queryFn: () => getLines(teamId),
+    enabled: open,
+  });
 
   // Initialize form values when point changes
   useEffect(() => {
@@ -51,18 +59,33 @@ export default function EditPointDialog({
       setSelectedPlayerIds(point.players.map((p) => p.id));
       setStartingOnOffense(point.starting_on_offense);
       setWon(point.won);
-      setStartDatetime(
-        point.start_datetime
-          ? new Date(point.start_datetime).toISOString().slice(0, 16)
-          : ""
-      );
-      setEndDatetime(
-        point.end_datetime
-          ? new Date(point.end_datetime).toISOString().slice(0, 16)
-          : ""
-      );
+      setSelectedLineId(""); // Reset line filter
     }
   }, [point]);
+
+  // Filter players based on selected line
+  const filteredPlayers = useMemo(() => {
+    if (typeof selectedLineId !== "number") {
+      return players;
+    }
+
+    // Find the selected line and get its player IDs
+    const selectedLine = lines?.find((line) => line.id === selectedLineId);
+    if (!selectedLine || !selectedLine.players) {
+      return players;
+    }
+
+    const linePlayerIds = selectedLine.players.map((p) => p.id);
+    return players.filter((p) => linePlayerIds.includes(p.id));
+  }, [players, selectedLineId, lines]);
+
+  // Count selected by gender
+  const selectedMen = selectedPlayerIds.filter((id) =>
+    players.some((p) => p.id === id && p.gender === "M")
+  ).length;
+  const selectedWomen = selectedPlayerIds.filter((id) =>
+    players.some((p) => p.id === id && p.gender === "W")
+  ).length;
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -73,14 +96,6 @@ export default function EditPointDialog({
 
       if (point.status === "completed" && won !== null) {
         updateData.won = won;
-      }
-
-      if (startDatetime) {
-        updateData.start_datetime = new Date(startDatetime).toISOString();
-      }
-
-      if (endDatetime) {
-        updateData.end_datetime = new Date(endDatetime).toISOString();
       }
 
       return updatePoint(point.id, updateData);
@@ -99,28 +114,12 @@ export default function EditPointDialog({
   };
 
   const handleSubmit = () => {
-    // Validation
-    if (selectedPlayerIds.length !== 7) {
-      return;
+    if (selectedPlayerIds.length === 7) {
+      updateMutation.mutate();
     }
-
-    // Validate end is at or after start if both are provided
-    if (startDatetime && endDatetime) {
-      const start = new Date(startDatetime);
-      const end = new Date(endDatetime);
-      if (end < start) {
-        return;
-      }
-    }
-
-    updateMutation.mutate();
   };
 
-  const isValid =
-    selectedPlayerIds.length === 7 &&
-    (!startDatetime ||
-      !endDatetime ||
-      new Date(endDatetime) >= new Date(startDatetime));
+  const isValid = selectedPlayerIds.length === 7;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -232,62 +231,67 @@ export default function EditPointDialog({
 
         <Divider sx={{ my: 3 }} />
 
-        {/* Timestamps Section */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
-            Timing
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: point.status === "completed" ? 6 : 12 }}>
-              <TextField
-                fullWidth
-                label="Start Time"
-                type="datetime-local"
-                value={startDatetime}
-                onChange={(e) => setStartDatetime(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            {point.status === "completed" && (
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  label="End Time"
-                  type="datetime-local"
-                  value={endDatetime}
-                  onChange={(e) => setEndDatetime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  error={
-                    !!(startDatetime &&
-                    endDatetime &&
-                    new Date(endDatetime) < new Date(startDatetime))
-                  }
-                  helperText={
-                    startDatetime &&
-                    endDatetime &&
-                    new Date(endDatetime) < new Date(startDatetime)
-                      ? "End time cannot be before start time"
-                      : ""
-                  }
-                />
-              </Grid>
-            )}
-          </Grid>
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
         {/* Players Section */}
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
             Players on the Field
           </Typography>
+
+          {/* Line filter */}
+          {lines && lines.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Filter by Line (Optional)
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                <Chip
+                  label="All Players"
+                  onClick={() => setSelectedLineId("")}
+                  color={selectedLineId === "" ? "primary" : "default"}
+                  variant={selectedLineId === "" ? "filled" : "outlined"}
+                />
+                {lines.map((line: Line) => (
+                  <Chip
+                    key={line.id}
+                    label={line.name}
+                    onClick={() => setSelectedLineId(line.id)}
+                    color={selectedLineId === line.id ? "primary" : "default"}
+                    variant={selectedLineId === line.id ? "filled" : "outlined"}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          {/* Player selection with count header */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Select 7 Players{" "}
+              <Typography
+                component="span"
+                variant="body2"
+                color={
+                  selectedPlayerIds.length === 7
+                    ? "success.main"
+                    : selectedPlayerIds.length > 0
+                    ? "warning.main"
+                    : "text.secondary"
+                }
+                fontWeight={selectedPlayerIds.length > 0 ? 500 : 400}
+              >
+                ({selectedPlayerIds.length}/7
+                {selectedPlayerIds.length > 0 && `: ${selectedMen}M, ${selectedWomen}W`})
+              </Typography>
+            </Typography>
+          </Box>
+
           <PlayerSelector
-            players={[...players].sort((a, b) => a.name.localeCompare(b.name))}
+            players={[...filteredPlayers].sort((a, b) => a.name.localeCompare(b.name))}
             selectedIds={selectedPlayerIds}
             onChange={setSelectedPlayerIds}
             required
             error={selectedPlayerIds.length > 0 && selectedPlayerIds.length !== 7}
+            showCount={false}
           />
         </Box>
       </DialogContent>

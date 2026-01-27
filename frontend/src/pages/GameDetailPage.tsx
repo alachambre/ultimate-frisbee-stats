@@ -606,6 +606,7 @@ export default function GameDetailPage() {
           onClose={() => setEditingPoint(null)}
           point={editingPoint}
           players={competition.players}
+          teamId={competition.team_id}
           onSuccess={() => {
             handlePointUpdated();
             setEditingPoint(null);
