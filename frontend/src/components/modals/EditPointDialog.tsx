@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,17 +11,13 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Divider,
-  Chip,
 } from "@mui/material";
-import FlashOnIcon from "@mui/icons-material/FlashOn";
-import ShieldIcon from "@mui/icons-material/Shield";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePoint } from "../../services/points";
-import { getLines } from "../../services/lines";
-import PlayerSelector from "../points/PlayerSelector";
-import type { PointWithPlayers, Player, Line } from "../../types";
+import PointPlayerSelection from "../points/PointPlayerSelection";
+import type { PointWithPlayers, Player } from "../../types";
 
 interface EditPointDialogProps {
   open: boolean;
@@ -46,13 +42,6 @@ export default function EditPointDialog({
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const queryClient = useQueryClient();
 
-  // Fetch lines for the team
-  const { data: lines } = useQuery({
-    queryKey: ["lines", teamId],
-    queryFn: () => getLines(teamId),
-    enabled: open,
-  });
-
   // Initialize form values when point changes
   useEffect(() => {
     if (point) {
@@ -62,30 +51,6 @@ export default function EditPointDialog({
       setSelectedLineId(""); // Reset line filter
     }
   }, [point]);
-
-  // Filter players based on selected line
-  const filteredPlayers = useMemo(() => {
-    if (typeof selectedLineId !== "number") {
-      return players;
-    }
-
-    // Find the selected line and get its player IDs
-    const selectedLine = lines?.find((line) => line.id === selectedLineId);
-    if (!selectedLine || !selectedLine.players) {
-      return players;
-    }
-
-    const linePlayerIds = selectedLine.players.map((p) => p.id);
-    return players.filter((p) => linePlayerIds.includes(p.id));
-  }, [players, selectedLineId, lines]);
-
-  // Count selected by gender
-  const selectedMen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "M")
-  ).length;
-  const selectedWomen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "W")
-  ).length;
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -131,47 +96,6 @@ export default function EditPointDialog({
               "Failed to update point. Please try again."}
           </Alert>
         )}
-
-        {/* Starting Position */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 1.5 }}>
-            Starting
-          </Typography>
-          <ToggleButtonGroup
-            value={startingOnOffense ? "offense" : "defense"}
-            exclusive
-            onChange={(_, newValue) => {
-              if (newValue !== null) {
-                setStartingOnOffense(newValue === "offense");
-              }
-            }}
-            fullWidth
-            aria-label="starting on offense or defense"
-            sx={{
-              "& .MuiToggleButton-root": {
-                py: 1.5,
-                textTransform: "none",
-                fontWeight: 500,
-                "&.Mui-selected": {
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "primary.dark",
-                  },
-                },
-              },
-            }}
-          >
-            <ToggleButton value="offense" aria-label="on offense">
-              <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
-              On Offense
-            </ToggleButton>
-            <ToggleButton value="defense" aria-label="on defense">
-              <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
-              On Defense
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
 
         {/* Outcome (only for completed points) */}
         {point.status === "completed" && (
@@ -237,61 +161,18 @@ export default function EditPointDialog({
             Players on the Field
           </Typography>
 
-          {/* Line filter */}
-          {lines && lines.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Filter by Line (Optional)
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                <Chip
-                  label="All Players"
-                  onClick={() => setSelectedLineId("")}
-                  color={selectedLineId === "" ? "primary" : "default"}
-                  variant={selectedLineId === "" ? "filled" : "outlined"}
-                />
-                {lines.map((line: Line) => (
-                  <Chip
-                    key={line.id}
-                    label={line.name}
-                    onClick={() => setSelectedLineId(line.id)}
-                    color={selectedLineId === line.id ? "primary" : "default"}
-                    variant={selectedLineId === line.id ? "filled" : "outlined"}
-                  />
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          {/* Player selection with count header */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Select 7 Players{" "}
-              <Typography
-                component="span"
-                variant="body2"
-                color={
-                  selectedPlayerIds.length === 7
-                    ? "success.main"
-                    : selectedPlayerIds.length > 0
-                    ? "warning.main"
-                    : "text.secondary"
-                }
-                fontWeight={selectedPlayerIds.length > 0 ? 500 : 400}
-              >
-                ({selectedPlayerIds.length}/7
-                {selectedPlayerIds.length > 0 && `: ${selectedMen}M, ${selectedWomen}W`})
-              </Typography>
-            </Typography>
-          </Box>
-
-          <PlayerSelector
-            players={[...filteredPlayers].sort((a, b) => a.name.localeCompare(b.name))}
-            selectedIds={selectedPlayerIds}
-            onChange={setSelectedPlayerIds}
-            required
-            error={selectedPlayerIds.length > 0 && selectedPlayerIds.length !== 7}
-            showCount={false}
+          <PointPlayerSelection
+            teamId={teamId}
+            players={players}
+            selectedPlayerIds={selectedPlayerIds}
+            onSelectedPlayerIdsChange={setSelectedPlayerIds}
+            startingOnOffense={startingOnOffense}
+            onStartingOnOffenseChange={setStartingOnOffense}
+            selectedLineId={selectedLineId}
+            onSelectedLineIdChange={setSelectedLineId}
+            open={open}
+            clearPlayersOnLineChange={false}
+            showGenderValidation={false}
           />
         </Box>
       </DialogContent>

@@ -8,20 +8,15 @@ import {
   Alert,
   Box,
   Typography,
-  ToggleButtonGroup,
-  ToggleButton,
   Chip,
 } from "@mui/material";
-import FlashOnIcon from "@mui/icons-material/FlashOn";
-import ShieldIcon from "@mui/icons-material/Shield";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startPoint, updatePoint } from "../../services/points";
-import { getLines } from "../../services/lines";
 import { getGame } from "../../services/games";
-import PlayerSelector from "../points/PlayerSelector";
-import type { Player, Line, PointWithPlayers } from "../../types";
+import PointPlayerSelection from "../points/PointPlayerSelection";
+import type { Player, PointWithPlayers } from "../../types";
 
 interface StartPointDialogProps {
   open: boolean;
@@ -45,43 +40,12 @@ export default function StartPointDialog({
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const queryClient = useQueryClient();
 
-  // Fetch lines for the team
-  const { data: lines } = useQuery({
-    queryKey: ["lines", teamId],
-    queryFn: () => getLines(teamId),
-    enabled: open,
-  });
-
   // Fetch game data to get existing points for ABBA pattern
   const { data: game } = useQuery({
     queryKey: ["game", String(gameId)],
     queryFn: () => getGame(gameId),
     enabled: open,
   });
-
-  // Filter players based on selected line
-  const filteredPlayers = useMemo(() => {
-    if (typeof selectedLineId !== "number") {
-      return players;
-    }
-
-    // Find the selected line and get its player IDs
-    const selectedLine = lines?.find((line) => line.id === selectedLineId);
-    if (!selectedLine || !selectedLine.players) {
-      return players;
-    }
-
-    const linePlayerIds = selectedLine.players.map((p) => p.id);
-    return players.filter((p) => linePlayerIds.includes(p.id));
-  }, [players, selectedLineId, lines]);
-
-  // Count selected by gender
-  const selectedMen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "M")
-  ).length;
-  const selectedWomen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "W")
-  ).length;
 
   // Calculate required gender ratio based on ABBA pattern
   const requiredGenderRatio = useMemo(() => {
@@ -125,17 +89,29 @@ export default function StartPointDialog({
     }
   }, [game]);
 
+  // Count selected by gender for validation
+  const selectedMen = selectedPlayerIds.filter((id) =>
+    players.some((p) => p.id === id && p.gender === "M")
+  ).length;
+  const selectedWomen = selectedPlayerIds.filter((id) =>
+    players.some((p) => p.id === id && p.gender === "W")
+  ).length;
+
   // Check if current selection matches required ratio
   const meetsGenderRequirement = useMemo(() => {
     if (!requiredGenderRatio) {
       // No requirement yet, but still need valid mixity (4M+3W or 3M+4W)
-      return selectedPlayerIds.length === 7 &&
-             ((selectedMen === 4 && selectedWomen === 3) ||
-              (selectedMen === 3 && selectedWomen === 4));
+      return (
+        selectedPlayerIds.length === 7 &&
+        ((selectedMen === 4 && selectedWomen === 3) ||
+          (selectedMen === 3 && selectedWomen === 4))
+      );
     }
 
-    return selectedMen === requiredGenderRatio.men &&
-           selectedWomen === requiredGenderRatio.women;
+    return (
+      selectedMen === requiredGenderRatio.men &&
+      selectedWomen === requiredGenderRatio.women
+    );
   }, [requiredGenderRatio, selectedMen, selectedWomen, selectedPlayerIds.length]);
 
   const startMutation = useMutation({
@@ -217,110 +193,19 @@ export default function StartPointDialog({
           </Alert>
         )}
 
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Starting
-          </Typography>
-          <ToggleButtonGroup
-            value={startingOnOffense ? "offense" : "defense"}
-            exclusive
-            onChange={(_, newValue) => {
-              if (newValue !== null) {
-                setStartingOnOffense(newValue === "offense");
-              }
-            }}
-            fullWidth
-            aria-label="starting on offense or defense"
-            sx={{
-              "& .MuiToggleButton-root": {
-                py: 1.5,
-                textTransform: "none",
-                fontWeight: 500,
-                "&.Mui-selected": {
-                  backgroundColor: "primary.main",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "primary.dark",
-                  },
-                },
-              },
-            }}
-          >
-            <ToggleButton value="offense" aria-label="on offense">
-              <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
-              On Offense
-            </ToggleButton>
-            <ToggleButton value="defense" aria-label="on defense">
-              <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
-              On Defense
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-
-        {/* Line filter */}
-        {lines && lines.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Filter by Line (Optional)
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              <Chip
-                label="All Players"
-                onClick={() => {
-                  setSelectedLineId("");
-                  setSelectedPlayerIds([]);
-                }}
-                color={selectedLineId === "" ? "primary" : "default"}
-                variant={selectedLineId === "" ? "filled" : "outlined"}
-              />
-              {lines.map((line: Line) => (
-                <Chip
-                  key={line.id}
-                  label={line.name}
-                  onClick={() => {
-                    setSelectedLineId(line.id);
-                    setSelectedPlayerIds([]);
-                  }}
-                  color={selectedLineId === line.id ? "primary" : "default"}
-                  variant={selectedLineId === line.id ? "filled" : "outlined"}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-
-        {/* Player selection with count header */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Select 7 Players{" "}
-            <Typography
-              component="span"
-              variant="body2"
-              color={
-                selectedPlayerIds.length === 7
-                  ? meetsGenderRequirement
-                    ? "success.main"
-                    : "error.main"
-                  : selectedPlayerIds.length > 0
-                  ? "warning.main"
-                  : "text.secondary"
-              }
-              fontWeight={selectedPlayerIds.length > 0 ? 500 : 400}
-            >
-              ({selectedPlayerIds.length}/7
-              {selectedPlayerIds.length > 0 && `: ${selectedMen}M, ${selectedWomen}W`}
-              {selectedPlayerIds.length === 7 && meetsGenderRequirement && " ✓"})
-            </Typography>
-          </Typography>
-        </Box>
-
-        <PlayerSelector
-          players={[...filteredPlayers].sort((a, b) => a.name.localeCompare(b.name))}
-          selectedIds={selectedPlayerIds}
-          onChange={setSelectedPlayerIds}
-          required
-          error={!isValid && selectedPlayerIds.length > 0}
-          showCount={false}
+        <PointPlayerSelection
+          teamId={teamId}
+          players={players}
+          selectedPlayerIds={selectedPlayerIds}
+          onSelectedPlayerIdsChange={setSelectedPlayerIds}
+          startingOnOffense={startingOnOffense}
+          onStartingOnOffenseChange={setStartingOnOffense}
+          selectedLineId={selectedLineId}
+          onSelectedLineIdChange={setSelectedLineId}
+          open={open}
+          clearPlayersOnLineChange={true}
+          showGenderValidation={true}
+          requiredGenderRatio={requiredGenderRatio}
         />
       </DialogContent>
       <DialogActions>
