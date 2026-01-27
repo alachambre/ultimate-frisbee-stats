@@ -52,20 +52,10 @@ export default function StrategyForm({
               "&.Mui-selected": {
                 fontWeight: "bold",
                 color: "white",
-                "&:hover": {
-                  opacity: 0.9,
-                },
-              },
-              "&.Mui-selected[value='offense']": {
                 backgroundColor: "primary.main",
                 "&:hover": {
                   backgroundColor: "primary.dark",
-                },
-              },
-              "&.Mui-selected[value='defense']": {
-                backgroundColor: "secondary.main",
-                "&:hover": {
-                  backgroundColor: "secondary.dark",
+                  opacity: 0.9,
                 },
               },
             },
