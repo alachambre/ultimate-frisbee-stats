@@ -139,20 +139,14 @@ export default function PlayerSelectionUI({
           {selectedIds.length > 0 && (
             <>
               <Chip
-                label={`${selectedMen} Men`}
+                label={`${selectedMen} ${selectedMen === 1 ? "man" : "men"}`}
                 size="small"
-                sx={{
-                  backgroundColor: "primary.light",
-                  color: "primary.main",
-                }}
+                variant="outlined"
               />
               <Chip
-                label={`${selectedWomen} Women`}
+                label={`${selectedWomen} ${selectedWomen === 1 ? "woman" : "women"}`}
                 size="small"
-                sx={{
-                  backgroundColor: "secondary.light",
-                  color: "secondary.main",
-                }}
+                variant="outlined"
               />
             </>
           )}
