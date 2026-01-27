@@ -213,7 +213,6 @@ export default function PointPlayerSelection({
         onChange={onSelectedPlayerIdsChange}
         required
         error={!isValid && selectedPlayerIds.length > 0}
-        showCount={false}
       />
     </>
   );

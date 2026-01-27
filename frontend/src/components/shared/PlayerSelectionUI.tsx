@@ -13,7 +13,6 @@ import {
   ListItemButton,
   ListItemText,
   Checkbox,
-  Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MaleIcon from "@mui/icons-material/Male";
@@ -27,7 +26,6 @@ interface PlayerSelectionUIProps {
   onSelectAllMen: () => void;
   onSelectAllWomen: () => void;
   onClearAll: () => void;
-  showCount?: boolean;
 }
 
 export default function PlayerSelectionUI({
@@ -37,7 +35,6 @@ export default function PlayerSelectionUI({
   onSelectAllMen,
   onSelectAllWomen,
   onClearAll,
-  showCount = true,
 }: PlayerSelectionUIProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"men" | "women">("men");
@@ -60,14 +57,6 @@ export default function PlayerSelectionUI({
   const womenPlayers = filteredPlayers
     .filter((p) => p.gender === "W")
     .sort((a, b) => a.name.localeCompare(b.name));
-
-  // Count selected by gender
-  const selectedMen = selectedIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "M")
-  ).length;
-  const selectedWomen = selectedIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "W")
-  ).length;
 
   const renderPlayerList = (playersList: Player[], genderLabel: string) => {
     if (playersList.length === 0) return null;
@@ -128,31 +117,6 @@ export default function PlayerSelectionUI({
 
   return (
     <Box>
-      {/* Selection Counter */}
-      {showCount && (
-        <Box mb={2} display="flex" gap={1} justifyContent="center">
-          <Chip
-            label={`${selectedIds.length} selected`}
-            color="primary"
-            variant="outlined"
-          />
-          {selectedIds.length > 0 && (
-            <>
-              <Chip
-                label={`${selectedMen} ${selectedMen === 1 ? "man" : "men"}`}
-                size="small"
-                variant="outlined"
-              />
-              <Chip
-                label={`${selectedWomen} ${selectedWomen === 1 ? "woman" : "women"}`}
-                size="small"
-                variant="outlined"
-              />
-            </>
-          )}
-        </Box>
-      )}
-
       {/* Tabs */}
       <Tabs
         value={activeTab}

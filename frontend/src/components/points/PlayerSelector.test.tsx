@@ -24,15 +24,6 @@ describe("PlayerSelector", () => {
     expect(screen.getByText("Player 3")).toBeInTheDocument();
   });
 
-  it("displays selection count", () => {
-    const onChange = vi.fn();
-    render(
-      <PlayerSelector players={mockPlayers} selectedIds={[1, 2]} onChange={onChange} />
-    );
-
-    expect(screen.getByText("2 selected")).toBeInTheDocument();
-  });
-
   it("shows checked state for selected players", () => {
     const onChange = vi.fn();
     render(
