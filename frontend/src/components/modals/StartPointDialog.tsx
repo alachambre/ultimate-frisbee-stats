@@ -190,16 +190,16 @@ export default function StartPointDialog({
             }
             size="small"
             sx={{
-              backgroundColor: requiredGenderRatio.men === 4 ? "primary.main" : "secondary.main",
+              backgroundColor:
+                selectedPlayerIds.length === 7 && !meetsGenderRequirement
+                  ? "error.main"
+                  : requiredGenderRatio.men === 4
+                  ? "primary.main"
+                  : "secondary.main",
               color: "white",
               "& .MuiChip-icon": {
                 color: "white",
               },
-              // Add red border when selection is wrong
-              ...(selectedPlayerIds.length === 7 && !meetsGenderRequirement && {
-                border: "2px solid",
-                borderColor: "error.main",
-              }),
             }}
           />
         )}
