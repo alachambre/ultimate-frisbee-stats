@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -17,6 +17,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
 import type { PointWithPlayers } from "../../types";
 
 interface PointHistoryItemProps {
@@ -49,6 +51,18 @@ export default function PointHistoryItem({
   // Only applies to completed points
   const isBreak = isCompleted && isWon && !point.starting_on_offense;
   const isBroken = isCompleted && !isWon && point.starting_on_offense;
+
+  // Sort players by gender (Men first) then by name
+  const sortedPlayers = useMemo(() => {
+    return [...point.players].sort((a, b) => {
+      // Sort by gender first (M before W)
+      if (a.gender !== b.gender) {
+        return a.gender === "M" ? -1 : 1;
+      }
+      // Then sort by name
+      return a.name.localeCompare(b.name);
+    });
+  }, [point.players]);
 
   return (
     <Card variant="outlined">
@@ -187,16 +201,23 @@ export default function PointHistoryItem({
           </AccordionSummary>
           <AccordionDetails>
             <Box display="flex" flexWrap="wrap" gap={0.5}>
-              {point.players.map((player) => (
+              {sortedPlayers.map((player) => (
                 <Chip
                   key={player.id}
+                  icon={player.gender === "M" ? <MaleIcon /> : <FemaleIcon />}
                   label={
                     player.number !== null && player.number !== undefined
                       ? `${player.name} #${player.number}`
                       : player.name
                   }
                   size="small"
-                  variant="outlined"
+                  sx={{
+                    backgroundColor: player.gender === "M" ? "primary.main" : "secondary.main",
+                    color: "white",
+                    "& .MuiChip-icon": {
+                      color: "white",
+                    },
+                  }}
                 />
               ))}
             </Box>

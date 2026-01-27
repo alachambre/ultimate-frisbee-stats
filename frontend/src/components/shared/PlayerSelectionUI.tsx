@@ -16,6 +16,8 @@ import {
   Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
 import type { Player } from "../../types";
 
 interface PlayerSelectionUIProps {
@@ -91,18 +93,23 @@ export default function PlayerSelectionUI({
                 />
                 <ListItemText
                   primary={
-                    <Box display="flex" alignItems="center" gap={1}>
+                    <Box display="flex" alignItems="center" gap={0.5}>
                       {player.name}
-                      <Chip
-                        label={player.gender === "M" ? "M" : "W"}
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: "0.7rem",
-                          backgroundColor: player.gender === "M" ? "#e3f2fd" : "#fce4ec",
-                          color: player.gender === "M" ? "#1976d2" : "#c2185b",
-                        }}
-                      />
+                      {player.gender === "M" ? (
+                        <MaleIcon
+                          sx={{
+                            fontSize: 18,
+                            color: "primary.main",
+                          }}
+                        />
+                      ) : (
+                        <FemaleIcon
+                          sx={{
+                            fontSize: 18,
+                            color: "secondary.main",
+                          }}
+                        />
+                      )}
                     </Box>
                   }
                   secondary={

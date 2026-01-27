@@ -192,13 +192,22 @@ export default function StartPointDialog({
               </Box>
             }
             size="small"
-            color={
-              selectedPlayerIds.length === 7
-                ? meetsGenderRequirement
-                  ? "success"
-                  : "error"
-                : "default"
-            }
+            sx={{
+              ...(selectedPlayerIds.length === 7 && meetsGenderRequirement && {
+                backgroundColor: requiredGenderRatio.men === 4 ? "primary.main" : "secondary.main",
+                color: "white",
+                "& .MuiChip-icon": {
+                  color: "white",
+                },
+              }),
+              ...(selectedPlayerIds.length === 7 && !meetsGenderRequirement && {
+                backgroundColor: "error.main",
+                color: "white",
+                "& .MuiChip-icon": {
+                  color: "white",
+                },
+              }),
+            }}
             variant={selectedPlayerIds.length === 7 ? "filled" : "outlined"}
           />
         )}
