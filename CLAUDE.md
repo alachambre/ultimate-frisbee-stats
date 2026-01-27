@@ -196,21 +196,21 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
-6da553e - Improve EditPointDialog and LineCard UX (NEW - uncommitted to remote)
+e07a132 - Enhance EditPointDialog and remove timing section (NEW - uncommitted to remote)
+9ed0705 - Implement ABBA Gender Rule with mixity UX improvements
+6da553e - Improve EditPointDialog and LineCard UX
 5f2e004 - Fix all remaining strategy tests and update documentation
 2db6239 - Improve StartPointDialog UX and add Strategy Management UI
-7db3290 - Fix Phase 6 frontend bugs and improve UX: Timer restart and comment workflow
-b2580c8 - Implement Phase 6 frontend: Enhanced point tracking with 4-status workflow
 ```
 
 ### Recent Changes Summary (Committed)
-- **Latest commit**: `6da553e` - Improve EditPointDialog and LineCard UX
-  - EditPointDialog: ToggleButtons instead of radio buttons, section dividers, responsive Grid layout
-  - LineCard: Removed edit/delete icons for cleaner UI (click card to navigate to detail)
-  - 145 tests passing (down from 147 - removed 2 obsolete LineCard tests)
+- **Latest commit**: `e07a132` - Enhance EditPointDialog and remove timing section
+  - Added line filtering for easier player selection
+  - Added player count header with gender breakdown (matching StartPointDialog)
+  - Removed timing section (start/end datetime editing no longer relevant)
+  - 147 tests passing
 
-### Recent Changes Summary (Uncommitted)
-- **Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (100% COMPLETE) ✅**:
+**Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (100% COMPLETE) ✅**:
   - ✅ **4-Status Point Workflow**:
     - Ready → Running → Scored → Completed lifecycle
     - FinishPointDialog transitions to "scored" (not "completed")
@@ -265,11 +265,17 @@ b2580c8 - Implement Phase 6 frontend: Enhanced point tracking with 4-status work
     - Alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
     - Points alternate between 4M+3W and 3M+4W based on sequence
     - First point establishes which ratio is "A" and which is "B"
-    - Real-time validation with visual feedback (success/error alerts)
-    - Player count display shows gender breakdown with color-coded validation
+    - Pattern calculation: `position % 4` where 0,3→A and 1,2→B (repeats every 4 points)
+    - **Mixity chip in StartPointDialog**: Top-right corner shows "Mixity: Men" or "Mixity: Women"
+      - Navy blue (primary) for men-majority, sky blue (secondary) for women-majority
+      - Red border when wrong ratio selected (7 players but incorrect M/W split)
+      - Male/Female icon with clean typography
+    - **Mixity in PointHistoryItem**: Subtle text in accordion summary "Show Players (Mixity: ♂ Men)" in neutral gray
+    - Player count display shows gender breakdown with color-coded validation (green when valid, red when invalid)
     - Start button disabled for invalid ratios (must be 4M+3W or 3M+4W)
     - 4 new tests covering first point selection and invalid ratio validation
-    - 149 total frontend tests passing
+    - **EditPointDialog enhanced**: Line filtering and player count header matching StartPointDialog
+    - 147 total frontend tests passing
 
 ## Architecture Patterns Established
 
@@ -440,25 +446,21 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - ✅ StartPointDialog UX: Chip-based line filter, inline player count with color-coding
 - ✅ FinishPointDialog: Cleaner UI with toggle buttons, color-coded Won/Lost
 - ✅ Resume Point: scored→running with optimistic cache updates (no UI flicker)
-- ✅ All 149 tests passing (33 new Phase 6 tests + ABBA rule tests)
-- ✅ EditPointDialog & LineCard UX improvements (toggle buttons, section dividers, cleaner cards)
+- ✅ All 147 tests passing (Phase 6 fully tested)
+- ✅ EditPointDialog enhancements: Line filtering, player count header, removed timing section
 - ✅ **ABBA Gender Rule Enforcement (COMPLETE)**:
   - Implemented ABBA alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
   - Points alternate between 4M+3W and 3M+4W following the sequence
   - First point's gender ratio defines which is "A" and which is "B"
-  - Pattern calculated from point number: `Math.floor((pointNumber - 1) / 2) % 2`
-  - StartPointDialog enhancements:
-    - Required gender ratio badge (e.g., "ABBA Gender Rule: 4 Men, 3 Women Required")
-    - Real-time validation with Alert component (success/error/info states)
-    - First point shows info message: "Select either 4M+3W or 3M+4W"
-    - Visual feedback with CheckCircle/Warning icons for ratio compliance
-    - Start button disabled for invalid ratios
-    - Player count display with color-coded validation (green ✓ when valid, red when invalid)
-  - 4 comprehensive tests added:
-    - First point info message display
-    - Allows 4M+3W for first point
-    - Allows 3M+4W for first point
-    - Disables button for invalid ratio (2M+5W)
+  - Pattern calculated: `position % 4` where 0,3→A and 1,2→B (repeats every 4 points)
+  - **Mixity chip in StartPointDialog**: Top-right corner shows "Mixity: Men" or "Mixity: Women"
+    - Navy blue for men-majority, sky blue for women-majority
+    - Red border when wrong ratio selected
+    - Male/Female icon with clean typography
+  - **Mixity in PointHistoryItem**: Subtle text in accordion summary in neutral gray
+  - Player count display with color-coded validation (green when valid, red when invalid)
+  - Start button disabled for invalid ratios
+  - 4 comprehensive tests covering first point selection and invalid ratio validation
   - Pure frontend validation logic - no backend changes needed
 
 **⏳ Phase 6.5: Internationalization (i18n) - NEW**
@@ -569,17 +571,20 @@ npm run build                       # Production build
 
 ## Git Status
 - Currently on `main` branch
-- **Working tree clean** - All Phase 6 Frontend work committed
+- **Working tree clean** - All Phase 6 work committed
 - Latest commits:
-  - `be2f4cd` - Fix all remaining strategy tests (17 tests)
+  - `e07a132` - Enhance EditPointDialog and remove timing section
+  - `9ed0705` - Implement ABBA Gender Rule with mixity UX improvements
+  - `6da553e` - Improve EditPointDialog and LineCard UX
+  - `5f2e004` - Fix all remaining strategy tests (17 tests)
   - `2db6239` - Improve StartPointDialog UX and add Strategy Management UI
-  - `bb28267` - Implement Phase 6 backend: Strategy model and enhanced Point tracking (PUSHED)
-- Branch is synced with origin/main
-- **Phase 6 Frontend COMPLETE** ✅:
+- Branch ahead of origin/main by 15 commits (needs push)
+- **Phase 6 FULLY COMPLETE** 🎉:
   - All 147 tests passing
-  - Strategy Management UI fully implemented
-  - 4-status point workflow with all dialogs
-  - UX improvements (chip-based filters, color-coded player count)
+  - Strategy Management UI with full CRUD
+  - 4-status point workflow (ready→running→scored→completed)
+  - ABBA Gender Rule with mixity chip UI
+  - EditPointDialog enhanced (line filtering, player count)
   - Production build passing
 
 ## Development Notes
@@ -634,8 +639,9 @@ npm run build                       # Production build
   - ✅ Code cleanup: Simplified PointTimer rendering, consolidated duplicate code
   - ✅ MSW mocks updated: Strategy endpoints, new point fields
   - ✅ Backend timezone comparison fix applied (update_point datetime comparison)
-  - ✅ Tests updated: 149 tests passing (33 new tests for Phase 6 including ABBA rule)
-  - ✅ ABBA Gender Rule: COMPLETE - Enforces alternating 4M+3W/3M+4W pattern in StartPointDialog
+  - ✅ Tests updated: 147 tests passing (Phase 6 fully tested including ABBA rule)
+  - ✅ ABBA Gender Rule: COMPLETE - Enforces alternating 4M+3W/3M+4W pattern with mixity chip UI
+  - ✅ EditPointDialog enhanced: Line filtering, player count header, timing section removed
   - ✅ Strategy Management UI: COMPLETE - Full CRUD with StrategiesPage and modals
 - **UI/UX Enhancements COMPLETE**
   - Centralized theme system in App.tsx with navy/sky blue gradient (#1e3a8a → #38bdf8)
