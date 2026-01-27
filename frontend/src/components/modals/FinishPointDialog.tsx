@@ -16,6 +16,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import PointTimer from "../points/PointTimer";
 import type { PointWithPlayers } from "../../types";
@@ -33,6 +34,7 @@ export default function FinishPointDialog({
   activePoint,
   onSuccess,
 }: FinishPointDialogProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [won, setWon] = useState<boolean | null>(null);
   const queryClient = useQueryClient();
 
@@ -74,21 +76,21 @@ export default function FinishPointDialog({
           ) : (
             <ShieldIcon color="secondary" />
           )}
-          Finish {isOffense ? "Offense" : "Defense"} Point
+          {t("points:dialog.finish.title")} {isOffense ? t("points:tracker.offense") : t("points:tracker.defense")}
         </Box>
       </DialogTitle>
       <DialogContent>
         {finishMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {(finishMutation.error as any)?.response?.data?.detail ||
-              "Failed to finish point. Please try again."}
+              t("common:error.generic")}
           </Alert>
         )}
 
         {/* Elapsed Time */}
         <Box sx={{ mb: 3, textAlign: "center" }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Elapsed Time
+            {t("points:tracker.elapsedTime", "Elapsed Time")}
           </Typography>
           {activePoint.start_datetime && (
             <PointTimer startDatetime={activePoint.start_datetime} />
@@ -98,7 +100,7 @@ export default function FinishPointDialog({
         {/* Outcome */}
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Outcome
+            {t("points:dialog.finish.outcome", "Outcome")}
           </Typography>
           <ToggleButtonGroup
             value={won === null ? "" : won ? "won" : "lost"}
@@ -140,25 +142,27 @@ export default function FinishPointDialog({
           >
             <ToggleButton value="won" aria-label="won the point">
               <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} />
-              Won
+              {t("points:dialog.finish.won", "Won")}
             </ToggleButton>
             <ToggleButton value="lost" aria-label="lost the point">
               <CancelIcon sx={{ mr: 1, fontSize: 20 }} />
-              Lost
+              {t("points:dialog.finish.lost", "Lost")}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={finishMutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={won === null || finishMutation.isPending}
         >
-          {finishMutation.isPending ? "Finishing..." : "Finish Point"}
+          {finishMutation.isPending
+            ? t("points:dialog.finish.finishing", "Finishing...")
+            : t("points:tracker.finish", "Finish Point")}
         </Button>
       </DialogActions>
     </Dialog>

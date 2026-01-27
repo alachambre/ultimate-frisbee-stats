@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Container, Box, FormControl, InputLabel, Select, MenuItem, Stack } from "@mui/material";
 import { getAllGames, getTeams, getCompetitions } from "../services";
 import PageHeader from "../components/shared/PageHeader";
@@ -10,6 +11,7 @@ import EmptyGamesState from "../components/games/EmptyGamesState";
 import CreateGameModal from "../components/modals/CreateGameModal";
 
 export default function GamesPage() {
+  const { t } = useTranslation(["games", "common"]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<number | "all">("all");
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | "all">("all");
@@ -68,7 +70,7 @@ export default function GamesPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading games..." />;
+    return <LoadingState message={t("common:action.loading")} />;
   }
 
   if (error) {
@@ -78,8 +80,8 @@ export default function GamesPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
-        title="Games"
-        actionLabel="New Game"
+        title={t("games:page.title")}
+        actionLabel={t("common:action.create")}
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 
@@ -90,10 +92,10 @@ export default function GamesPage() {
             {/* Team Filter */}
             {teams && teams.length > 0 && (
               <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel>Filter by Team</InputLabel>
+                <InputLabel>{t("common:action.filter")} by Team</InputLabel>
                 <Select
                   value={selectedTeamId}
-                  label="Filter by Team"
+                  label={`${t("common:action.filter")} by Team`}
                   onChange={(e) => handleTeamChange(e.target.value as number | "all")}
                 >
                   <MenuItem value="all">All Teams</MenuItem>
@@ -109,10 +111,10 @@ export default function GamesPage() {
             {/* Competition Filter */}
             {competitions && competitions.length > 0 && (
               <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel>Filter by Competition</InputLabel>
+                <InputLabel>{t("common:action.filter")} by Competition</InputLabel>
                 <Select
                   value={selectedCompetitionId}
-                  label="Filter by Competition"
+                  label={`${t("common:action.filter")} by Competition`}
                   onChange={(e) => setSelectedCompetitionId(e.target.value as number | "all")}
                   disabled={filteredCompetitions.length === 0}
                 >
@@ -136,7 +138,7 @@ export default function GamesPage() {
       ) : filteredGames.length === 0 ? (
         <Box sx={{ textAlign: "center", py: 8 }}>
           <Box sx={{ color: "text.secondary" }}>
-            No games found for the selected filters
+            {t("common:messages.noData")}
           </Box>
         </Box>
       ) : (

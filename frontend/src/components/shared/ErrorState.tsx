@@ -1,4 +1,5 @@
 import { Box, Typography, Alert } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface ErrorStateProps {
   message: string;
@@ -7,8 +8,9 @@ interface ErrorStateProps {
 
 export default function ErrorState({
   message,
-  title = "Error",
+  title,
 }: ErrorStateProps) {
+  const { t } = useTranslation('common');
   return (
     <Box
       display="flex"
@@ -18,7 +20,7 @@ export default function ErrorState({
     >
       <Alert severity="error" sx={{ maxWidth: 600 }}>
         <Typography variant="h6" gutterBottom>
-          {title}
+          {title || t('common:messages.error')}
         </Typography>
         <Typography variant="body2">{message}</Typography>
       </Alert>

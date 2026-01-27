@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -24,6 +25,7 @@ export default function AddPlayerModal({
   onClose,
   teamId,
 }: AddPlayerModalProps) {
+  const { t } = useTranslation(["players", "common"]);
   const [playerName, setPlayerName] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
   const [gender, setGender] = useState<Gender>("M");
@@ -63,7 +65,7 @@ export default function AddPlayerModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Add Player</DialogTitle>
+        <DialogTitle>{t("common:action.add")} Player</DialogTitle>
         <DialogContent>
           <PlayerForm
             playerName={playerName}
@@ -77,21 +79,21 @@ export default function AddPlayerModal({
           {mutation.isError && (
             <Box sx={{ mt: 2 }}>
               <Alert severity="error">
-                Error adding player. Please try again.
+                {t("common:messages.error")}
               </Alert>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !playerName.trim()}
           >
-            {mutation.isPending ? "Adding..." : "Add Player"}
+            {mutation.isPending ? `${t("common:action.add")}...` : t("common:action.add")}
           </Button>
         </DialogActions>
       </form>

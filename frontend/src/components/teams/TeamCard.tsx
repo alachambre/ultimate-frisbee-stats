@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import GroupIcon from "@mui/icons-material/Group";
+import { useTranslation } from "react-i18next";
 import type { TeamWithPlayers } from "../../types";
 
 interface TeamCardProps {
@@ -15,6 +16,7 @@ interface TeamCardProps {
 }
 
 export default function TeamCard({ team }: TeamCardProps) {
+  const { t } = useTranslation(['teams', 'common']);
   const menCount = team.players.filter(p => p.gender === "M").length;
   const womenCount = team.players.filter(p => p.gender === "W").length;
 
@@ -47,13 +49,13 @@ export default function TeamCard({ team }: TeamCardProps) {
           </Typography>
 
           <Typography variant="body1" color="text.secondary" mb={2}>
-            {menCount} {menCount === 1 ? "Man" : "Men"}, {womenCount} {womenCount === 1 ? "Woman" : "Women"}
+            {menCount} {menCount === 1 ? t('common:labels.male') : t('points:dialog.start.men')}, {womenCount} {womenCount === 1 ? t('common:labels.female') : t('points:dialog.start.women')}
           </Typography>
 
           <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
             <CalendarTodayIcon sx={{ fontSize: 18, color: "text.secondary" }} />
             <Typography variant="body2" color="text.secondary">
-              Created {new Date(team.created_at).toLocaleDateString("en-US", {
+              {new Date(team.created_at).toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
                 year: "numeric",

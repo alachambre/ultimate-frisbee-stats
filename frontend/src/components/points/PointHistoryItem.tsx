@@ -19,6 +19,7 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
+import { useTranslation } from "react-i18next";
 import type { PointWithPlayers } from "../../types";
 
 interface PointHistoryItemProps {
@@ -32,6 +33,7 @@ export default function PointHistoryItem({
   onEdit,
   onDelete,
 }: PointHistoryItemProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [expanded, setExpanded] = useState(false);
 
   const formatDuration = (seconds: number | null | undefined): string => {
@@ -82,7 +84,7 @@ export default function PointHistoryItem({
               <ShieldIcon color="secondary" />
             )}
             <Typography variant="h6" fontWeight="bold">
-              Point #{point.point_number}
+              {t("points:history.point")} #{point.point_number}
             </Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
@@ -109,14 +111,14 @@ export default function PointHistoryItem({
           {isCompleted && (
             <Chip
               icon={isWon ? <CheckCircleIcon /> : <CancelIcon />}
-              label={isWon ? "Won" : "Lost"}
+              label={isWon ? t("points:dialog.finish.won", "Won") : t("points:dialog.finish.lost", "Lost")}
               color={isWon ? "success" : "error"}
               size="small"
             />
           )}
           {isBreak && (
             <Chip
-              label="Break!"
+              label={t("points:history.break")}
               color="primary"
               size="small"
               sx={{ fontWeight: "bold" }}
@@ -124,7 +126,7 @@ export default function PointHistoryItem({
           )}
           {isBroken && (
             <Chip
-              label="Broken"
+              label={t("points:history.broken")}
               color="warning"
               size="small"
               sx={{ fontWeight: "bold" }}
@@ -132,21 +134,21 @@ export default function PointHistoryItem({
           )}
           {isRunning && (
             <Chip
-              label="Running"
+              label={t("points:status.running")}
               color="primary"
               size="small"
             />
           )}
           {isScored && (
             <Chip
-              label="Scored"
+              label={t("points:status.scored")}
               color="success"
               size="small"
             />
           )}
           {isReady && (
             <Chip
-              label="Ready"
+              label={t("points:status.ready")}
               color="default"
               size="small"
             />
@@ -155,10 +157,10 @@ export default function PointHistoryItem({
 
         <Box display="flex" gap={2} mb={1} alignItems="center" flexWrap="wrap">
           <Typography variant="body2" color="text.secondary">
-            {point.starting_on_offense ? "Offense" : "Defense"}
+            {point.starting_on_offense ? t("points:tracker.offense") : t("points:tracker.defense")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Duration: <strong>{formatDuration(point.duration_seconds)}</strong>
+            {t("points:tracker.duration", "Duration")}: <strong>{formatDuration(point.duration_seconds)}</strong>
           </Typography>
         </Box>
 
@@ -166,7 +168,7 @@ export default function PointHistoryItem({
         {point.strategy && (
           <Box mb={1}>
             <Typography variant="body2" color="text.secondary" component="span">
-              Strategy:{" "}
+              {t("points:tracker.strategy")}:{" "}
             </Typography>
             <Chip
               label={point.strategy.name}
@@ -182,7 +184,7 @@ export default function PointHistoryItem({
           <Box mb={1}>
             {point.pull !== null && !point.starting_on_offense && (
               <Typography variant="body2" color="text.secondary">
-                Pull: <strong>{point.pull ? "Inbound" : "Out of bounds"}</strong>
+                Pull: <strong>{point.pull ? t("points:dialog.start.inbounds") : t("points:dialog.start.outOfBounds")}</strong>
               </Typography>
             )}
             {point.comments && (
@@ -203,7 +205,7 @@ export default function PointHistoryItem({
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="body2">
-                {expanded ? "Hide" : "Show"} Players
+                {expanded ? t("common:action.hide") : t("common:action.show")} {t("common:players")}
               </Typography>
               {(isMixityMen || isMixityWomen) && (
                 <Typography
@@ -215,16 +217,16 @@ export default function PointHistoryItem({
                     gap: 0.5,
                   }}
                 >
-                  (Mixity:
+                  ({t("points:dialog.start.mixity")}:
                   {isMixityMen ? (
                     <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
                       <MaleIcon sx={{ fontSize: 16, mr: 0.25 }} />
-                      Men
+                      {t("points:dialog.start.men")}
                     </Box>
                   ) : (
                     <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
                       <FemaleIcon sx={{ fontSize: 16, mr: 0.25 }} />
-                      Women
+                      {t("points:dialog.start.women")}
                     </Box>
                   )}
                   )

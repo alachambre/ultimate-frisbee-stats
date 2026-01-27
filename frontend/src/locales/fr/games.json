@@ -1,0 +1,51 @@
+{
+  "page": {
+    "title": "Matchs",
+    "empty": {
+      "title": "Aucun match pour le moment",
+      "description": "Créez votre premier match pour commencer"
+    }
+  },
+  "detail": {
+    "info": "Infos match",
+    "score": "Score",
+    "us": "Nous",
+    "them": "Eux",
+    "roster": "Effectif du match",
+    "points": "Points",
+    "startGame": "Démarrer le match",
+    "endGame": "Terminer le match",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce match ?",
+    "endGameConfirm": "Êtes-vous sûr de vouloir terminer ce match ?"
+  },
+  "modal": {
+    "create": {
+      "title": "Créer un nouveau match"
+    },
+    "edit": {
+      "title": "Modifier le match"
+    },
+    "addPlayers": {
+      "title": "Sélectionner les joueurs pour le match"
+    }
+  },
+  "form": {
+    "opponent": "Adversaire",
+    "opponentPlaceholder": "Entrez le nom de l'adversaire",
+    "date": "Date",
+    "competition": "Compétition",
+    "selectCompetition": "Sélectionnez une compétition"
+  },
+  "card": {
+    "vs": "vs",
+    "points": "{{count}} point",
+    "points_plural": "{{count}} points",
+    "players": "{{count}} joueur",
+    "players_plural": "{{count}} joueurs"
+  },
+  "status": {
+    "ready": "Prêt",
+    "started": "Commencé",
+    "ended": "Terminé"
+  }
+}

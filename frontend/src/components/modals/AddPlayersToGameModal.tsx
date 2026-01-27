@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { addPlayersToGame } from "../../services/games";
 import { getCompetition } from "../../services/competitions";
 import AddPlayersModal from "./AddPlayersModal";
@@ -17,11 +18,13 @@ export default function AddPlayersToGameModal({
   competitionId,
   currentPlayerIds,
 }: AddPlayersToGameModalProps) {
+  const { t } = useTranslation('games');
+
   return (
     <AddPlayersModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Players to Game"
+      title={t('games:modal.addPlayers.title')}
       currentPlayerIds={currentPlayerIds}
       fetchPlayers={async () => {
         const competition = await getCompetition(competitionId);
@@ -29,7 +32,7 @@ export default function AddPlayersToGameModal({
       }}
       addPlayers={(playerIds) => addPlayersToGame(gameId, playerIds)}
       invalidateQueries={[["game", String(gameId)]]}
-      emptyMessage="All competition players are already in the game"
+      emptyMessage={t('games:modal.addPlayers.title')}
     />
   );
 }

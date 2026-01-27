@@ -10,6 +10,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
+import { useTranslation } from "react-i18next";
 import type { Strategy } from "../../types";
 
 interface StrategyCardProps {
@@ -19,6 +20,7 @@ interface StrategyCardProps {
 }
 
 export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCardProps) {
+  const { t } = useTranslation(['strategies', 'common']);
   const isOffense = strategy.category === "offense";
 
   return (
@@ -70,7 +72,7 @@ export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCar
 
         {/* Category chip */}
         <Chip
-          label={isOffense ? "Offense" : "Defense"}
+          label={isOffense ? t('strategies:form.offense') : t('strategies:form.defense')}
           size="small"
           color="default"
           sx={{ mb: 2 }}

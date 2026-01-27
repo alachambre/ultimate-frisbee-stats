@@ -3,6 +3,8 @@ import { render, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../locales";
 
 // Create a custom render function that includes providers
 // Similar to backend's conftest.py fixtures
@@ -49,15 +51,24 @@ interface AllTheProvidersProps {
   children: React.ReactNode;
 }
 
+// Clone i18n instance for tests with English only
+const testI18n = i18n.cloneInstance({
+  lng: 'en',
+  fallbackLng: 'en',
+  react: { useSuspense: false },
+});
+
 const AllTheProviders = ({ children }: AllTheProvidersProps) => {
   const testQueryClient = createTestQueryClient();
 
   return (
-    <ThemeProvider theme={theme}>
-      <QueryClientProvider client={testQueryClient}>
-        <BrowserRouter>{children}</BrowserRouter>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <I18nextProvider i18n={testI18n}>
+      <ThemeProvider theme={theme}>
+        <QueryClientProvider client={testQueryClient}>
+          <BrowserRouter>{children}</BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </I18nextProvider>
   );
 };
 

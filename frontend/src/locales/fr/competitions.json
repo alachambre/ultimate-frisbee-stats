@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Compétitions",
+    "empty": {
+      "title": "Aucune compétition pour le moment",
+      "description": "Créez votre première compétition pour commencer"
+    }
+  },
+  "detail": {
+    "info": "Infos compétition",
+    "roster": "Effectif",
+    "games": "Matchs",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette compétition ?"
+  },
+  "modal": {
+    "create": {
+      "title": "Créer une nouvelle compétition"
+    },
+    "edit": {
+      "title": "Modifier la compétition"
+    },
+    "addPlayers": {
+      "title": "Ajouter des joueurs à l'effectif"
+    }
+  },
+  "form": {
+    "name": "Nom de la compétition",
+    "namePlaceholder": "Entrez le nom de la compétition",
+    "location": "Lieu",
+    "locationPlaceholder": "Entrez le lieu",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "team": "Équipe",
+    "selectTeam": "Sélectionnez une équipe"
+  },
+  "card": {
+    "games": "{{count}} match",
+    "games_plural": "{{count}} matchs",
+    "players": "{{count}} joueur",
+    "players_plural": "{{count}} joueurs"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Teams",
+    "addTeam": "Add Team",
+    "empty": {
+      "title": "No teams yet",
+      "description": "Create your first team to get started"
+    }
+  },
+  "detail": {
+    "roster": "Roster",
+    "competitions": "Competitions",
+    "lines": "Lines",
+    "strategies": "Strategies",
+    "deleteConfirm": "Are you sure you want to delete this team?"
+  },
+  "modal": {
+    "create": {
+      "title": "Create New Team"
+    },
+    "edit": {
+      "title": "Edit Team"
+    }
+  },
+  "form": {
+    "name": "Team Name",
+    "namePlaceholder": "Enter team name"
+  },
+  "card": {
+    "players": "{{count}} player",
+    "players_plural": "{{count}} players"
+  }
+}

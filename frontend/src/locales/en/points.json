@@ -1,0 +1,98 @@
+{
+  "tracker": {
+    "title": "Live Point Tracking",
+    "newPoint": "New Point",
+    "offense": "Offense",
+    "defense": "Defense",
+    "score": "Score!",
+    "turnover": "Turnover",
+    "complete": "Complete Point",
+    "finish": "Finish Point",
+    "resume": "Resume",
+    "resuming": "Resuming...",
+    "strategy": "Strategy",
+    "noStrategy": "No strategy selected",
+    "changeStrategy": "Change Strategy",
+    "selectStrategy": "Select Strategy",
+    "addComment": "Add Comment",
+    "editComment": "Edit Comment",
+    "elapsedTime": "Elapsed Time",
+    "duration": "Duration",
+    "playersOnField": "Players on field",
+    "pullQuestion": "Did the pull land inbound?",
+    "offenseStrategies": "Offense Strategies",
+    "defenseStrategies": "Defense Strategies"
+  },
+  "dialog": {
+    "start": {
+      "title": "Start New Point",
+      "selectPlayers": "Select 7 Players",
+      "mixity": "Mixity",
+      "men": "Men",
+      "women": "Women",
+      "pull": "Pull",
+      "inbounds": "Inbounds",
+      "outOfBounds": "Out of Bounds",
+      "line": "Line",
+      "selectLine": "Select a line (optional)",
+      "strategy": "Strategy",
+      "selectStrategy": "Select a strategy (optional)",
+      "starting": "Starting...",
+      "validation": {
+        "exactly7": "You must select exactly 7 players",
+        "invalidMixity": "Invalid mixity: must be 4M+3W or 3M+4W"
+      }
+    },
+    "finish": {
+      "title": "Finish Point",
+      "weScored": "We scored!",
+      "theyScored": "They scored",
+      "ourScore": "Our Score",
+      "theirScore": "Their Score",
+      "outcome": "Outcome",
+      "won": "Won",
+      "lost": "Lost",
+      "finishing": "Finishing..."
+    },
+    "complete": {
+      "title": "Complete Point",
+      "addComment": "Add a comment (optional)",
+      "commentPlaceholder": "Enter your comment...",
+      "confirmMessage": "Mark this point as completed? This will finalize the point after any adjustments.",
+      "completing": "Completing..."
+    },
+    "addComment": {
+      "title": "Add Comment",
+      "commentPlaceholder": "Enter your comment..."
+    },
+    "edit": {
+      "title": "Edit Point",
+      "pointNumber": "Point #{{number}}",
+      "changeStrategy": "Change Strategy",
+      "currentStrategy": "Current: {{strategy}}",
+      "selectNewStrategy": "Select new strategy"
+    },
+    "selectStrategy": {
+      "title": "Select Strategy",
+      "noStrategies": "No strategies available",
+      "createFirst": "Create strategies for this team first"
+    }
+  },
+  "history": {
+    "title": "Point History",
+    "point": "Point",
+    "break": "Break!",
+    "broken": "Broken",
+    "comment": "Comment"
+  },
+  "status": {
+    "ready": "Ready",
+    "running": "Running",
+    "scored": "Scored",
+    "completed": "Completed"
+  },
+  "empty": {
+    "noPoints": "No points yet",
+    "startFirst": "Start tracking your first point"
+  }
+}

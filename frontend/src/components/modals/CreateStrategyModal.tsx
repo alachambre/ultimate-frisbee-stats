@@ -8,6 +8,7 @@ import {
   Button,
   Alert,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { createStrategy } from "../../services/strategies";
 import StrategyForm from "../strategies/StrategyForm";
 import type { StrategyCreate, StrategyCategory } from "../../types";
@@ -21,6 +22,7 @@ export default function CreateStrategyModal({
   isOpen,
   onClose,
 }: CreateStrategyModalProps) {
+  const { t } = useTranslation(['strategies', 'common']);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -62,11 +64,11 @@ export default function CreateStrategyModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Create Strategy</DialogTitle>
+        <DialogTitle>{t('strategies:modal.create.title')}</DialogTitle>
         <DialogContent>
           {mutation.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Failed to create strategy. Please try again.
+              {t('common:error.generic')}
             </Alert>
           )}
 
@@ -88,14 +90,14 @@ export default function CreateStrategyModal({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t('common:action.cancel')}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={!isFormValid || mutation.isPending}
           >
-            {mutation.isPending ? "Creating..." : "Create"}
+            {mutation.isPending ? t('common:action.saving') : t('common:action.create')}
           </Button>
         </DialogActions>
       </form>

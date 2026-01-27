@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Container } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { getTeams } from "../services";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
@@ -10,6 +11,7 @@ import EmptyTeamsState from "../components/teams/EmptyTeamsState";
 import CreateTeamModal from "../components/modals/CreateTeamModal";
 
 export default function TeamsPage() {
+  const { t } = useTranslation(['teams', 'common']);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const {
@@ -22,7 +24,7 @@ export default function TeamsPage() {
   });
 
   if (isLoading) {
-    return <LoadingState message="Loading teams..." />;
+    return <LoadingState message={t('common:action.loading')} />;
   }
 
   if (error) {
@@ -32,8 +34,8 @@ export default function TeamsPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
-        title="Teams"
-        actionLabel="Add Team"
+        title={t('teams:page.title')}
+        actionLabel={t('teams:page.addTeam')}
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 

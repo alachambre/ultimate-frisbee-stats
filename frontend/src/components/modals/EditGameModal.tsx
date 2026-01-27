@@ -1,5 +1,6 @@
 import { useState, type FormEvent, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -24,6 +25,7 @@ export default function EditGameModal({
   onClose,
   game,
 }: EditGameModalProps) {
+  const { t } = useTranslation(["games", "common"]);
   const [opponentName, setOpponentName] = useState(game.opponent_name);
   const [date, setDate] = useState(
     game.date ? new Date(game.date).toISOString().split("T")[0] : ""
@@ -68,23 +70,23 @@ export default function EditGameModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Game</DialogTitle>
+        <DialogTitle>{t("games:modal.edit.title")}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             <TextField
               autoFocus
-              label="Opponent Name"
+              label={t("games:form.opponent")}
               type="text"
               fullWidth
               variant="outlined"
               value={opponentName}
               onChange={(e) => setOpponentName(e.target.value)}
-              placeholder="Enter opponent name"
+              placeholder={t("games:form.opponentPlaceholder")}
               inputProps={{ maxLength: 100 }}
               required
             />
             <TextField
-              label="Date"
+              label={t("games:form.date")}
               type="date"
               fullWidth
               variant="outlined"
@@ -94,36 +96,36 @@ export default function EditGameModal({
                 shrink: true,
               }}
               disabled
-              helperText="Date cannot be changed after game creation"
+              helperText={t("games:form.date")}
             />
             <TextField
-              label="Comments (optional)"
+              label={t("common:labels.comments")}
               type="text"
               fullWidth
               variant="outlined"
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder="Add any comments about this game"
+              placeholder={t("common:labels.comments")}
               multiline
               rows={3}
             />
             {mutation.isError && (
               <Alert severity="error">
-                Error updating game. Please try again.
+                {t("common:messages.error")}
               </Alert>
             )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !opponentName.trim()}
           >
-            {mutation.isPending ? "Saving..." : "Save Changes"}
+            {mutation.isPending ? t("common:action.loading") : t("common:action.save")}
           </Button>
         </DialogActions>
       </form>

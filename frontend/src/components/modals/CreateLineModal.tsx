@@ -10,6 +10,7 @@ import {
   Alert,
   MenuItem,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { createLine } from "../../services/lines";
 import { getTeams } from "../../services/teams";
 import type { LineCreate } from "../../types";
@@ -25,6 +26,7 @@ export default function CreateLineModal({
   onClose,
   teamId,
 }: CreateLineModalProps) {
+  const { t } = useTranslation(['lines', 'common']);
   const [formData, setFormData] = useState({
     team_id: teamId?.toString() || "",
     name: "",
@@ -72,13 +74,13 @@ export default function CreateLineModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Create New Line</DialogTitle>
+        <DialogTitle>{t('lines:modal.create.title')}</DialogTitle>
         <DialogContent>
           {!teamId && (
             <TextField
               select
               margin="dense"
-              label="Team"
+              label={t('common:team')}
               fullWidth
               variant="outlined"
               value={formData.team_id}
@@ -98,7 +100,7 @@ export default function CreateLineModal({
           <TextField
             autoFocus
             margin="dense"
-            label="Line Name"
+            label={t('lines:form.name')}
             type="text"
             fullWidth
             variant="outlined"
@@ -106,14 +108,14 @@ export default function CreateLineModal({
             onChange={(e) =>
               setFormData({ ...formData, name: e.target.value })
             }
-            placeholder="e.g., O-Line, D-Line, Handlers"
+            placeholder={t('lines:form.namePlaceholder')}
             inputProps={{ maxLength: 100 }}
             required
           />
 
           <TextField
             margin="dense"
-            label="Description (optional)"
+            label={t('common:labels.description')}
             type="text"
             fullWidth
             variant="outlined"
@@ -123,25 +125,25 @@ export default function CreateLineModal({
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            placeholder="Add notes about this line"
+            placeholder={t('lines:form.namePlaceholder')}
           />
 
           {mutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error creating line. Please try again.
+              {t('common:error.generic')}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t('common:action.cancel')}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !isFormValid}
           >
-            {mutation.isPending ? "Creating..." : "Create Line"}
+            {mutation.isPending ? t('common:action.saving') : t('common:action.create')}
           </Button>
         </DialogActions>
       </form>

@@ -5,6 +5,7 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import type { Gender } from "../../types";
@@ -28,11 +29,13 @@ export default function PlayerForm({
   onPlayerNumberChange,
   autoFocus = false,
 }: PlayerFormProps) {
+  const { t } = useTranslation(["players", "common"]);
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
       <Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Gender
+          {t("common:labels.gender")}
         </Typography>
         <ToggleButtonGroup
           value={gender}
@@ -73,28 +76,28 @@ export default function PlayerForm({
         >
           <ToggleButton value="M" aria-label="man">
             <MaleIcon sx={{ mr: 1, fontSize: 20 }} />
-            Man
+            {t("players:form.genderMale")}
           </ToggleButton>
           <ToggleButton value="W" aria-label="woman">
             <FemaleIcon sx={{ mr: 1, fontSize: 20 }} />
-            Woman
+            {t("players:form.genderFemale")}
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
       <TextField
         autoFocus={autoFocus}
-        label="Player Name"
+        label={t("players:form.name")}
         type="text"
         fullWidth
         variant="outlined"
         value={playerName}
         onChange={(e) => onPlayerNameChange(e.target.value)}
-        placeholder="Enter player name"
+        placeholder={t("players:form.namePlaceholder")}
         inputProps={{ maxLength: 100 }}
         required
       />
       <TextField
-        label="Jersey Number (Optional)"
+        label={`Jersey Number (${t("common:labels.optional")})`}
         type="number"
         fullWidth
         variant="outlined"

@@ -1,4 +1,5 @@
 import { Box, Typography, Button, Paper } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import GroupIcon from "@mui/icons-material/Group";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -9,6 +10,8 @@ interface EmptyTeamsStateProps {
 export default function EmptyTeamsState({
   onCreateClick,
 }: EmptyTeamsStateProps) {
+  const { t } = useTranslation(["teams", "common"]);
+
   return (
     <Paper
       elevation={0}
@@ -37,11 +40,10 @@ export default function EmptyTeamsState({
       </Box>
 
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        No Teams Yet
+        {t("teams:page.empty.title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: "auto" }}>
-        Get started by creating your first ultimate frisbee team to track stats
-        and manage players
+        {t("teams:page.empty.description")}
       </Typography>
 
       <Button
@@ -50,7 +52,7 @@ export default function EmptyTeamsState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        Create Your First Team
+        {t("common:action.create")}
       </Button>
     </Paper>
   );

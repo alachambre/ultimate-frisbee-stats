@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// import { useTranslation } from "react-i18next"; // TODO: Complete translation in Phase 6.5
 import {
   Container,
   Box,
@@ -44,6 +45,7 @@ import CreateGameModal from "../components/modals/CreateGameModal";
 import type { Player } from "../types";
 
 export default function CompetitionDetailPage() {
+  // const { t } = useTranslation(["competitions", "players", "games", "common"]);
   const { competitionId } = useParams<{ competitionId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

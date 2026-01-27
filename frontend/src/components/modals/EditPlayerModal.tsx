@@ -1,5 +1,6 @@
 import { useState, type FormEvent, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +27,7 @@ export default function EditPlayerModal({
   player,
   teamId,
 }: EditPlayerModalProps) {
+  const { t } = useTranslation(["players", "common"]);
   const [playerName, setPlayerName] = useState(player.name);
   const [playerNumber, setPlayerNumber] = useState(
     player.number?.toString() || ""
@@ -85,13 +87,13 @@ export default function EditPlayerModal({
   if (showDeleteConfirm) {
     return (
       <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Delete Player?</DialogTitle>
+        <DialogTitle>{t("common:action.delete")} Player?</DialogTitle>
         <DialogContent>
           <Box>
-            Are you sure you want to remove {player.name} from the team?
+            {t("common:messages.confirmDelete")}
             {deleteMutation.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
-                Error deleting player. Please try again.
+                {t("common:messages.error")}
               </Alert>
             )}
           </Box>
@@ -101,7 +103,7 @@ export default function EditPlayerModal({
             onClick={() => setShowDeleteConfirm(false)}
             disabled={deleteMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -109,7 +111,7 @@ export default function EditPlayerModal({
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Player"}
+            {deleteMutation.isPending ? `${t("common:action.delete")}...` : t("common:action.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -119,7 +121,7 @@ export default function EditPlayerModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Player</DialogTitle>
+        <DialogTitle>{t("players:modal.edit.title")}</DialogTitle>
         <DialogContent>
           <PlayerForm
             playerName={playerName}
@@ -133,7 +135,7 @@ export default function EditPlayerModal({
           {updateMutation.isError && (
             <Box sx={{ mt: 2 }}>
               <Alert severity="error">
-                Error updating player. Please try again.
+                {t("common:messages.error")}
               </Alert>
             </Box>
           )}
@@ -155,7 +157,7 @@ export default function EditPlayerModal({
               width: { xs: "100%", sm: "auto" },
             }}
           >
-            Delete Player
+            {t("common:action.delete")} Player
           </Button>
           <Box
             sx={{
@@ -174,7 +176,7 @@ export default function EditPlayerModal({
                 width: { xs: "100%", sm: "auto" },
               }}
             >
-              Cancel
+              {t("common:action.cancel")}
             </Button>
             <Button
               type="submit"
@@ -185,7 +187,7 @@ export default function EditPlayerModal({
                 width: { xs: "100%", sm: "auto" },
               }}
             >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              {updateMutation.isPending ? `${t("common:action.save")}...` : t("common:action.save")}
             </Button>
           </Box>
         </DialogActions>

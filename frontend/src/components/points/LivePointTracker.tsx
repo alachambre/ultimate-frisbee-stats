@@ -17,6 +17,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import CommentIcon from "@mui/icons-material/Comment";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import PointTimer from "./PointTimer";
 import StartPointDialog from "../modals/StartPointDialog";
@@ -41,6 +42,7 @@ export default function LivePointTracker({
   teamId,
   onPointUpdated,
 }: LivePointTrackerProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
@@ -112,7 +114,7 @@ export default function LivePointTracker({
     <>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" fontWeight="bold" gutterBottom>
-          Live Point Tracking
+          {t("points:tracker.title", "Live Point Tracking")}
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
@@ -120,7 +122,7 @@ export default function LivePointTracker({
           // No active or scored point - show start button
           <Box textAlign="center" py={2}>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              No active point. Start tracking a new point.
+              {t("points:empty.noPoints")}
             </Typography>
             <Button
               variant="contained"
@@ -128,7 +130,7 @@ export default function LivePointTracker({
               onClick={() => setIsStartDialogOpen(true)}
               size="large"
             >
-              Start Point
+              {t("points:tracker.newPoint")}
             </Button>
           </Box>
         ) : (
@@ -137,22 +139,26 @@ export default function LivePointTracker({
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Point #{currentPoint.point_number} -{" "}
-                  {currentPoint.status === "running" ? "Running" : "Scored"}
+                  {t("points:history.point")} #{currentPoint.point_number} -{" "}
+                  {currentPoint.status === "running"
+                    ? t("points:status.running")
+                    : t("points:status.scored")}
                 </Typography>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Chip
                     label={
                       currentPoint.starting_on_offense
-                        ? "Started on Offense"
-                        : "Started on Defense"
+                        ? t("points:tracker.offense")
+                        : t("points:tracker.defense")
                     }
                     size="small"
                     color={currentPoint.starting_on_offense ? "primary" : "default"}
                   />
                   {currentPoint.status === "scored" && (
                     <Chip
-                      label={currentPoint.won ? "Won" : "Lost"}
+                      label={currentPoint.won
+                        ? t("points:dialog.finish.weScored")
+                        : t("points:dialog.finish.theyScored")}
                       size="small"
                       color={currentPoint.won ? "success" : "error"}
                     />
@@ -161,7 +167,9 @@ export default function LivePointTracker({
               </Box>
               <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {currentPoint.status === "running" ? "Elapsed Time" : "Duration"}
+                  {currentPoint.status === "running"
+                    ? t("points:tracker.elapsedTime", "Elapsed Time")
+                    : t("points:tracker.duration", "Duration")}
                 </Typography>
                 {currentPoint.start_datetime && (
                   <PointTimer
@@ -180,7 +188,7 @@ export default function LivePointTracker({
              activePoint.pull === null && (
               <Box mt={2} textAlign="center">
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Did the pull land inbound?
+                  {t("points:tracker.pullQuestion", "Did the pull land inbound?")}
                 </Typography>
                 <ButtonGroup variant="outlined" disabled={updatePullMutation.isPending}>
                   <Button
@@ -188,14 +196,14 @@ export default function LivePointTracker({
                     onClick={() => updatePullMutation.mutate(true)}
                     color="success"
                   >
-                    Inbound
+                    {t("points:dialog.start.inbounds")}
                   </Button>
                   <Button
                     startIcon={<CloseIcon />}
                     onClick={() => updatePullMutation.mutate(false)}
                     color="error"
                   >
-                    Out of Bounds
+                    {t("points:dialog.start.outOfBounds")}
                   </Button>
                 </ButtonGroup>
               </Box>
@@ -209,7 +217,9 @@ export default function LivePointTracker({
                 onClick={() => setIsStrategyDialogOpen(true)}
                 size="medium"
               >
-                {currentPoint.strategy ? "Change Strategy" : "Select Strategy"}
+                {currentPoint.strategy
+                  ? t("points:tracker.changeStrategy", "Change Strategy")
+                  : t("points:tracker.selectStrategy", "Select Strategy")}
               </Button>
               <Button
                 variant="outlined"
@@ -217,7 +227,9 @@ export default function LivePointTracker({
                 onClick={() => setIsCommentDialogOpen(true)}
                 size="medium"
               >
-                {currentPoint.comments ? "Edit Comment" : "Add Comment"}
+                {currentPoint.comments
+                  ? t("points:tracker.editComment", "Edit Comment")
+                  : t("points:tracker.addComment", "Add Comment")}
               </Button>
             </Box>
 
@@ -230,7 +242,7 @@ export default function LivePointTracker({
                   onClick={() => setIsFinishDialogOpen(true)}
                   size="large"
                 >
-                  Finish Point
+                  {t("points:tracker.finish", "Finish Point")}
                 </Button>
               ) : (
                 <>
@@ -242,7 +254,9 @@ export default function LivePointTracker({
                     disabled={restartPointMutation.isPending}
                     size="large"
                   >
-                    {restartPointMutation.isPending ? "Resuming..." : "Resume Point"}
+                    {restartPointMutation.isPending
+                      ? t("points:tracker.resuming", "Resuming...")
+                      : t("points:tracker.resume")}
                   </Button>
                   <Button
                     variant="contained"
@@ -251,7 +265,7 @@ export default function LivePointTracker({
                     onClick={() => setIsCompleteDialogOpen(true)}
                     size="large"
                   >
-                    Complete Point
+                    {t("points:tracker.complete")}
                   </Button>
                 </>
               )}
@@ -259,13 +273,13 @@ export default function LivePointTracker({
 
             <Box mt={2}>
               <Typography variant="body2" color="text.secondary">
-                Players on field: {currentPoint.players.length}
+                {t("points:tracker.playersOnField", "Players on field")}: {currentPoint.players.length}
               </Typography>
               {/* Show strategy if selected */}
               {currentPoint.strategy && (
                 <Box mt={1}>
                   <Typography variant="body2" color="text.secondary" component="span">
-                    Strategy:{" "}
+                    {t("points:tracker.strategy")}:{" "}
                   </Typography>
                   <Chip
                     label={currentPoint.strategy.name}
@@ -279,7 +293,7 @@ export default function LivePointTracker({
               {/* Show pull status if marked */}
               {activePoint && !activePoint.starting_on_offense && activePoint.pull !== null && (
                 <Typography variant="body2" color="text.secondary" mt={1}>
-                  Pull: <strong>{activePoint.pull ? "Inbound" : "Out of Bounds"}</strong>
+                  Pull: <strong>{activePoint.pull ? t("points:dialog.start.inbounds") : t("points:dialog.start.outOfBounds")}</strong>
                 </Typography>
               )}
             </Box>

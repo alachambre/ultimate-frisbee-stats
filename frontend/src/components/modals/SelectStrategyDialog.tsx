@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import { getStrategies } from "../../services/strategies";
 import type { PointWithPlayers, StrategyCategory } from "../../types";
@@ -33,6 +34,7 @@ export default function SelectStrategyDialog({
   gameId,
   onSuccess,
 }: SelectStrategyDialogProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [strategyId, setStrategyId] = useState<number | "">(point.strategy?.id || "");
   const queryClient = useQueryClient();
 
@@ -79,32 +81,34 @@ export default function SelectStrategyDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Select Strategy</DialogTitle>
+      <DialogTitle>{t("points:dialog.selectStrategy.title")}</DialogTitle>
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {(updateMutation.error as any)?.response?.data?.detail ||
-              "Failed to update strategy. Please try again."}
+              t("common:error.generic")}
           </Alert>
         )}
 
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            {point.starting_on_offense ? "Offense Strategies" : "Defense Strategies"}
+            {point.starting_on_offense
+              ? t("points:tracker.offenseStrategies", "Offense Strategies")
+              : t("points:tracker.defenseStrategies", "Defense Strategies")}
           </Typography>
         </Box>
 
         <FormControl fullWidth>
-          <InputLabel id="strategy-select-label">Strategy</InputLabel>
+          <InputLabel id="strategy-select-label">{t("points:tracker.strategy")}</InputLabel>
           <Select
             autoFocus
             labelId="strategy-select-label"
             value={strategyId}
-            label="Strategy"
+            label={t("points:tracker.strategy")}
             onChange={(e) => setStrategyId(e.target.value as number | "")}
           >
             <MenuItem value="">
-              <em>No strategy</em>
+              <em>{t("points:tracker.noStrategy")}</em>
             </MenuItem>
             {strategies?.map((strategy) => (
               <MenuItem key={strategy.id} value={strategy.id}>
@@ -116,14 +120,14 @@ export default function SelectStrategyDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? "Saving..." : "Save"}
+          {updateMutation.isPending ? t("common:action.saving") : t("common:action.save")}
         </Button>
       </DialogActions>
     </Dialog>

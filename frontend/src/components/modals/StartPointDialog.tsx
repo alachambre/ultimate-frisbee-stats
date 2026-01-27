@@ -13,6 +13,7 @@ import {
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { startPoint, updatePoint } from "../../services/points";
 import { getGame } from "../../services/games";
 import PointPlayerSelection from "../points/PointPlayerSelection";
@@ -35,6 +36,7 @@ export default function StartPointDialog({
   players,
   onSuccess,
 }: StartPointDialogProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [startingOnOffense, setStartingOnOffense] = useState<boolean>(true);
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
@@ -173,7 +175,7 @@ export default function StartPointDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1 }}>
-        <span>Start Point</span>
+        <span>{t("points:dialog.start.title")}</span>
         {/* Mixity indicator */}
         {requiredGenderRatio && (
           <Chip
@@ -181,10 +183,12 @@ export default function StartPointDialog({
             label={
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Typography variant="caption" fontWeight={500}>
-                  Mixity:
+                  {t("points:dialog.start.mixity")}:
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
-                  {requiredGenderRatio.men === 4 ? "Men" : "Women"}
+                  {requiredGenderRatio.men === 4
+                    ? t("points:dialog.start.men")
+                    : t("points:dialog.start.women")}
                 </Typography>
               </Box>
             }
@@ -208,7 +212,7 @@ export default function StartPointDialog({
         {startMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {(startMutation.error as any)?.response?.data?.detail ||
-              "Failed to start point. Please try again."}
+              t("common:error.generic")}
           </Alert>
         )}
 
@@ -229,14 +233,16 @@ export default function StartPointDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={startMutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={!isValid || startMutation.isPending}
         >
-          {startMutation.isPending ? "Starting..." : "Start Point"}
+          {startMutation.isPending
+            ? t("points:dialog.start.starting", "Starting...")
+            : t("points:tracker.newPoint")}
         </Button>
       </DialogActions>
     </Dialog>

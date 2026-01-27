@@ -1,6 +1,7 @@
 import { Box, Typography, Button, Paper } from "@mui/material";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 
 interface EmptyStrategiesStateProps {
   onCreateClick: () => void;
@@ -9,6 +10,7 @@ interface EmptyStrategiesStateProps {
 export default function EmptyStrategiesState({
   onCreateClick,
 }: EmptyStrategiesStateProps) {
+  const { t } = useTranslation(['strategies', 'common']);
   return (
     <Paper
       elevation={0}
@@ -37,10 +39,10 @@ export default function EmptyStrategiesState({
       </Box>
 
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        No Strategies Yet
+        {t('strategies:page.empty.title')}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: "auto" }}>
-        Create offensive and defensive strategies to assign to points during live tracking
+        {t('strategies:page.empty.description')}
       </Typography>
 
       <Button
@@ -49,7 +51,7 @@ export default function EmptyStrategiesState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        Create Your First Strategy
+        {t('strategies:page.empty.title')}
       </Button>
     </Paper>
   );

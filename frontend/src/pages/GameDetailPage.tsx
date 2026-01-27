@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Container,
   Box,
@@ -42,6 +43,7 @@ import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player } from "../types";
 
 export default function GameDetailPage() {
+  const { t } = useTranslation(["games", "players", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -123,11 +125,11 @@ export default function GameDetailPage() {
   });
 
   if (isLoading) {
-    return <LoadingState message="Loading game..." />;
+    return <LoadingState message={t("common:action.loading")} />;
   }
 
   if (error || !game) {
-    return <ErrorState message="Error loading game. Please try again." />;
+    return <ErrorState message={t("common:messages.error")} />;
   }
 
   const handleDelete = () => {
@@ -177,7 +179,7 @@ export default function GameDetailPage() {
           startIcon={<ArrowBackIcon />}
           sx={{ mb: 2 }}
         >
-          Back to Games
+          {t("common:action.back")}
         </Button>
         <Box
           display="flex"
@@ -204,13 +206,7 @@ export default function GameDetailPage() {
             </Box>
             <Box display="flex" gap={1} flexWrap="wrap">
               <Chip
-                label={
-                  game.status === "ready"
-                    ? "Not Started"
-                    : game.status === "started"
-                    ? "Ongoing"
-                    : "Finished"
-                }
+                label={t(`games:status.${game.status}`)}
                 color={game.status === "started" ? "primary" : "default"}
                 size="small"
               />
@@ -228,7 +224,7 @@ export default function GameDetailPage() {
               }}
             >
               <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                Edit
+                {t("common:action.edit")}
               </Box>
             </Button>
             {game.status === "ready" && (
@@ -242,7 +238,7 @@ export default function GameDetailPage() {
                 }}
               >
                 <Box component="span">
-                  {startMutation.isPending ? "Starting..." : "Start Game"}
+                  {startMutation.isPending ? t("common:action.loading") : t("games:detail.startGame")}
                 </Box>
               </Button>
             )}
@@ -258,7 +254,7 @@ export default function GameDetailPage() {
                 }}
               >
                 <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                  End Game
+                  {t("games:detail.endGame")}
                 </Box>
               </Button>
             )}
@@ -273,7 +269,7 @@ export default function GameDetailPage() {
               }}
             >
               <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                Delete
+                {t("common:action.delete")}
               </Box>
             </Button>
           </Box>
@@ -284,7 +280,7 @@ export default function GameDetailPage() {
       <Paper sx={{ mb: 3 }}>
         <Box p={4} textAlign="center">
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            {game.status === "ended" ? "Final Score" : "Score"}
+            {t("games:detail.score")}
           </Typography>
           <Typography variant="h2" fontWeight="bold">
             {game.our_score} - {game.opponent_score}
@@ -348,7 +344,7 @@ export default function GameDetailPage() {
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Box display="flex" alignItems="center" gap={1}>
                 <Typography variant="h6">
-                  Players ({game.players.length})
+                  {t("games:detail.roster")} ({game.players.length})
                 </Typography>
                 <IconButton
                   size="small"
@@ -365,7 +361,7 @@ export default function GameDetailPage() {
                 size="small"
                 disabled={game.status === "ended"}
               >
-                Add Players
+                {t("common:action.add")}
               </Button>
             </Box>
           </Box>
@@ -394,11 +390,11 @@ export default function GameDetailPage() {
                         mb: 2,
                       }}
                     >
-                      Men ({game.players.filter((p) => p.gender === "M").length})
+                      {t("common:labels.male")} ({game.players.filter((p) => p.gender === "M").length})
                     </Typography>
                     {game.players.filter((p) => p.gender === "M").length === 0 ? (
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        No male players in roster
+                        {t("players:empty.noPlayers")}
                       </Typography>
                     ) : (
                       <PlayersGrid
@@ -432,11 +428,11 @@ export default function GameDetailPage() {
                         mb: 2,
                       }}
                     >
-                      Women ({game.players.filter((p) => p.gender === "W").length})
+                      {t("common:labels.female")} ({game.players.filter((p) => p.gender === "W").length})
                     </Typography>
                     {game.players.filter((p) => p.gender === "W").length === 0 ? (
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        No female players in roster
+                        {t("players:empty.noPlayers")}
                       </Typography>
                     ) : (
                       <PlayersGrid
@@ -469,7 +465,7 @@ export default function GameDetailPage() {
       <Paper>
         <Box p={3} borderBottom="1px solid" borderColor="divider">
           <Typography variant="h6">
-            Point History ({game.points.length})
+            {t("games:detail.points")} ({game.points.length})
           </Typography>
         </Box>
 
@@ -489,14 +485,14 @@ export default function GameDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Delete Game?</DialogTitle>
+        <DialogTitle>{t("games:detail.deleteConfirm")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Delete this game? This will also delete all points.
+            {t("games:detail.deleteConfirm")}
           </Typography>
           {deleteMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error deleting game. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
@@ -505,7 +501,7 @@ export default function GameDetailPage() {
             onClick={() => setIsDeleteConfirmOpen(false)}
             disabled={deleteMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -513,7 +509,7 @@ export default function GameDetailPage() {
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Game"}
+            {deleteMutation.isPending ? t("common:action.loading") : t("common:action.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -525,14 +521,14 @@ export default function GameDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>End Game?</DialogTitle>
+        <DialogTitle>{t("games:detail.endGameConfirm")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Mark game as ended? This cannot be undone.
+            {t("games:detail.endGameConfirm")}
           </Typography>
           {finishMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error ending game. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
@@ -541,7 +537,7 @@ export default function GameDetailPage() {
             onClick={() => setIsFinishConfirmOpen(false)}
             disabled={finishMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleFinish}
@@ -549,7 +545,7 @@ export default function GameDetailPage() {
             color="success"
             disabled={finishMutation.isPending}
           >
-            {finishMutation.isPending ? "Ending..." : "End Game"}
+            {finishMutation.isPending ? t("common:action.loading") : t("games:detail.endGame")}
           </Button>
         </DialogActions>
       </Dialog>

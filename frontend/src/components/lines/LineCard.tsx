@@ -7,6 +7,7 @@ import {
   Chip,
 } from "@mui/material";
 import GroupsIcon from "@mui/icons-material/Groups";
+import { useTranslation } from "react-i18next";
 import type { LineWithPlayers } from "../../types";
 
 interface LineCardProps {
@@ -14,6 +15,7 @@ interface LineCardProps {
 }
 
 export default function LineCard({ line }: LineCardProps) {
+  const { t } = useTranslation(['lines', 'common', 'points']);
   const navigate = useNavigate();
   const menCount = line.players.filter((p) => p.gender === "M").length;
   const womenCount = line.players.filter((p) => p.gender === "W").length;
@@ -72,21 +74,21 @@ export default function LineCard({ line }: LineCardProps) {
 
         <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
           <Chip
-            label={`${line.players.length} ${line.players.length === 1 ? "player" : "players"}`}
+            label={t('lines:card.players', { count: line.players.length })}
             size="small"
             color="primary"
             variant="outlined"
           />
           {menCount > 0 && (
             <Chip
-              label={`${menCount} ${menCount === 1 ? "man" : "men"}`}
+              label={`${menCount} ${menCount === 1 ? t('common:labels.male') : t('points:dialog.start.men')}`}
               size="small"
               variant="outlined"
             />
           )}
           {womenCount > 0 && (
             <Chip
-              label={`${womenCount} ${womenCount === 1 ? "woman" : "women"}`}
+              label={`${womenCount} ${womenCount === 1 ? t('common:labels.female') : t('points:dialog.start.women')}`}
               size="small"
               variant="outlined"
             />

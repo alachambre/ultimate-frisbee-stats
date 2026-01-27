@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -22,6 +23,7 @@ export default function CreateCompetitionModal({
   isOpen,
   onClose,
 }: CreateCompetitionModalProps) {
+  const { t } = useTranslation(["competitions", "common"]);
   const [formData, setFormData] = useState({
     team_id: "",
     name: "",
@@ -85,12 +87,12 @@ export default function CreateCompetitionModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Create New Competition</DialogTitle>
+        <DialogTitle>{t("competitions:modal.create.title")}</DialogTitle>
         <DialogContent>
           <TextField
             select
             margin="dense"
-            label="Team"
+            label={t("competitions:form.team")}
             fullWidth
             variant="outlined"
             value={formData.team_id}
@@ -109,7 +111,7 @@ export default function CreateCompetitionModal({
           <TextField
             autoFocus={!!teams && teams.length > 0}
             margin="dense"
-            label="Competition Name"
+            label={t("competitions:form.name")}
             type="text"
             fullWidth
             variant="outlined"
@@ -117,14 +119,14 @@ export default function CreateCompetitionModal({
             onChange={(e) =>
               setFormData({ ...formData, name: e.target.value })
             }
-            placeholder="e.g., Spring League 2024"
+            placeholder={t("competitions:form.namePlaceholder")}
             inputProps={{ maxLength: 100 }}
             required
           />
 
           <TextField
             margin="dense"
-            label="Description (optional)"
+            label={`${t("common:labels.description")} (${t("common:labels.optional")})`}
             type="text"
             fullWidth
             variant="outlined"
@@ -134,12 +136,12 @@ export default function CreateCompetitionModal({
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            placeholder="Add details about this competition"
+            placeholder={t("competitions:form.namePlaceholder")}
           />
 
           <TextField
             margin="dense"
-            label="Start Date"
+            label={t("competitions:form.startDate")}
             type="date"
             fullWidth
             variant="outlined"
@@ -153,7 +155,7 @@ export default function CreateCompetitionModal({
 
           <TextField
             margin="dense"
-            label="End Date"
+            label={t("competitions:form.endDate")}
             type="date"
             fullWidth
             variant="outlined"
@@ -172,27 +174,27 @@ export default function CreateCompetitionModal({
               formData.start_date &&
               formData.end_date &&
               formData.end_date < formData.start_date
-                ? "End date must be after start date"
+                ? t("common:validation.invalid")
                 : ""
             }
           />
 
           {mutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error creating competition. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !isFormValid}
           >
-            {mutation.isPending ? "Creating..." : "Create Competition"}
+            {mutation.isPending ? `${t("common:action.create")}...` : t("common:action.create")}
           </Button>
         </DialogActions>
       </form>

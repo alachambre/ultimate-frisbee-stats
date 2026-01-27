@@ -1,0 +1,92 @@
+{
+  "action": {
+    "create": "Créer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "select": "Sélectionner",
+    "clear": "Effacer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "loading": "Chargement...",
+    "submit": "Soumettre",
+    "show": "Afficher",
+    "hide": "Masquer"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "ready": "Prêt",
+    "running": "En cours",
+    "scored": "Marqué",
+    "completed": "Terminé",
+    "started": "Commencé",
+    "ended": "Terminé"
+  },
+  "labels": {
+    "name": "Nom",
+    "description": "Description",
+    "date": "Date",
+    "time": "Temps",
+    "notes": "Notes",
+    "comment": "Commentaire",
+    "comments": "Commentaires",
+    "gender": "Genre",
+    "male": "Homme",
+    "female": "Femme",
+    "required": "Requis",
+    "optional": "Optionnel"
+  },
+  "error": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "loading": "Échec du chargement des données",
+    "saving": "Échec de l'enregistrement",
+    "deleting": "Échec de la suppression"
+  },
+  "messages": {
+    "error": "Une erreur s'est produite",
+    "success": "Succès",
+    "loading": "Chargement...",
+    "noData": "Aucune donnée disponible",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
+    "saved": "Enregistré avec succès",
+    "deleted": "Supprimé avec succès"
+  },
+  "players": "Joueurs",
+  "team": "Équipe",
+  "game": "Match",
+  "competition": "Compétition",
+  "validation": {
+    "required": "Ce champ est requis",
+    "invalid": "Valeur invalide",
+    "tooShort": "Valeur trop courte",
+    "tooLong": "Valeur trop longue"
+  },
+  "home": {
+    "title": "Stats Ultimate Frisbee",
+    "subtitle": "Suivez les performances de votre équipe, match par match, point par point",
+    "cards": {
+      "teams": {
+        "title": "Gérer les équipes",
+        "description": "Créez et gérez l'effectif de votre équipe"
+      },
+      "competitions": {
+        "title": "Compétitions",
+        "description": "Organisez des tournois et suivez les résultats"
+      },
+      "games": {
+        "title": "Matchs",
+        "description": "Enregistrez les matchs et suivez les stats point par point"
+      }
+    }
+  }
+}

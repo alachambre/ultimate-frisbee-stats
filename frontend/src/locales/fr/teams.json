@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Équipes",
+    "addTeam": "Ajouter une équipe",
+    "empty": {
+      "title": "Aucune équipe pour le moment",
+      "description": "Créez votre première équipe pour commencer"
+    }
+  },
+  "detail": {
+    "roster": "Effectif",
+    "competitions": "Compétitions",
+    "lines": "Lignes",
+    "strategies": "Stratégies",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette équipe ?"
+  },
+  "modal": {
+    "create": {
+      "title": "Créer une nouvelle équipe"
+    },
+    "edit": {
+      "title": "Modifier l'équipe"
+    }
+  },
+  "form": {
+    "name": "Nom de l'équipe",
+    "namePlaceholder": "Entrez le nom de l'équipe"
+  },
+  "card": {
+    "players": "{{count}} joueur",
+    "players_plural": "{{count}} joueurs"
+  }
+}

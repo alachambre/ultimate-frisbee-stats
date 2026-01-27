@@ -8,6 +8,7 @@ import {
   Button,
   Alert,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { updateStrategy } from "../../services/strategies";
 import StrategyForm from "../strategies/StrategyForm";
 import type { Strategy, StrategyUpdate, StrategyCategory } from "../../types";
@@ -23,6 +24,7 @@ export default function EditStrategyModal({
   onClose,
   strategy,
 }: EditStrategyModalProps) {
+  const { t } = useTranslation(['strategies', 'common']);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -77,11 +79,11 @@ export default function EditStrategyModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Strategy</DialogTitle>
+        <DialogTitle>{t('strategies:modal.edit.title')}</DialogTitle>
         <DialogContent>
           {mutation.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Failed to update strategy. Please try again.
+              {t('common:error.generic')}
             </Alert>
           )}
 
@@ -103,14 +105,14 @@ export default function EditStrategyModal({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t('common:action.cancel')}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={!isFormValid || mutation.isPending}
           >
-            {mutation.isPending ? "Saving..." : "Save Changes"}
+            {mutation.isPending ? t('common:action.saving') : t('common:action.save')}
           </Button>
         </DialogActions>
       </form>

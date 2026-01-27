@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -24,6 +25,7 @@ export default function EditCompetitionModal({
   onClose,
   competition,
 }: EditCompetitionModalProps) {
+  const { t } = useTranslation(["competitions", "common"]);
   const [formData, setFormData] = useState({
     name: competition.name,
     description: competition.description || "",
@@ -82,12 +84,12 @@ export default function EditCompetitionModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Competition</DialogTitle>
+        <DialogTitle>{t("competitions:modal.edit.title")}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Competition Name"
+            label={t("competitions:form.name")}
             type="text"
             fullWidth
             variant="outlined"
@@ -101,7 +103,7 @@ export default function EditCompetitionModal({
 
           <TextField
             margin="dense"
-            label="Description (optional)"
+            label={t("common:labels.description")}
             type="text"
             fullWidth
             variant="outlined"
@@ -115,7 +117,7 @@ export default function EditCompetitionModal({
 
           <TextField
             margin="dense"
-            label="Start Date"
+            label={t("competitions:form.startDate")}
             type="date"
             fullWidth
             variant="outlined"
@@ -129,7 +131,7 @@ export default function EditCompetitionModal({
 
           <TextField
             margin="dense"
-            label="End Date"
+            label={t("competitions:form.endDate")}
             type="date"
             fullWidth
             variant="outlined"
@@ -148,7 +150,7 @@ export default function EditCompetitionModal({
               formData.start_date &&
               formData.end_date &&
               formData.end_date < formData.start_date
-                ? "End date must be after start date"
+                ? t("common:validation.invalid")
                 : ""
             }
           />
@@ -156,7 +158,7 @@ export default function EditCompetitionModal({
           <TextField
             select
             margin="dense"
-            label="Status"
+            label={t("common:status.active")}
             fullWidth
             variant="outlined"
             value={formData.status}
@@ -164,26 +166,26 @@ export default function EditCompetitionModal({
               setFormData({ ...formData, status: e.target.value as CompetitionStatus })
             }
           >
-            <MenuItem value="ongoing">Ongoing</MenuItem>
-            <MenuItem value="completed">Completed</MenuItem>
+            <MenuItem value="ongoing">{t("common:status.active")}</MenuItem>
+            <MenuItem value="completed">{t("common:status.completed")}</MenuItem>
           </TextField>
 
           {mutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error updating competition. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !isFormValid}
           >
-            {mutation.isPending ? "Saving..." : "Save Changes"}
+            {mutation.isPending ? t("common:action.loading") : t("common:action.save")}
           </Button>
         </DialogActions>
       </form>

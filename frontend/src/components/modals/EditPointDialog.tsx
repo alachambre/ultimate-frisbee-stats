@@ -15,6 +15,7 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import PointPlayerSelection from "../points/PointPlayerSelection";
 import type { PointWithPlayers, Player } from "../../types";
@@ -36,6 +37,7 @@ export default function EditPointDialog({
   teamId,
   onSuccess,
 }: EditPointDialogProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [startingOnOffense, setStartingOnOffense] = useState(true);
   const [won, setWon] = useState<boolean | null>(null);
@@ -88,12 +90,12 @@ export default function EditPointDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Edit Point #{point.point_number}</DialogTitle>
+      <DialogTitle>{t("points:dialog.edit.title")} #{point.point_number}</DialogTitle>
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {(updateMutation.error as any)?.response?.data?.detail ||
-              "Failed to update point. Please try again."}
+              t("common:error.generic")}
           </Alert>
         )}
 
@@ -101,7 +103,7 @@ export default function EditPointDialog({
         {point.status === "completed" && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 1.5 }}>
-              Outcome
+              {t("points:dialog.finish.outcome", "Outcome")}
             </Typography>
             <ToggleButtonGroup
               value={won === null ? "" : won ? "won" : "lost"}
@@ -143,11 +145,11 @@ export default function EditPointDialog({
             >
               <ToggleButton value="won" aria-label="won the point">
                 <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} />
-                Won
+                {t("points:dialog.finish.won", "Won")}
               </ToggleButton>
               <ToggleButton value="lost" aria-label="lost the point">
                 <CancelIcon sx={{ mr: 1, fontSize: 20 }} />
-                Lost
+                {t("points:dialog.finish.lost", "Lost")}
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>
@@ -158,7 +160,7 @@ export default function EditPointDialog({
         {/* Players Section */}
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
-            Players on the Field
+            {t("points:tracker.playersOnField", "Players on the Field")}
           </Typography>
 
           <PointPlayerSelection
@@ -178,14 +180,14 @@ export default function EditPointDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={!isValid || updateMutation.isPending}
         >
-          {updateMutation.isPending ? "Saving..." : "Save Changes"}
+          {updateMutation.isPending ? t("common:action.saving") : t("common:action.save")}
         </Button>
       </DialogActions>
     </Dialog>

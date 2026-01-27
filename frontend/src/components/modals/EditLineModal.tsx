@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +24,7 @@ export default function EditLineModal({
   onClose,
   line,
 }: EditLineModalProps) {
+  const { t } = useTranslation(["lines", "common"]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -71,12 +73,12 @@ export default function EditLineModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Line</DialogTitle>
+        <DialogTitle>{t("lines:modal.edit.title")}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Line Name"
+            label={t("lines:form.name")}
             type="text"
             fullWidth
             variant="outlined"
@@ -90,7 +92,7 @@ export default function EditLineModal({
 
           <TextField
             margin="dense"
-            label="Description (optional)"
+            label={t("common:labels.description")}
             type="text"
             fullWidth
             variant="outlined"
@@ -104,20 +106,20 @@ export default function EditLineModal({
 
           {mutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error updating line. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !isFormValid}
           >
-            {mutation.isPending ? "Saving..." : "Save Changes"}
+            {mutation.isPending ? t("common:action.loading") : t("common:action.save")}
           </Button>
         </DialogActions>
       </form>

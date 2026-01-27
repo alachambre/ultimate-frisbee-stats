@@ -10,6 +10,7 @@ import {
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ScoreboardIcon from "@mui/icons-material/Scoreboard";
+import { useTranslation } from "react-i18next";
 import type { GameWithScore } from "../../types";
 
 interface GameCardProps {
@@ -17,6 +18,7 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game }: GameCardProps) {
+  const { t } = useTranslation(['games', 'common']);
   return (
     <Card
       elevation={0}
@@ -63,12 +65,12 @@ export default function GameCard({ game }: GameCardProps) {
             <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary">
               {game.date
-                ? new Date(game.date).toLocaleDateString("en-US", {
+                ? new Date(game.date).toLocaleDateString(undefined, {
                     month: "short",
                     day: "numeric",
                     year: "numeric",
                   })
-                : "Date not set"}
+                : t('common:labels.date')}
             </Typography>
           </Box>
 
@@ -76,14 +78,14 @@ export default function GameCard({ game }: GameCardProps) {
             <Chip
               label={
                 game.status === "started"
-                  ? "Ongoing"
+                  ? t('games:status.started')
                   : game.status === "ended"
                     ? game.our_score > game.opponent_score
-                      ? "Won"
+                      ? t('points:dialog.finish.won')
                       : game.our_score < game.opponent_score
-                        ? "Lost"
+                        ? t('points:dialog.finish.lost')
                         : "Tie"
-                    : "Ready"
+                    : t('games:status.ready')
               }
               color={
                 game.status === "started"

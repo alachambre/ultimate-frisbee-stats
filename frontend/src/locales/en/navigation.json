@@ -1,0 +1,17 @@
+{
+  "menu": {
+    "teams": "Teams",
+    "strategies": "Strategies",
+    "competitions": "Competitions",
+    "games": "Games",
+    "home": "Home"
+  },
+  "drawer": {
+    "title": "Ultimate Frisbee Stats"
+  },
+  "language": {
+    "english": "English",
+    "french": "Français",
+    "select": "Select Language"
+  }
+}

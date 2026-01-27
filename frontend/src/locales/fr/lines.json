@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Lignes"
+  },
+  "detail": {
+    "players": "Joueurs",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette ligne ?"
+  },
+  "modal": {
+    "create": {
+      "title": "Créer une nouvelle ligne"
+    },
+    "edit": {
+      "title": "Modifier la ligne"
+    },
+    "addPlayers": {
+      "title": "Ajouter des joueurs à la ligne"
+    }
+  },
+  "form": {
+    "name": "Nom de la ligne",
+    "namePlaceholder": "Entrez le nom de la ligne (ex: Ligne O, Ligne D)"
+  },
+  "card": {
+    "players": "{{count}} joueur",
+    "players_plural": "{{count}} joueurs"
+  },
+  "empty": {
+    "noLines": "Aucune ligne pour le moment",
+    "createFirst": "Créez votre première ligne"
+  }
+}

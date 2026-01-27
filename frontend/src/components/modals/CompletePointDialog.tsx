@@ -10,6 +10,7 @@ import {
   Chip,
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import type { PointWithPlayers } from "../../types";
 
@@ -26,6 +27,7 @@ export default function CompletePointDialog({
   scoredPoint,
   onSuccess,
 }: CompletePointDialogProps) {
+  const { t } = useTranslation(["points", "common"]);
   const queryClient = useQueryClient();
 
   const completeMutation = useMutation({
@@ -47,36 +49,36 @@ export default function CompletePointDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Complete Point</DialogTitle>
+      <DialogTitle>{t("points:dialog.complete.title")}</DialogTitle>
       <DialogContent>
         {completeMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {(completeMutation.error as any)?.response?.data?.detail ||
-              "Failed to complete point. Please try again."}
+              t("common:error.generic")}
           </Alert>
         )}
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Mark this point as completed? This will finalize the point after any adjustments.
+          {t("points:dialog.complete.confirmMessage", "Mark this point as completed? This will finalize the point after any adjustments.")}
         </Typography>
 
         {/* Point summary */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Point #{scoredPoint.point_number}
+            {t("points:history.point")} #{scoredPoint.point_number}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Chip
               label={
                 scoredPoint.starting_on_offense
-                  ? "Started on Offense"
-                  : "Started on Defense"
+                  ? t("points:tracker.offense")
+                  : t("points:tracker.defense")
               }
               size="small"
               color={scoredPoint.starting_on_offense ? "primary" : "default"}
             />
             <Chip
-              label={scoredPoint.won ? "Won" : "Lost"}
+              label={scoredPoint.won ? t("points:dialog.finish.won", "Won") : t("points:dialog.finish.lost", "Lost")}
               size="small"
               color={scoredPoint.won ? "success" : "error"}
             />
@@ -87,7 +89,7 @@ export default function CompletePointDialog({
         {scoredPoint.strategy && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Strategy
+              {t("points:tracker.strategy")}
             </Typography>
             <Chip
               label={scoredPoint.strategy.name}
@@ -99,14 +101,16 @@ export default function CompletePointDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={completeMutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={completeMutation.isPending}
         >
-          {completeMutation.isPending ? "Completing..." : "Complete Point"}
+          {completeMutation.isPending
+            ? t("points:dialog.complete.completing", "Completing...")
+            : t("points:tracker.complete")}
         </Button>
       </DialogActions>
     </Dialog>

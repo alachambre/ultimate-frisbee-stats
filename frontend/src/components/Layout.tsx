@@ -12,22 +12,42 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import LanguageIcon from "@mui/icons-material/Language";
+import { useTranslation } from "react-i18next";
 
 export default function Layout() {
   const location = useLocation();
+  const { t, i18n } = useTranslation(['navigation', 'common']);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [languageMenuAnchor, setLanguageMenuAnchor] = useState<null | HTMLElement>(null);
 
   const menuItems = [
-    { label: "Teams", path: "/teams" },
-    { label: "Strategies", path: "/strategies" },
-    { label: "Competitions", path: "/competitions" },
-    { label: "Games", path: "/games" },
+    { label: t('navigation:menu.teams'), path: "/teams" },
+    { label: t('navigation:menu.strategies'), path: "/strategies" },
+    { label: t('navigation:menu.competitions'), path: "/competitions" },
+    { label: t('navigation:menu.games'), path: "/games" },
   ];
 
   const handleDrawerClose = () => {
     setMobileMenuOpen(false);
+  };
+
+  const handleLanguageMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setLanguageMenuAnchor(event.currentTarget);
+  };
+
+  const handleLanguageMenuClose = () => {
+    setLanguageMenuAnchor(null);
+  };
+
+  const handleLanguageChange = (lng: string) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem('i18nextLng', lng);
+    handleLanguageMenuClose();
   };
 
   return (
@@ -63,6 +83,36 @@ export default function Layout() {
           >
             🥏 Ultimate Stats
           </Typography>
+
+          {/* Language Selector */}
+          <IconButton
+            onClick={handleLanguageMenuOpen}
+            sx={{
+              color: "white",
+              mr: { xs: 1, md: 2 },
+            }}
+            aria-label="select language"
+          >
+            <LanguageIcon />
+          </IconButton>
+          <Menu
+            anchorEl={languageMenuAnchor}
+            open={Boolean(languageMenuAnchor)}
+            onClose={handleLanguageMenuClose}
+          >
+            <MenuItem
+              onClick={() => handleLanguageChange('en')}
+              selected={i18n.language === 'en'}
+            >
+              🇬🇧 {t('navigation:language.english')}
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleLanguageChange('fr')}
+              selected={i18n.language === 'fr'}
+            >
+              🇫🇷 {t('navigation:language.french')}
+            </MenuItem>
+          </Menu>
 
           {/* Mobile Menu Icon */}
           <IconButton
@@ -127,7 +177,7 @@ export default function Layout() {
               borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
             }}
           >
-            Navigation
+            {t('navigation:drawer.title')}
           </Typography>
           <List>
             {menuItems.map((item) => (

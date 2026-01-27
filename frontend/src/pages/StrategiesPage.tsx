@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Container,
   Box,
@@ -26,6 +27,7 @@ import EditStrategyModal from "../components/modals/EditStrategyModal";
 import type { Strategy, StrategyCategory } from "../types";
 
 export default function StrategiesPage() {
+  const { t } = useTranslation(["strategies", "common"]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<StrategyCategory | "all">("all");
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
@@ -67,18 +69,18 @@ export default function StrategiesPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading strategies..." />;
+    return <LoadingState message={t("common:action.loading")} />;
   }
 
   if (error) {
-    return <ErrorState message="Error loading strategies. Please try again." />;
+    return <ErrorState message={t("common:messages.error")} />;
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
-        title="Strategies"
-        actionLabel="New Strategy"
+        title={t("strategies:page.title")}
+        actionLabel={t("common:action.create")}
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 
@@ -116,11 +118,11 @@ export default function StrategiesPage() {
             </ToggleButton>
             <ToggleButton value="offense" aria-label="offense strategies">
               <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
-              Offense
+              {t("strategies:form.offense")}
             </ToggleButton>
             <ToggleButton value="defense" aria-label="defense strategies">
               <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
-              Defense
+              {t("strategies:form.defense")}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
@@ -133,7 +135,7 @@ export default function StrategiesPage() {
       ) : filteredStrategies.length === 0 ? (
         <Box sx={{ textAlign: "center", py: 8 }}>
           <Box sx={{ color: "text.secondary" }}>
-            No strategies found for the selected category
+            {t("common:messages.noData")}
           </Box>
         </Box>
       ) : (
@@ -161,16 +163,15 @@ export default function StrategiesPage() {
         open={!!deletingStrategy}
         onClose={() => setDeletingStrategy(null)}
       >
-        <DialogTitle>Delete Strategy?</DialogTitle>
+        <DialogTitle>{t("common:action.delete")} Strategy?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete "{deletingStrategy?.name}"? This action cannot be undone.
-            Points that used this strategy will keep their reference but the strategy will be marked as deleted.
+            {t("strategies:card.deleteConfirm")}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeletingStrategy(null)} disabled={deleteMutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -178,7 +179,7 @@ export default function StrategiesPage() {
             variant="contained"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            {deleteMutation.isPending ? `${t("common:action.delete")}...` : t("common:action.delete")}
           </Button>
         </DialogActions>
       </Dialog>

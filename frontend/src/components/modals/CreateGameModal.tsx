@@ -1,5 +1,6 @@
 import { useState, type FormEvent, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -40,6 +41,7 @@ export default function CreateGameModal({
   onClose,
   competitionId,
 }: CreateGameModalProps) {
+  const { t } = useTranslation(["games", "players", "common"]);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | "">("");
   const [opponentName, setOpponentName] = useState("");
   const [date, setDate] = useState("");
@@ -211,17 +213,17 @@ export default function CreateGameModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Create New Game</DialogTitle>
+        <DialogTitle>{t("games:modal.create.title")}</DialogTitle>
         <DialogContent>
           {!competitionId && (
             <FormControl fullWidth margin="dense" required>
-              <InputLabel id="competition-label">Competition</InputLabel>
+              <InputLabel id="competition-label">{t("games:form.competition")}</InputLabel>
               <Select
                 labelId="competition-label"
                 id="competition-select"
                 value={selectedCompetitionId}
                 onChange={(e) => setSelectedCompetitionId(e.target.value as number)}
-                label="Competition"
+                label={t("games:form.competition")}
               >
                 {competitions?.map((competition) => (
                   <MenuItem key={competition.id} value={competition.id}>
@@ -234,20 +236,20 @@ export default function CreateGameModal({
 
           <TextField
             margin="dense"
-            label="Opponent Name"
+            label={t("games:form.opponent")}
             type="text"
             fullWidth
             variant="outlined"
             value={opponentName}
             onChange={(e) => setOpponentName(e.target.value)}
-            placeholder="Enter opponent name"
+            placeholder={t("games:form.opponentPlaceholder")}
             inputProps={{ maxLength: 100 }}
             required
           />
 
           <TextField
             margin="dense"
-            label="Date"
+            label={t("games:form.date")}
             type="date"
             fullWidth
             variant="outlined"
@@ -260,13 +262,13 @@ export default function CreateGameModal({
 
           <TextField
             margin="dense"
-            label="Comments (optional)"
+            label={`${t("common:labels.comments")} (${t("common:labels.optional")})`}
             type="text"
             fullWidth
             variant="outlined"
             value={comments}
             onChange={(e) => setComments(e.target.value)}
-            placeholder="Add any comments about this game"
+            placeholder={`${t("common:action.add")} ${t("common:labels.comments")}`}
             multiline
             rows={3}
           />
@@ -275,20 +277,20 @@ export default function CreateGameModal({
           {competition && availablePlayers.length > 0 && (
             <Box mt={3}>
               <Typography variant="h6" gutterBottom>
-                Select Players (Optional)
+                {t("common:action.select")} Players ({t("common:labels.optional")})
               </Typography>
 
               {/* Selection Counter */}
               <Box mb={2} display="flex" gap={1} justifyContent="center">
                 <Chip
-                  label={`${selectedPlayerIds.length} selected`}
+                  label={`${selectedPlayerIds.length} ${t("common:action.select").toLowerCase()}ed`}
                   color="primary"
                   variant="outlined"
                 />
                 {selectedPlayerIds.length > 0 && (
                   <>
                     <Chip
-                      label={`${selectedMen} Men`}
+                      label={`${selectedMen} ${t("common:labels.male")}`}
                       size="small"
                       sx={{
                         backgroundColor: "#e3f2fd",
@@ -296,7 +298,7 @@ export default function CreateGameModal({
                       }}
                     />
                     <Chip
-                      label={`${selectedWomen} Women`}
+                      label={`${selectedWomen} ${t("common:labels.female")}`}
                       size="small"
                       sx={{
                         backgroundColor: "#fce4ec",
@@ -314,12 +316,12 @@ export default function CreateGameModal({
                 sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}
               >
                 <Tab
-                  label={`Men (${menPlayers.length})`}
+                  label={`${t("common:labels.male")} (${menPlayers.length})`}
                   value="men"
                   sx={{ textTransform: "none" }}
                 />
                 <Tab
-                  label={`Women (${womenPlayers.length})`}
+                  label={`${t("common:labels.female")} (${womenPlayers.length})`}
                   value="women"
                   sx={{ textTransform: "none" }}
                 />
@@ -333,7 +335,7 @@ export default function CreateGameModal({
                   onClick={handleSelectAll}
                   disabled={filteredPlayers.length === 0}
                 >
-                  Select All
+                  {t("common:action.select")} All
                 </Button>
                 <Button
                   size="small"
@@ -341,7 +343,7 @@ export default function CreateGameModal({
                   onClick={handleClearAll}
                   disabled={selectedPlayerIds.length === 0}
                 >
-                  Clear All
+                  {t("common:action.clear")} All
                 </Button>
                 {activeTab === "men" && menPlayers.length > 0 && (
                   <Button
@@ -357,7 +359,7 @@ export default function CreateGameModal({
                       },
                     }}
                   >
-                    All Men
+                    All {t("common:labels.male")}
                   </Button>
                 )}
                 {activeTab === "women" && womenPlayers.length > 0 && (
@@ -374,7 +376,7 @@ export default function CreateGameModal({
                       },
                     }}
                   >
-                    All Women
+                    All {t("common:labels.female")}
                   </Button>
                 )}
               </Stack>
@@ -383,7 +385,7 @@ export default function CreateGameModal({
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Search by name or number..."
+                placeholder={`${t("common:action.search")}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 InputProps={{
@@ -404,12 +406,12 @@ export default function CreateGameModal({
                       <Box py={4} textAlign="center">
                         <Typography color="text.secondary">
                           {searchQuery
-                            ? `No men found matching "${searchQuery}"`
-                            : "No male players available"}
+                            ? `${t("players:empty.noPlayers")}`
+                            : t("players:empty.noPlayers")}
                         </Typography>
                       </Box>
                     ) : (
-                      renderPlayerList(menPlayers, "Men")
+                      renderPlayerList(menPlayers, t("common:labels.male"))
                     )}
                   </>
                 )}
@@ -419,12 +421,12 @@ export default function CreateGameModal({
                       <Box py={4} textAlign="center">
                         <Typography color="text.secondary">
                           {searchQuery
-                            ? `No women found matching "${searchQuery}"`
-                            : "No female players available"}
+                            ? `${t("players:empty.noPlayers")}`
+                            : t("players:empty.noPlayers")}
                         </Typography>
                       </Box>
                     ) : (
-                      renderPlayerList(womenPlayers, "Women")
+                      renderPlayerList(womenPlayers, t("common:labels.female"))
                     )}
                   </>
                 )}
@@ -434,20 +436,20 @@ export default function CreateGameModal({
 
           {mutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error creating game. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !finalCompetitionId || !opponentName.trim()}
           >
-            {mutation.isPending ? "Creating..." : "Create Game"}
+            {mutation.isPending ? `${t("common:action.create")}...` : t("common:action.create")}
           </Button>
         </DialogActions>
       </form>

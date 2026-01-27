@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { addPlayersToLine } from "../../services/lines";
 import { getTeam } from "../../services";
 import AddPlayersModal from "./AddPlayersModal";
@@ -17,11 +18,13 @@ export default function AddPlayersToLineModal({
   teamId,
   currentPlayerIds,
 }: AddPlayersToLineModalProps) {
+  const { t } = useTranslation('lines');
+
   return (
     <AddPlayersModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Players to Line"
+      title={t('lines:modal.addPlayers.title')}
       currentPlayerIds={currentPlayerIds}
       fetchPlayers={async () => {
         const team = await getTeam(teamId);
@@ -29,7 +32,7 @@ export default function AddPlayersToLineModal({
       }}
       addPlayers={(playerIds) => addPlayersToLine(lineId, playerIds)}
       invalidateQueries={[["line", String(lineId)]]}
-      emptyMessage="All team players are already in the line"
+      emptyMessage={t('lines:modal.addPlayers.title')}
     />
   );
 }

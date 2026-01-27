@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Lines"
+  },
+  "detail": {
+    "players": "Players",
+    "deleteConfirm": "Are you sure you want to delete this line?"
+  },
+  "modal": {
+    "create": {
+      "title": "Create New Line"
+    },
+    "edit": {
+      "title": "Edit Line"
+    },
+    "addPlayers": {
+      "title": "Add Players to Line"
+    }
+  },
+  "form": {
+    "name": "Line Name",
+    "namePlaceholder": "Enter line name (e.g., O-line, D-line)"
+  },
+  "card": {
+    "players": "{{count}} player",
+    "players_plural": "{{count}} players"
+  },
+  "empty": {
+    "noLines": "No lines yet",
+    "createFirst": "Create your first line"
+  }
+}

@@ -1,6 +1,7 @@
 import { Box, Typography, Button, Paper } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 
 interface EmptyCompetitionsStateProps {
   onCreateClick: () => void;
@@ -9,6 +10,7 @@ interface EmptyCompetitionsStateProps {
 export default function EmptyCompetitionsState({
   onCreateClick,
 }: EmptyCompetitionsStateProps) {
+  const { t } = useTranslation(['competitions', 'common']);
   return (
     <Paper
       elevation={0}
@@ -37,15 +39,14 @@ export default function EmptyCompetitionsState({
       </Box>
 
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        No Competitions Yet
+        {t('competitions:page.empty.title')}
       </Typography>
       <Typography
         variant="body1"
         color="text.secondary"
         sx={{ mb: 4, maxWidth: 500, mx: "auto" }}
       >
-        Create a competition to organize games, manage rosters, and track your
-        team's performance
+        {t('competitions:page.empty.description')}
       </Typography>
 
       <Button
@@ -54,7 +55,7 @@ export default function EmptyCompetitionsState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        Create Your First Competition
+        {t('competitions:page.empty.title')}
       </Button>
     </Paper>
   );

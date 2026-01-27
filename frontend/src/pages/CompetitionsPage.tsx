@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Container, Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { getCompetitions, getTeams } from "../services";
 import PageHeader from "../components/shared/PageHeader";
@@ -10,6 +11,7 @@ import EmptyCompetitionsState from "../components/competitions/EmptyCompetitions
 import CreateCompetitionModal from "../components/modals/CreateCompetitionModal";
 
 export default function CompetitionsPage() {
+  const { t } = useTranslation(["competitions", "common"]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<number | "all">("all");
 
@@ -41,18 +43,18 @@ export default function CompetitionsPage() {
   }, [competitions, selectedTeamId]);
 
   if (isLoading) {
-    return <LoadingState message="Loading competitions..." />;
+    return <LoadingState message={t("common:action.loading")} />;
   }
 
   if (error) {
-    return <ErrorState message="Error loading competitions. Please try again." />;
+    return <ErrorState message={t("common:messages.error")} />;
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
-        title="Competitions"
-        actionLabel="New Competition"
+        title={t("competitions:page.title")}
+        actionLabel={t("common:action.create")}
         onActionClick={() => setIsCreateModalOpen(true)}
       />
 
@@ -60,10 +62,10 @@ export default function CompetitionsPage() {
       {teams && teams.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Filter by Team</InputLabel>
+            <InputLabel>{t("common:action.filter")} by Team</InputLabel>
             <Select
               value={selectedTeamId}
-              label="Filter by Team"
+              label={`${t("common:action.filter")} by Team`}
               onChange={(e) => setSelectedTeamId(e.target.value as number | "all")}
             >
               <MenuItem value="all">All Teams</MenuItem>
@@ -84,7 +86,7 @@ export default function CompetitionsPage() {
       ) : filteredCompetitions.length === 0 ? (
         <Box sx={{ textAlign: "center", py: 8 }}>
           <Box sx={{ color: "text.secondary" }}>
-            No competitions found for the selected team
+            {t("common:messages.noData")}
           </Box>
         </Box>
       ) : (

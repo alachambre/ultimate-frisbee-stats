@@ -3,8 +3,10 @@ import { Container, Typography, Grid, Card, CardActionArea, CardContent, Box } f
 import GroupIcon from "@mui/icons-material/Group";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ScoreboardIcon from "@mui/icons-material/Scoreboard";
+import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
+  const { t } = useTranslation('common');
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Box textAlign="center" mb={8}>
@@ -20,10 +22,10 @@ export default function HomePage() {
             fontSize: { xs: "2rem", sm: "3rem" },
           }}
         >
-          🥏 Ultimate Frisbee Stats
+          🥏 {t('home.title')}
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
-          Track your team's performance, game by game, point by point
+          {t('home.subtitle')}
         </Typography>
       </Box>
 
@@ -48,10 +50,10 @@ export default function HomePage() {
               <CardContent sx={{ textAlign: "center", py: 4 }}>
                 <GroupIcon sx={{ fontSize: 60, color: "primary.main", mb: 2 }} />
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  Manage Teams
+                  {t('home.cards.teams.title')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Create and manage your team roster
+                  {t('home.cards.teams.description')}
                 </Typography>
               </CardContent>
             </CardActionArea>
@@ -78,10 +80,10 @@ export default function HomePage() {
               <CardContent sx={{ textAlign: "center", py: 4 }}>
                 <EmojiEventsIcon sx={{ fontSize: 60, color: (theme) => theme.gradients.middle, mb: 2 }} />
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  Competitions
+                  {t('home.cards.competitions.title')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Organize tournaments and track results
+                  {t('home.cards.competitions.description')}
                 </Typography>
               </CardContent>
             </CardActionArea>
@@ -108,10 +110,10 @@ export default function HomePage() {
               <CardContent sx={{ textAlign: "center", py: 4 }}>
                 <ScoreboardIcon sx={{ fontSize: 60, color: "secondary.main", mb: 2 }} />
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  Games
+                  {t('home.cards.games.title')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Record games and track point-by-point stats
+                  {t('home.cards.games.description')}
                 </Typography>
               </CardContent>
             </CardActionArea>

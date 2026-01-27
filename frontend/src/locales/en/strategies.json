@@ -1,0 +1,31 @@
+{
+  "page": {
+    "title": "Strategies",
+    "empty": {
+      "title": "No strategies yet",
+      "description": "Create your first strategy to get started"
+    }
+  },
+  "modal": {
+    "create": {
+      "title": "Create New Strategy"
+    },
+    "edit": {
+      "title": "Edit Strategy"
+    }
+  },
+  "form": {
+    "name": "Strategy Name",
+    "namePlaceholder": "Enter strategy name",
+    "type": "Type",
+    "offense": "Offense",
+    "defense": "Defense",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter strategy description (optional)",
+    "team": "Team",
+    "selectTeam": "Select a team"
+  },
+  "card": {
+    "deleteConfirm": "Are you sure you want to delete this strategy?"
+  }
+}

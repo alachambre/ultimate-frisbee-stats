@@ -1,0 +1,98 @@
+{
+  "tracker": {
+    "title": "Suivi du point en direct",
+    "newPoint": "Nouveau point",
+    "offense": "Offense",
+    "defense": "Defense",
+    "score": "Score !",
+    "turnover": "Turnover",
+    "complete": "Terminer le point",
+    "finish": "Terminer le point",
+    "resume": "Reprendre",
+    "resuming": "Reprise en cours...",
+    "strategy": "Stratégie",
+    "noStrategy": "Aucune stratégie sélectionnée",
+    "changeStrategy": "Changer de stratégie",
+    "selectStrategy": "Sélectionner une stratégie",
+    "addComment": "Ajouter un commentaire",
+    "editComment": "Modifier le commentaire",
+    "elapsedTime": "Temps écoulé",
+    "duration": "Durée",
+    "playersOnField": "Joueurs sur le terrain",
+    "pullQuestion": "Le pull a-t-il atterri dans le terrain ?",
+    "offenseStrategies": "Stratégies offense",
+    "defenseStrategies": "Stratégies defense"
+  },
+  "dialog": {
+    "start": {
+      "title": "Démarrer un nouveau point",
+      "selectPlayers": "Sélectionner 7 joueurs",
+      "mixity": "Mixité",
+      "men": "Hommes",
+      "women": "Femmes",
+      "pull": "Pull",
+      "inbounds": "Dans le terrain",
+      "outOfBounds": "Hors limites",
+      "line": "Ligne",
+      "selectLine": "Sélectionner une ligne (optionnel)",
+      "strategy": "Stratégie",
+      "selectStrategy": "Sélectionner une stratégie (optionnel)",
+      "starting": "Démarrage...",
+      "validation": {
+        "exactly7": "Vous devez sélectionner exactement 7 joueurs",
+        "invalidMixity": "Mixité invalide : doit être 4H+3F ou 3H+4F"
+      }
+    },
+    "finish": {
+      "title": "Terminer le point",
+      "weScored": "On a marqué !",
+      "theyScored": "Ils ont marqué",
+      "ourScore": "Notre score",
+      "theirScore": "Leur score",
+      "outcome": "Résultat",
+      "won": "Gagné",
+      "lost": "Perdu",
+      "finishing": "Finalisation..."
+    },
+    "complete": {
+      "title": "Compléter le point",
+      "addComment": "Ajouter un commentaire (optionnel)",
+      "commentPlaceholder": "Entrez votre commentaire...",
+      "confirmMessage": "Marquer ce point comme terminé ? Cela finalisera le point après les ajustements.",
+      "completing": "Finalisation..."
+    },
+    "addComment": {
+      "title": "Ajouter un commentaire",
+      "commentPlaceholder": "Entrez votre commentaire..."
+    },
+    "edit": {
+      "title": "Modifier le point",
+      "pointNumber": "Point #{{number}}",
+      "changeStrategy": "Changer de stratégie",
+      "currentStrategy": "Actuelle : {{strategy}}",
+      "selectNewStrategy": "Sélectionner une nouvelle stratégie"
+    },
+    "selectStrategy": {
+      "title": "Sélectionner une stratégie",
+      "noStrategies": "Aucune stratégie disponible",
+      "createFirst": "Créez d'abord des stratégies pour cette équipe"
+    }
+  },
+  "history": {
+    "title": "Historique des points",
+    "point": "Point",
+    "break": "Break !",
+    "broken": "Broken",
+    "comment": "Commentaire"
+  },
+  "status": {
+    "ready": "Prêt",
+    "running": "En cours",
+    "scored": "Marqué",
+    "completed": "Terminé"
+  },
+  "empty": {
+    "noPoints": "Aucun point pour le moment",
+    "startFirst": "Commencez à suivre votre premier point"
+  }
+}

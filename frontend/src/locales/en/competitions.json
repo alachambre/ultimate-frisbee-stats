@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Competitions",
+    "empty": {
+      "title": "No competitions yet",
+      "description": "Create your first competition to get started"
+    }
+  },
+  "detail": {
+    "info": "Competition Info",
+    "roster": "Roster",
+    "games": "Games",
+    "deleteConfirm": "Are you sure you want to delete this competition?"
+  },
+  "modal": {
+    "create": {
+      "title": "Create New Competition"
+    },
+    "edit": {
+      "title": "Edit Competition"
+    },
+    "addPlayers": {
+      "title": "Add Players to Roster"
+    }
+  },
+  "form": {
+    "name": "Competition Name",
+    "namePlaceholder": "Enter competition name",
+    "location": "Location",
+    "locationPlaceholder": "Enter location",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "team": "Team",
+    "selectTeam": "Select a team"
+  },
+  "card": {
+    "games": "{{count}} game",
+    "games_plural": "{{count}} games",
+    "players": "{{count}} player",
+    "players_plural": "{{count}} players"
+  }
+}

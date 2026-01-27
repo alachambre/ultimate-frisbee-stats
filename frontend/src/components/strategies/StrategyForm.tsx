@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   TextField,
   Box,
@@ -28,11 +29,12 @@ export default function StrategyForm({
   onDescriptionChange,
   autoFocus = false,
 }: StrategyFormProps) {
+  const { t } = useTranslation(["strategies", "common"]);
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
       <Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Category
+          {t("strategies:form.type")}
         </Typography>
         <ToggleButtonGroup
           value={category}
@@ -63,27 +65,27 @@ export default function StrategyForm({
         >
           <ToggleButton value="offense" aria-label="offense">
             <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
-            Offense
+            {t("strategies:form.offense")}
           </ToggleButton>
           <ToggleButton value="defense" aria-label="defense">
             <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
-            Defense
+            {t("strategies:form.defense")}
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
       <TextField
         autoFocus={autoFocus}
-        label="Strategy Name"
+        label={t("strategies:form.name")}
         type="text"
         fullWidth
         variant="outlined"
         value={strategyName}
         onChange={(e) => onStrategyNameChange(e.target.value)}
-        placeholder="e.g., Vertical Stack, Zone Defense"
+        placeholder={t("strategies:form.namePlaceholder")}
         required
       />
       <TextField
-        label="Description (Optional)"
+        label={t("strategies:form.description")}
         type="text"
         fullWidth
         variant="outlined"
@@ -91,7 +93,7 @@ export default function StrategyForm({
         rows={3}
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
-        placeholder="Describe the strategy..."
+        placeholder={t("strategies:form.descriptionPlaceholder")}
       />
     </Box>
   );

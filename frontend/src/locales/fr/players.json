@@ -1,0 +1,29 @@
+{
+  "modal": {
+    "add": {
+      "title": "Ajouter un joueur à {{teamName}}"
+    },
+    "edit": {
+      "title": "Modifier le joueur"
+    },
+    "addMultiple": {
+      "title": "Ajouter des joueurs",
+      "selectPlayers": "Sélectionner les joueurs à ajouter"
+    }
+  },
+  "form": {
+    "name": "Nom du joueur",
+    "namePlaceholder": "Entrez le nom du joueur",
+    "gender": "Genre",
+    "genderMale": "Homme",
+    "genderFemale": "Femme"
+  },
+  "card": {
+    "male": "H",
+    "female": "F"
+  },
+  "empty": {
+    "noPlayers": "Aucun joueur pour le moment",
+    "addFirst": "Ajoutez votre premier joueur"
+  }
+}

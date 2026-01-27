@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +21,7 @@ export default function CreateTeamModal({
   isOpen,
   onClose,
 }: CreateTeamModalProps) {
+  const { t } = useTranslation(["teams", "common"]);
   const [teamName, setTeamName] = useState("");
   const queryClient = useQueryClient();
 
@@ -48,37 +50,37 @@ export default function CreateTeamModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Create New Team</DialogTitle>
+        <DialogTitle>{t("teams:modal.create.title")}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Team Name"
+            label={t("teams:form.name")}
             type="text"
             fullWidth
             variant="outlined"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            placeholder="Enter team name"
+            placeholder={t("teams:form.namePlaceholder")}
             inputProps={{ maxLength: 100 }}
             required
           />
           {mutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error creating team. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} disabled={mutation.isPending}>
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={mutation.isPending || !teamName.trim()}
           >
-            {mutation.isPending ? "Creating..." : "Create Team"}
+            {mutation.isPending ? `${t("common:action.create")}...` : t("common:action.create")}
           </Button>
         </DialogActions>
       </form>

@@ -1,6 +1,7 @@
 import { Box, Typography, Button, Paper } from "@mui/material";
 import SportsIcon from "@mui/icons-material/Sports";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 
 interface EmptyGamesStateProps {
   onCreateClick: () => void;
@@ -9,6 +10,7 @@ interface EmptyGamesStateProps {
 export default function EmptyGamesState({
   onCreateClick,
 }: EmptyGamesStateProps) {
+  const { t } = useTranslation(['games', 'common']);
   return (
     <Paper
       elevation={0}
@@ -37,10 +39,10 @@ export default function EmptyGamesState({
       </Box>
 
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        No Games Yet
+        {t('games:page.empty.title')}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: "auto" }}>
-        Get started by creating your first game to track stats and points
+        {t('games:page.empty.description')}
       </Typography>
 
       <Button
@@ -49,7 +51,7 @@ export default function EmptyGamesState({
         startIcon={<AddIcon />}
         onClick={onCreateClick}
       >
-        Create Your First Game
+        {t('games:page.empty.title')}
       </Button>
     </Paper>
   );

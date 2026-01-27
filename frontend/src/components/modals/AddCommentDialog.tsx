@@ -9,6 +9,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import type { PointWithPlayers } from "../../types";
 
@@ -27,6 +28,7 @@ export default function AddCommentDialog({
   gameId,
   onSuccess,
 }: AddCommentDialogProps) {
+  const { t } = useTranslation(["points", "common"]);
   const [comments, setComments] = useState<string>("");
   const queryClient = useQueryClient();
 
@@ -62,21 +64,21 @@ export default function AddCommentDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {point.comments ? "Edit Comment" : "Add Comment"}
+        {point.comments ? t("points:tracker.editComment", "Edit Comment") : t("points:dialog.addComment.title")}
       </DialogTitle>
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {(updateMutation.error as any)?.response?.data?.detail ||
-              "Failed to update comment. Please try again."}
+              t("common:error.generic")}
           </Alert>
         )}
 
         <TextField
           autoFocus
           fullWidth
-          label="Comment"
-          placeholder="Add notes about this point..."
+          label={t("points:history.comment")}
+          placeholder={t("points:dialog.addComment.commentPlaceholder")}
           value={comments}
           onChange={(e) => setComments(e.target.value)}
           multiline
@@ -86,14 +88,14 @@ export default function AddCommentDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={updateMutation.isPending}
         >
-          {updateMutation.isPending ? "Saving..." : "Save"}
+          {updateMutation.isPending ? t("common:action.saving") : t("common:action.save")}
         </Button>
       </DialogActions>
     </Dialog>

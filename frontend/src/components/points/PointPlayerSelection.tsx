@@ -9,6 +9,7 @@ import {
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { getLines } from "../../services/lines";
 import PlayerSelector from "./PlayerSelector";
 import type { Player, Line } from "../../types";
@@ -42,6 +43,8 @@ export default function PointPlayerSelection({
   showGenderValidation = false,
   requiredGenderRatio = null,
 }: PointPlayerSelectionProps) {
+  const { t } = useTranslation(['points', 'common']);
+
   // Fetch lines for the team
   const { data: lines } = useQuery({
     queryKey: ["lines", teamId],
@@ -115,7 +118,7 @@ export default function PointPlayerSelection({
       {/* Starting Position */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Starting
+          {t('points:dialog.start.pull')}
         </Typography>
         <ToggleButtonGroup
           value={startingOnOffense ? "offense" : "defense"}
@@ -144,11 +147,11 @@ export default function PointPlayerSelection({
         >
           <ToggleButton value="offense" aria-label="on offense">
             <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
-            On Offense
+            {t('points:tracker.offense')}
           </ToggleButton>
           <ToggleButton value="defense" aria-label="on defense">
             <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
-            On Defense
+            {t('points:tracker.defense')}
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
@@ -157,11 +160,11 @@ export default function PointPlayerSelection({
       {lines && lines.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Filter by Line (Optional)
+            {t('points:dialog.start.line')}
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             <Chip
-              label="All Players"
+              label={t('common:players')}
               onClick={() => handleLineChange("")}
               color={selectedLineId === "" ? "primary" : "default"}
               variant={selectedLineId === "" ? "filled" : "outlined"}
@@ -182,7 +185,7 @@ export default function PointPlayerSelection({
       {/* Player selection with count header */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          Select 7 Players{" "}
+          {t('points:dialog.start.selectPlayers')}{" "}
           <Typography
             component="span"
             variant="body2"

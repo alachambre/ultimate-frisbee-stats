@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Container,
   Box,
@@ -37,6 +38,7 @@ import CreateLineModal from "../components/modals/CreateLineModal";
 import EditLineModal from "../components/modals/EditLineModal";
 
 export default function TeamDetailPage() {
+  const { t } = useTranslation(["teams", "players", "lines", "common"]);
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -81,11 +83,11 @@ export default function TeamDetailPage() {
   });
 
   if (isLoading) {
-    return <LoadingState message="Loading team..." />;
+    return <LoadingState message={t("common:action.loading")} />;
   }
 
   if (error || !team) {
-    return <ErrorState message="Error loading team. Please try again." />;
+    return <ErrorState message={t("common:messages.error")} />;
   }
 
   const handleDelete = () => {
@@ -108,7 +110,7 @@ export default function TeamDetailPage() {
           startIcon={<ArrowBackIcon />}
           sx={{ mb: 2 }}
         >
-          Back to Teams
+          {t("common:action.back")}
         </Button>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
           <Box>
@@ -125,7 +127,7 @@ export default function TeamDetailPage() {
             startIcon={<DeleteIcon />}
             onClick={() => setIsDeleteConfirmOpen(true)}
           >
-            Delete Team
+            {t("common:action.delete")}
           </Button>
         </Box>
       </Box>
@@ -140,7 +142,7 @@ export default function TeamDetailPage() {
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="h6">
-                Players ({team.players.length})
+                {t("teams:detail.roster")} ({team.players.length})
               </Typography>
               <IconButton
                 size="small"
@@ -155,7 +157,7 @@ export default function TeamDetailPage() {
               startIcon={<AddIcon />}
               onClick={() => setIsAddPlayerModalOpen(true)}
             >
-              Add Player
+              {t("common:action.add")}
             </Button>
           </Box>
         </Box>
@@ -189,11 +191,11 @@ export default function TeamDetailPage() {
                       mb: 2
                     }}
                   >
-                    Men ({team.players.filter(p => p.gender === "M").length})
+                    {t("common:labels.male")} ({team.players.filter(p => p.gender === "M").length})
                   </Typography>
                   {team.players.filter(p => p.gender === "M").length === 0 ? (
                     <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      No male players yet
+                      {t("players:empty.noPlayers")}
                     </Typography>
                   ) : (
                     <PlayersGrid
@@ -225,11 +227,11 @@ export default function TeamDetailPage() {
                       mb: 2
                     }}
                   >
-                    Women ({team.players.filter(p => p.gender === "W").length})
+                    {t("common:labels.female")} ({team.players.filter(p => p.gender === "W").length})
                   </Typography>
                   {team.players.filter(p => p.gender === "W").length === 0 ? (
                     <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      No female players yet
+                      {t("players:empty.noPlayers")}
                     </Typography>
                   ) : (
                     <PlayersGrid
@@ -250,14 +252,14 @@ export default function TeamDetailPage() {
         <Box p={3} borderBottom="1px solid" borderColor="divider">
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">
-              Lines ({lines?.length || 0})
+              {t("teams:detail.lines")} ({lines?.length || 0})
             </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setIsCreateLineModalOpen(true)}
             >
-              Create Line
+              {t("common:action.create")}
             </Button>
           </Box>
         </Box>
@@ -280,16 +282,14 @@ export default function TeamDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Delete Team?</DialogTitle>
+        <DialogTitle>{t("teams:detail.deleteConfirm")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Are you sure you want to delete "{team.name}"? This will also
-            delete all players and games for this team. This action cannot be
-            undone.
+            {t("teams:detail.deleteConfirm")}
           </Typography>
           {deleteMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error deleting team. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
@@ -298,7 +298,7 @@ export default function TeamDetailPage() {
             onClick={() => setIsDeleteConfirmOpen(false)}
             disabled={deleteMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -306,7 +306,7 @@ export default function TeamDetailPage() {
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Team"}
+            {deleteMutation.isPending ? t("common:action.loading") : t("common:action.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -349,15 +349,14 @@ export default function TeamDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Delete Line?</DialogTitle>
+        <DialogTitle>{t("lines:detail.deleteConfirm")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Delete "{deletingLine?.name}"? This will remove the line but not the
-            players from the team.
+            {t("lines:detail.deleteConfirm")}
           </Typography>
           {deleteLineMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error deleting line. Please try again.
+              {t("common:messages.error")}
             </Alert>
           )}
         </DialogContent>
@@ -366,7 +365,7 @@ export default function TeamDetailPage() {
             onClick={() => setDeletingLine(null)}
             disabled={deleteLineMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={confirmDeleteLine}
@@ -374,7 +373,7 @@ export default function TeamDetailPage() {
             color="error"
             disabled={deleteLineMutation.isPending}
           >
-            {deleteLineMutation.isPending ? "Deleting..." : "Delete Line"}
+            {deleteLineMutation.isPending ? t("common:action.loading") : t("common:action.delete")}
           </Button>
         </DialogActions>
       </Dialog>

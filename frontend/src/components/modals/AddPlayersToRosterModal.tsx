@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { addPlayersToRoster, getTeamPlayers } from "../../services";
 import AddPlayersModal from "./AddPlayersModal";
 
@@ -16,16 +17,18 @@ export default function AddPlayersToRosterModal({
   teamId,
   currentRosterIds,
 }: AddPlayersToRosterModalProps) {
+  const { t } = useTranslation('competitions');
+
   return (
     <AddPlayersModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add Players to Roster"
+      title={t('competitions:modal.addPlayers.title')}
       currentPlayerIds={currentRosterIds}
       fetchPlayers={() => getTeamPlayers(teamId)}
       addPlayers={(playerIds) => addPlayersToRoster(competitionId, playerIds)}
       invalidateQueries={[["competition", String(competitionId)]]}
-      emptyMessage="All team players are already in the roster"
+      emptyMessage={t('competitions:modal.addPlayers.title')}
     />
   );
 }

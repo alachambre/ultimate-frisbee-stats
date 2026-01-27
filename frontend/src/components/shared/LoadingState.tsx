@@ -1,12 +1,14 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface LoadingStateProps {
   message?: string;
 }
 
 export default function LoadingState({
-  message = "Loading...",
+  message,
 }: LoadingStateProps) {
+  const { t } = useTranslation('common');
   return (
     <Box
       display="flex"
@@ -17,7 +19,7 @@ export default function LoadingState({
     >
       <CircularProgress size={60} sx={{ mb: 2 }} />
       <Typography variant="h6" color="text.secondary">
-        {message}
+        {message || t('common:action.loading')}
       </Typography>
     </Box>
   );
