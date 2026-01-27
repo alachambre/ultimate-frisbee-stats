@@ -193,22 +193,17 @@ export default function StartPointDialog({
             }
             size="small"
             sx={{
-              ...(selectedPlayerIds.length === 7 && meetsGenderRequirement && {
-                backgroundColor: requiredGenderRatio.men === 4 ? "primary.main" : "secondary.main",
+              backgroundColor: requiredGenderRatio.men === 4 ? "primary.main" : "secondary.main",
+              color: "white",
+              "& .MuiChip-icon": {
                 color: "white",
-                "& .MuiChip-icon": {
-                  color: "white",
-                },
-              }),
+              },
+              // Add red border when selection is wrong
               ...(selectedPlayerIds.length === 7 && !meetsGenderRequirement && {
-                backgroundColor: "error.main",
-                color: "white",
-                "& .MuiChip-icon": {
-                  color: "white",
-                },
+                border: "2px solid",
+                borderColor: "error.main",
               }),
             }}
-            variant={selectedPlayerIds.length === 7 ? "filled" : "outlined"}
           />
         )}
       </DialogTitle>
