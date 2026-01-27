@@ -127,18 +127,6 @@ export default function EditPlayerModal({
         <DialogTitle>Edit Player</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-            <TextField
-              autoFocus
-              label="Player Name"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Enter player name"
-              inputProps={{ maxLength: 100 }}
-              required
-            />
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Gender
@@ -180,16 +168,28 @@ export default function EditPlayerModal({
                   },
                 }}
               >
-                <ToggleButton value="M" aria-label="male">
+                <ToggleButton value="M" aria-label="man">
                   <MaleIcon sx={{ mr: 1, fontSize: 20 }} />
-                  Male
+                  Man
                 </ToggleButton>
-                <ToggleButton value="W" aria-label="female">
+                <ToggleButton value="W" aria-label="woman">
                   <FemaleIcon sx={{ mr: 1, fontSize: 20 }} />
-                  Female
+                  Woman
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
+            <TextField
+              autoFocus
+              label="Player Name"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="Enter player name"
+              inputProps={{ maxLength: 100 }}
+              required
+            />
             <TextField
               label="Jersey Number (Optional)"
               type="number"
