@@ -87,7 +87,7 @@ npm run dev
 frontend/
 ├── src/
 │   ├── components/       # Reusable UI components
-│   │   ├── Layout.tsx    # Main app layout with AppBar
+│   │   ├── Layout.tsx    # Main app layout with AppBar and language selector
 │   │   ├── shared/       # Reusable shared components
 │   │   │   ├── PageHeader.tsx
 │   │   │   ├── LoadingState.tsx
@@ -156,6 +156,19 @@ frontend/
 │   │   ├── LineDetailPage.tsx      # Individual line with player management
 │   │   ├── GamesPage.tsx           # Game list/management
 │   │   └── GameDetailPage.tsx      # Individual game with score and points
+│   ├── locales/          # i18n translation files
+│   │   ├── index.ts      # i18n configuration (language detection, resources)
+│   │   ├── en/           # English translations (9 JSON files)
+│   │   │   ├── common.json       # Shared: actions, status, labels, validation
+│   │   │   ├── navigation.json   # AppBar menu items
+│   │   │   ├── teams.json
+│   │   │   ├── players.json
+│   │   │   ├── competitions.json
+│   │   │   ├── games.json
+│   │   │   ├── points.json       # Point tracking UI
+│   │   │   ├── lines.json
+│   │   │   └── strategies.json
+│   │   └── fr/           # French translations (9 JSON files, same structure)
 │   ├── services/         # API layer (mirrors backend CRUD)
 │   │   ├── api.ts        # Axios client configuration
 │   │   ├── teams.ts      # Team API calls
@@ -167,14 +180,15 @@ frontend/
 │   │   ├── strategies.ts # Strategy API calls
 │   │   └── index.ts      # Central export point
 │   ├── types/            # TypeScript types (mirrors backend schemas)
-│   │   └── index.ts      # All type definitions
+│   │   ├── index.ts      # All type definitions
+│   │   └── i18n.d.ts     # i18next TypeScript types (CustomTypeOptions)
 │   ├── hooks/            # Custom React hooks
 │   ├── test/             # Testing utilities
 │   │   ├── setup.ts      # Test configuration
-│   │   ├── test-utils.tsx # Custom render with providers
+│   │   ├── test-utils.tsx # Custom render with providers (includes i18n mock)
 │   │   └── mocks/        # MSW handlers for API mocking
 │   │       └── handlers.ts  # Request handlers for all API endpoints
-│   ├── App.tsx           # Root component with providers
+│   ├── App.tsx           # Root component with providers (includes I18nextProvider)
 │   ├── main.tsx          # Application entry point
 │   └── index.css         # Global CSS styles
 ├── public/               # Static assets
@@ -256,6 +270,7 @@ npm install
 - `axios` - HTTP client
 - `@mui/material` + `@emotion/react` + `@emotion/styled` - Material UI components
 - `@mui/icons-material` - Material Design icons
+- `react-i18next` + `i18next` + `i18next-browser-languagedetector` - Internationalization
 
 **Development Dependencies:**
 - `vite` + `@vitejs/plugin-react` - Build tooling
@@ -489,6 +504,139 @@ All entity cards (teams, competitions, games) follow a consistent visual pattern
 - **Theme-first**: All colors and gradients from centralized theme
 - **No custom CSS**: MUI handles all styling needs
 
+## Internationalization (i18n)
+
+The application supports **French** and **English** with react-i18next, covering all UI text across 58 component files.
+
+### Translation Structure
+
+**9 Namespaces (~300 translation strings):**
+- `common` - Shared actions, status labels, validation messages, homepage
+- `navigation` - AppBar menu items, drawer navigation
+- `teams` - Team pages, modals, forms
+- `players` - Player management
+- `competitions` - Competition management
+- `games` - Game tracking, roster sections
+- `points` - Point tracking UI (largest namespace, ~40+ strings)
+- `lines` - Line management
+- `strategies` - Strategy management
+
+**File Organization:**
+```
+src/locales/
+├── index.ts              # i18n configuration
+├── en/                   # English translations
+│   ├── common.json
+│   ├── navigation.json
+│   ├── teams.json
+│   ├── players.json
+│   ├── competitions.json
+│   ├── games.json
+│   ├── points.json
+│   ├── lines.json
+│   └── strategies.json
+└── fr/                   # French translations (same structure)
+```
+
+### Language Selector
+
+**Location:** AppBar (top-right corner)
+- IconButton with LanguageIcon
+- Menu with 🇬🇧 English / 🇫🇷 Français options
+- Instant language switch (no page reload)
+- Preference persisted to localStorage
+
+### Sport Terminology
+
+**Important:** Ultimate frisbee sport-specific terms stay in **English** in both languages (see `GLOSSARY.md`):
+- Pull, Turnover, Break, Hold
+- Handler, Cutter
+- Foul, Travel, Pick, Strip
+
+General UI terms are translated:
+- Team → "Équipe" (French)
+- Player → "Joueur" / "Joueuse" (French)
+- Create → "Créer" (French)
+
+### Usage in Components
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation('teams'); // Load 'teams' namespace
+
+  return (
+    <Typography>{t('page.title')}</Typography>           // "Teams" / "Équipes"
+    <Button>{t('common:action.create')}</Button>         // Cross-namespace reference
+    <Typography>{t('card.players', { count: 5 })}</Typography> // Pluralization
+  );
+}
+```
+
+### Adding New Translations
+
+1. **Add translation keys** to both `en/*.json` and `fr/*.json`:
+   ```json
+   // en/teams.json
+   {
+     "page": {
+       "newFeature": "New Feature Text"
+     }
+   }
+
+   // fr/teams.json
+   {
+     "page": {
+       "newFeature": "Texte de la nouvelle fonctionnalité"
+     }
+   }
+   ```
+
+2. **Use in component** with `useTranslation` hook:
+   ```typescript
+   const { t } = useTranslation('teams');
+   <Typography>{t('page.newFeature')}</Typography>
+   ```
+
+3. **Test automatically uses English** (i18n mock in `test-utils.tsx`)
+
+### Language Detection
+
+Order: `localStorage` → `navigator.language` → `'en'` (fallback)
+
+Configured in `src/locales/index.ts`:
+```typescript
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
+    },
+    fallbackLng: 'en',
+  });
+```
+
+### TypeScript Support
+
+Type-safe translation keys via `src/types/i18n.d.ts`:
+```typescript
+declare module 'react-i18next' {
+  interface CustomTypeOptions {
+    defaultNS: 'common';
+    resources: {
+      common: typeof commonEN;
+      teams: typeof teamsEN;
+      // ... all 9 namespaces
+    };
+  }
+}
+```
+
+TypeScript will autocomplete translation keys and catch typos at compile time.
+
 ## Development
 
 ### Running Tests
@@ -507,7 +655,8 @@ The project uses Vitest with React Testing Library and MSW for API mocking.
 - Component tests: Unit tests for shared components (PointTimer, PlayerSelector, PlayerCard, PlayerSelectionUI)
 - Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog, CompletePointDialog, Strategy modals)
 - MSW provides realistic API mocking with request interception for all backend endpoints (including strategies)
-- **Current: 147 tests passing across 23 test files**
+- i18n mock in test-utils.tsx ensures all tests use English translations
+- **Current: 185 tests passing across 23 test files (100% pass rate)**
 
 ### Development Workflow
 
@@ -537,6 +686,16 @@ Backend is configured to allow all origins in development. If you still see CORS
 
 ## Recent Enhancements
 
+**Phase 6.5: Internationalization (Complete):**
+- ✅ **French/English Support**: Full i18n with react-i18next
+- ✅ **Translation Structure**: 9 namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies)
+- ✅ **Coverage**: ~300 translation strings across 58 component files
+- ✅ **Language Selector**: IconButton in AppBar with instant switching (🇬🇧 EN / 🇫🇷 FR)
+- ✅ **localStorage Persistence**: Language preference saved and restored
+- ✅ **Sport Terminology**: Ultimate frisbee terms stay in English (Pull, Turnover, Break) per GLOSSARY.md
+- ✅ **TypeScript Support**: Type-safe translation keys with autocomplete
+- ✅ **Testing**: 185 tests passing (100% pass rate) with i18n mock using English
+
 **Phase 6 Frontend (Complete):**
 - ✅ **Strategy Management UI**: StrategiesPage with full CRUD, CreateStrategyModal, EditStrategyModal
 - ✅ **4-Status Point Workflow**: Ready → Running → Scored → Completed with all dialogs
@@ -555,7 +714,6 @@ Backend is configured to allow all origins in development. If you still see CORS
   - Timer properly restarts when resuming scored points
   - Optimistic cache updates for smooth transitions (no UI flicker)
   - Code cleanup: Simplified timer rendering, consolidated duplicate code
-- ✅ **Testing**: 147 tests passing (29 new Phase 6 tests)
 - ⏳ **ABBA Gender Rule**: Not yet implemented (frontend validation only)
 
 **Phase 5 Complete:**

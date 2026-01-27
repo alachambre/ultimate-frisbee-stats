@@ -126,13 +126,17 @@ npm run build                       # Production build
 - `frontend/src/theme.d.ts` - TypeScript declarations for theme extensions (gradients)
 - `frontend/src/pages/` - All page components with routes
 - `frontend/src/components/` - Organized by domain (teams/, players/, games/, modals/)
+- `frontend/src/components/Layout.tsx` - AppBar with language selector (🇬🇧/🇫🇷)
 - `frontend/src/services/` - API layer matching backend endpoints
 - `frontend/src/types/index.ts` - TypeScript types matching backend schemas
 - `frontend/src/types/i18n.d.ts` - TypeScript types for i18next (CustomTypeOptions with resources)
-- `frontend/src/locales/` - i18n translation files organized by namespace (en/, fr/, index.ts)
+- `frontend/src/locales/` - i18n translation files (~300 strings across 9 namespaces)
+  - `index.ts` - i18n configuration (language detection, resources, fallback)
+  - `en/` - 9 English translation files (common, navigation, teams, players, competitions, games, points, lines, strategies)
+  - `fr/` - 9 French translation files (same structure)
 - `frontend/src/test/mocks/handlers.ts` - MSW handlers for all endpoints
-- `frontend/src/test/test-utils.tsx` - Test utilities with i18n mock (English only)
-- `frontend/README.md` - Comprehensive frontend documentation with theme system details
+- `frontend/src/test/test-utils.tsx` - Test utilities with i18n mock (English only, zero test changes needed)
+- `frontend/README.md` - Comprehensive frontend documentation with theme system, i18n guide
 - `GLOSSARY.md` - Ultimate frisbee terms that stay in English (Pull, Turnover, Break, etc.)
 
 ## Known Issues
