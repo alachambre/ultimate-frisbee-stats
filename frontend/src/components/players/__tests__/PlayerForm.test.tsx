@@ -24,7 +24,7 @@ describe("PlayerForm", () => {
   });
 
   it("shows correct gender selected", () => {
-    const { rerender, container } = render(
+    const { rerender } = render(
       <PlayerForm
         playerName=""
         onPlayerNameChange={vi.fn()}
