@@ -196,12 +196,18 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
-be2f4cd - Fix all remaining strategy tests (17 tests)
+6da553e - Improve EditPointDialog and LineCard UX (NEW - uncommitted to remote)
+5f2e004 - Fix all remaining strategy tests and update documentation
 2db6239 - Improve StartPointDialog UX and add Strategy Management UI
-bb28267 - Implement Phase 6 backend: Strategy model and enhanced Point tracking (PUSHED)
-23ae5f0 - Implement Phase 5 backend: Lines and enhanced Game model (PUSHED)
-ec7e694 - Enhance UI with theme improvements, roster UX, and home page updates
+7db3290 - Fix Phase 6 frontend bugs and improve UX: Timer restart and comment workflow
+b2580c8 - Implement Phase 6 frontend: Enhanced point tracking with 4-status workflow
 ```
+
+### Recent Changes Summary (Committed)
+- **Latest commit**: `6da553e` - Improve EditPointDialog and LineCard UX
+  - EditPointDialog: ToggleButtons instead of radio buttons, section dividers, responsive Grid layout
+  - LineCard: Removed edit/delete icons for cleaner UI (click card to navigate to detail)
+  - 145 tests passing (down from 147 - removed 2 obsolete LineCard tests)
 
 ### Recent Changes Summary (Uncommitted)
 - **Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (COMPLETE) ✅**:
@@ -421,7 +427,7 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - Status: 273 backend tests passing (100%), production-ready
 - Next: Phase 5-6 Frontend implementation
 
-**✅ Phase 6 Frontend: Strategy UI & 4-Status Point Tracking (COMPLETE)**
+**✅ Phase 6 Frontend: Strategy UI & 4-Status Point Tracking (95% COMPLETE)**
 - ✅ Strategy management UI (StrategiesPage, Create/Edit/Delete modals with confirmation)
 - ✅ LivePointTracker updated for 4-status workflow (ready→running→scored→completed)
 - ✅ Strategy selection in LivePointTracker (SelectStrategyDialog, auto-filtered by category)
@@ -430,8 +436,9 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - ✅ StartPointDialog UX: Chip-based line filter, inline player count with color-coding
 - ✅ FinishPointDialog: Cleaner UI with toggle buttons, color-coded Won/Lost
 - ✅ Resume Point: scored→running with optimistic cache updates (no UI flicker)
-- ✅ All 147 tests passing (29 new Phase 6 tests)
-- ⏳ **ABBA Gender Rule Enforcement (Frontend-only):**
+- ✅ All 145 tests passing (29 new Phase 6 tests)
+- ✅ EditPointDialog & LineCard UX improvements (toggle buttons, section dividers, cleaner cards)
+- ⏳ **ABBA Gender Rule Enforcement (Frontend-only - REMAINING):**
   - Implement ABBA alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
   - Each point must alternate between 4M+3W and 3M+4W following the sequence
   - First point's gender ratio defines which is "A" and which is "B"
@@ -443,6 +450,18 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
     - Optionally disable "Start Point" button if ratio doesn't match
   - PlayerSelector updates: Display live count of selected men/women
   - No backend changes needed - pure UI validation logic
+
+**⏳ Phase 6.5: Internationalization (i18n) - NEW**
+- Add react-i18next for localization support
+- Support French and English languages
+- Language selector in AppBar
+- Translation files organized by domain (teams, games, points, etc.)
+- Update all components to use translation keys
+- Persist language preference in localStorage
+- Update test setup to mock i18n
+- Estimated effort: 11-18 hours
+- **Why now?**: Better to add before codebase grows with Phases 7-8
+- **Scope**: All UI strings (buttons, labels, headers, messages, forms, empty states)
 
 **⏳ Phase 7: Calls & Turnovers**
 - Add Call model (with timing)
@@ -621,7 +640,8 @@ npm run build                       # Production build
 - Active point polling every 5 seconds using React Query
 - Timezone-aware datetimes with proper 'Z' suffix serialization
 - **Next Steps:**
-  1. **ABBA Gender Rule** - Frontend validation for alternating 4M+3W / 3M+4W pattern
-  2. **Fix Game Timer** - Start timer when first point runs (not game start button)
+  1. **Complete Phase 6** - ABBA Gender Rule (frontend validation for alternating 4M+3W / 3M+4W pattern)
+  2. **Phase 6.5** - Internationalization (i18n) - French/English localization (11-18 hour effort)
   3. **Phase 7** - Calls & Turnovers (backend + frontend)
   4. **Phase 8** - Statistics Dashboard
+  5. **Known Issue** - Fix Game Timer (start when first point runs, not game start button)
