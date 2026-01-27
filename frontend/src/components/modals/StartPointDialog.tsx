@@ -14,8 +14,8 @@ import {
 } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import WarningIcon from "@mui/icons-material/Warning";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startPoint, updatePoint } from "../../services/points";
 import { getLines } from "../../services/lines";
@@ -175,7 +175,43 @@ export default function StartPointDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Start Point</DialogTitle>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1 }}>
+        <span>Start Point</span>
+        {/* Mixity indicator */}
+        {requiredGenderRatio && (
+          <Chip
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Typography variant="caption" fontWeight={500}>
+                  Mixity:
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {requiredGenderRatio.men}
+                  </Typography>
+                  <MaleIcon sx={{ fontSize: 16 }} />
+                  <Typography variant="body2" sx={{ mx: 0.25 }}>
+                    /
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {requiredGenderRatio.women}
+                  </Typography>
+                  <FemaleIcon sx={{ fontSize: 16 }} />
+                </Box>
+              </Box>
+            }
+            size="small"
+            color={
+              selectedPlayerIds.length === 7
+                ? meetsGenderRequirement
+                  ? "success"
+                  : "error"
+                : "default"
+            }
+            variant={selectedPlayerIds.length === 7 ? "filled" : "outlined"}
+          />
+        )}
+      </DialogTitle>
       <DialogContent>
         {startMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -223,43 +259,6 @@ export default function StartPointDialog({
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
-
-        {/* Gender requirement badge (ABBA rule) */}
-        {requiredGenderRatio && (
-          <Alert
-            severity={
-              selectedPlayerIds.length === 7
-                ? meetsGenderRequirement
-                  ? "success"
-                  : "error"
-                : "info"
-            }
-            icon={
-              selectedPlayerIds.length === 7 ? (
-                meetsGenderRequirement ? (
-                  <CheckCircleIcon fontSize="inherit" />
-                ) : (
-                  <WarningIcon fontSize="inherit" />
-                )
-              ) : undefined
-            }
-            sx={{ mb: 3 }}
-          >
-            <Typography variant="body2" fontWeight={500}>
-              ABBA Gender Rule: {requiredGenderRatio.men} Men, {requiredGenderRatio.women} Women Required
-            </Typography>
-          </Alert>
-        )}
-        {!requiredGenderRatio && (
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="body2" fontWeight={500}>
-              First Point: Select either 4 Men + 3 Women or 3 Men + 4 Women
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              This will establish the ABBA pattern for subsequent points
-            </Typography>
-          </Alert>
-        )}
 
         {/* Line filter */}
         {lines && lines.length > 0 && (

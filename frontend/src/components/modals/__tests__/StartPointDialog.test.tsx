@@ -452,7 +452,7 @@ describe("StartPointDialog", () => {
   });
 
   describe("ABBA Gender Rule", () => {
-    it("shows first point message when no completed points exist", async () => {
+    it("does not show mixity chip when no completed points exist", async () => {
       const team = await createTeam({ name: "Test Team" });
       const competition = await createCompetition({
         team_id: team.id,
@@ -487,10 +487,11 @@ describe("StartPointDialog", () => {
         />
       );
 
-      // Should show first point info message
+      // Should NOT show mixity chip for first point (no requirement yet)
       await waitFor(() => {
-        expect(screen.getByText(/first point: select either 4 men \+ 3 women or 3 men \+ 4 women/i)).toBeInTheDocument();
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
+      expect(screen.queryByText(/mixity/i)).not.toBeInTheDocument();
     });
 
     it("allows starting first point with 4M+3W", async () => {
