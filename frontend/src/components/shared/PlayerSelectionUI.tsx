@@ -196,8 +196,9 @@ export default function PlayerSelectionUI({
               borderColor: "primary.main",
               color: "primary.main",
               "&:hover": {
-                borderColor: "primary.dark",
-                backgroundColor: "primary.light",
+                backgroundColor: "primary.main",
+                color: "white",
+                borderColor: "primary.main",
               },
             }}
           >
@@ -213,8 +214,9 @@ export default function PlayerSelectionUI({
               borderColor: "secondary.main",
               color: "secondary.main",
               "&:hover": {
-                borderColor: "secondary.dark",
-                backgroundColor: "secondary.light",
+                backgroundColor: "secondary.main",
+                color: "white",
+                borderColor: "secondary.main",
               },
             }}
           >
