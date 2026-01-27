@@ -72,7 +72,7 @@ export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCar
         <Chip
           label={isOffense ? "Offense" : "Defense"}
           size="small"
-          color={isOffense ? "primary" : "default"}
+          color="default"
           sx={{ mb: 2 }}
         />
 
