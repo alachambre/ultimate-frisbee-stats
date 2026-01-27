@@ -10,7 +10,7 @@
 ## Project Overview
 Building a PWA for tracking ultimate frisbee statistics with:
 - **Backend**: FastAPI + SQLAlchemy + SQLite (273 tests passing)
-- **Frontend**: React + TypeScript + Material UI + TanStack Query (186 tests passing)
+- **Frontend**: React + TypeScript + Material UI + TanStack Query (185 tests passing)
 - **Primary Target**: Mobile devices (used on the sidelines during games)
 
 ## Current Status
@@ -202,21 +202,23 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
+2beb80b - Make mixity chip fully red when gender ratio is invalid
+8284828 - Preselect offense/defense based on previous point result
+9cd02c4 - Remove selection counter chips from player dialogs
+2ef938e - Make strategy category chips always gray
+e9cc60d - Use same navy blue color for both Offense and Defense strategy buttons
 2d03caa - Extract shared StrategyForm component and replace dropdown with toggle buttons
-c10cf47 - Add mandatory tests for PlayerForm and player modals (27 new tests)
-ec5354a - Remove unused imports from player modal tests
-0bf2aa9 - Extract shared PlayerForm component from player modals
-[recent] - Extract shared PointPlayerSelection component and add comprehensive tests
 ```
 
 ### Recent Changes Summary (Committed)
-- **Latest commit**: `2d03caa` - Extract shared StrategyForm component and replace dropdown with toggle buttons
-  - Created StrategyForm component eliminating ~100 lines of duplicate code
-  - Replaced category dropdown with ToggleButtonGroup (Offense/Defense toggle buttons)
-  - Category buttons moved to top (before name field) with theme colors
-  - Both strategy modals now use shared component
-  - StrategyForm: 7 tests covering all form behaviors
-  - 186 tests passing (7 new tests added)
+
+**Latest UX Polish (6 commits):**
+- **2beb80b**: Mixity chip fully red when invalid - Changed from red border to complete red background (error.main) for clearer visual feedback when gender ratio is wrong
+- **8284828**: Preselect offense/defense based on previous point - Won previous → start on defense, lost → start on offense (allows manual override for half-time)
+- **9cd02c4**: Removed selection counter chips - Eliminated redundant gender count chips since button shows count (185 tests, removed 1 obsolete test)
+- **2ef938e**: Strategy category chips always gray - Icon provides color distinction (navy FlashOn, sky blue Shield)
+- **e9cc60d**: Unified strategy button colors - Both Offense/Defense use navy blue (primary.main) when selected for consistency
+- **2d03caa**: StrategyForm component - Extracted shared form (~100 lines saved), replaced dropdown with toggle buttons
 
 - **Recent refactoring**: Code deduplication across dialogs and forms
   - Created PointPlayerSelection component (~230 lines) shared by StartPointDialog and EditPointDialog
@@ -286,7 +288,7 @@ ec5354a - Remove unused imports from player modal tests
     - Pattern calculation: `position % 4` where 0,3→A and 1,2→B (repeats every 4 points)
     - **Mixity chip in StartPointDialog**: Top-right corner shows "Mixity: Men" or "Mixity: Women"
       - Navy blue (primary) for men-majority, sky blue (secondary) for women-majority
-      - Red border when wrong ratio selected (7 players but incorrect M/W split)
+      - Completely red background (error.main) when wrong ratio selected (7 players but incorrect M/W split)
       - Male/Female icon with clean typography
     - **Mixity in PointHistoryItem**: Subtle text in accordion summary "Show Players (Mixity: ♂ Men)" in neutral gray
     - Player count display shows gender breakdown with color-coded validation (green when valid, red when invalid)
@@ -343,7 +345,7 @@ src/
 - **Card System**: Consistent gradient borders, full-width teams, responsive competition/game grids
 
 ### Testing Strategy
-- **Frontend**: 186 tests passing - 28/28 test files (Phase 1-6 fully tested)
+- **Frontend**: 185 tests passing - 28/28 test files (Phase 1-6 fully tested)
   - Phase 1: Teams & Players
     - PlayerForm tests (7) - Shared component for gender/name/number fields
     - AddPlayerModal tests (8) - Form initialization, validation, submission
@@ -469,7 +471,7 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - ✅ StartPointDialog UX: Chip-based line filter, inline player count with color-coding
 - ✅ FinishPointDialog: Cleaner UI with toggle buttons, color-coded Won/Lost
 - ✅ Resume Point: scored→running with optimistic cache updates (no UI flicker)
-- ✅ All 147 tests passing (Phase 6 fully tested)
+- ✅ All 185 tests passing (Phase 6 fully tested with recent UX polish)
 - ✅ EditPointDialog enhancements: Line filtering, player count header, removed timing section
 - ✅ **ABBA Gender Rule Enforcement (COMPLETE)**:
   - Implemented ABBA alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
@@ -478,8 +480,9 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
   - Pattern calculated: `position % 4` where 0,3→A and 1,2→B (repeats every 4 points)
   - **Mixity chip in StartPointDialog**: Top-right corner shows "Mixity: Men" or "Mixity: Women"
     - Navy blue for men-majority, sky blue for women-majority
-    - Red border when wrong ratio selected
+    - Completely red background (error.main) when wrong ratio selected
     - Male/Female icon with clean typography
+  - **Preselection**: Offense/defense auto-preselected based on previous point (won→defense, lost→offense)
   - **Mixity in PointHistoryItem**: Subtle text in accordion summary in neutral gray
   - Player count display with color-coded validation (green when valid, red when invalid)
   - Start button disabled for invalid ratios
@@ -538,7 +541,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd frontend
 npm run dev                         # Starts on http://localhost:5173/
-npm test                            # Run all 80 tests
+npm test                            # Run all 185 tests
 npm run test:coverage               # Run tests with coverage report
 npm run build                       # Production build
 ```
@@ -594,20 +597,22 @@ npm run build                       # Production build
 
 ## Git Status
 - Currently on `main` branch
-- **Working tree clean** - All Phase 6 work committed
+- **Modified files**: CLAUDE.md (documentation updates in progress)
 - Latest commits:
-  - `e07a132` - Enhance EditPointDialog and remove timing section
-  - `9ed0705` - Implement ABBA Gender Rule with mixity UX improvements
-  - `6da553e` - Improve EditPointDialog and LineCard UX
-  - `5f2e004` - Fix all remaining strategy tests (17 tests)
-  - `2db6239` - Improve StartPointDialog UX and add Strategy Management UI
-- Branch ahead of origin/main by 15 commits (needs push)
+  - `2beb80b` - Make mixity chip fully red when gender ratio is invalid
+  - `8284828` - Preselect offense/defense based on previous point result
+  - `9cd02c4` - Remove selection counter chips from player dialogs
+  - `2ef938e` - Make strategy category chips always gray
+  - `e9cc60d` - Use same navy blue color for both Offense and Defense strategy buttons
+  - `2d03caa` - Extract shared StrategyForm component and replace dropdown with toggle buttons
+- Branch ahead of origin/main by 1 commit (needs push after CLAUDE.md update)
 - **Phase 6 FULLY COMPLETE** 🎉:
-  - All 147 tests passing
+  - All 185 tests passing (28 test files)
   - Strategy Management UI with full CRUD
   - 4-status point workflow (ready→running→scored→completed)
-  - ABBA Gender Rule with mixity chip UI
-  - EditPointDialog enhanced (line filtering, player count)
+  - ABBA Gender Rule with mixity chip UI (completely red when invalid)
+  - Offense/defense preselection based on previous point
+  - Recent UX polish (unified colors, cleaner chips, removed redundant counters)
   - Production build passing
 
 ## Development Notes
@@ -630,7 +635,7 @@ npm run build                       # Production build
   - Line model: M2M with players, unique constraint (team_id + name), 8 REST endpoints
   - Game enhancements: 3-status lifecycle (ready/started/ended), comments field, player selection (3 new endpoints)
   - Database recreated with new schema (lines, line_players, game_players tables)
-  - Frontend: 111 tests passing (31 tests for Lines, Game management, polish & bug fixes)
+  - Frontend: 185 tests passing (comprehensive coverage across all phases)
   - LineDetailPage with player management (add/remove via AddPlayersToLineModal)
   - Lines integrated into TeamDetailPage (no dedicated /lines route)
   - Game player selection UI (AddPlayersToGameModal), comments in modals, status lifecycle buttons
@@ -662,7 +667,7 @@ npm run build                       # Production build
   - ✅ Code cleanup: Simplified PointTimer rendering, consolidated duplicate code
   - ✅ MSW mocks updated: Strategy endpoints, new point fields
   - ✅ Backend timezone comparison fix applied (update_point datetime comparison)
-  - ✅ Tests updated: 147 tests passing (Phase 6 fully tested including ABBA rule)
+  - ✅ Tests updated: 185 tests passing (Phase 6 fully tested including ABBA rule and recent UX polish)
   - ✅ ABBA Gender Rule: COMPLETE - Enforces alternating 4M+3W/3M+4W pattern with mixity chip UI
   - ✅ EditPointDialog enhanced: Line filtering, player count header, timing section removed
   - ✅ Strategy Management UI: COMPLETE - Full CRUD with StrategiesPage and modals
