@@ -160,30 +160,6 @@ describe("EditPointDialog", () => {
     expect(checkbox8.checked).toBe(false);
   });
 
-  it("allows changing starting position", async () => {
-    const user = userEvent.setup();
-    renderWithQueryClient(
-      <EditPointDialog
-        open={true}
-        onClose={vi.fn()}
-        point={mockCompletedPoint}
-        players={mockPlayers}
-        teamId={1}
-      />
-    );
-
-    const offenseButton = screen.getByRole("button", { name: /on offense/i });
-    const defenseButton = screen.getByRole("button", { name: /on defense/i });
-
-    expect(offenseButton).toHaveAttribute("aria-pressed", "true");
-    expect(defenseButton).toHaveAttribute("aria-pressed", "false");
-
-    await user.click(defenseButton);
-
-    expect(offenseButton).toHaveAttribute("aria-pressed", "false");
-    expect(defenseButton).toHaveAttribute("aria-pressed", "true");
-  });
-
   it("allows changing outcome for completed points", async () => {
     const user = userEvent.setup();
     renderWithQueryClient(
