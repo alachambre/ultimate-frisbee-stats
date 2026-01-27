@@ -450,4 +450,267 @@ describe("StartPointDialog", () => {
       expect(screen.getByText("Grace")).toBeInTheDocument();
     });
   });
+
+  describe("ABBA Gender Rule", () => {
+    it("shows first point message when no completed points exist", async () => {
+      const team = await createTeam({ name: "Test Team" });
+      const competition = await createCompetition({
+        team_id: team.id,
+        name: "Test Competition",
+        start_date: "2024-01-01",
+        end_date: "2024-12-31",
+      });
+      const game = await createGame({
+        competition_id: competition.id,
+        opponent_name: "Rival",
+        date: "2024-01-15",
+      });
+
+      const createdPlayers = await Promise.all(
+        mockPlayers.map((p) =>
+          createPlayer({
+            name: p.name,
+            number: p.number,
+            gender: p.gender,
+            team_id: team.id,
+          })
+        )
+      );
+
+      renderWithQueryClient(
+        <StartPointDialog
+          open={true}
+          onClose={vi.fn()}
+          gameId={game.id}
+          teamId={team.id}
+          players={createdPlayers}
+        />
+      );
+
+      // Should show first point info message
+      await waitFor(() => {
+        expect(screen.getByText(/first point: select either 4 men \+ 3 women or 3 men \+ 4 women/i)).toBeInTheDocument();
+      });
+    });
+
+    it("allows starting first point with 4M+3W", async () => {
+      const user = userEvent.setup();
+      const team = await createTeam({ name: "Test Team" });
+      const competition = await createCompetition({
+        team_id: team.id,
+        name: "Test Competition",
+        start_date: "2024-01-01",
+        end_date: "2024-12-31",
+      });
+      const game = await createGame({
+        competition_id: competition.id,
+        opponent_name: "Rival",
+        date: "2024-01-15",
+      });
+
+      const createdPlayers = await Promise.all(
+        mockPlayers.map((p) =>
+          createPlayer({
+            name: p.name,
+            number: p.number,
+            gender: p.gender,
+            team_id: team.id,
+          })
+        )
+      );
+
+      renderWithQueryClient(
+        <StartPointDialog
+          open={true}
+          onClose={vi.fn()}
+          gameId={game.id}
+          teamId={team.id}
+          players={createdPlayers}
+        />
+      );
+
+      // Men tab is active by default - select 4 men
+      const menCheckboxes = screen.getAllByRole("checkbox").filter(cb => {
+        const listItem = cb.closest('li');
+        return listItem !== null;
+      });
+
+      for (let i = 0; i < 4; i++) {
+        await user.click(menCheckboxes[i]);
+      }
+
+      // Switch to Women tab and select 3 women
+      const womenTab = screen.getByRole("tab", { name: /women/i });
+      await user.click(womenTab);
+
+      await waitFor(() => {
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+      });
+
+      const womenCheckboxes = screen.getAllByRole("checkbox").filter(cb => {
+        const listItem = cb.closest('li');
+        return listItem !== null;
+      });
+
+      for (let i = 0; i < 3; i++) {
+        await user.click(womenCheckboxes[i]);
+      }
+
+      // Start button should be enabled
+      const startButton = screen.getByRole("button", { name: /start point/i });
+      await waitFor(() => {
+        expect(startButton).toBeEnabled();
+      });
+    });
+
+    it("allows starting first point with 3M+4W", async () => {
+      const user = userEvent.setup();
+      const team = await createTeam({ name: "Test Team" });
+      const competition = await createCompetition({
+        team_id: team.id,
+        name: "Test Competition",
+        start_date: "2024-01-01",
+        end_date: "2024-12-31",
+      });
+      const game = await createGame({
+        competition_id: competition.id,
+        opponent_name: "Rival",
+        date: "2024-01-15",
+      });
+
+      const createdPlayers = await Promise.all(
+        mockPlayers.map((p) =>
+          createPlayer({
+            name: p.name,
+            number: p.number,
+            gender: p.gender,
+            team_id: team.id,
+          })
+        )
+      );
+
+      renderWithQueryClient(
+        <StartPointDialog
+          open={true}
+          onClose={vi.fn()}
+          gameId={game.id}
+          teamId={team.id}
+          players={createdPlayers}
+        />
+      );
+
+      // Men tab is active by default - select 3 men
+      const menCheckboxes = screen.getAllByRole("checkbox").filter(cb => {
+        const listItem = cb.closest('li');
+        return listItem !== null;
+      });
+
+      for (let i = 0; i < 3; i++) {
+        await user.click(menCheckboxes[i]);
+      }
+
+      // Switch to Women tab and select 4 women
+      const womenTab = screen.getByRole("tab", { name: /women/i });
+      await user.click(womenTab);
+
+      await waitFor(() => {
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+      });
+
+      const womenCheckboxes = screen.getAllByRole("checkbox").filter(cb => {
+        const listItem = cb.closest('li');
+        return listItem !== null;
+      });
+
+      for (let i = 0; i < 4; i++) {
+        await user.click(womenCheckboxes[i]);
+      }
+
+      // Start button should be enabled
+      const startButton = screen.getByRole("button", { name: /start point/i });
+      await waitFor(() => {
+        expect(startButton).toBeEnabled();
+      });
+    });
+
+    it("disables start button when first point has invalid gender ratio (2M+5W)", async () => {
+      const user = userEvent.setup();
+      const team = await createTeam({ name: "Test Team" });
+      const competition = await createCompetition({
+        team_id: team.id,
+        name: "Test Competition",
+        start_date: "2024-01-01",
+        end_date: "2024-12-31",
+      });
+      const game = await createGame({
+        competition_id: competition.id,
+        opponent_name: "Rival",
+        date: "2024-01-15",
+      });
+
+      // Create 9 players: 5 women, 4 men (to test invalid 2M+5W ratio)
+      const extendedPlayers = [
+        ...mockPlayers,
+        { id: 9, name: "Iris", number: 90, gender: "W" as const, team_id: 1, created_at: "2024-01-01" },
+      ];
+
+      const createdPlayers = await Promise.all(
+        extendedPlayers.map((p) =>
+          createPlayer({
+            name: p.name,
+            number: p.number,
+            gender: p.gender,
+            team_id: team.id,
+          })
+        )
+      );
+
+      renderWithQueryClient(
+        <StartPointDialog
+          open={true}
+          onClose={vi.fn()}
+          gameId={game.id}
+          teamId={team.id}
+          players={createdPlayers}
+        />
+      );
+
+      // Men tab is active by default - select 2 men
+      const menCheckboxes = screen.getAllByRole("checkbox").filter(cb => {
+        const listItem = cb.closest('li');
+        return listItem !== null;
+      });
+
+      for (let i = 0; i < 2; i++) {
+        await user.click(menCheckboxes[i]);
+      }
+
+      // Switch to Women tab and select all 5 women
+      const womenTab = screen.getByRole("tab", { name: /women/i });
+      await user.click(womenTab);
+
+      await waitFor(() => {
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+      });
+
+      const womenCheckboxes = screen.getAllByRole("checkbox").filter(cb => {
+        const listItem = cb.closest('li');
+        return listItem !== null;
+      });
+
+      // Select all 5 women
+      for (let i = 0; i < 5; i++) {
+        await user.click(womenCheckboxes[i]);
+      }
+
+      // Start button should be disabled (2M+5W is invalid - must be 4M+3W or 3M+4W)
+      const startButton = screen.getByRole("button", { name: /start point/i });
+      await waitFor(() => {
+        expect(startButton).toBeDisabled();
+      });
+
+      // Should show error color in player count
+      expect(screen.getByText(/2M, 5W/i)).toBeInTheDocument();
+    });
+  });
 });

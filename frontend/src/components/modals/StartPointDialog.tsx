@@ -14,11 +14,14 @@ import {
 } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { startPoint, updatePoint } from "../../services/points";
 import { getLines } from "../../services/lines";
+import { getGame } from "../../services/games";
 import PlayerSelector from "../points/PlayerSelector";
-import type { Player, Line } from "../../types";
+import type { Player, Line, PointWithPlayers } from "../../types";
 
 interface StartPointDialogProps {
   open: boolean;
@@ -49,6 +52,13 @@ export default function StartPointDialog({
     enabled: open,
   });
 
+  // Fetch game data to get existing points for ABBA pattern
+  const { data: game } = useQuery({
+    queryKey: ["game", String(gameId)],
+    queryFn: () => getGame(gameId),
+    enabled: open,
+  });
+
   // Filter players based on selected line
   const filteredPlayers = useMemo(() => {
     if (typeof selectedLineId !== "number") {
@@ -72,6 +82,59 @@ export default function StartPointDialog({
   const selectedWomen = selectedPlayerIds.filter((id) =>
     players.some((p) => p.id === id && p.gender === "W")
   ).length;
+
+  // Calculate required gender ratio based on ABBA pattern
+  const requiredGenderRatio = useMemo(() => {
+    if (!game?.points || game.points.length === 0) {
+      // First point - either ratio is acceptable
+      return null;
+    }
+
+    // Get completed points sorted by point_number
+    const completedPoints = game.points
+      .filter((p: PointWithPlayers) => p.status === "completed")
+      .sort((a: PointWithPlayers, b: PointWithPlayers) => a.point_number - b.point_number);
+
+    if (completedPoints.length === 0) {
+      // No completed points yet - either ratio is acceptable
+      return null;
+    }
+
+    // Determine the next point number
+    const nextPointNumber = Math.max(...game.points.map((p: PointWithPlayers) => p.point_number)) + 1;
+
+    // ABBA pattern: A-B-B-A-A-B-B-A...
+    // Calculate if this point should be "A" or "B"
+    // Pattern for point number n (1-based): Math.floor((n - 1) / 2) % 2 === 0 → "A", else "B"
+    const isPatternA = Math.floor((nextPointNumber - 1) / 2) % 2 === 0;
+
+    // Determine what "A" ratio is based on the first completed point
+    const firstPoint = completedPoints[0];
+    const firstPointMen = firstPoint.players.filter((p: Player) => p.gender === "M").length;
+
+    // First point establishes what "A" is (4M+3W or 3M+4W)
+    const patternAIsFourMen = firstPointMen === 4;
+
+    // Determine required ratio for this point
+    if (isPatternA) {
+      return patternAIsFourMen ? { men: 4, women: 3 } : { men: 3, women: 4 };
+    } else {
+      return patternAIsFourMen ? { men: 3, women: 4 } : { men: 4, women: 3 };
+    }
+  }, [game]);
+
+  // Check if current selection matches required ratio
+  const meetsGenderRequirement = useMemo(() => {
+    if (!requiredGenderRatio) {
+      // No requirement yet, but still need valid mixity (4M+3W or 3M+4W)
+      return selectedPlayerIds.length === 7 &&
+             ((selectedMen === 4 && selectedWomen === 3) ||
+              (selectedMen === 3 && selectedWomen === 4));
+    }
+
+    return selectedMen === requiredGenderRatio.men &&
+           selectedWomen === requiredGenderRatio.women;
+  }, [requiredGenderRatio, selectedMen, selectedWomen, selectedPlayerIds.length]);
 
   const startMutation = useMutation({
     mutationFn: async () => {
@@ -103,12 +166,12 @@ export default function StartPointDialog({
   };
 
   const handleSubmit = () => {
-    if (selectedPlayerIds.length === 7) {
+    if (selectedPlayerIds.length === 7 && meetsGenderRequirement) {
       startMutation.mutate();
     }
   };
 
-  const isValid = selectedPlayerIds.length === 7;
+  const isValid = selectedPlayerIds.length === 7 && meetsGenderRequirement;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -161,6 +224,43 @@ export default function StartPointDialog({
           </ToggleButtonGroup>
         </Box>
 
+        {/* Gender requirement badge (ABBA rule) */}
+        {requiredGenderRatio && (
+          <Alert
+            severity={
+              selectedPlayerIds.length === 7
+                ? meetsGenderRequirement
+                  ? "success"
+                  : "error"
+                : "info"
+            }
+            icon={
+              selectedPlayerIds.length === 7 ? (
+                meetsGenderRequirement ? (
+                  <CheckCircleIcon fontSize="inherit" />
+                ) : (
+                  <WarningIcon fontSize="inherit" />
+                )
+              ) : undefined
+            }
+            sx={{ mb: 3 }}
+          >
+            <Typography variant="body2" fontWeight={500}>
+              ABBA Gender Rule: {requiredGenderRatio.men} Men, {requiredGenderRatio.women} Women Required
+            </Typography>
+          </Alert>
+        )}
+        {!requiredGenderRatio && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2" fontWeight={500}>
+              First Point: Select either 4 Men + 3 Women or 3 Men + 4 Women
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              This will establish the ABBA pattern for subsequent points
+            </Typography>
+          </Alert>
+        )}
+
         {/* Line filter */}
         {lines && lines.length > 0 && (
           <Box sx={{ mb: 3 }}>
@@ -200,11 +300,20 @@ export default function StartPointDialog({
             <Typography
               component="span"
               variant="body2"
-              color={isValid ? "success.main" : selectedPlayerIds.length > 0 ? "error.main" : "text.secondary"}
+              color={
+                selectedPlayerIds.length === 7
+                  ? meetsGenderRequirement
+                    ? "success.main"
+                    : "error.main"
+                  : selectedPlayerIds.length > 0
+                  ? "warning.main"
+                  : "text.secondary"
+              }
               fontWeight={selectedPlayerIds.length > 0 ? 500 : 400}
             >
               ({selectedPlayerIds.length}/7
-              {selectedPlayerIds.length > 0 && `: ${selectedMen}M, ${selectedWomen}W`})
+              {selectedPlayerIds.length > 0 && `: ${selectedMen}M, ${selectedWomen}W`}
+              {selectedPlayerIds.length === 7 && meetsGenderRequirement && " ✓"})
             </Typography>
           </Typography>
         </Box>

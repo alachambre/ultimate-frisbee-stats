@@ -210,7 +210,7 @@ b2580c8 - Implement Phase 6 frontend: Enhanced point tracking with 4-status work
   - 145 tests passing (down from 147 - removed 2 obsolete LineCard tests)
 
 ### Recent Changes Summary (Uncommitted)
-- **Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (COMPLETE) ✅**:
+- **Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (100% COMPLETE) ✅**:
   - ✅ **4-Status Point Workflow**:
     - Ready → Running → Scored → Completed lifecycle
     - FinishPointDialog transitions to "scored" (not "completed")
@@ -261,8 +261,15 @@ b2580c8 - Implement Phase 6 frontend: Enhanced point tracking with 4-status work
     - StrategiesPage: 8 tests
     - All tests use proper setup with resetMockData() and data hierarchy
     - Production build passing, all TypeScript errors resolved
-  - ⏳ **Not Yet Implemented**:
-    - ABBA Gender Rule enforcement (frontend validation only)
+  - ✅ **ABBA Gender Rule Enforcement (COMPLETE)**:
+    - Alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
+    - Points alternate between 4M+3W and 3M+4W based on sequence
+    - First point establishes which ratio is "A" and which is "B"
+    - Real-time validation with visual feedback (success/error alerts)
+    - Player count display shows gender breakdown with color-coded validation
+    - Start button disabled for invalid ratios (must be 4M+3W or 3M+4W)
+    - 4 new tests covering first point selection and invalid ratio validation
+    - 149 total frontend tests passing
 
 ## Architecture Patterns Established
 
@@ -372,9 +379,6 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - **Call** - Fouls/violations with duration tracking
 - **Turnover** - Turnover events with player responsibility
 
-**Remaining Enhancements:**
-- **ABBA Gender Rule** (Phase 6+) - Mixity validation (4M+3W or 3M+4W) with ABBA rule enforcement (frontend-only)
-
 **Statistics Dashboard (Phase 8):**
 - Comprehensive analytics at game/competition/team/player level
 - Offense/defense efficiency metrics
@@ -427,7 +431,7 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - Status: 273 backend tests passing (100%), production-ready
 - Next: Phase 5-6 Frontend implementation
 
-**✅ Phase 6 Frontend: Strategy UI & 4-Status Point Tracking (95% COMPLETE)**
+**✅ Phase 6 Frontend: Strategy UI & 4-Status Point Tracking (100% COMPLETE) 🎉**
 - ✅ Strategy management UI (StrategiesPage, Create/Edit/Delete modals with confirmation)
 - ✅ LivePointTracker updated for 4-status workflow (ready→running→scored→completed)
 - ✅ Strategy selection in LivePointTracker (SelectStrategyDialog, auto-filtered by category)
@@ -436,20 +440,26 @@ Phase 1-3 served as a proof of concept. The full vision is documented in **`requ
 - ✅ StartPointDialog UX: Chip-based line filter, inline player count with color-coding
 - ✅ FinishPointDialog: Cleaner UI with toggle buttons, color-coded Won/Lost
 - ✅ Resume Point: scored→running with optimistic cache updates (no UI flicker)
-- ✅ All 145 tests passing (29 new Phase 6 tests)
+- ✅ All 149 tests passing (33 new Phase 6 tests + ABBA rule tests)
 - ✅ EditPointDialog & LineCard UX improvements (toggle buttons, section dividers, cleaner cards)
-- ⏳ **ABBA Gender Rule Enforcement (Frontend-only - REMAINING):**
-  - Implement ABBA alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
-  - Each point must alternate between 4M+3W and 3M+4W following the sequence
+- ✅ **ABBA Gender Rule Enforcement (COMPLETE)**:
+  - Implemented ABBA alternating gender ratio pattern (A-B-B-A-A-B-B-A...)
+  - Points alternate between 4M+3W and 3M+4W following the sequence
   - First point's gender ratio defines which is "A" and which is "B"
-  - Pattern calculated from point number: `(pointNumber % 4)` determines A or B
-  - UI enhancements in StartPointDialog:
-    - Show required gender ratio badge (e.g., "Required: 4 Men, 3 Women")
-    - Real-time validation as players are selected
-    - Visual feedback (green checkmark or red warning) for ratio compliance
-    - Optionally disable "Start Point" button if ratio doesn't match
-  - PlayerSelector updates: Display live count of selected men/women
-  - No backend changes needed - pure UI validation logic
+  - Pattern calculated from point number: `Math.floor((pointNumber - 1) / 2) % 2`
+  - StartPointDialog enhancements:
+    - Required gender ratio badge (e.g., "ABBA Gender Rule: 4 Men, 3 Women Required")
+    - Real-time validation with Alert component (success/error/info states)
+    - First point shows info message: "Select either 4M+3W or 3M+4W"
+    - Visual feedback with CheckCircle/Warning icons for ratio compliance
+    - Start button disabled for invalid ratios
+    - Player count display with color-coded validation (green ✓ when valid, red when invalid)
+  - 4 comprehensive tests added:
+    - First point info message display
+    - Allows 4M+3W for first point
+    - Allows 3M+4W for first point
+    - Disables button for invalid ratio (2M+5W)
+  - Pure frontend validation logic - no backend changes needed
 
 **⏳ Phase 6.5: Internationalization (i18n) - NEW**
 - Add react-i18next for localization support
@@ -624,9 +634,9 @@ npm run build                       # Production build
   - ✅ Code cleanup: Simplified PointTimer rendering, consolidated duplicate code
   - ✅ MSW mocks updated: Strategy endpoints, new point fields
   - ✅ Backend timezone comparison fix applied (update_point datetime comparison)
-  - ✅ Tests updated: 119 tests passing (8 new tests for CompletePointDialog and FinishPointDialog)
-  - ⏳ ABBA Gender Rule: Not yet implemented
-  - ⏳ Strategy Management UI: No pages/modals to create/edit strategies (service layer complete)
+  - ✅ Tests updated: 149 tests passing (33 new tests for Phase 6 including ABBA rule)
+  - ✅ ABBA Gender Rule: COMPLETE - Enforces alternating 4M+3W/3M+4W pattern in StartPointDialog
+  - ✅ Strategy Management UI: COMPLETE - Full CRUD with StrategiesPage and modals
 - **UI/UX Enhancements COMPLETE**
   - Centralized theme system in App.tsx with navy/sky blue gradient (#1e3a8a → #38bdf8)
   - TypeScript theme declarations in src/theme.d.ts
@@ -646,9 +656,15 @@ npm run build                       # Production build
   - All player lists sorted alphabetically throughout the app
 - Active point polling every 5 seconds using React Query
 - Timezone-aware datetimes with proper 'Z' suffix serialization
+- **Phase 6 COMPLETE** 🎉 - All features implemented:
+  - 4-status point workflow (ready→running→scored→completed)
+  - Strategy management (full CRUD UI)
+  - Pull tracking (inbound/out of bounds for defensive points)
+  - Point comments (add/edit during live tracking)
+  - Resume point feature (scored→running for late calls)
+  - ABBA Gender Rule enforcement (alternating 4M+3W / 3M+4W pattern)
 - **Next Steps:**
-  1. **Complete Phase 6** - ABBA Gender Rule (frontend validation for alternating 4M+3W / 3M+4W pattern)
-  2. **Phase 6.5** - Internationalization (i18n) - French/English localization (11-18 hour effort)
-  3. **Phase 7** - Calls & Turnovers (backend + frontend)
-  4. **Phase 8** - Statistics Dashboard
-  5. **Known Issue** - Fix Game Timer (start when first point runs, not game start button)
+  1. **Phase 6.5** - Internationalization (i18n) - French/English localization (11-18 hour effort)
+  2. **Phase 7** - Calls & Turnovers (backend + frontend)
+  3. **Phase 8** - Statistics Dashboard
+  4. **Known Issue** - Fix Game Timer (start when first point runs, not game start button)

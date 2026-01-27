@@ -92,14 +92,6 @@ export default function TeamDetailPage() {
     deleteMutation.mutate();
   };
 
-  const handleEditLine = (line: LineWithPlayers) => {
-    setEditingLine(line);
-  };
-
-  const handleDeleteLine = (line: LineWithPlayers) => {
-    setDeletingLine(line);
-  };
-
   const confirmDeleteLine = () => {
     if (deletingLine) {
       deleteLineMutation.mutate(deletingLine.id);
