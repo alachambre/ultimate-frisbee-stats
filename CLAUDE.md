@@ -10,7 +10,7 @@
 ## Project Overview
 Building a PWA for tracking ultimate frisbee statistics with:
 - **Backend**: FastAPI + SQLAlchemy + SQLite (273 tests passing)
-- **Frontend**: React + TypeScript + Material UI + TanStack Query (111 tests passing)
+- **Frontend**: React + TypeScript + Material UI + TanStack Query (152 tests passing)
 - **Primary Target**: Mobile devices (used on the sidelines during games)
 
 ## Current Status
@@ -109,6 +109,8 @@ Building a PWA for tracking ultimate frisbee statistics with:
   - All player lists sorted alphabetically throughout the app
 - ✅ **Player Gender Field:**
   - Added gender field (M/W) to AddPlayerModal and EditPlayerModal
+  - Gender selection uses ToggleButtonGroup with theme colors (navy blue for Man, sky blue for Woman)
+  - Gender field positioned first in player forms (before name field)
   - Gender displayed split by section (removed individual chips)
   - Team and competition detail pages show players in two columns (Men/Women)
   - Updated all player mocks and tests to include gender
@@ -148,6 +150,9 @@ Building a PWA for tracking ultimate frisbee statistics with:
   - All GameCard/GameDetailPage/LivePointTracker updated for new status values
 - ✅ **Code Quality:**
   - Consolidated duplicate code: Generic AddPlayersModal component (~1000 lines saved)
+  - Created PointPlayerSelection component shared by StartPointDialog and EditPointDialog (~200 lines saved)
+  - Created PlayerForm component shared by AddPlayerModal and EditPlayerModal (~100 lines saved)
+  - Total code duplication eliminated: ~1300 lines across all phases
   - Three "add players" modals now thin wrappers around generic component
   - MSW mocks for all 8 Line endpoints + 3 Game player management endpoints
   - POST /teams/:id/players handler added for test support
@@ -196,19 +201,28 @@ Building a PWA for tracking ultimate frisbee statistics with:
 
 ### Latest Commits
 ```
-e07a132 - Enhance EditPointDialog and remove timing section (NEW - uncommitted to remote)
+0bf2aa9 - Extract shared PlayerForm component from player modals
+[recent] - Extract shared PointPlayerSelection component and add comprehensive tests
+e07a132 - Enhance EditPointDialog and remove timing section
 9ed0705 - Implement ABBA Gender Rule with mixity UX improvements
 6da553e - Improve EditPointDialog and LineCard UX
-5f2e004 - Fix all remaining strategy tests and update documentation
-2db6239 - Improve StartPointDialog UX and add Strategy Management UI
 ```
 
 ### Recent Changes Summary (Committed)
-- **Latest commit**: `e07a132` - Enhance EditPointDialog and remove timing section
-  - Added line filtering for easier player selection
-  - Added player count header with gender breakdown (matching StartPointDialog)
-  - Removed timing section (start/end datetime editing no longer relevant)
-  - 147 tests passing
+- **Latest commit**: `0bf2aa9` - Extract shared PlayerForm component from player modals
+  - Created PlayerForm component eliminating ~100 lines of duplicate code
+  - Both AddPlayerModal and EditPlayerModal now use shared component
+  - Gender selection uses ToggleButtonGroup (navy blue for Man, sky blue for Woman)
+  - Gender moved to first field, labels changed from Male/Female to Man/Woman
+  - 152 tests passing
+
+- **Recent refactoring**: Code deduplication across dialogs and forms
+  - Created PointPlayerSelection component (~230 lines) shared by StartPointDialog and EditPointDialog
+  - Eliminated ~200 lines of duplicate code for offense/defense toggle, line filter, player selection UI
+  - Created 12 comprehensive tests for PointPlayerSelection, removed 7 duplicate tests from parent dialogs
+  - Feature flags for behavior differences: `clearPlayersOnLineChange`, `showGenderValidation`, `requiredGenderRatio`
+  - Created PlayerForm component for gender toggle, name field, and jersey number field
+  - Improved UI consistency: gender selection now uses theme-colored toggle buttons throughout
 
 **Phase 6 Frontend: Enhanced Point Tracking & Strategy Management (100% COMPLETE) ✅**:
   - ✅ **4-Status Point Workflow**:
@@ -251,10 +265,12 @@ e07a132 - Enhance EditPointDialog and remove timing section (NEW - uncommitted t
     - Offense/defense icons use gradient colors throughout (navy/sky blue)
     - FinishPointDialog cleaner UI (removed player list, offense/defense in title, color-coded toggle buttons)
   - ✅ **Testing**:
-    - 147 frontend tests passing (29 new tests for Phase 6)
+    - 152 frontend tests passing (34 new tests for Phase 6 + refactoring)
     - CompletePointDialog: 7 tests (new component)
     - FinishPointDialog: 7 tests (updated for toggle buttons and cleaner UI)
-    - StartPointDialog: 9 tests (updated for chip-based line filter)
+    - StartPointDialog: 7 tests (streamlined after extracting shared logic)
+    - EditPointDialog: 8 tests (streamlined after extracting shared logic)
+    - PointPlayerSelection: 12 tests (new shared component)
     - CreateStrategyModal: 6 tests
     - EditStrategyModal: 8 tests
     - SelectStrategyDialog: 8 tests
@@ -275,7 +291,7 @@ e07a132 - Enhance EditPointDialog and remove timing section (NEW - uncommitted t
     - Start button disabled for invalid ratios (must be 4M+3W or 3M+4W)
     - 4 new tests covering first point selection and invalid ratio validation
     - **EditPointDialog enhanced**: Line filtering and player count header matching StartPointDialog
-    - 147 total frontend tests passing
+    - 152 total frontend tests passing (5 new tests added for shared components)
 
 ## Architecture Patterns Established
 
@@ -288,9 +304,10 @@ src/
 │   ├── competitions/    # CompetitionCard, CompetitionsGrid, EmptyCompetitionsState
 │   ├── lines/           # LineCard, LinesGrid, EmptyLinesState (Phase 5)
 │   ├── strategies/      # StrategyCard, StrategiesGrid, EmptyStrategiesState (Phase 6)
-│   ├── players/         # PlayerCard, PlayersGrid, EmptyPlayersState
+│   ├── players/         # PlayerCard, PlayersGrid, EmptyPlayersState, PlayerForm
 │   ├── games/           # GameCard, GamesGrid, EmptyGamesState
-│   ├── points/          # LivePointTracker, PointTimer, PlayerSelector, PointHistoryList, PointHistoryItem
+│   ├── points/          # LivePointTracker, PointTimer, PlayerSelector, PointHistoryList, PointHistoryItem,
+│   │                    # PointPlayerSelection
 │   └── modals/          # CreateTeamModal, EditPlayerModal, CreateGameModal, EditGameModal,
 │                        # StartPointDialog, FinishPointDialog, CompletePointDialog, EditPointDialog,
 │                        # AddCommentDialog, SelectStrategyDialog,
