@@ -84,6 +84,34 @@ export default function PointHistoryItem({
             <Typography variant="h6" fontWeight="bold">
               Point #{point.point_number}
             </Typography>
+            {/* Subtle mixity icon badge */}
+            {(isMixityMen || isMixityWomen) && (
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  ml: 0.5,
+                }}
+              >
+                {isMixityMen ? (
+                  <MaleIcon
+                    sx={{
+                      fontSize: 20,
+                      color: "primary.main",
+                      opacity: 0.7,
+                    }}
+                  />
+                ) : (
+                  <FemaleIcon
+                    sx={{
+                      fontSize: 20,
+                      color: "secondary.main",
+                      opacity: 0.7,
+                    }}
+                  />
+                )}
+              </Box>
+            )}
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
             <IconButton
@@ -149,21 +177,6 @@ export default function PointHistoryItem({
               label="Ready"
               color="default"
               size="small"
-            />
-          )}
-          {/* Mixity chip */}
-          {(isMixityMen || isMixityWomen) && (
-            <Chip
-              icon={isMixityMen ? <MaleIcon /> : <FemaleIcon />}
-              label={`Mixity: ${isMixityMen ? "Men" : "Women"}`}
-              size="small"
-              sx={{
-                backgroundColor: isMixityMen ? "primary.main" : "secondary.main",
-                color: "white",
-                "& .MuiChip-icon": {
-                  color: "white",
-                },
-              }}
             />
           )}
         </Box>
