@@ -205,11 +205,7 @@ export default function PointHistoryItem({
                 <Chip
                   key={player.id}
                   icon={player.gender === "M" ? <MaleIcon /> : <FemaleIcon />}
-                  label={
-                    player.number !== null && player.number !== undefined
-                      ? `${player.name} #${player.number}`
-                      : player.name
-                  }
+                  label={player.name}
                   size="small"
                   sx={{
                     backgroundColor: player.gender === "M" ? "primary.main" : "secondary.main",
