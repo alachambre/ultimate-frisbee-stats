@@ -64,6 +64,12 @@ export default function PointHistoryItem({
     });
   }, [point.players]);
 
+  // Calculate mixity
+  const menCount = point.players.filter((p) => p.gender === "M").length;
+  const womenCount = point.players.filter((p) => p.gender === "W").length;
+  const isMixityMen = menCount === 4 && womenCount === 3;
+  const isMixityWomen = menCount === 3 && womenCount === 4;
+
   return (
     <Card variant="outlined">
       <CardContent>
@@ -143,6 +149,21 @@ export default function PointHistoryItem({
               label="Ready"
               color="default"
               size="small"
+            />
+          )}
+          {/* Mixity chip */}
+          {(isMixityMen || isMixityWomen) && (
+            <Chip
+              icon={isMixityMen ? <MaleIcon /> : <FemaleIcon />}
+              label={`Mixity: ${isMixityMen ? "Men" : "Women"}`}
+              size="small"
+              sx={{
+                backgroundColor: isMixityMen ? "primary.main" : "secondary.main",
+                color: "white",
+                "& .MuiChip-icon": {
+                  color: "white",
+                },
+              }}
             />
           )}
         </Box>
