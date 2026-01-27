@@ -104,9 +104,11 @@ export default function StartPointDialog({
     const nextPointNumber = Math.max(...game.points.map((p: PointWithPlayers) => p.point_number)) + 1;
 
     // ABBA pattern: A-B-B-A-A-B-B-A...
-    // Calculate if this point should be "A" or "B"
-    // Pattern for point number n (1-based): Math.floor((n - 1) / 2) % 2 === 0 → "A", else "B"
-    const isPatternA = Math.floor((nextPointNumber - 1) / 2) % 2 === 0;
+    // The pattern repeats every 4 points. Using 0-indexed position:
+    // pos % 4: 0→A, 1→B, 2→B, 3→A (then repeats)
+    const position = nextPointNumber - 1; // Convert to 0-indexed
+    const positionInCycle = position % 4;
+    const isPatternA = positionInCycle === 0 || positionInCycle === 3;
 
     // Determine what "A" ratio is based on the first completed point
     const firstPoint = completedPoints[0];
