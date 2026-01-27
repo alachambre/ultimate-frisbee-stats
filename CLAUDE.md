@@ -70,8 +70,9 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage
-- **Frontend**: Vitest + MSW + React Testing Library
+- **Backend**: Pytest with comprehensive CRUD and API coverage (273 tests)
+- **Frontend**: Vitest + MSW + React Testing Library (185 tests - 100% passing)
+- **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
 - **Organization**: Tests in `__tests__/` subdirectories
 
@@ -104,7 +105,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd frontend
 npm run dev                         # Starts on http://localhost:5173/
-npm test                            # Run all 185 tests
+npm test                            # Run all 185 tests (100% passing ✅)
 npm run test:coverage               # Run tests with coverage report
 npm run build                       # Production build
 ```
