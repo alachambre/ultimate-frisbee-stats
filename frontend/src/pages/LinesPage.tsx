@@ -102,11 +102,7 @@ export default function LinesPage() {
       {lines && lines.length === 0 ? (
         <EmptyLinesState onCreateLine={() => setIsCreateModalOpen(true)} />
       ) : (
-        <LinesGrid
-          lines={lines || []}
-          onEdit={setEditingLine}
-          onDelete={setDeletingLine}
-        />
+        <LinesGrid lines={lines || []} />
       )}
 
       <CreateLineModal

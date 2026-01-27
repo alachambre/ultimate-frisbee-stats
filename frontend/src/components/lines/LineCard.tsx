@@ -5,36 +5,21 @@ import {
   Typography,
   Box,
   Chip,
-  IconButton,
 } from "@mui/material";
 import GroupsIcon from "@mui/icons-material/Groups";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import type { LineWithPlayers } from "../../types";
 
 interface LineCardProps {
   line: LineWithPlayers;
-  onEdit: (line: LineWithPlayers) => void;
-  onDelete: (line: LineWithPlayers) => void;
 }
 
-export default function LineCard({ line, onEdit, onDelete }: LineCardProps) {
+export default function LineCard({ line }: LineCardProps) {
   const navigate = useNavigate();
   const menCount = line.players.filter((p) => p.gender === "M").length;
   const womenCount = line.players.filter((p) => p.gender === "W").length;
 
   const handleCardClick = () => {
     navigate(`/lines/${line.id}`);
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit(line);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete(line);
   };
 
   return (
@@ -85,7 +70,7 @@ export default function LineCard({ line, onEdit, onDelete }: LineCardProps) {
           </Typography>
         )}
 
-        <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap" mb={2}>
+        <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
           <Chip
             label={`${line.players.length} ${line.players.length === 1 ? "player" : "players"}`}
             size="small"
@@ -106,25 +91,6 @@ export default function LineCard({ line, onEdit, onDelete }: LineCardProps) {
               variant="outlined"
             />
           )}
-        </Box>
-
-        <Box display="flex" gap={1} justifyContent="center">
-          <IconButton
-            color="primary"
-            onClick={handleEdit}
-            size="small"
-            aria-label="Edit line"
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            color="error"
-            onClick={handleDelete}
-            size="small"
-            aria-label="Delete line"
-          >
-            <DeleteIcon />
-          </IconButton>
         </Box>
       </CardContent>
     </Card>

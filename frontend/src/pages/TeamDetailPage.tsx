@@ -276,11 +276,7 @@ export default function TeamDetailPage() {
               onCreateLine={() => setIsCreateLineModalOpen(true)}
             />
           ) : (
-            <LinesGrid
-              lines={lines}
-              onEdit={handleEditLine}
-              onDelete={handleDeleteLine}
-            />
+            <LinesGrid lines={lines} />
           )}
         </Box>
       </Paper>

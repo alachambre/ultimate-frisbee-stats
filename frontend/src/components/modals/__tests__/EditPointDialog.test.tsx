@@ -79,12 +79,12 @@ describe("EditPointDialog", () => {
     );
 
     // Check starting position
-    const offenseRadio = screen.getByLabelText("On Offense") as HTMLInputElement;
-    expect(offenseRadio.checked).toBe(true);
+    const offenseButton = screen.getByRole("button", { name: /on offense/i });
+    expect(offenseButton).toHaveAttribute("aria-pressed", "true");
 
     // Check outcome for completed point
-    const wonRadio = screen.getByLabelText("We won") as HTMLInputElement;
-    expect(wonRadio.checked).toBe(true);
+    const wonButton = screen.getByRole("button", { name: /won/i, pressed: true });
+    expect(wonButton).toBeInTheDocument();
   });
 
   it("shows outcome radio buttons only for completed points", () => {
@@ -99,8 +99,8 @@ describe("EditPointDialog", () => {
 
     // Completed point should show outcome
     expect(screen.getByText("Outcome")).toBeInTheDocument();
-    expect(screen.getByLabelText("We won")).toBeInTheDocument();
-    expect(screen.getByLabelText("They won")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /won the point/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /lost the point/i })).toBeInTheDocument();
 
     // Active point should not show outcome
     rerender(
@@ -202,18 +202,16 @@ describe("EditPointDialog", () => {
       />
     );
 
-    const offenseRadio = screen.getByLabelText("On Offense") as HTMLInputElement;
-    const defenseRadio = screen.getByLabelText(
-      "On Defense"
-    ) as HTMLInputElement;
+    const offenseButton = screen.getByRole("button", { name: /on offense/i });
+    const defenseButton = screen.getByRole("button", { name: /on defense/i });
 
-    expect(offenseRadio.checked).toBe(true);
-    expect(defenseRadio.checked).toBe(false);
+    expect(offenseButton).toHaveAttribute("aria-pressed", "true");
+    expect(defenseButton).toHaveAttribute("aria-pressed", "false");
 
-    await user.click(defenseRadio);
+    await user.click(defenseButton);
 
-    expect(offenseRadio.checked).toBe(false);
-    expect(defenseRadio.checked).toBe(true);
+    expect(offenseButton).toHaveAttribute("aria-pressed", "false");
+    expect(defenseButton).toHaveAttribute("aria-pressed", "true");
   });
 
   it("allows changing outcome for completed points", async () => {
@@ -227,16 +225,16 @@ describe("EditPointDialog", () => {
       />
     );
 
-    const wonRadio = screen.getByLabelText("We won") as HTMLInputElement;
-    const lostRadio = screen.getByLabelText("They won") as HTMLInputElement;
+    const wonButton = screen.getByRole("button", { name: /won the point/i });
+    const lostButton = screen.getByRole("button", { name: /lost the point/i });
 
-    expect(wonRadio.checked).toBe(true);
-    expect(lostRadio.checked).toBe(false);
+    expect(wonButton).toHaveAttribute("aria-pressed", "true");
+    expect(lostButton).toHaveAttribute("aria-pressed", "false");
 
-    await user.click(lostRadio);
+    await user.click(lostButton);
 
-    expect(wonRadio.checked).toBe(false);
-    expect(lostRadio.checked).toBe(true);
+    expect(wonButton).toHaveAttribute("aria-pressed", "false");
+    expect(lostButton).toHaveAttribute("aria-pressed", "true");
   });
 
   it("disables save button when less than 7 players selected", async () => {
@@ -364,8 +362,8 @@ describe("EditPointDialog", () => {
     );
 
     // Change starting position
-    const defenseRadio = screen.getByLabelText("On Defense");
-    await user.click(defenseRadio);
+    const defenseButton = screen.getByRole("button", { name: /on defense/i });
+    await user.click(defenseButton);
 
     // Submit form
     const saveButton = screen.getByRole("button", { name: /save changes/i });

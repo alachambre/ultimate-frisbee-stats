@@ -4,16 +4,14 @@ import type { LineWithPlayers } from "../../types";
 
 interface LinesGridProps {
   lines: LineWithPlayers[];
-  onEdit: (line: LineWithPlayers) => void;
-  onDelete: (line: LineWithPlayers) => void;
 }
 
-export default function LinesGrid({ lines, onEdit, onDelete }: LinesGridProps) {
+export default function LinesGrid({ lines }: LinesGridProps) {
   return (
     <Grid container spacing={3}>
       {lines.map((line) => (
         <Grid key={line.id} size={{ xs: 12, sm: 6, md: 4 }}>
-          <LineCard line={line} onEdit={onEdit} onDelete={onDelete} />
+          <LineCard line={line} />
         </Grid>
       ))}
     </Grid>
