@@ -24,7 +24,8 @@
     "loading": "Loading...",
     "submit": "Save",
     "show": "Show",
-    "hide": "Hide"
+    "hide": "Hide",
+    "moreActions": "More Actions"
   },
   "status": {
     "label": "Status",

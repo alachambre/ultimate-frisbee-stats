@@ -24,7 +24,8 @@
     "loading": "Chargement...",
     "submit": "Soumettre",
     "show": "Afficher",
-    "hide": "Masquer"
+    "hide": "Masquer",
+    "moreActions": "Plus d'actions"
   },
   "status": {
     "active": "Actif",

@@ -19,8 +19,11 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
+import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
+import CommentIcon from "@mui/icons-material/Comment";
 import { useTranslation } from "react-i18next";
 import type { PointWithPlayers } from "../../types";
+import { PointEventsHistory } from "./PointEventsHistory";
 
 interface PointHistoryItemProps {
   point: PointWithPlayers;
@@ -34,7 +37,8 @@ export default function PointHistoryItem({
   onDelete,
 }: PointHistoryItemProps) {
   const { t } = useTranslation(["points", "common"]);
-  const [expanded, setExpanded] = useState(false);
+  const [playersExpanded, setPlayersExpanded] = useState(false);
+  const [chronologyExpanded, setChronologyExpanded] = useState(false);
 
   const formatDuration = (seconds: number | null | undefined): string => {
     if (!seconds) return "N/A";
@@ -76,7 +80,7 @@ export default function PointHistoryItem({
     <Card variant="outlined">
       <CardContent>
         {/* Title row with icon and action buttons */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Box display="flex" alignItems="center" gap={1}>
             {point.starting_on_offense ? (
               <FlashOnIcon color="primary" />
@@ -85,6 +89,9 @@ export default function PointHistoryItem({
             )}
             <Typography variant="h6" fontWeight="bold">
               {t("points:history.point")} #{point.point_number}
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5, fontWeight: 'normal' }}>
+                ({t("points:tracker.duration")}: {formatDuration(point.duration_seconds)})
+              </Typography>
             </Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
@@ -107,7 +114,7 @@ export default function PointHistoryItem({
         </Box>
 
         {/* Status badges row */}
-        <Box display="flex" alignItems="center" gap={1} mb={1} flexWrap="wrap">
+        <Box display="flex" alignItems="center" gap={1} mb={2} flexWrap="wrap">
           {isCompleted && (
             <Chip
               icon={isWon ? <CheckCircleIcon /> : <CancelIcon />}
@@ -155,57 +162,39 @@ export default function PointHistoryItem({
           )}
         </Box>
 
-        <Box display="flex" gap={2} mb={1} alignItems="center" flexWrap="wrap">
-          <Typography variant="body2" color="text.secondary">
-            {point.starting_on_offense ? t("points:tracker.offense") : t("points:tracker.defense")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("points:tracker.duration", "Duration")}: <strong>{formatDuration(point.duration_seconds)}</strong>
-          </Typography>
-        </Box>
-
-        {/* Strategy */}
-        {point.strategy && (
-          <Box mb={1}>
-            <Typography variant="body2" color="text.secondary" component="span">
-              {t("points:tracker.strategy")}:{" "}
-            </Typography>
-            <Chip
-              label={point.strategy.name}
-              size="small"
-              variant="outlined"
-              sx={{ ml: 0.5 }}
-            />
-          </Box>
-        )}
-
-        {/* Additional fields */}
-        {(point.pull !== null || point.comments) && (
-          <Box mb={1}>
-            {point.pull !== null && !point.starting_on_offense && (
-              <Typography variant="body2" color="text.secondary">
-                Pull: <strong>{point.pull ? t("points:dialog.start.inbounds") : t("points:dialog.start.outOfBounds")}</strong>
-              </Typography>
+        {/* Strategy and Comments with icons */}
+        {(point.strategy || point.comments) && (
+          <Box mb={2}>
+            {point.strategy && (
+              <Box display="flex" alignItems="center" gap={0.5} mb={point.comments ? 1 : 0}>
+                <EmojiObjectsIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  {point.strategy.name}
+                </Typography>
+              </Box>
             )}
             {point.comments && (
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
-                {point.comments}
-              </Typography>
+              <Box display="flex" alignItems="flex-start" gap={0.5}>
+                <CommentIcon sx={{ fontSize: 18, color: 'text.secondary', mt: 0.25 }} />
+                <Typography variant="body2" color="text.secondary">
+                  {point.comments}
+                </Typography>
+              </Box>
             )}
           </Box>
         )}
 
         {/* Expandable player list */}
         <Accordion
-          expanded={expanded}
-          onChange={() => setExpanded(!expanded)}
+          expanded={playersExpanded}
+          onChange={() => setPlayersExpanded(!playersExpanded)}
           elevation={0}
-          sx={{ mt: 1 }}
+          sx={{ mt: 2 }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="body2">
-                {expanded ? t("common:action.hide") : t("common:action.show")} {t("common:players")}
+                {playersExpanded ? t("common:action.hide") : t("common:action.show")} {t("common:players")}
               </Typography>
               {(isMixityMen || isMixityWomen) && (
                 <Typography
@@ -252,6 +241,32 @@ export default function PointHistoryItem({
                 />
               ))}
             </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Expandable chronology */}
+        <Accordion
+          expanded={chronologyExpanded}
+          onChange={() => setChronologyExpanded(!chronologyExpanded)}
+          elevation={0}
+          sx={{ mt: 2 }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="body2">
+              {chronologyExpanded ? t("common:action.hide") : t("common:action.show")} {t("points:pointEvents")}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <PointEventsHistory
+              pointId={point.id}
+              startingOnOffense={point.starting_on_offense}
+              pointStartTime={point.start_datetime}
+              strategy={point.strategy}
+              pull={point.pull}
+              pointStatus={point.status}
+              endDateTime={point.end_datetime}
+              won={point.won}
+            />
           </AccordionDetails>
         </Accordion>
       </CardContent>

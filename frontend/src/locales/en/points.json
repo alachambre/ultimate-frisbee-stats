@@ -4,6 +4,8 @@
     "newPoint": "Start Point",
     "offense": "Offense",
     "defense": "Defense",
+    "inOffense": "in offense",
+    "inDefense": "in defense",
     "score": "Score!",
     "turnover": "Turnover",
     "complete": "Complete Point",
@@ -96,6 +98,8 @@
     "noPoints": "No points yet",
     "startFirst": "Start tracking your first point"
   },
+  "pointEvents": "Chronology",
+  "pointStart": "Point start",
   "recordCall": "Record Call",
   "recordTurnover": "Record Turnover",
   "resumeFromCall": "Resume from Call",

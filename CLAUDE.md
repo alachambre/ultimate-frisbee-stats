@@ -146,6 +146,23 @@ npm run build                       # Production build
 
 ## Known Issues
 
+### Test Coverage Gaps (Phase 7 UI Improvements)
+**What's tested ✅:**
+- LivePointTracker basic functionality (10 tests)
+- CallsList (13 tests)
+- TurnoversList (15 tests)
+- All 239 existing tests passing
+
+**What needs tests ⚠️:**
+- **PointEventsHistory component** - New unified chronology component (zero tests)
+  - Event sorting/merging logic (calls + turnovers by timestamp)
+  - Point start/scored event rendering
+  - Chronological ordering (most recent first)
+- **PointHistoryItem enhancements** - New collapsible chronology section not tested
+- **LivePointTracker UI changes** - More Actions menu, chronology integration
+
+**Note:** All existing functionality still works (239 tests passing). These are new features without dedicated test coverage yet.
+
 ## User Preferences
 - Clean, maintainable code with explanations of React/TypeScript concepts
 - Modern, polished UI (Material UI)

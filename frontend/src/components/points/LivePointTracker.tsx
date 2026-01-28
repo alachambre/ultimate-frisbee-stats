@@ -7,6 +7,11 @@ import {
   Chip,
   Divider,
   ButtonGroup,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -18,6 +23,7 @@ import CommentIcon from "@mui/icons-material/Comment";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
@@ -29,8 +35,7 @@ import AddCommentDialog from "../modals/AddCommentDialog";
 import SelectStrategyDialog from "../modals/SelectStrategyDialog";
 import { RecordCallDialog } from "../modals/RecordCallDialog";
 import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
-import { CallsList } from "./CallsList";
-import { TurnoversList } from "./TurnoversList";
+import { PointEventsHistory } from "./PointEventsHistory";
 import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Call } from "../../types";
 import { useQuery } from "@tanstack/react-query";
 import { getTurnoversByPoint } from "../../services/turnovers";
@@ -59,6 +64,7 @@ export default function LivePointTracker({
   const [isStrategyDialogOpen, setIsStrategyDialogOpen] = useState(false);
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
   const [isTurnoverDialogOpen, setIsTurnoverDialogOpen] = useState(false);
+  const [moreActionsAnchor, setMoreActionsAnchor] = useState<null | HTMLElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch turnovers for active point (needed for possession logic)
@@ -237,75 +243,133 @@ export default function LivePointTracker({
               </Box>
             )}
 
-            {/* Strategy and Comment buttons */}
-            <Box display="flex" justifyContent="center" gap={2} mt={2} flexWrap="wrap">
-              <Button
-                variant="outlined"
-                startIcon={<EmojiObjectsIcon />}
-                onClick={() => setIsStrategyDialogOpen(true)}
-                size="medium"
-              >
-                {currentPoint.strategy
-                  ? t("points:tracker.changeStrategy", "Change Strategy")
-                  : t("points:tracker.selectStrategy", "Select Strategy")}
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<CommentIcon />}
-                onClick={() => setIsCommentDialogOpen(true)}
-                size="medium"
-              >
-                {currentPoint.comments
-                  ? t("points:tracker.editComment", "Edit Comment")
-                  : t("points:tracker.addComment", "Add Comment")}
-              </Button>
-            </Box>
+            {/* Action buttons - Select Strategy (when not set) */}
+            {!currentPoint.strategy && (
+              <Box display="flex" justifyContent="center" mt={2}>
+                <Button
+                  variant="outlined"
+                  startIcon={<EmojiObjectsIcon />}
+                  onClick={() => setIsStrategyDialogOpen(true)}
+                  size="medium"
+                >
+                  {t("points:tracker.selectStrategy", "Select Strategy")}
+                </Button>
+              </Box>
+            )}
 
-            {/* Call and Turnover Tracking - only when point is running */}
-            {activePoint && activePoint.status === 'running' && (
+            {/* More Actions Menu */}
+            <Menu
+              anchorEl={moreActionsAnchor}
+              open={Boolean(moreActionsAnchor)}
+              onClose={() => setMoreActionsAnchor(null)}
+            >
+              {[
+                currentPoint.strategy && (
+                  <MenuItem
+                    key="change-strategy"
+                    onClick={() => {
+                      setIsStrategyDialogOpen(true);
+                      setMoreActionsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <EmojiObjectsIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>
+                      {t("points:tracker.changeStrategy", "Change Strategy")}
+                    </ListItemText>
+                  </MenuItem>
+                ),
+                <MenuItem
+                  key="comment"
+                  onClick={() => {
+                    setIsCommentDialogOpen(true);
+                    setMoreActionsAnchor(null);
+                  }}
+                >
+                  <ListItemIcon>
+                    <CommentIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>
+                    {currentPoint.comments
+                      ? t("points:tracker.editComment", "Edit Comment")
+                      : t("points:tracker.addComment", "Add Comment")}
+                  </ListItemText>
+                </MenuItem>,
+                activePoint && activePoint.status === 'running' && (
+                  <MenuItem
+                    key="record-call"
+                    onClick={() => {
+                      setIsCallDialogOpen(true);
+                      setMoreActionsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <PauseCircleIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>
+                      {t("points:recordCall")}
+                    </ListItemText>
+                  </MenuItem>
+                ),
+                activePoint && activePoint.status === 'running' && (
+                  <MenuItem
+                    key="record-turnover"
+                    onClick={() => {
+                      setIsTurnoverDialogOpen(true);
+                      setMoreActionsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <SwapHorizIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>
+                      {t("points:recordTurnover")}
+                    </ListItemText>
+                  </MenuItem>
+                )
+              ].filter(Boolean)}
+            </Menu>
+
+            {/* Display chronology for active points (running or scored) */}
+            {currentPoint && (
               <Box mt={2}>
-                <Box display="flex" justifyContent="center" gap={2} mb={2} flexWrap="wrap">
-                  <Button
-                    variant="outlined"
-                    startIcon={<PauseCircleIcon />}
-                    onClick={() => setIsCallDialogOpen(true)}
-                    size="medium"
-                  >
-                    {t("points:recordCall")}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<SwapHorizIcon />}
-                    onClick={() => setIsTurnoverDialogOpen(true)}
-                    size="medium"
-                  >
-                    {t("points:recordTurnover")}
-                  </Button>
-                </Box>
-
-                {/* Display lists if data exists */}
-                <CallsList pointId={activePoint.id} pointStartTime={activePoint.start_datetime} />
-                <TurnoversList
-                  pointId={activePoint.id}
-                  startingOnOffense={activePoint.starting_on_offense}
-                  pointStartTime={activePoint.start_datetime}
+                <PointEventsHistory
+                  pointId={currentPoint.id}
+                  startingOnOffense={currentPoint.starting_on_offense}
+                  pointStartTime={currentPoint.start_datetime}
+                  strategy={currentPoint.strategy}
+                  pull={currentPoint.pull}
+                  pointStatus={currentPoint.status}
+                  endDateTime={currentPoint.end_datetime}
+                  won={currentPoint.won}
                 />
               </Box>
             )}
 
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
               {currentPoint.status === "running" ? (
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<CheckCircleIcon />}
-                  onClick={() => setIsFinishDialogOpen(true)}
-                  disabled={hasPendingCall}
-                  size="large"
-                  title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : ""}
-                >
-                  {t("points:tracker.finish", "Finish Point")}
-                </Button>
+                <>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<CheckCircleIcon />}
+                    onClick={() => setIsFinishDialogOpen(true)}
+                    disabled={hasPendingCall}
+                    size="large"
+                    title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : ""}
+                  >
+                    {t("points:tracker.finish", "Finish Point")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<MoreVertIcon />}
+                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                    size="large"
+                  >
+                    {t("common:action.moreActions", "More Actions")}
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button
@@ -329,34 +393,15 @@ export default function LivePointTracker({
                   >
                     {t("points:tracker.complete")}
                   </Button>
-                </>
-              )}
-            </Box>
-
-            <Box mt={2}>
-              <Typography variant="body2" color="text.secondary">
-                {t("points:tracker.playersOnField", "Players on field")}: {currentPoint.players.length}
-              </Typography>
-              {/* Show strategy if selected */}
-              {currentPoint.strategy && (
-                <Box mt={1}>
-                  <Typography variant="body2" color="text.secondary" component="span">
-                    {t("points:tracker.strategy")}:{" "}
-                  </Typography>
-                  <Chip
-                    label={currentPoint.strategy.name}
-                    size="small"
+                  <Button
                     variant="outlined"
-                    color="primary"
-                    sx={{ ml: 0.5 }}
-                  />
-                </Box>
-              )}
-              {/* Show pull status if marked */}
-              {activePoint && !activePoint.starting_on_offense && activePoint.pull !== null && (
-                <Typography variant="body2" color="text.secondary" mt={1}>
-                  Pull: <strong>{activePoint.pull ? t("points:dialog.start.inbounds") : t("points:dialog.start.outOfBounds")}</strong>
-                </Typography>
+                    startIcon={<MoreVertIcon />}
+                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                    size="large"
+                  >
+                    {t("common:action.moreActions", "More Actions")}
+                  </Button>
+                </>
               )}
             </Box>
           </Box>
