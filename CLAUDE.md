@@ -13,16 +13,18 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `data-model-design.md` - Complete data model (9 entities)
 - `backend/README.md` - Backend API documentation
 - `frontend/README.md` - Frontend architecture
+- `LOGGING.md` - Backend logging guide for production debugging
 
 ## Current Status
 
 **Phase 6.5 Complete** - Full internationalization (i18n) with French/English support:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 7 entities (teams, players, competitions, games, points, lines, strategies)
-- **Backend**: Complete REST API for all entities, SQLite with foreign keys, domain-organized code structure
+- **Backend**: Complete REST API for all entities, SQLite with foreign keys, domain-organized code structure, production logging for debugging
 - **Frontend**: Full CRUD interfaces for all entities, mobile-first design, comprehensive test coverage, full i18n support
 - **Point Tracking**: 4-status workflow (ready→running→scored→completed), ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
 - **UI**: Navy/sky blue theme (#1e3a8a → #38bdf8), consistent card design, responsive layouts
 - **i18n**: React-i18next with 9 translation namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies), language selector in AppBar, sport terms stay in English per GLOSSARY.md
+- **Logging**: Essential logs for production debugging (errors, key operations, lifecycle events) - see LOGGING.md
 
 **Key Features:**
 - Competition & roster management with gender field (M/W)
@@ -70,7 +72,7 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (273 tests)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (279 tests - 100% passing)
 - **Frontend**: Vitest + MSW + React Testing Library (185 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
@@ -97,7 +99,7 @@ backend/app/
 ```bash
 cd backend
 source venv/bin/activate
-pytest tests/ -v                    # Run all 273 tests
+pytest tests/ -v                    # Run all 279 tests (100% passing ✅)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -114,6 +116,8 @@ npm run build                       # Production build
 
 ### Backend
 - `backend/app/database.py` - SQLite config with foreign key enforcement
+- `backend/app/logging_config.py` - Logging configuration for production debugging
+- `backend/app/main.py` - FastAPI app with global exception handler and lifecycle logging
 - `backend/app/models/` - SQLAlchemy models organized by domain (base, team, competition, player, game, point, line, strategy)
 - `backend/app/schemas/` - Pydantic schemas organized by domain (enums, team, competition, player, game, point, line, strategy)
 - `backend/app/crud/` - CRUD operations organized by domain (teams, competitions, players, games, points, lines, strategies)

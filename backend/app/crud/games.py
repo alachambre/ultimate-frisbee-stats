@@ -1,35 +1,47 @@
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
 from datetime import datetime, timezone
 from app import models, schemas
+from app.logging_config import get_logger
+
+logger = get_logger("crud.games")
 
 
 def create_game(db: Session, game: schemas.GameCreate) -> models.Game:
-    db_game = models.Game(
-        competition_id=game.competition_id,
-        opponent_name=game.opponent_name,
-        date=game.date,
-        status=models.GameStatusEnum.ready,
-        comments=game.comments
-    )
+    try:
+        db_game = models.Game(
+            competition_id=game.competition_id,
+            opponent_name=game.opponent_name,
+            date=game.date,
+            status=models.GameStatusEnum.ready,
+            comments=game.comments
+        )
 
-    # Add players to game if provided (must be from competition roster)
-    if game.player_ids:
-        from app.crud.competitions import get_competition
-        competition = get_competition(db, game.competition_id)
-        if competition:
-            roster_player_ids = {p.id for p in competition.players}
-            valid_player_ids = [pid for pid in game.player_ids if pid in roster_player_ids]
-            if valid_player_ids:
-                players = db.query(models.Player).filter(
-                    models.Player.id.in_(valid_player_ids)
-                ).all()
-                db_game.players = players
+        # Add players to game if provided (must be from competition roster)
+        if game.player_ids:
+            from app.crud.competitions import get_competition
+            competition = get_competition(db, game.competition_id)
+            if competition:
+                roster_player_ids = {p.id for p in competition.players}
+                valid_player_ids = [pid for pid in game.player_ids if pid in roster_player_ids]
+                if valid_player_ids:
+                    players = db.query(models.Player).filter(
+                        models.Player.id.in_(valid_player_ids)
+                    ).all()
+                    db_game.players = players
 
-    db.add(db_game)
-    db.commit()
-    db.refresh(db_game)
-    return db_game
+        db.add(db_game)
+        db.commit()
+        db.refresh(db_game)
+        return db_game
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(
+            f"Database error creating game for competition {game.competition_id}: {e}",
+            exc_info=True
+        )
+        raise
 
 
 def get_game(db: Session, game_id: int) -> Optional[models.Game]:
@@ -58,22 +70,30 @@ def get_games_by_team(db: Session, team_id: int) -> List[models.Game]:
 def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> Optional[models.Game]:
     db_game = get_game(db, game_id)
     if db_game:
-        if game_update.opponent_name is not None:
-            db_game.opponent_name = game_update.opponent_name
-        if game_update.status is not None:
-            # Convert GameStatus enum to GameStatusEnum
-            new_status = models.GameStatusEnum[game_update.status.value]
-            old_status = db_game.status
+        try:
+            if game_update.opponent_name is not None:
+                db_game.opponent_name = game_update.opponent_name
+            if game_update.status is not None:
+                # Convert GameStatus enum to GameStatusEnum
+                new_status = models.GameStatusEnum[game_update.status.value]
+                old_status = db_game.status
 
-            # Set end timestamp when game ends
-            if new_status == models.GameStatusEnum.ended and old_status == models.GameStatusEnum.started:
-                db_game.end_datetime = datetime.now(timezone.utc)
+                # Set end timestamp when game ends
+                if new_status == models.GameStatusEnum.ended and old_status == models.GameStatusEnum.started:
+                    db_game.end_datetime = datetime.now(timezone.utc)
 
-            db_game.status = new_status
-        if game_update.comments is not None:
-            db_game.comments = game_update.comments
-        db.commit()
-        db.refresh(db_game)
+                db_game.status = new_status
+            if game_update.comments is not None:
+                db_game.comments = game_update.comments
+            db.commit()
+            db.refresh(db_game)
+        except SQLAlchemyError as e:
+            db.rollback()
+            logger.error(
+                f"Database error updating game {game_id}: {e}",
+                exc_info=True
+            )
+            raise
     return db_game
 
 

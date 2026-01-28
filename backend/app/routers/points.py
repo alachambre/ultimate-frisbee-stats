@@ -4,6 +4,9 @@ from typing import List
 
 from app import schemas, crud
 from app.database import get_db
+from app.logging_config import get_logger
+
+logger = get_logger("routers.points")
 
 router = APIRouter(
     prefix="/points",
@@ -16,19 +19,34 @@ def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
     # Verify game exists and is in progress
     game = crud.get_game(db, point.game_id)
     if not game:
+        logger.warning(f"Failed to create point: game {point.game_id} not found")
         raise HTTPException(status_code=404, detail="Game not found")
     if game.status.value == "ended":
+        logger.warning(
+            f"Failed to create point: game {point.game_id} has ended"
+        )
         raise HTTPException(status_code=400, detail="Cannot add points to an ended game")
 
     # Verify strategy exists if provided
     if point.strategy_id:
         strategy = crud.get_strategy(db, point.strategy_id)
         if not strategy:
+            logger.warning(
+                f"Failed to create point: strategy {point.strategy_id} not found"
+            )
             raise HTTPException(status_code=404, detail="Strategy not found")
 
     try:
-        return crud.create_point(db, point)
+        created_point = crud.create_point(db, point)
+        logger.info(
+            f"Point created: id={created_point.id}, game={point.game_id}, "
+            f"offense={point.starting_on_offense}, players={len(point.player_ids)}"
+        )
+        return created_point
     except ValueError as e:
+        logger.warning(
+            f"Failed to create point for game {point.game_id}: {str(e)}"
+        )
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -45,9 +63,16 @@ def update_point(point_id: int, point_update: schemas.PointUpdate, db: Session =
     try:
         point = crud.update_point(db, point_id, point_update)
         if not point:
+            logger.warning(f"Failed to update point: point {point_id} not found")
             raise HTTPException(status_code=404, detail="Point not found")
+
+        # Log status changes (important for tracking point lifecycle)
+        if point_update.status:
+            logger.info(f"Point {point_id} status changed to {point_update.status.value}")
+
         return point
     except ValueError as e:
+        logger.warning(f"Failed to update point {point_id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -63,9 +88,13 @@ def finish_point(point_id: int, finish_data: schemas.PointFinish, db: Session = 
     try:
         point = crud.finish_point(db, point_id, finish_data)
         if not point:
+            logger.warning(f"Failed to finish point: point {point_id} not found")
             raise HTTPException(status_code=404, detail="Point not found")
+
+        logger.info(f"Point {point_id} finished: won={finish_data.won}")
         return point
     except ValueError as e:
+        logger.warning(f"Failed to finish point {point_id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -74,8 +103,12 @@ def cancel_point(point_id: int, db: Session = Depends(get_db)):
     try:
         success = crud.cancel_point(db, point_id)
         if not success:
+            logger.warning(f"Failed to cancel point: point {point_id} not found")
             raise HTTPException(status_code=404, detail="Point not found")
+
+        logger.info(f"Point {point_id} cancelled")
     except ValueError as e:
+        logger.warning(f"Failed to cancel point {point_id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 

@@ -5,6 +5,9 @@ from pydantic import BaseModel
 
 from app import schemas, crud
 from app.database import get_db
+from app.logging_config import get_logger
+
+logger = get_logger("routers.games")
 
 router = APIRouter(
     prefix="/games",
@@ -34,6 +37,9 @@ def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
     # Verify competition exists
     competition = crud.get_competition(db, game.competition_id)
     if not competition:
+        logger.warning(
+            f"Failed to create game: competition {game.competition_id} not found"
+        )
         raise HTTPException(status_code=404, detail="Competition not found")
 
     # If no players specified, use all competition roster players
@@ -44,12 +50,20 @@ def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
         roster_player_ids = {p.id for p in competition.players}
         invalid_players = set(game.player_ids) - roster_player_ids
         if invalid_players:
+            logger.warning(
+                f"Failed to create game: players {invalid_players} not in competition {game.competition_id} roster"
+            )
             raise HTTPException(
                 status_code=400,
                 detail=f"Players {invalid_players} not found in competition roster"
             )
 
-    return crud.create_game(db, game)
+    created_game = crud.create_game(db, game)
+    logger.info(
+        f"Game created: id={created_game.id}, competition={game.competition_id}, "
+        f"opponent={game.opponent_name}, players={len(game.player_ids)}"
+    )
+    return created_game
 
 
 @router.get("/{game_id}", response_model=schemas.GameDetail)
@@ -64,7 +78,13 @@ def get_game(game_id: int, db: Session = Depends(get_db)):
 def update_game(game_id: int, game_update: schemas.GameUpdate, db: Session = Depends(get_db)):
     game = crud.update_game(db, game_id, game_update)
     if not game:
+        logger.warning(f"Failed to update game: game {game_id} not found")
         raise HTTPException(status_code=404, detail="Game not found")
+
+    # Log status changes (important for tracking game lifecycle)
+    if game_update.status:
+        logger.info(f"Game {game_id} status changed to {game_update.status.value}")
+
     return game
 
 
@@ -72,7 +92,10 @@ def update_game(game_id: int, game_update: schemas.GameUpdate, db: Session = Dep
 def finish_game(game_id: int, db: Session = Depends(get_db)):
     game = crud.finish_game(db, game_id)
     if not game:
+        logger.warning(f"Failed to finish game: game {game_id} not found")
         raise HTTPException(status_code=404, detail="Game not found")
+
+    logger.info(f"Game {game_id} finished")
     return game
 
 
