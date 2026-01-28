@@ -14,6 +14,8 @@ from .game import Game
 from .point import Point
 from .line import Line
 from .strategy import Strategy
+from .call import Call
+from .turnover import Turnover
 
 __all__ = [
     "Base",
@@ -33,4 +35,6 @@ __all__ = [
     "Point",
     "Line",
     "Strategy",
+    "Call",
+    "Turnover",
 ]

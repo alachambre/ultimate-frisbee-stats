@@ -168,3 +168,36 @@ def sample_defense_strategy(db_session):
         )
     )
     return strategy
+
+
+@pytest.fixture
+def sample_player(db_session, sample_team):
+    """Create a single sample player for testing"""
+    from app.crud import create_player
+    from app.schemas import PlayerCreate, Gender
+
+    player = create_player(
+        db_session,
+        PlayerCreate(team_id=sample_team.id, name="Test Player", number=1, gender=Gender.M)
+    )
+    return player
+
+
+@pytest.fixture
+def sample_point(db_session, sample_game, sample_players):
+    """Create a sample point for testing"""
+    from app.crud import create_point
+    from app.schemas import PointCreate
+
+    # Create a point with 7 players
+    player_ids = [p.id for p in sample_players]
+    point = create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            point_number=1,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+    return point

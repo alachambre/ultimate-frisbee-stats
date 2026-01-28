@@ -14,6 +14,8 @@ from .game import Game, GameCreate, GameUpdate, GameWithScore, GameDetail
 from .point import Point, PointCreate, PointUpdate, PointFinish, PointWithPlayers
 from .line import Line, LineCreate, LineUpdate, LineWithPlayers
 from .strategy import Strategy, StrategyCreate, StrategyUpdate
+from .call import Call, CallCreate, CallUpdate
+from .turnover import Turnover, TurnoverCreate, TurnoverUpdate, TurnoverWithPlayer
 
 # Rebuild models with forward references after all models are imported
 TeamWithPlayers.model_rebuild()
@@ -22,6 +24,7 @@ GameWithScore.model_rebuild()
 GameDetail.model_rebuild()
 PointWithPlayers.model_rebuild()
 LineWithPlayers.model_rebuild()
+TurnoverWithPlayer.model_rebuild()
 
 __all__ = [
     # Enums
@@ -66,4 +69,13 @@ __all__ = [
     "Strategy",
     "StrategyCreate",
     "StrategyUpdate",
+    # Calls
+    "Call",
+    "CallCreate",
+    "CallUpdate",
+    # Turnovers
+    "Turnover",
+    "TurnoverCreate",
+    "TurnoverUpdate",
+    "TurnoverWithPlayer",
 ]

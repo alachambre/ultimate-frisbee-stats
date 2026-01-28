@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 import logging
 
 from app.database import init_db
-from app.routers import teams, players, games, points, competitions, lines, strategies
+from app.routers import teams, players, games, points, competitions, lines, strategies, calls, turnovers
 from app.logging_config import setup_logging, get_logger
 
 # Initialize logging
@@ -76,3 +76,5 @@ app.include_router(games.router)
 app.include_router(points.router)
 app.include_router(lines.router)
 app.include_router(strategies.router)
+app.include_router(calls.router)
+app.include_router(turnovers.router)

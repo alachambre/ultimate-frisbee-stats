@@ -73,6 +73,23 @@ from app.crud.strategies import (
     delete_strategy,
 )
 
+from app.crud.calls import (
+    create_call,
+    get_call,
+    get_calls_by_point,
+    update_call,
+    delete_call,
+)
+
+from app.crud.turnovers import (
+    create_turnover,
+    get_turnover,
+    get_turnovers_by_point,
+    get_turnovers_by_player,
+    update_turnover,
+    delete_turnover,
+)
+
 __all__ = [
     # Teams
     "create_team",
@@ -132,4 +149,17 @@ __all__ = [
     "get_strategies",
     "update_strategy",
     "delete_strategy",
+    # Calls
+    "create_call",
+    "get_call",
+    "get_calls_by_point",
+    "update_call",
+    "delete_call",
+    # Turnovers
+    "create_turnover",
+    "get_turnover",
+    "get_turnovers_by_point",
+    "get_turnovers_by_player",
+    "update_turnover",
+    "delete_turnover",
 ]

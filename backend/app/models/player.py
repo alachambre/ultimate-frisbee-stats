@@ -24,3 +24,4 @@ class Player(Base):
     competitions = relationship("Competition", secondary=competition_players, back_populates="players")
     lines = relationship("Line", secondary=line_players, back_populates="players")
     games = relationship("Game", secondary=game_players, back_populates="players")
+    turnovers = relationship("Turnover", back_populates="player")

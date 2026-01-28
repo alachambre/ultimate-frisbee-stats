@@ -29,3 +29,5 @@ class Point(Base):
     game = relationship("Game", back_populates="points")
     strategy = relationship("Strategy", back_populates="points")
     players = relationship("Player", secondary=point_players, back_populates="points")
+    calls = relationship("Call", back_populates="point", cascade="all, delete-orphan")
+    turnovers = relationship("Turnover", back_populates="point", cascade="all, delete-orphan")
