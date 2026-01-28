@@ -62,13 +62,13 @@ export default function CompetitionsPage() {
       {teams && teams.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>{t("common:action.filter")} by Team</InputLabel>
+            <InputLabel>{t("competitions:page.filterByTeam")}</InputLabel>
             <Select
               value={selectedTeamId}
-              label={`${t("common:action.filter")} by Team`}
+              label={t("competitions:page.filterByTeam")}
               onChange={(e) => setSelectedTeamId(e.target.value as number | "all")}
             >
-              <MenuItem value="all">All Teams</MenuItem>
+              <MenuItem value="all">{t("competitions:page.allTeams")}</MenuItem>
               {teams.map((team) => (
                 <MenuItem key={team.id} value={team.id}>
                   {team.name}

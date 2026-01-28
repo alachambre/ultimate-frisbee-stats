@@ -2,6 +2,11 @@
   "page": {
     "title": "Matchs",
     "newGame": "Nouveau match",
+    "filterByTeam": "Filtrer par équipe",
+    "filterByCompetition": "Filtrer par compétition",
+    "allTeams": "Toutes les équipes",
+    "allCompetitions": "Toutes les compétitions",
+    "allFromTeam": "Toutes de l'équipe",
     "empty": {
       "title": "Aucun match pour le moment",
       "description": "Créez votre premier match pour commencer",
@@ -23,6 +28,9 @@
     "points": "Points",
     "startGame": "Démarrer le match",
     "endGame": "Terminer le match",
+    "gameDuration": "Durée du match",
+    "dateNotSet": "Date non définie",
+    "comments": "Commentaires",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce match ?",
     "deleteConfirmTitle": "Confirmer la suppression",
     "endGameConfirm": "Marquer le match comme terminé ?",
@@ -31,7 +39,17 @@
     "deleteGame": "Supprimer le match",
     "deleteGameButton": "Supprimer le match",
     "addPlayers": "Ajouter des joueurs",
-    "removePlayers": "Retirer des joueurs"
+    "removePlayers": "Retirer des joueurs",
+    "deletePointTitle": "Supprimer le point ?",
+    "deletePointConfirm": "Supprimer le point #{{pointNumber}} ? Cette action est irréversible.",
+    "deletePointError": "Erreur lors de la suppression du point. Veuillez réessayer.",
+    "deletePoint": "Supprimer le point",
+    "deletingPoint": "Suppression...",
+    "removePlayerTitle": "Retirer le joueur du match ?",
+    "removePlayerConfirm": "Retirer \"{{playerName}}\" de ce match ? Cela ne supprimera pas le joueur de l'effectif de la compétition.",
+    "removePlayerError": "Erreur lors du retrait du joueur du match. Veuillez réessayer.",
+    "removePlayer": "Retirer le joueur",
+    "removingPlayer": "Retrait..."
   },
   "modal": {
     "create": {
@@ -42,7 +60,9 @@
       "title": "Modifier le match"
     },
     "addPlayers": {
-      "title": "Ajouter des joueurs au match"
+      "title": "Ajouter des joueurs au match",
+      "loading": "Chargement des joueurs...",
+      "empty": "Tous les joueurs de l'effectif sont déjà ajoutés à ce match"
     }
   },
   "form": {

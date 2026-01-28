@@ -1,11 +1,31 @@
 {
-  "page": {
-    "title": "Lignes",
-    "createLine": "Nouvelle ligne"
-  },
   "detail": {
+    "loading": "Chargement de la ligne...",
+    "error": "Erreur lors du chargement de la ligne. Veuillez réessayer.",
+    "backTo": "Retour à {{teamName}}",
+    "team": "Équipe",
+    "teamLoading": "Chargement...",
+    "teamLabel": "Équipe :",
+    "playersCount": "{{count}} joueur",
+    "playersCount_plural": "{{count}} joueurs",
     "players": "Joueurs",
-    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette ligne ?"
+    "addPlayers": "Ajouter des joueurs",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer la ligne ?",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer \"{{lineName}}\" ? Cette action est irréversible.",
+    "deleteError": "Erreur lors de la suppression de la ligne. Veuillez réessayer.",
+    "deleteLine": "Supprimer la ligne",
+    "deleting": "Suppression...",
+    "men": "Hommes",
+    "women": "Femmes",
+    "noMalePlayers": "Aucun joueur masculin pour le moment",
+    "noFemalePlayers": "Aucun joueur féminin pour le moment",
+    "removePlayerTitle": "Retirer le joueur de la ligne ?",
+    "removePlayerConfirm": "Êtes-vous sûr de vouloir retirer \"{{playerName}}\" de cette ligne ? Cela ne supprimera pas le joueur de l'équipe.",
+    "removePlayerError": "Erreur lors du retrait du joueur de la ligne. Veuillez réessayer.",
+    "removePlayer": "Retirer le joueur",
+    "removing": "Retrait..."
   },
   "modal": {
     "create": {
@@ -16,7 +36,9 @@
       "title": "Modifier la ligne"
     },
     "addPlayers": {
-      "title": "Ajouter des joueurs à la ligne"
+      "title": "Ajouter des joueurs à la ligne",
+      "loading": "Chargement des joueurs...",
+      "empty": "Tous les joueurs sont déjà ajoutés à cette ligne"
     }
   },
   "form": {

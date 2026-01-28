@@ -2,6 +2,9 @@
   "page": {
     "title": "Strategies",
     "newStrategy": "New Strategy",
+    "filter": {
+      "all": "All"
+    },
     "empty": {
       "title": "No strategies yet",
       "description": "Create your first strategy to get started",

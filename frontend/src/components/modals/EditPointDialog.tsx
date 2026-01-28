@@ -159,10 +159,6 @@ export default function EditPointDialog({
 
         {/* Players Section */}
         <Box>
-          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
-            {t("points:tracker.playersOnField", "Players on the Field")}
-          </Typography>
-
           <PointPlayerSelection
             teamId={teamId}
             players={players}

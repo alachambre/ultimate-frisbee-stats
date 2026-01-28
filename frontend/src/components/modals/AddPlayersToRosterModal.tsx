@@ -28,6 +28,7 @@ export default function AddPlayersToRosterModal({
       fetchPlayers={() => getTeamPlayers(teamId)}
       addPlayers={(playerIds) => addPlayersToRoster(competitionId, playerIds)}
       invalidateQueries={[["competition", String(competitionId)]]}
+      loadingMessage={t('competitions:modal.addPlayers.loading')}
       emptyMessage={t('competitions:modal.addPlayers.allInRoster')}
     />
   );

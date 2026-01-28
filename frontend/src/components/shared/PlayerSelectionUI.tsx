@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -36,6 +37,7 @@ export default function PlayerSelectionUI({
   onSelectAllWomen,
   onClearAll,
 }: PlayerSelectionUIProps) {
+  const { t } = useTranslation("common");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"men" | "women">("men");
 
@@ -124,12 +126,12 @@ export default function PlayerSelectionUI({
         sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}
       >
         <Tab
-          label={`Men (${menPlayers.length})`}
+          label={`${t("common:labels.men")} (${menPlayers.length})`}
           value="men"
           sx={{ textTransform: "none" }}
         />
         <Tab
-          label={`Women (${womenPlayers.length})`}
+          label={`${t("common:labels.women")} (${womenPlayers.length})`}
           value="women"
           sx={{ textTransform: "none" }}
         />
@@ -143,7 +145,7 @@ export default function PlayerSelectionUI({
           onClick={onClearAll}
           disabled={selectedIds.length === 0}
         >
-          Clear All
+          {t("common:labels.clearAll")}
         </Button>
         {activeTab === "men" && menPlayers.length > 0 && (
           <Button
@@ -160,7 +162,7 @@ export default function PlayerSelectionUI({
               },
             }}
           >
-            All Men
+            {t("common:labels.allMen")}
           </Button>
         )}
         {activeTab === "women" && womenPlayers.length > 0 && (
@@ -178,7 +180,7 @@ export default function PlayerSelectionUI({
               },
             }}
           >
-            All Women
+            {t("common:labels.allWomen")}
           </Button>
         )}
       </Stack>

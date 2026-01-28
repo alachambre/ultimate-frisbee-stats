@@ -2,6 +2,11 @@
   "page": {
     "title": "Games",
     "newGame": "New Game",
+    "filterByTeam": "Filter by Team",
+    "filterByCompetition": "Filter by Competition",
+    "allTeams": "All Teams",
+    "allCompetitions": "All Competitions",
+    "allFromTeam": "All from Team",
     "empty": {
       "title": "No games yet",
       "description": "Get started by creating your first game",
@@ -23,6 +28,9 @@
     "points": "Points",
     "startGame": "Start Game",
     "endGame": "End Game",
+    "gameDuration": "Game Duration",
+    "dateNotSet": "Date not set",
+    "comments": "Comments",
     "deleteConfirm": "Are you sure you want to delete this game?",
     "deleteConfirmTitle": "Confirm deletion",
     "endGameConfirm": "Mark game as ended?",
@@ -31,7 +39,17 @@
     "deleteGame": "Delete Game",
     "deleteGameButton": "Delete Game",
     "addPlayers": "Add Players",
-    "removePlayers": "Remove Players"
+    "removePlayers": "Remove Players",
+    "deletePointTitle": "Delete Point?",
+    "deletePointConfirm": "Delete Point #{{pointNumber}}? This cannot be undone.",
+    "deletePointError": "Error deleting point. Please try again.",
+    "deletePoint": "Delete Point",
+    "deletingPoint": "Deleting...",
+    "removePlayerTitle": "Remove Player from Game?",
+    "removePlayerConfirm": "Remove \"{{playerName}}\" from this game? This will not delete the player from the competition roster.",
+    "removePlayerError": "Error removing player from game. Please try again.",
+    "removePlayer": "Remove Player",
+    "removingPlayer": "Removing..."
   },
   "modal": {
     "create": {
@@ -42,7 +60,9 @@
       "title": "Edit Game"
     },
     "addPlayers": {
-      "title": "Add Players to Game"
+      "title": "Add Players to Game",
+      "loading": "Loading players...",
+      "empty": "All roster players are already added to this game"
     }
   },
   "form": {

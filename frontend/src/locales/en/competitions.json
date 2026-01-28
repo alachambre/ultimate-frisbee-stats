@@ -2,6 +2,8 @@
   "page": {
     "title": "Competitions",
     "newCompetition": "New Competition",
+    "filterByTeam": "Filter by Team",
+    "allTeams": "All Teams",
     "empty": {
       "title": "No competitions yet",
       "description": "Get started by creating your first competition",
@@ -9,10 +11,34 @@
     }
   },
   "detail": {
+    "loading": "Loading competition...",
+    "error": "Error loading competition. Please try again.",
+    "backToCompetitions": "Back to Competitions",
+    "edit": "Edit",
+    "delete": "Delete",
     "info": "Competition Info",
     "roster": "Roster",
+    "rosterCount": "Roster ({{count}})",
+    "showRoster": "Show roster",
+    "hideRoster": "Hide roster",
+    "addPlayers": "Add Players",
     "games": "Games",
-    "deleteConfirm": "Are you sure you want to delete this competition?"
+    "gamesCount": "Games ({{count}})",
+    "addGame": "Add Game",
+    "men": "Men",
+    "women": "Women",
+    "noMalePlayers": "No male players yet",
+    "noFemalePlayers": "No female players yet",
+    "deleteTitle": "Delete Competition?",
+    "deleteConfirm": "Are you sure you want to delete \"{{competitionName}}\"? This will also delete all games for this competition. This action cannot be undone.",
+    "deleteError": "Error deleting competition. Please try again.",
+    "deleteCompetition": "Delete Competition",
+    "deleting": "Deleting...",
+    "removePlayerTitle": "Remove Player from Roster?",
+    "removePlayerConfirm": "Are you sure you want to remove \"{{playerName}}\" from this competition roster? This will not delete the player from the team.",
+    "removePlayerError": "Error removing player from roster. Please try again.",
+    "removePlayer": "Remove Player",
+    "removing": "Removing..."
   },
   "modal": {
     "create": {
@@ -24,6 +50,7 @@
     },
     "addPlayers": {
       "title": "Add Players to Roster",
+      "loading": "Loading players...",
       "allInRoster": "All team players are already in the roster"
     }
   },

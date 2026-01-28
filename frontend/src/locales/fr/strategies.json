@@ -1,6 +1,10 @@
 {
   "page": {
     "title": "Stratégies",
+    "newStrategy": "Créer une stratégie",
+    "filter": {
+      "all": "Toutes"
+    },
     "empty": {
       "title": "Aucune stratégie pour le moment",
       "description": "Créez votre première stratégie pour commencer",
@@ -20,8 +24,8 @@
     "name": "Nom de la stratégie",
     "namePlaceholder": "Entrez le nom de la stratégie",
     "type": "Type",
-    "offense": "Offense",
-    "defense": "Defense",
+    "offense": "Attaque",
+    "defense": "Défense",
     "description": "Description",
     "descriptionPlaceholder": "Entrez la description de la stratégie (optionnel)",
     "team": "Équipe",

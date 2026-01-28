@@ -1,11 +1,31 @@
 {
-  "page": {
-    "title": "Lines",
-    "createLine": "New Line"
-  },
   "detail": {
+    "loading": "Loading line...",
+    "error": "Error loading line. Please try again.",
+    "backTo": "Back to {{teamName}}",
+    "team": "Team",
+    "teamLoading": "Loading...",
+    "teamLabel": "Team:",
+    "playersCount": "{{count}} player",
+    "playersCount_plural": "{{count}} players",
     "players": "Players",
-    "deleteConfirm": "Are you sure you want to delete this line?"
+    "addPlayers": "Add Players",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete Line?",
+    "deleteConfirm": "Are you sure you want to delete \"{{lineName}}\"? This action cannot be undone.",
+    "deleteError": "Error deleting line. Please try again.",
+    "deleteLine": "Delete Line",
+    "deleting": "Deleting...",
+    "men": "Men",
+    "women": "Women",
+    "noMalePlayers": "No male players yet",
+    "noFemalePlayers": "No female players yet",
+    "removePlayerTitle": "Remove Player from Line?",
+    "removePlayerConfirm": "Are you sure you want to remove \"{{playerName}}\" from this line? This will not delete the player from the team.",
+    "removePlayerError": "Error removing player from line. Please try again.",
+    "removePlayer": "Remove Player",
+    "removing": "Removing..."
   },
   "modal": {
     "create": {
@@ -16,7 +36,9 @@
       "title": "Edit Line"
     },
     "addPlayers": {
-      "title": "Add Players to Line"
+      "title": "Add Players to Line",
+      "loading": "Loading players...",
+      "empty": "All players are already added to this line"
     }
   },
   "form": {

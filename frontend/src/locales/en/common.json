@@ -7,6 +7,9 @@
     "save": "Save Changes",
     "saving": "Saving...",
     "add": "Add",
+    "adding": "Adding...",
+    "addPlayers": "Add {{count}} Player",
+    "addPlayers_plural": "Add {{count}} Players",
     "remove": "Remove",
     "close": "Close",
     "confirm": "Confirm",
@@ -31,7 +34,9 @@
     "scored": "Scored",
     "completed": "Completed",
     "started": "Started",
-    "ended": "Ended"
+    "ended": "Ended",
+    "ongoing": "Ongoing",
+    "planned": "Planned"
   },
   "labels": {
     "name": "Name",
@@ -44,6 +49,11 @@
     "gender": "Gender",
     "male": "Male",
     "female": "Female",
+    "men": "Men",
+    "women": "Women",
+    "allMen": "All Men",
+    "allWomen": "All Women",
+    "clearAll": "Clear All",
     "required": "Required",
     "optional": "Optional"
   },
@@ -51,7 +61,8 @@
     "generic": "An error occurred. Please try again.",
     "loading": "Failed to load data",
     "saving": "Failed to save changes",
-    "deleting": "Failed to delete"
+    "deleting": "Failed to delete",
+    "addingPlayers": "Error adding players. Please try again."
   },
   "messages": {
     "error": "An error occurred",

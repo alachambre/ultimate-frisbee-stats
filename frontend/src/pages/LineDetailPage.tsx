@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Container,
   Box,
@@ -35,6 +36,7 @@ import AddPlayersToLineModal from "../components/modals/AddPlayersToLineModal";
 import type { Player } from "../types";
 
 export default function LineDetailPage() {
+  const { t } = useTranslation(["lines", "common"]);
   const { lineId } = useParams<{ lineId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -81,11 +83,11 @@ export default function LineDetailPage() {
   });
 
   if (isLoading) {
-    return <LoadingState message="Loading line..." />;
+    return <LoadingState message={t("lines:detail.loading")} />;
   }
 
   if (error || !line) {
-    return <ErrorState message="Error loading line. Please try again." />;
+    return <ErrorState message={t("lines:detail.error")} />;
   }
 
   const handleDelete = () => {
@@ -112,7 +114,7 @@ export default function LineDetailPage() {
           startIcon={<ArrowBackIcon />}
           sx={{ mb: 2 }}
         >
-          Back to {team?.name || "Team"}
+          {t("lines:detail.backTo", { teamName: team?.name || t("lines:detail.team") })}
         </Button>
         <Box
           display="flex"
@@ -127,7 +129,7 @@ export default function LineDetailPage() {
                 {line.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                ({line.players.length} players)
+                ({t("lines:detail.playersCount", { count: line.players.length })})
               </Typography>
             </Box>
             {line.description && (
@@ -138,12 +140,12 @@ export default function LineDetailPage() {
             <Box display="flex" alignItems="center" gap={1}>
               <GroupsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
               <Typography variant="body2" color="text.secondary">
-                Team:{" "}
+                {t("lines:detail.teamLabel")}{" "}
                 <Link
                   to={`/teams/${line.team_id}`}
                   style={{ textDecoration: "none", color: "inherit", fontWeight: "bold" }}
                 >
-                  {team?.name || "Loading..."}
+                  {team?.name || t("lines:detail.teamLoading")}
                 </Link>
               </Typography>
             </Box>
@@ -154,7 +156,7 @@ export default function LineDetailPage() {
               startIcon={<EditIcon />}
               onClick={() => setIsEditModalOpen(true)}
             >
-              Edit
+              {t("lines:detail.edit")}
             </Button>
             <Button
               variant="outlined"
@@ -162,7 +164,7 @@ export default function LineDetailPage() {
               startIcon={<DeleteIcon />}
               onClick={() => setIsDeleteConfirmOpen(true)}
             >
-              Delete
+              {t("lines:detail.delete")}
             </Button>
           </Box>
         </Box>
@@ -173,14 +175,14 @@ export default function LineDetailPage() {
         <Box p={3} borderBottom="1px solid" borderColor="divider">
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">
-              Players ({line.players.length})
+              {t("lines:detail.players")} ({line.players.length})
             </Typography>
             <Button
               variant="contained"
               startIcon={<PersonAddIcon />}
               onClick={() => setIsAddPlayersModalOpen(true)}
             >
-              Add Players
+              {t("lines:detail.addPlayers")}
             </Button>
           </Box>
         </Box>
@@ -213,7 +215,7 @@ export default function LineDetailPage() {
                       mb: 2,
                     }}
                   >
-                    Men ({line.players.filter((p) => p.gender === "M").length})
+                    {t("lines:detail.men")} ({line.players.filter((p) => p.gender === "M").length})
                   </Typography>
                   {line.players.filter((p) => p.gender === "M").length === 0 ? (
                     <Typography
@@ -221,7 +223,7 @@ export default function LineDetailPage() {
                       color="text.secondary"
                       sx={{ py: 2 }}
                     >
-                      No male players yet
+                      {t("lines:detail.noMalePlayers")}
                     </Typography>
                   ) : (
                     <PlayersGrid
@@ -255,7 +257,7 @@ export default function LineDetailPage() {
                       mb: 2,
                     }}
                   >
-                    Women ({line.players.filter((p) => p.gender === "W").length})
+                    {t("lines:detail.women")} ({line.players.filter((p) => p.gender === "W").length})
                   </Typography>
                   {line.players.filter((p) => p.gender === "W").length === 0 ? (
                     <Typography
@@ -263,7 +265,7 @@ export default function LineDetailPage() {
                       color="text.secondary"
                       sx={{ py: 2 }}
                     >
-                      No female players yet
+                      {t("lines:detail.noFemalePlayers")}
                     </Typography>
                   ) : (
                     <PlayersGrid
@@ -287,15 +289,14 @@ export default function LineDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Delete Line?</DialogTitle>
+        <DialogTitle>{t("lines:detail.deleteTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Are you sure you want to delete "{line.name}"? This action cannot
-            be undone.
+            {t("lines:detail.deleteConfirm", { lineName: line.name })}
           </Typography>
           {deleteMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error deleting line. Please try again.
+              {t("lines:detail.deleteError")}
             </Alert>
           )}
         </DialogContent>
@@ -304,7 +305,7 @@ export default function LineDetailPage() {
             onClick={() => setIsDeleteConfirmOpen(false)}
             disabled={deleteMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -312,7 +313,7 @@ export default function LineDetailPage() {
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Line"}
+            {deleteMutation.isPending ? t("lines:detail.deleting") : t("lines:detail.deleteLine")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -324,15 +325,14 @@ export default function LineDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Remove Player from Line?</DialogTitle>
+        <DialogTitle>{t("lines:detail.removePlayerTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Are you sure you want to remove "{playerToRemove?.name}" from this
-            line? This will not delete the player from the team.
+            {t("lines:detail.removePlayerConfirm", { playerName: playerToRemove?.name })}
           </Typography>
           {removePlayerMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error removing player from line. Please try again.
+              {t("lines:detail.removePlayerError")}
             </Alert>
           )}
         </DialogContent>
@@ -341,7 +341,7 @@ export default function LineDetailPage() {
             onClick={() => setPlayerToRemove(null)}
             disabled={removePlayerMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={confirmRemovePlayer}
@@ -349,7 +349,7 @@ export default function LineDetailPage() {
             color="error"
             disabled={removePlayerMutation.isPending}
           >
-            {removePlayerMutation.isPending ? "Removing..." : "Remove Player"}
+            {removePlayerMutation.isPending ? t("lines:detail.removing") : t("lines:detail.removePlayer")}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -37,9 +38,10 @@ export default function AddPlayersModal({
   fetchPlayers,
   addPlayers,
   invalidateQueries,
-  loadingMessage = "Loading players...",
-  emptyMessage = "All players are already added",
+  loadingMessage,
+  emptyMessage,
 }: AddPlayersModalProps) {
+  const { t } = useTranslation("common");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const queryClient = useQueryClient();
 
@@ -108,10 +110,10 @@ export default function AddPlayersModal({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {isLoading ? (
-          <Typography>{loadingMessage}</Typography>
+          <Typography>{loadingMessage || t("common:action.loading")}</Typography>
         ) : availablePlayers.length === 0 ? (
           <Box py={4} textAlign="center">
-            <Typography color="text.secondary">{emptyMessage}</Typography>
+            <Typography color="text.secondary">{emptyMessage || t("common:messages.noData")}</Typography>
           </Box>
         ) : (
           <PlayerSelectionUI
@@ -126,13 +128,13 @@ export default function AddPlayersModal({
 
         {mutation.isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            Error adding players. Please try again.
+            {t("common:error.addingPlayers")}
           </Alert>
         )}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={mutation.isPending}>
-          Cancel
+          {t("common:action.cancel")}
         </Button>
         <Button
           onClick={handleSubmit}
@@ -144,8 +146,8 @@ export default function AddPlayersModal({
           }
         >
           {mutation.isPending
-            ? "Adding..."
-            : `Add ${selectedPlayerIds.length} Player${selectedPlayerIds.length !== 1 ? "s" : ""}`}
+            ? t("common:action.adding")
+            : t("common:action.addPlayers", { count: selectedPlayerIds.length })}
         </Button>
       </DialogActions>
     </Dialog>

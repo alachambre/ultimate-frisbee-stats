@@ -32,7 +32,8 @@ export default function AddPlayersToGameModal({
       }}
       addPlayers={(playerIds) => addPlayersToGame(gameId, playerIds)}
       invalidateQueries={[["game", String(gameId)]]}
-      emptyMessage={t('games:modal.addPlayers.title')}
+      loadingMessage={t('games:modal.addPlayers.loading')}
+      emptyMessage={t('games:modal.addPlayers.empty')}
     />
   );
 }

@@ -92,13 +92,13 @@ export default function GamesPage() {
             {/* Team Filter */}
             {teams && teams.length > 0 && (
               <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel>{t("common:action.filter")} by Team</InputLabel>
+                <InputLabel>{t("games:page.filterByTeam")}</InputLabel>
                 <Select
                   value={selectedTeamId}
-                  label={`${t("common:action.filter")} by Team`}
+                  label={t("games:page.filterByTeam")}
                   onChange={(e) => handleTeamChange(e.target.value as number | "all")}
                 >
-                  <MenuItem value="all">All Teams</MenuItem>
+                  <MenuItem value="all">{t("games:page.allTeams")}</MenuItem>
                   {teams.map((team) => (
                     <MenuItem key={team.id} value={team.id}>
                       {team.name}
@@ -111,15 +111,15 @@ export default function GamesPage() {
             {/* Competition Filter */}
             {competitions && competitions.length > 0 && (
               <FormControl size="small" sx={{ minWidth: 200 }}>
-                <InputLabel>{t("common:action.filter")} by Competition</InputLabel>
+                <InputLabel>{t("games:page.filterByCompetition")}</InputLabel>
                 <Select
                   value={selectedCompetitionId}
-                  label={`${t("common:action.filter")} by Competition`}
+                  label={t("games:page.filterByCompetition")}
                   onChange={(e) => setSelectedCompetitionId(e.target.value as number | "all")}
                   disabled={filteredCompetitions.length === 0}
                 >
                   <MenuItem value="all">
-                    {selectedTeamId === "all" ? "All Competitions" : "All from Team"}
+                    {selectedTeamId === "all" ? t("games:page.allCompetitions") : t("games:page.allFromTeam")}
                   </MenuItem>
                   {filteredCompetitions.map((competition) => (
                     <MenuItem key={competition.id} value={competition.id}>

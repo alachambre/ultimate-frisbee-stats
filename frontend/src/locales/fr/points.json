@@ -2,8 +2,8 @@
   "tracker": {
     "title": "Suivi du point en direct",
     "newPoint": "Nouveau point",
-    "offense": "Offense",
-    "defense": "Defense",
+    "offense": "Attaque",
+    "defense": "Défense",
     "score": "Score !",
     "turnover": "Turnover",
     "complete": "Terminer le point",
@@ -20,8 +20,8 @@
     "duration": "Durée",
     "playersOnField": "Joueurs sur le terrain",
     "pullQuestion": "Le pull a-t-il atterri dans le terrain ?",
-    "offenseStrategies": "Stratégies offense",
-    "defenseStrategies": "Stratégies defense"
+    "offenseStrategies": "Stratégies attaque",
+    "defenseStrategies": "Stratégies défense"
   },
   "dialog": {
     "start": {
@@ -30,7 +30,7 @@
       "mixity": "Mixité",
       "men": "Hommes",
       "women": "Femmes",
-      "pull": "Pull",
+      "pull": "Démarrer le point en",
       "inbounds": "Dans le terrain",
       "outOfBounds": "Hors limites",
       "line": "Ligne",

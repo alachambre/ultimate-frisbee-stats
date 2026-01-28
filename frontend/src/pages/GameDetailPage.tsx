@@ -43,7 +43,7 @@ import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player } from "../types";
 
 export default function GameDetailPage() {
-  const { t } = useTranslation(["games", "players", "common"]);
+  const { t, i18n } = useTranslation(["games", "players", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -196,12 +196,12 @@ export default function GameDetailPage() {
               <CalendarTodayIcon sx={{ fontSize: 16, color: "text.secondary" }} />
               <Typography variant="body2" color="text.secondary">
                 {game.date
-                  ? new Date(game.date).toLocaleDateString("en-US", {
+                  ? new Date(game.date).toLocaleDateString(i18n.language === "fr" ? "fr-FR" : "en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })
-                  : "Date not set"}
+                  : t("games:detail.dateNotSet")}
               </Typography>
             </Box>
             <Box display="flex" gap={1} flexWrap="wrap">
@@ -290,7 +290,7 @@ export default function GameDetailPage() {
           {game.start_datetime && (
             <Box mt={2}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                Game Duration
+                {t("games:detail.gameDuration")}
               </Typography>
               <GameTimer
                 startDatetime={game.start_datetime}
@@ -325,7 +325,7 @@ export default function GameDetailPage() {
       {game.comments && (
         <Paper sx={{ mb: 3, p: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Comments
+            {t("games:detail.comments")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {game.comments}
@@ -566,14 +566,14 @@ export default function GameDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Delete Point?</DialogTitle>
+        <DialogTitle>{t("games:detail.deletePointTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Delete Point #{deletingPoint?.point_number}? This cannot be undone.
+            {t("games:detail.deletePointConfirm", { pointNumber: deletingPoint?.point_number })}
           </Typography>
           {deletePointMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error deleting point. Please try again.
+              {t("games:detail.deletePointError")}
             </Alert>
           )}
         </DialogContent>
@@ -582,7 +582,7 @@ export default function GameDetailPage() {
             onClick={() => setDeletingPoint(null)}
             disabled={deletePointMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={confirmDeletePoint}
@@ -590,7 +590,7 @@ export default function GameDetailPage() {
             color="error"
             disabled={deletePointMutation.isPending}
           >
-            {deletePointMutation.isPending ? "Deleting..." : "Delete Point"}
+            {deletePointMutation.isPending ? t("games:detail.deletingPoint") : t("games:detail.deletePoint")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -617,15 +617,14 @@ export default function GameDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Remove Player from Game?</DialogTitle>
+        <DialogTitle>{t("games:detail.removePlayerTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Remove "{playerToRemove?.name}" from this game? This will not delete
-            the player from the competition roster.
+            {t("games:detail.removePlayerConfirm", { playerName: playerToRemove?.name })}
           </Typography>
           {removePlayerMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error removing player from game. Please try again.
+              {t("games:detail.removePlayerError")}
             </Alert>
           )}
         </DialogContent>
@@ -634,7 +633,7 @@ export default function GameDetailPage() {
             onClick={() => setPlayerToRemove(null)}
             disabled={removePlayerMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={confirmRemovePlayer}
@@ -642,7 +641,7 @@ export default function GameDetailPage() {
             color="error"
             disabled={removePlayerMutation.isPending}
           >
-            {removePlayerMutation.isPending ? "Removing..." : "Remove Player"}
+            {removePlayerMutation.isPending ? t("games:detail.removingPlayer") : t("games:detail.removePlayer")}
           </Button>
         </DialogActions>
       </Dialog>

@@ -2,6 +2,8 @@
   "page": {
     "title": "Compétitions",
     "newCompetition": "Nouvelle compétition",
+    "filterByTeam": "Filtrer par équipe",
+    "allTeams": "Toutes les équipes",
     "empty": {
       "title": "Aucune compétition pour le moment",
       "description": "Créez votre première compétition pour commencer",
@@ -9,10 +11,34 @@
     }
   },
   "detail": {
+    "loading": "Chargement de la compétition...",
+    "error": "Erreur lors du chargement de la compétition. Veuillez réessayer.",
+    "backToCompetitions": "Retour aux compétitions",
+    "edit": "Modifier",
+    "delete": "Supprimer",
     "info": "Infos compétition",
     "roster": "Effectif",
+    "rosterCount": "Effectif ({{count}})",
+    "showRoster": "Afficher l'effectif",
+    "hideRoster": "Masquer l'effectif",
+    "addPlayers": "Ajouter des joueurs",
     "games": "Matchs",
-    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette compétition ?"
+    "gamesCount": "Matchs ({{count}})",
+    "addGame": "Ajouter un match",
+    "men": "Hommes",
+    "women": "Femmes",
+    "noMalePlayers": "Aucun joueur masculin pour le moment",
+    "noFemalePlayers": "Aucun joueur féminin pour le moment",
+    "deleteTitle": "Supprimer la compétition ?",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer \"{{competitionName}}\" ? Cela supprimera également tous les matchs de cette compétition. Cette action est irréversible.",
+    "deleteError": "Erreur lors de la suppression de la compétition. Veuillez réessayer.",
+    "deleteCompetition": "Supprimer la compétition",
+    "deleting": "Suppression...",
+    "removePlayerTitle": "Retirer le joueur de l'effectif ?",
+    "removePlayerConfirm": "Êtes-vous sûr de vouloir retirer \"{{playerName}}\" de l'effectif de cette compétition ? Cela ne supprimera pas le joueur de l'équipe.",
+    "removePlayerError": "Erreur lors du retrait du joueur de l'effectif. Veuillez réessayer.",
+    "removePlayer": "Retirer le joueur",
+    "removing": "Retrait..."
   },
   "modal": {
     "create": {
@@ -24,6 +50,7 @@
     },
     "addPlayers": {
       "title": "Ajouter des joueurs à l'effectif",
+      "loading": "Chargement des joueurs...",
       "allInRoster": "Tous les joueurs de l'équipe sont déjà dans l'effectif"
     }
   },

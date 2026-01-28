@@ -7,6 +7,9 @@
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "add": "Ajouter",
+    "adding": "Ajout...",
+    "addPlayers": "Ajouter {{count}} joueur",
+    "addPlayers_plural": "Ajouter {{count}} joueurs",
     "remove": "Retirer",
     "close": "Fermer",
     "confirm": "Confirmer",
@@ -30,7 +33,9 @@
     "scored": "Marqué",
     "completed": "Terminé",
     "started": "Commencé",
-    "ended": "Terminé"
+    "ended": "Terminé",
+    "ongoing": "En cours",
+    "planned": "Planifiée"
   },
   "labels": {
     "name": "Nom",
@@ -43,6 +48,11 @@
     "gender": "Genre",
     "male": "Homme",
     "female": "Femme",
+    "men": "Hommes",
+    "women": "Femmes",
+    "allMen": "Tous les hommes",
+    "allWomen": "Toutes les femmes",
+    "clearAll": "Tout effacer",
     "required": "Requis",
     "optional": "Optionnel"
   },
@@ -50,7 +60,8 @@
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "loading": "Échec du chargement des données",
     "saving": "Échec de l'enregistrement",
-    "deleting": "Échec de la suppression"
+    "deleting": "Échec de la suppression",
+    "addingPlayers": "Erreur lors de l'ajout des joueurs. Veuillez réessayer."
   },
   "messages": {
     "error": "Une erreur s'est produite",

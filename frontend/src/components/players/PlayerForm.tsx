@@ -97,13 +97,13 @@ export default function PlayerForm({
         required
       />
       <TextField
-        label={`Jersey Number (${t("common:labels.optional")})`}
+        label={`${t("players:form.jerseyNumber")} (${t("common:labels.optional")})`}
         type="number"
         fullWidth
         variant="outlined"
         value={playerNumber}
         onChange={(e) => onPlayerNumberChange(e.target.value)}
-        placeholder="0-99"
+        placeholder={t("players:form.jerseyNumberPlaceholder")}
         inputProps={{ min: 0, max: 99 }}
       />
     </Box>

@@ -32,7 +32,8 @@ export default function AddPlayersToLineModal({
       }}
       addPlayers={(playerIds) => addPlayersToLine(lineId, playerIds)}
       invalidateQueries={[["line", String(lineId)]]}
-      emptyMessage={t('lines:modal.addPlayers.title')}
+      loadingMessage={t('lines:modal.addPlayers.loading')}
+      emptyMessage={t('lines:modal.addPlayers.empty')}
     />
   );
 }

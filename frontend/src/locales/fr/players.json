@@ -18,7 +18,9 @@
     "namePlaceholder": "Entrez le nom du joueur",
     "gender": "Genre",
     "genderMale": "Homme",
-    "genderFemale": "Femme"
+    "genderFemale": "Femme",
+    "jerseyNumber": "Numéro de maillot",
+    "jerseyNumberPlaceholder": "0-99"
   },
   "card": {
     "male": "H",

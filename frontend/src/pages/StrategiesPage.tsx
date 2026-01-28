@@ -114,7 +114,7 @@ export default function StrategiesPage() {
           >
             <ToggleButton value="all" aria-label="all strategies">
               <AppsIcon sx={{ mr: 1, fontSize: 20 }} />
-              All
+              {t("strategies:page.filter.all")}
             </ToggleButton>
             <ToggleButton value="offense" aria-label="offense strategies">
               <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />

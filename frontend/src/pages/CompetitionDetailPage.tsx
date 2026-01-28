@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { useTranslation } from "react-i18next"; // TODO: Complete translation in Phase 6.5
+import { useTranslation } from "react-i18next";
 import {
   Container,
   Box,
@@ -45,7 +45,7 @@ import CreateGameModal from "../components/modals/CreateGameModal";
 import type { Player } from "../types";
 
 export default function CompetitionDetailPage() {
-  // const { t } = useTranslation(["competitions", "players", "games", "common"]);
+  const { t, i18n } = useTranslation(["competitions", "players", "games", "common"]);
   const { competitionId } = useParams<{ competitionId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -92,12 +92,12 @@ export default function CompetitionDetailPage() {
   });
 
   if (isLoading) {
-    return <LoadingState message="Loading competition..." />;
+    return <LoadingState message={t("competitions:detail.loading")} />;
   }
 
   if (error || !competition) {
     return (
-      <ErrorState message="Error loading competition. Please try again." />
+      <ErrorState message={t("competitions:detail.error")} />
     );
   }
 
@@ -118,7 +118,8 @@ export default function CompetitionDetailPage() {
   const formatDateRange = (startDate: string, endDate: string) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    const locale = i18n.language === "fr" ? "fr-FR" : "en-US";
+    return `${start.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })} - ${end.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })}`;
   };
 
   return (
@@ -131,7 +132,7 @@ export default function CompetitionDetailPage() {
           startIcon={<ArrowBackIcon />}
           sx={{ mb: 2 }}
         >
-          Back to Competitions
+          {t("competitions:detail.backToCompetitions")}
         </Button>
         <Box
           display="flex"
@@ -146,12 +147,11 @@ export default function CompetitionDetailPage() {
                 {competition.name}
               </Typography>
               <Chip
-                label={competition.status}
+                label={t(`common:status.${competition.status}`)}
                 size="small"
                 color={
                   competition.status === "ongoing" ? "success" : "default"
                 }
-                sx={{ textTransform: "capitalize" }}
               />
             </Box>
             {competition.description && (
@@ -175,7 +175,7 @@ export default function CompetitionDetailPage() {
               startIcon={<EditIcon />}
               onClick={() => setIsEditModalOpen(true)}
             >
-              Edit
+              {t("competitions:detail.edit")}
             </Button>
             <Button
               variant="outlined"
@@ -183,7 +183,7 @@ export default function CompetitionDetailPage() {
               startIcon={<DeleteIcon />}
               onClick={() => setIsDeleteConfirmOpen(true)}
             >
-              Delete
+              {t("competitions:detail.delete")}
             </Button>
           </Box>
         </Box>
@@ -199,12 +199,12 @@ export default function CompetitionDetailPage() {
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="h6">
-                Roster ({competition.players.length})
+                {t("competitions:detail.rosterCount", { count: competition.players.length })}
               </Typography>
               <IconButton
                 size="small"
                 onClick={() => setShowRoster(!showRoster)}
-                aria-label={showRoster ? "Hide roster" : "Show roster"}
+                aria-label={showRoster ? t("competitions:detail.hideRoster") : t("competitions:detail.showRoster")}
               >
                 {showRoster ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
@@ -214,7 +214,7 @@ export default function CompetitionDetailPage() {
               startIcon={<PersonAddIcon />}
               onClick={() => setIsAddPlayersModalOpen(true)}
             >
-              Add Players
+              {t("competitions:detail.addPlayers")}
             </Button>
           </Box>
         </Box>
@@ -248,11 +248,11 @@ export default function CompetitionDetailPage() {
                         mb: 2
                       }}
                     >
-                      Men ({competition.players.filter(p => p.gender === "M").length})
+                      {t("competitions:detail.men")} ({competition.players.filter(p => p.gender === "M").length})
                     </Typography>
                     {competition.players.filter(p => p.gender === "M").length === 0 ? (
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        No male players yet
+                        {t("competitions:detail.noMalePlayers")}
                       </Typography>
                     ) : (
                       <PlayersGrid
@@ -284,11 +284,11 @@ export default function CompetitionDetailPage() {
                         mb: 2
                       }}
                     >
-                      Women ({competition.players.filter(p => p.gender === "W").length})
+                      {t("competitions:detail.women")} ({competition.players.filter(p => p.gender === "W").length})
                     </Typography>
                     {competition.players.filter(p => p.gender === "W").length === 0 ? (
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        No female players yet
+                        {t("competitions:detail.noFemalePlayers")}
                       </Typography>
                     ) : (
                       <PlayersGrid
@@ -309,14 +309,14 @@ export default function CompetitionDetailPage() {
         <Box p={3} borderBottom="1px solid" borderColor="divider">
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">
-              Games ({games?.length || 0})
+              {t("competitions:detail.gamesCount", { count: games?.length || 0 })}
             </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setIsCreateGameModalOpen(true)}
             >
-              Add Game
+              {t("competitions:detail.addGame")}
             </Button>
           </Box>
         </Box>
@@ -339,15 +339,14 @@ export default function CompetitionDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Delete Competition?</DialogTitle>
+        <DialogTitle>{t("competitions:detail.deleteTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Are you sure you want to delete "{competition.name}"? This will also
-            delete all games for this competition. This action cannot be undone.
+            {t("competitions:detail.deleteConfirm", { competitionName: competition.name })}
           </Typography>
           {deleteMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error deleting competition. Please try again.
+              {t("competitions:detail.deleteError")}
             </Alert>
           )}
         </DialogContent>
@@ -356,7 +355,7 @@ export default function CompetitionDetailPage() {
             onClick={() => setIsDeleteConfirmOpen(false)}
             disabled={deleteMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={handleDelete}
@@ -364,7 +363,7 @@ export default function CompetitionDetailPage() {
             color="error"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Competition"}
+            {deleteMutation.isPending ? t("competitions:detail.deleting") : t("competitions:detail.deleteCompetition")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -376,15 +375,14 @@ export default function CompetitionDetailPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Remove Player from Roster?</DialogTitle>
+        <DialogTitle>{t("competitions:detail.removePlayerTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Are you sure you want to remove "{playerToRemove?.name}" from this
-            competition roster? This will not delete the player from the team.
+            {t("competitions:detail.removePlayerConfirm", { playerName: playerToRemove?.name })}
           </Typography>
           {removePlayerMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              Error removing player from roster. Please try again.
+              {t("competitions:detail.removePlayerError")}
             </Alert>
           )}
         </DialogContent>
@@ -393,7 +391,7 @@ export default function CompetitionDetailPage() {
             onClick={() => setPlayerToRemove(null)}
             disabled={removePlayerMutation.isPending}
           >
-            Cancel
+            {t("common:action.cancel")}
           </Button>
           <Button
             onClick={confirmRemovePlayer}
@@ -401,7 +399,7 @@ export default function CompetitionDetailPage() {
             color="error"
             disabled={removePlayerMutation.isPending}
           >
-            {removePlayerMutation.isPending ? "Removing..." : "Remove Player"}
+            {removePlayerMutation.isPending ? t("competitions:detail.removing") : t("competitions:detail.removePlayer")}
           </Button>
         </DialogActions>
       </Dialog>
