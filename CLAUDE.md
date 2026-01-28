@@ -17,6 +17,17 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Current Status
 
+**Phase 8 (Partial) Complete** - Live game statistics integrated:
+- **Live Statistics**: Real-time player statistics during games with visual highlighting
+  - Backend API: GET /statistics/games/{game_id}/live
+  - Returns: points_played, effective_time_seconds (point duration - call durations)
+  - Frontend: Integrated into GameDetailPage player roster section
+  - 5-second polling for started games, one-time fetch for ended games
+  - Sorting: by name/points/time with persistent selection
+  - Visual highlighting: Top 20% (green) and bottom 20% (orange) based on playing time
+  - Mobile-first 2-column card layout
+  - 14 comprehensive backend tests (357 total passing)
+
 **Phase 7 Complete** - Calls & Turnovers tracking fully integrated frontend + backend:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
 - **Backend**: Complete REST API for all entities including calls/turnovers, SQLite with foreign keys, domain-organized code structure, production logging
@@ -38,6 +49,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Point comments and resume functionality for late calls
 - **Call tracking**: Record calls with start/resume timestamps, display call duration, prevent finishing point with pending calls
 - **Turnover tracking**: Record turnovers with player assignment, automatic possession calculation, display turnover history
+- **Live statistics**: Real-time player stats (points played, effective playing time) with visual highlighting for rotation management
 - French/English language switching with localStorage persistence
 
 ## Architecture
@@ -76,23 +88,25 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (343 tests - 100% passing)
-- **Frontend**: Vitest + MSW + React Testing Library (239 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (357 tests - 100% passing)
+- **Frontend**: Vitest + MSW + React Testing Library (258 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
 - **Organization**: Tests in `__tests__/` subdirectories
 
 ## Next Steps
 
-**Phase 8: Statistics Dashboard - NEXT**
-- Game/competition/team/player analytics
-- Offense/defense efficiency metrics
-- Player playing time tracking (using call data for dead time calculation)
-- Turnover statistics per player
-- Possession statistics and flow
-- Point duration analysis
-- Visualizations and charts
-- Export/sharing capabilities
+**Phase 8: Statistics Dashboard - IN PROGRESS**
+- ✅ Live game statistics: Player playing time tracking during games (complete)
+- **Remaining analytics:**
+  - Game/competition/team aggregated statistics
+  - Offense/defense efficiency metrics
+  - Turnover statistics per player
+  - Possession statistics and flow
+  - Point duration analysis
+  - Break/hold percentages
+  - Visualizations and charts
+  - Export/sharing capabilities
 
 ## Important Commands
 
@@ -100,7 +114,7 @@ backend/app/
 ```bash
 cd backend
 source venv/bin/activate
-pytest tests/ -v                    # Run all 343 tests (100% passing ✅)
+pytest tests/ -v                    # Run all 357 tests (100% passing ✅)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

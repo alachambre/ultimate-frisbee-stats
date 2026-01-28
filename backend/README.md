@@ -18,7 +18,8 @@ backend/
 │   │   ├── lines.py       # Line management endpoints (Phase 5)
 │   │   ├── strategies.py  # Strategy management endpoints (Phase 6)
 │   │   ├── calls.py       # Call tracking endpoints (Phase 7)
-│   │   └── turnovers.py   # Turnover tracking endpoints (Phase 7)
+│   │   ├── turnovers.py   # Turnover tracking endpoints (Phase 7)
+│   │   └── statistics.py  # Statistics endpoints (Phase 8)
 │   ├── crud/              # Database operations by domain
 │   │   ├── teams.py       # Team CRUD operations
 │   │   ├── competitions.py # Competition CRUD operations
@@ -28,7 +29,8 @@ backend/
 │   │   ├── lines.py       # Line CRUD operations (Phase 5)
 │   │   ├── strategies.py  # Strategy CRUD operations (Phase 6)
 │   │   ├── calls.py       # Call CRUD operations (Phase 7)
-│   │   └── turnovers.py   # Turnover CRUD operations (Phase 7)
+│   │   ├── turnovers.py   # Turnover CRUD operations (Phase 7)
+│   │   └── statistics.py  # Statistics calculations (Phase 8)
 │   ├── models/            # SQLAlchemy database models organized by domain
 │   │   ├── base.py        # Base model, enums, association tables
 │   │   ├── team.py        # Team model
@@ -50,7 +52,8 @@ backend/
 │   │   ├── line.py        # Line schemas (Phase 5)
 │   │   ├── strategy.py    # Strategy schemas (Phase 6)
 │   │   ├── call.py        # Call schemas (Phase 7)
-│   │   └── turnover.py    # Turnover schemas (Phase 7)
+│   │   ├── turnover.py    # Turnover schemas (Phase 7)
+│   │   └── statistics.py  # Statistics schemas (Phase 8)
 │   ├── database.py        # Database connection & session management
 │   └── main.py            # FastAPI application setup
 ├── tests/
@@ -374,6 +377,21 @@ pytest tests/ -v --tb=short
 - Eager loading: Player details included in turnover responses
 - Timestamp validation: Required timestamp field
 - Timezone-aware datetime handling (UTC with 'Z' suffix)
+
+### Statistics (Phase 8)
+- `GET /statistics/games/{game_id}/live` - Get live player statistics for a game
+
+**Live Statistics Features:**
+- Real-time playing time tracking for all players in game roster
+- Returns: player_id, player_name, player_number, points_played, effective_time_seconds
+- Only completed points are counted
+- Effective time = point duration - call durations (dead time)
+- Sorted by player number for easy scanning
+- Use cases:
+  - Live game monitoring: 5-second polling for real-time stats during games
+  - Post-game analysis: One-time fetch for final statistics
+  - Rotation management: Identify overused/underused players
+  - Fair play time: Ensure balanced playing time across roster
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 
