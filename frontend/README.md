@@ -729,9 +729,6 @@ Backend is configured to allow all origins in development. If you still see CORS
 ## Future Enhancements
 
 The application roadmap includes:
-- **Strategy Management UI**: Pages and modals to create/edit/delete strategies (service layer complete)
-- **ABBA Gender Rule**: Frontend validation for alternating 4M+3W / 3M+4W pattern (Phase 6 Frontend)
-- **Game Timer Fix**: Start timer with first running point, not game start button
 - **Calls & Turnovers**: Track fouls, violations, and turnover events (Phase 7)
 - **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics (Phase 8)
 - **PWA Features**: Offline support, install prompt, service worker caching
