@@ -140,26 +140,26 @@ export default function GameDetailPage() {
 
   // Helper function to determine highlight based on playing time
   const getHighlight = (stats: PlayerGameStats, allStats: PlayerGameStats[]): "high" | "low" | null => {
-    // Need at least 4 players total to create meaningful quartiles
-    if (allStats.length < 4) return null;
+    // Need at least 5 players total to create meaningful quintiles
+    if (allStats.length < 5) return null;
 
     // Sort ALL players by time (descending) - includes players with 0 time
     const sortedByTime = [...allStats].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
 
-    // Calculate quartiles (top 25% and bottom 25%)
-    // With ~20 players, this means ~5 players on each end will be highlighted
-    const quartileSize = Math.max(1, Math.floor(sortedByTime.length / 4));
+    // Calculate top/bottom 20% (quintiles)
+    // With ~20 players, this means ~4 players on each end will be highlighted
+    const quintileSize = Math.max(1, Math.floor(sortedByTime.length / 5));
 
-    const topThreshold = sortedByTime[quartileSize - 1]?.effective_time_seconds || 0;
-    const bottomThreshold = sortedByTime[sortedByTime.length - quartileSize]?.effective_time_seconds || 0;
+    const topThreshold = sortedByTime[quintileSize - 1]?.effective_time_seconds || 0;
+    const bottomThreshold = sortedByTime[sortedByTime.length - quintileSize]?.effective_time_seconds || 0;
 
-    // Highlight top quartile players (most playing time)
-    // Must have actual playing time to be in top quartile
+    // Highlight top 20% players (most playing time)
+    // Must have actual playing time to be in top tier
     if (stats.effective_time_seconds > 0 && stats.effective_time_seconds >= topThreshold && stats.effective_time_seconds > bottomThreshold) {
       return "high";
     }
 
-    // Highlight bottom quartile players (least playing time, including 0)
+    // Highlight bottom 20% players (least playing time, including 0)
     if (stats.effective_time_seconds <= bottomThreshold) {
       return "low";
     }
