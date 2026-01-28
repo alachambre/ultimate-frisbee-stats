@@ -250,3 +250,64 @@ export interface GameDetail extends GameWithScore {
   points: PointWithPlayers[];
   players: Player[];
 }
+
+// ============================================
+// Call Types
+// ============================================
+
+export interface Call {
+  id: number;
+  point_id: number;
+  call_timestamp: string; // ISO datetime with 'Z'
+  resume_timestamp: string | null; // ISO datetime with 'Z', null until resolved
+  comments: string | null;
+  created_at: string; // ISO datetime with 'Z'
+}
+
+export interface CallCreate {
+  point_id: number;
+  call_timestamp: string; // ISO datetime
+  resume_timestamp?: string | null;
+  comments?: string | null;
+}
+
+export interface CallUpdate {
+  resume_timestamp?: string | null;
+  comments?: string | null;
+}
+
+// ============================================
+// Turnover Types
+// ============================================
+
+export interface TurnoverWithPlayer {
+  id: number;
+  point_id: number;
+  player_id: number | null; // Optional - can be null for team turnovers
+  timestamp: string; // ISO datetime with 'Z'
+  comments: string | null;
+  created_at: string; // ISO datetime with 'Z'
+  player: Player | null; // Player details if player_id is set
+}
+
+export interface Turnover {
+  id: number;
+  point_id: number;
+  player_id: number | null;
+  timestamp: string;
+  comments: string | null;
+  created_at: string;
+}
+
+export interface TurnoverCreate {
+  point_id: number;
+  player_id?: number | null;
+  timestamp: string; // ISO datetime
+  comments?: string | null;
+}
+
+export interface TurnoverUpdate {
+  player_id?: number | null;
+  timestamp?: string;
+  comments?: string | null;
+}

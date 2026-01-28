@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Call, CallCreate, CallUpdate, Turnover, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -14,6 +14,8 @@ let games: Game[] = [];
 let gamePlayers: Map<number, number[]> = new Map(); // gameId -> playerIds[]
 let strategies: Strategy[] = [];
 let points: PointWithPlayers[] = [];
+let calls: Call[] = [];
+let turnovers: TurnoverWithPlayer[] = [];
 let nextTeamId = 1;
 let nextPlayerId = 1;
 let nextCompetitionId = 1;
@@ -21,6 +23,8 @@ let nextLineId = 1;
 let nextGameId = 1;
 let nextStrategyId = 1;
 let nextPointId = 1;
+let nextCallId = 1;
+let nextTurnoverId = 1;
 
 // Helper to reset data between tests
 export function resetMockData() {
@@ -34,6 +38,8 @@ export function resetMockData() {
   gamePlayers = new Map();
   strategies = [];
   points = [];
+  calls = [];
+  turnovers = [];
   nextTeamId = 1;
   nextPlayerId = 1;
   nextCompetitionId = 1;
@@ -41,6 +47,8 @@ export function resetMockData() {
   nextGameId = 1;
   nextStrategyId = 1;
   nextPointId = 1;
+  nextCallId = 1;
+  nextTurnoverId = 1;
 }
 
 export const handlers = [
@@ -1016,6 +1024,157 @@ export const handlers = [
       }
     });
 
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ============================================
+  // Call Endpoints
+  // ============================================
+
+  // GET /calls/:callId - Get a single call
+  http.get(`${BASE_URL}/calls/:callId`, ({ params }) => {
+    const callId = Number(params.callId);
+    const call = calls.find((c) => c.id === callId);
+
+    if (!call) {
+      return HttpResponse.json({ detail: "Call not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(call);
+  }),
+
+  // GET /calls/points/:pointId/calls - Get all calls for a point
+  http.get(`${BASE_URL}/calls/points/:pointId/calls`, ({ params }) => {
+    const pointId = Number(params.pointId);
+    const pointCalls = calls.filter((c) => c.point_id === pointId);
+    return HttpResponse.json(pointCalls);
+  }),
+
+  // POST /calls - Create a new call
+  http.post(`${BASE_URL}/calls`, async ({ request }) => {
+    const newCall = (await request.json()) as CallCreate;
+    const call: Call = {
+      id: nextCallId++,
+      ...newCall,
+      resume_timestamp: newCall.resume_timestamp ?? null,
+      comments: newCall.comments ?? null,
+      created_at: new Date().toISOString(),
+    };
+    calls.push(call);
+    return HttpResponse.json(call, { status: 201 });
+  }),
+
+  // PUT /calls/:callId - Update a call
+  http.put(`${BASE_URL}/calls/:callId`, async ({ params, request }) => {
+    const callId = Number(params.callId);
+    const updates = (await request.json()) as CallUpdate;
+    const callIndex = calls.findIndex((c) => c.id === callId);
+
+    if (callIndex === -1) {
+      return HttpResponse.json({ detail: "Call not found" }, { status: 404 });
+    }
+
+    calls[callIndex] = {
+      ...calls[callIndex],
+      ...updates,
+    };
+
+    return HttpResponse.json(calls[callIndex]);
+  }),
+
+  // DELETE /calls/:callId - Delete a call
+  http.delete(`${BASE_URL}/calls/:callId`, ({ params }) => {
+    const callId = Number(params.callId);
+    const callIndex = calls.findIndex((c) => c.id === callId);
+
+    if (callIndex === -1) {
+      return HttpResponse.json({ detail: "Call not found" }, { status: 404 });
+    }
+
+    calls.splice(callIndex, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ============================================
+  // Turnover Endpoints
+  // ============================================
+
+  // GET /turnovers/:turnoverId - Get a single turnover
+  http.get(`${BASE_URL}/turnovers/:turnoverId`, ({ params }) => {
+    const turnoverId = Number(params.turnoverId);
+    const turnover = turnovers.find((t) => t.id === turnoverId);
+
+    if (!turnover) {
+      return HttpResponse.json({ detail: "Turnover not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(turnover);
+  }),
+
+  // GET /turnovers/points/:pointId/turnovers - Get all turnovers for a point
+  http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, ({ params }) => {
+    const pointId = Number(params.pointId);
+    const pointTurnovers = turnovers.filter((t) => t.point_id === pointId);
+    return HttpResponse.json(pointTurnovers);
+  }),
+
+  // GET /turnovers/players/:playerId/turnovers - Get all turnovers for a player
+  http.get(`${BASE_URL}/turnovers/players/:playerId/turnovers`, ({ params }) => {
+    const playerId = Number(params.playerId);
+    const playerTurnovers = turnovers
+      .filter((t) => t.player_id === playerId)
+      .map(({ player, ...rest }) => rest); // Remove player field for this endpoint
+    return HttpResponse.json(playerTurnovers);
+  }),
+
+  // POST /turnovers - Create a new turnover
+  http.post(`${BASE_URL}/turnovers`, async ({ request }) => {
+    const newTurnover = (await request.json()) as TurnoverCreate;
+    const player = newTurnover.player_id ? players.find((p) => p.id === newTurnover.player_id) : null;
+
+    const turnover: TurnoverWithPlayer = {
+      id: nextTurnoverId++,
+      ...newTurnover,
+      player_id: newTurnover.player_id ?? null,
+      comments: newTurnover.comments ?? null,
+      created_at: new Date().toISOString(),
+      player: player ?? null,
+    };
+    turnovers.push(turnover);
+    return HttpResponse.json(turnover, { status: 201 });
+  }),
+
+  // PUT /turnovers/:turnoverId - Update a turnover
+  http.put(`${BASE_URL}/turnovers/:turnoverId`, async ({ params, request }) => {
+    const turnoverId = Number(params.turnoverId);
+    const updates = (await request.json()) as TurnoverUpdate;
+    const turnoverIndex = turnovers.findIndex((t) => t.id === turnoverId);
+
+    if (turnoverIndex === -1) {
+      return HttpResponse.json({ detail: "Turnover not found" }, { status: 404 });
+    }
+
+    const player = updates.player_id ? players.find((p) => p.id === updates.player_id) : null;
+
+    turnovers[turnoverIndex] = {
+      ...turnovers[turnoverIndex],
+      ...updates,
+      player: player ?? null,
+    };
+
+    return HttpResponse.json(turnovers[turnoverIndex]);
+  }),
+
+  // DELETE /turnovers/:turnoverId - Delete a turnover
+  http.delete(`${BASE_URL}/turnovers/:turnoverId`, ({ params }) => {
+    const turnoverId = Number(params.turnoverId);
+    const turnoverIndex = turnovers.findIndex((t) => t.id === turnoverId);
+
+    if (turnoverIndex === -1) {
+      return HttpResponse.json({ detail: "Turnover not found" }, { status: 404 });
+    }
+
+    turnovers.splice(turnoverIndex, 1);
     return new HttpResponse(null, { status: 204 });
   }),
 ];

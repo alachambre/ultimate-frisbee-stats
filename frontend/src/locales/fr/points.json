@@ -94,5 +94,29 @@
   "empty": {
     "noPoints": "Aucun point pour le moment",
     "startFirst": "Commencez à suivre votre premier point"
-  }
+  },
+  "recordCall": "Enregistrer un Call",
+  "recordTurnover": "Enregistrer un Turnover",
+  "resumeFromCall": "Reprendre après Call",
+  "callStarted": "Call Démarré",
+  "callResumed": "Call Repris",
+  "callPending": "En attente de reprise",
+  "callDuration": "Durée",
+  "turnoverRecorded": "Turnover Enregistré",
+  "turnoverBy": "Par",
+  "teamTurnover": "Turnover d'Équipe",
+  "possession": "Possession",
+  "weHaveDisc": "Nous avons le disque",
+  "theyHaveDisc": "Ils ont le disque",
+  "addComments": "Ajouter des Commentaires",
+  "recordCallTitle": "Enregistrer un Call",
+  "recordCallDescription": "Enregistrer quand le jeu s'arrête pour un call (faute, violation, etc.)",
+  "resumeFromCallTitle": "Reprendre après Call",
+  "resumeFromCallDescription": "Marquer quand le jeu reprend après le call",
+  "recordTurnoverTitle": "Enregistrer un Turnover",
+  "recordTurnoverDescription": "Enregistrer un changement de possession",
+  "selectPlayerResponsible": "Sélectionner le joueur responsable (optionnel)",
+  "noCalls": "Aucun call enregistré",
+  "noTurnovers": "Aucun turnover enregistré",
+  "turnoverSequence": "Turnover #{{number}}"
 }

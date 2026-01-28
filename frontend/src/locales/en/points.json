@@ -94,5 +94,29 @@
   "empty": {
     "noPoints": "No points yet",
     "startFirst": "Start tracking your first point"
-  }
+  },
+  "recordCall": "Record Call",
+  "recordTurnover": "Record Turnover",
+  "resumeFromCall": "Resume from Call",
+  "callStarted": "Call Started",
+  "callResumed": "Call Resumed",
+  "callPending": "Pending Resume",
+  "callDuration": "Duration",
+  "turnoverRecorded": "Turnover Recorded",
+  "turnoverBy": "By",
+  "teamTurnover": "Team Turnover",
+  "possession": "Possession",
+  "weHaveDisc": "We have the disc",
+  "theyHaveDisc": "They have the disc",
+  "addComments": "Add Comments",
+  "recordCallTitle": "Record Call",
+  "recordCallDescription": "Record when play stops due to a call (foul, violation, etc.)",
+  "resumeFromCallTitle": "Resume from Call",
+  "resumeFromCallDescription": "Mark when play resumes after the call",
+  "recordTurnoverTitle": "Record Turnover",
+  "recordTurnoverDescription": "Record a change of possession",
+  "selectPlayerResponsible": "Select player responsible (optional)",
+  "noCalls": "No calls recorded",
+  "noTurnovers": "No turnovers recorded",
+  "turnoverSequence": "Turnover #{{number}}"
 }

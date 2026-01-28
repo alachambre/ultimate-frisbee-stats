@@ -16,6 +16,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import CommentIcon from "@mui/icons-material/Comment";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
+import PauseCircleIcon from "@mui/icons-material/PauseCircle";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
@@ -25,7 +27,13 @@ import FinishPointDialog from "../modals/FinishPointDialog";
 import CompletePointDialog from "../modals/CompletePointDialog";
 import AddCommentDialog from "../modals/AddCommentDialog";
 import SelectStrategyDialog from "../modals/SelectStrategyDialog";
-import type { GameDetail, PointWithPlayers, Player } from "../../types";
+import { RecordCallDialog } from "../modals/RecordCallDialog";
+import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
+import { CallsList } from "./CallsList";
+import { TurnoversList } from "./TurnoversList";
+import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer } from "../../types";
+import { useQuery } from "@tanstack/react-query";
+import { getTurnoversByPoint } from "../../services/turnovers";
 
 interface LivePointTrackerProps {
   game: GameDetail;
@@ -48,7 +56,16 @@ export default function LivePointTracker({
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [isStrategyDialogOpen, setIsStrategyDialogOpen] = useState(false);
+  const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
+  const [isTurnoverDialogOpen, setIsTurnoverDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Fetch turnovers for active point (needed for possession logic)
+  const { data: existingTurnovers = [] } = useQuery<TurnoverWithPlayer[]>({
+    queryKey: ['turnovers', activePoint?.id],
+    queryFn: () => getTurnoversByPoint(activePoint!.id),
+    enabled: !!activePoint,
+  });
 
   // Find scored points (most recent scored point)
   const scoredPoint = useMemo(() => {
@@ -233,6 +250,34 @@ export default function LivePointTracker({
               </Button>
             </Box>
 
+            {/* Call and Turnover Tracking - only when point is running */}
+            {activePoint && activePoint.status === 'running' && (
+              <Box mt={2}>
+                <Box display="flex" justifyContent="center" gap={2} mb={2} flexWrap="wrap">
+                  <Button
+                    variant="outlined"
+                    startIcon={<PauseCircleIcon />}
+                    onClick={() => setIsCallDialogOpen(true)}
+                    size="medium"
+                  >
+                    {t("points:recordCall")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<SwapHorizIcon />}
+                    onClick={() => setIsTurnoverDialogOpen(true)}
+                    size="medium"
+                  >
+                    {t("points:recordTurnover")}
+                  </Button>
+                </Box>
+
+                {/* Display lists if data exists */}
+                <CallsList pointId={activePoint.id} />
+                <TurnoversList pointId={activePoint.id} startingOnOffense={activePoint.starting_on_offense} />
+              </Box>
+            )}
+
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
               {currentPoint.status === "running" ? (
                 <Button
@@ -346,6 +391,23 @@ export default function LivePointTracker({
           point={currentPoint}
           gameId={game.id}
           onSuccess={onPointUpdated}
+        />
+      )}
+
+      {activePoint && (
+        <RecordCallDialog
+          open={isCallDialogOpen}
+          onClose={() => setIsCallDialogOpen(false)}
+          point={activePoint}
+        />
+      )}
+
+      {activePoint && (
+        <RecordTurnoverDialog
+          open={isTurnoverDialogOpen}
+          onClose={() => setIsTurnoverDialogOpen(false)}
+          point={activePoint}
+          existingTurnovers={existingTurnovers}
         />
       )}
     </>
