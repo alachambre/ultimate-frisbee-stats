@@ -289,3 +289,400 @@ def test_get_live_game_player_stats_sorted_by_number(db_session: Session, sample
     assert stats[0]["player_number"] == 1  # player_low
     assert stats[1]["player_number"] == 50  # player_mid
     assert stats[2]["player_number"] == 99  # player_high
+
+
+# Tests for get_game_team_stats
+
+
+def test_get_game_team_stats_no_completed_points(db_session: Session, sample_game: models.Game):
+    """Test team stats when no points are completed"""
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats is not None
+    assert stats["game_id"] == sample_game.id
+    assert stats["total_completed_points"] == 0
+
+    # Offense should be all zeros
+    assert stats["offense"]["points_started"] == 0
+    assert stats["offense"]["points_won"] == 0
+    assert stats["offense"]["points_lost"] == 0
+    assert stats["offense"]["win_rate"] == 0.0
+    assert stats["offense"]["points_won_no_turnover"] == 0
+    assert stats["offense"]["clean_point_rate"] == 0.0
+    assert stats["offense"]["break_rate"] == 0.0
+
+    # Defense should be all zeros
+    assert stats["defense"]["points_started"] == 0
+    assert stats["defense"]["points_won"] == 0
+    assert stats["defense"]["points_lost"] == 0
+    assert stats["defense"]["win_rate"] == 0.0
+    assert stats["defense"]["points_with_turnover"] == 0
+    assert stats["defense"]["turnover_rate"] == 0.0
+    assert stats["defense"]["points_won_no_turnover"] == 0
+    assert stats["defense"]["clean_break_rate"] == 0.0
+    assert stats["defense"]["points_lost_no_turnover"] == 0
+    assert stats["defense"]["hold_rate"] == 0.0
+
+
+def test_get_game_team_stats_game_not_found(db_session: Session):
+    """Test with non-existent game ID"""
+    stats = crud.get_game_team_stats(db_session, 99999)
+    assert stats is None
+
+
+def test_get_game_team_stats_only_offense_points(db_session: Session, sample_game: models.Game):
+    """Test with only offensive points"""
+    # Create 3 offense points: 2 won, 1 lost
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=True,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add_all([point1, point2, point3])
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats["total_completed_points"] == 3
+
+    # Offense: 3 started, 2 won, 1 lost
+    assert stats["offense"]["points_started"] == 3
+    assert stats["offense"]["points_won"] == 2
+    assert stats["offense"]["points_lost"] == 1
+    assert abs(stats["offense"]["win_rate"] - 0.667) < 0.01
+    assert abs(stats["offense"]["break_rate"] - 0.333) < 0.01
+
+    # Defense: 0 started
+    assert stats["defense"]["points_started"] == 0
+    assert stats["defense"]["win_rate"] == 0.0
+
+
+def test_get_game_team_stats_only_defense_points(db_session: Session, sample_game: models.Game):
+    """Test with only defensive points"""
+    # Create 4 defense points: 3 won, 1 lost
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    point4 = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add_all([point1, point2, point3, point4])
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats["total_completed_points"] == 4
+
+    # Offense: 0 started
+    assert stats["offense"]["points_started"] == 0
+
+    # Defense: 4 started, 3 won, 1 lost
+    assert stats["defense"]["points_started"] == 4
+    assert stats["defense"]["points_won"] == 3
+    assert stats["defense"]["points_lost"] == 1
+    assert abs(stats["defense"]["win_rate"] - 0.75) < 0.01
+    assert abs(stats["defense"]["hold_rate"] - 0.75) < 0.01
+
+
+def test_get_game_team_stats_offense_with_no_turnovers(db_session: Session, sample_game: models.Game):
+    """Test offense clean points (no turnovers)"""
+    # Create 3 offense points won, all without turnovers
+    for i in range(3):
+        point = models.Point(
+            game_id=sample_game.id,
+            point_number=i + 1,
+            starting_on_offense=True,
+            won=True,
+            status=models.PointStatusEnum.completed,
+        )
+        db_session.add(point)
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats["offense"]["points_started"] == 3
+    assert stats["offense"]["points_won"] == 3
+    assert stats["offense"]["points_won_no_turnover"] == 3
+    assert stats["offense"]["clean_point_rate"] == 1.0  # 100% clean
+
+
+def test_get_game_team_stats_offense_with_turnovers(db_session: Session, sample_game: models.Game):
+    """Test offense with turnovers - verify our/their attribution"""
+    # Point 1: offense won with 2 turnovers (1 ours, 1 theirs) - not clean
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point1)
+    db_session.flush()
+
+    # First turnover (odd) = ours
+    turnover1_1 = models.Turnover(
+        point_id=point1.id,
+        timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+    )
+    # Second turnover (even) = theirs
+    turnover1_2 = models.Turnover(
+        point_id=point1.id,
+        timestamp=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
+    )
+    db_session.add_all([turnover1_1, turnover1_2])
+
+    # Point 2: offense won with no turnovers - clean
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point2)
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats["offense"]["points_started"] == 2
+    assert stats["offense"]["points_won"] == 2
+    assert stats["offense"]["points_won_no_turnover"] == 1  # Only point 2
+    assert stats["offense"]["clean_point_rate"] == 0.5  # 1 out of 2 won
+
+
+def test_get_game_team_stats_defense_with_turnovers(db_session: Session, sample_game: models.Game):
+    """Test defense turnover tracking"""
+    # Point 1: defense won with 1 turnover (theirs)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point1)
+    db_session.flush()
+
+    # When starting_on_offense=False, first turnover is theirs (odd)
+    turnover1 = models.Turnover(
+        point_id=point1.id,
+        timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+    )
+    db_session.add(turnover1)
+
+    # Point 2: defense won with no turnovers (clean break)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point2)
+
+    # Point 3: defense lost with no turnovers
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point3)
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats["defense"]["points_started"] == 3
+    assert stats["defense"]["points_won"] == 2
+    assert stats["defense"]["points_lost"] == 1
+    assert stats["defense"]["points_with_turnover"] == 1  # Only point 1 had a turnover
+    assert abs(stats["defense"]["turnover_rate"] - 0.333) < 0.01  # 1/3
+    assert stats["defense"]["points_won_no_turnover"] == 2  # Both Point 1 and 2 (no OUR turnovers)
+    assert abs(stats["defense"]["clean_break_rate"] - 0.667) < 0.01  # 2/3
+    assert stats["defense"]["points_lost_no_turnover"] == 1  # Point 3
+
+
+def test_get_game_team_stats_mixed_offense_defense(db_session: Session, sample_game: models.Game):
+    """Test with mixed offense and defense points"""
+    # 2 offense: 1 won, 1 lost
+    offense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    offense2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+
+    # 2 defense: 1 won, 1 lost
+    defense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    defense2 = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+
+    db_session.add_all([offense1, offense2, defense1, defense2])
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    assert stats["total_completed_points"] == 4
+
+    # Offense
+    assert stats["offense"]["points_started"] == 2
+    assert stats["offense"]["points_won"] == 1
+    assert stats["offense"]["points_lost"] == 1
+    assert stats["offense"]["win_rate"] == 0.5
+    assert stats["offense"]["break_rate"] == 0.5
+
+    # Defense
+    assert stats["defense"]["points_started"] == 2
+    assert stats["defense"]["points_won"] == 1
+    assert stats["defense"]["points_lost"] == 1
+    assert stats["defense"]["win_rate"] == 0.5
+    assert stats["defense"]["hold_rate"] == 0.5
+
+
+def test_get_game_team_stats_turnover_attribution_logic(db_session: Session, sample_game: models.Game):
+    """Test the possession alternation logic for turnover attribution"""
+    # Point 1: Start on OFFENSE with 3 turnovers
+    # Turnovers: 1st=ours(odd), 2nd=theirs(even), 3rd=ours(odd)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point1)
+    db_session.flush()
+
+    for i in range(3):
+        turnover = models.Turnover(
+            point_id=point1.id,
+            timestamp=datetime(2024, 1, 1, 10, i, 0, tzinfo=timezone.utc),
+        )
+        db_session.add(turnover)
+
+    # Point 2: Start on DEFENSE with 3 turnovers
+    # Turnovers: 1st=theirs(odd), 2nd=ours(even), 3rd=theirs(odd)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(point2)
+    db_session.flush()
+
+    for i in range(3):
+        turnover = models.Turnover(
+            point_id=point2.id,
+            timestamp=datetime(2024, 1, 1, 11, i, 0, tzinfo=timezone.utc),
+        )
+        db_session.add(turnover)
+
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    # Point 1 (offense): 2 our turnovers (1st, 3rd) - not clean
+    assert stats["offense"]["points_won_no_turnover"] == 0
+
+    # Point 2 (defense): 1 our turnover (2nd) - not clean break
+    assert stats["defense"]["points_won_no_turnover"] == 0
+    assert stats["defense"]["points_with_turnover"] == 1
+
+
+def test_get_game_team_stats_ignores_non_completed_points(db_session: Session, sample_game: models.Game):
+    """Test that only completed points are counted"""
+    # Create points with different statuses
+    ready_point = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        status=models.PointStatusEnum.ready,
+    )
+    running_point = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        status=models.PointStatusEnum.running,
+    )
+    scored_point = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=True,
+        status=models.PointStatusEnum.scored,
+    )
+    completed_point = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+
+    db_session.add_all([ready_point, running_point, scored_point, completed_point])
+    db_session.commit()
+
+    stats = crud.get_game_team_stats(db_session, sample_game.id)
+
+    # Only the completed point should be counted
+    assert stats["total_completed_points"] == 1
+    assert stats["offense"]["points_started"] == 1

@@ -32,3 +32,22 @@ def get_live_game_statistics(
 
     stats = crud.get_live_game_player_stats(db, game_id)
     return stats
+
+
+@router.get("/games/{game_id}/team", response_model=schemas.GameTeamStats)
+def get_game_team_statistics(
+    game_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get team statistics for a game.
+    Returns offense and defense efficiency metrics.
+
+    Only completed points are included in the calculations.
+    Turnovers are attributed based on possession alternation logic.
+    """
+    stats = crud.get_game_team_stats(db, game_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    return stats

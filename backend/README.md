@@ -380,8 +380,9 @@ pytest tests/ -v --tb=short
 
 ### Statistics (Phase 8)
 - `GET /statistics/games/{game_id}/live` - Get live player statistics for a game
+- `GET /statistics/games/{game_id}/team` - Get team statistics for a game (offense/defense efficiency)
 
-**Live Statistics Features:**
+**Live Player Statistics:**
 - Real-time playing time tracking for all players in game roster
 - Returns: player_id, player_name, player_number, points_played, effective_time_seconds
 - Only completed points are counted
@@ -392,6 +393,17 @@ pytest tests/ -v --tb=short
   - Post-game analysis: One-time fetch for final statistics
   - Rotation management: Identify overused/underused players
   - Fair play time: Ensure balanced playing time across roster
+
+**Team Statistics:**
+- Offensive and defensive efficiency metrics
+- Returns: total_completed_points, offense stats (points_started, points_won, win_rate, clean_point_rate, break_rate), defense stats (points_started, points_won, win_rate, turnover_rate, clean_break_rate, hold_rate)
+- Turnover attribution: Possession tracking based on starting_on_offense + turnover sequence
+- Only completed points are counted
+- Use cases:
+  - Game analysis: Understand offensive/defensive performance
+  - Strategy evaluation: Measure clean point rates and break rates
+  - Turnover impact: Track how turnovers affect point outcomes
+  - Performance trends: Compare offense vs defense effectiveness
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 
@@ -442,16 +454,21 @@ git commit -m "Your commit message"
 - Complete test isolation - no side effects between tests
 
 ### Test Coverage
-- **270 tests passing** (Phase 6)
+- **372 tests passing** (Phase 8 - Partial)
+  - 19 Statistics CRUD tests (Phase 8 - live player stats + team stats)
+  - 10 Statistics API tests (Phase 8)
+  - 14 Call CRUD tests (Phase 7)
+  - 14 Call API tests (Phase 7)
+  - 17 Turnover CRUD tests (Phase 7)
+  - 17 Turnover API tests (Phase 7)
   - 20 Strategy CRUD tests (Phase 6)
   - 20 Strategy API tests (Phase 6)
   - ~35 enhanced Point tests (Phase 6 - 4-status lifecycle, new fields)
-  - ~10 Point API tests (Phase 6)
   - 31 Line CRUD tests (Phase 5)
   - 27 Line API tests (Phase 5)
   - 17 enhanced Game tests (Phase 5)
   - Comprehensive coverage of all domains and edge cases
-  - Tests include CRUD operations, M2M relationships, cascade deletes, unique constraints, enum handling
+  - Tests include CRUD operations, M2M relationships, cascade deletes, unique constraints, enum handling, turnover attribution logic
 
 ## Troubleshooting
 

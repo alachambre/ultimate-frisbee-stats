@@ -17,8 +17,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Current Status
 
-**Phase 8 (Partial) Complete** - Live game statistics integrated:
-- **Live Statistics**: Real-time player statistics during games with visual highlighting
+**Phase 8 (In Progress)** - Statistics implementation:
+- **Live Player Statistics**: Real-time player statistics with visual highlighting ✅
   - Backend API: GET /statistics/games/{game_id}/live
   - Returns: points_played, effective_time_seconds (point duration - call durations)
   - Frontend: Integrated into GameDetailPage player roster section
@@ -26,7 +26,12 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
   - Sorting: by name/points/time with persistent selection
   - Visual highlighting: Top 20% (green) and bottom 20% (orange) based on playing time
   - Mobile-first 2-column card layout
-  - 14 comprehensive backend tests (357 total passing)
+- **Team Statistics**: Game-level offense/defense efficiency metrics ✅
+  - Backend API: GET /statistics/games/{game_id}/team
+  - Returns: offense stats (win_rate, clean_point_rate, break_rate), defense stats (win_rate, turnover_rate, clean_break_rate, hold_rate)
+  - Turnover attribution logic: Possession tracking based on starting_on_offense + turnover sequence
+  - Only completed points counted
+  - 29 comprehensive backend tests (372 total passing)
 
 **Phase 7 Complete** - Calls & Turnovers tracking fully integrated frontend + backend:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
@@ -49,7 +54,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Point comments and resume functionality for late calls
 - **Call tracking**: Record calls with start/resume timestamps, display call duration, prevent finishing point with pending calls
 - **Turnover tracking**: Record turnovers with player assignment, automatic possession calculation, display turnover history
-- **Live statistics**: Real-time player stats (points played, effective playing time) with visual highlighting for rotation management
+- **Live player statistics**: Real-time player stats (points played, effective playing time) with visual highlighting for rotation management
+- **Team statistics**: Game-level offense/defense efficiency metrics (win rates, clean point rates, break rates, turnover rates)
 - French/English language switching with localStorage persistence
 
 ## Architecture
@@ -88,7 +94,7 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (357 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (372 tests - 100% passing)
 - **Frontend**: Vitest + MSW + React Testing Library (258 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
@@ -114,7 +120,7 @@ backend/app/
 ```bash
 cd backend
 source venv/bin/activate
-pytest tests/ -v                    # Run all 357 tests (100% passing ✅)
+pytest tests/ -v                    # Run all 372 tests (100% passing ✅)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -137,7 +143,7 @@ npm run build                       # Production build
 - `backend/app/schemas/` - Pydantic schemas organized by domain (enums, team, competition, player, game, point, line, strategy, call, turnover)
 - `backend/app/crud/` - CRUD operations organized by domain (teams, competitions, players, games, points, lines, strategies, calls, turnovers)
 - `backend/app/routers/` - API endpoints organized by domain (teams, competitions, players, games, points, lines, strategies, calls, turnovers)
-- `backend/tests/` - 343 comprehensive tests (CRUD + API)
+- `backend/tests/` - 372 comprehensive tests (CRUD + API)
 - `backend/README.md` - Comprehensive backend documentation
 
 ### Frontend

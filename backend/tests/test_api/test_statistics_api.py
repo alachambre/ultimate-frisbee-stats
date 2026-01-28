@@ -213,3 +213,202 @@ def test_get_live_game_statistics_ignores_non_completed_points(client: TestClien
     assert len(data) == 1
     assert data[0]["points_played"] == 1  # Only completed point
     assert data[0]["effective_time_seconds"] == 120  # Only from completed point
+
+
+# Tests for team statistics endpoint
+
+
+def test_get_game_team_statistics_success(client: TestClient, sample_game: models.Game, db_session: Session):
+    """Test successful retrieval of team statistics"""
+    # Create some completed points
+    # 2 offense: 1 won, 1 lost
+    offense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    offense2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+
+    # 2 defense: 1 won, 1 lost
+    defense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    defense2 = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+
+    db_session.add_all([offense1, offense2, defense1, defense2])
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["game_id"] == sample_game.id
+    assert data["total_completed_points"] == 4
+
+    # Offense
+    assert data["offense"]["points_started"] == 2
+    assert data["offense"]["points_won"] == 1
+    assert data["offense"]["points_lost"] == 1
+    assert data["offense"]["win_rate"] == 0.5
+
+    # Defense
+    assert data["defense"]["points_started"] == 2
+    assert data["defense"]["points_won"] == 1
+    assert data["defense"]["points_lost"] == 1
+    assert data["defense"]["win_rate"] == 0.5
+
+
+def test_get_game_team_statistics_game_not_found(client: TestClient):
+    """Test with non-existent game ID"""
+    response = client.get("/statistics/games/99999/team")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Game not found"
+
+
+def test_get_game_team_statistics_no_completed_points(client: TestClient, sample_game: models.Game, db_session: Session):
+    """Test team stats with no completed points"""
+    response = client.get(f"/statistics/games/{sample_game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["game_id"] == sample_game.id
+    assert data["total_completed_points"] == 0
+
+    # All stats should be zero or 0.0
+    assert data["offense"]["points_started"] == 0
+    assert data["offense"]["win_rate"] == 0.0
+    assert data["defense"]["points_started"] == 0
+    assert data["defense"]["win_rate"] == 0.0
+
+
+def test_get_game_team_statistics_with_turnovers(client: TestClient, sample_game: models.Game, db_session: Session):
+    """Test team stats with turnovers"""
+    # Offense point won without turnovers (clean)
+    offense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(offense1)
+    db_session.flush()
+
+    # Offense point won with turnovers (not clean)
+    offense2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(offense2)
+    db_session.flush()
+
+    # Add turnovers to offense2
+    turnover1 = models.Turnover(
+        point_id=offense2.id,
+        timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+    )
+    turnover2 = models.Turnover(
+        point_id=offense2.id,
+        timestamp=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
+    )
+    db_session.add_all([turnover1, turnover2])
+
+    # Defense point with turnover
+    defense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(defense1)
+    db_session.flush()
+
+    turnover3 = models.Turnover(
+        point_id=defense1.id,
+        timestamp=datetime(2024, 1, 1, 11, 1, 0, tzinfo=timezone.utc),
+    )
+    db_session.add(turnover3)
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Offense: 2 won, 1 clean (offense1)
+    assert data["offense"]["points_started"] == 2
+    assert data["offense"]["points_won"] == 2
+    assert data["offense"]["points_won_no_turnover"] == 1
+    assert data["offense"]["clean_point_rate"] == 0.5  # 1 out of 2
+
+    # Defense: 1 started, 1 with turnover
+    assert data["defense"]["points_started"] == 1
+    assert data["defense"]["points_with_turnover"] == 1
+    assert data["defense"]["turnover_rate"] == 1.0
+
+
+def test_get_game_team_statistics_ignores_non_completed(client: TestClient, sample_game: models.Game, db_session: Session):
+    """Test that only completed points are counted"""
+    # Create points with different statuses
+    ready = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        status=models.PointStatusEnum.ready,
+    )
+    running = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        status=models.PointStatusEnum.running,
+    )
+    scored = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=True,
+        status=models.PointStatusEnum.scored,
+    )
+    completed = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+
+    db_session.add_all([ready, running, scored, completed])
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Only 1 completed point should be counted
+    assert data["total_completed_points"] == 1
+    assert data["offense"]["points_started"] == 1
