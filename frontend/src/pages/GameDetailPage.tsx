@@ -458,7 +458,7 @@ export default function GameDetailPage() {
                     ) : game.status === "started" && sortedMenStats.length > 0 ? (
                       <Grid container spacing={2}>
                         {sortedMenStats.map((stats) => (
-                          <Grid size={{ xs: 12, sm: 6 }} key={stats.player_id}>
+                          <Grid size={{ xs: 6, md: 4 }} key={stats.player_id}>
                             <GamePlayerStatsCard stats={stats} />
                           </Grid>
                         ))}
@@ -504,7 +504,7 @@ export default function GameDetailPage() {
                     ) : game.status === "started" && sortedWomenStats.length > 0 ? (
                       <Grid container spacing={2}>
                         {sortedWomenStats.map((stats) => (
-                          <Grid size={{ xs: 12, sm: 6 }} key={stats.player_id}>
+                          <Grid size={{ xs: 6, md: 4 }} key={stats.player_id}>
                             <GamePlayerStatsCard stats={stats} />
                           </Grid>
                         ))}
