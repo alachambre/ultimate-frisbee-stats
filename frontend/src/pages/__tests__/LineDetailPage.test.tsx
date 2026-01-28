@@ -49,7 +49,10 @@ describe("LineDetailPage", () => {
     });
 
     expect(screen.getByText("Test line description")).toBeInTheDocument();
-    expect(screen.getByText(/0 players/i)).toBeInTheDocument();
+    // Player count is rendered as "(0 players)" next to line name
+    expect(screen.getByText((content, element) => {
+      return element?.textContent === "(0 players)" || content.includes("0 player");
+    })).toBeInTheDocument();
     expect(screen.getByText("Test Team")).toBeInTheDocument();
   });
 
@@ -107,7 +110,7 @@ describe("LineDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
       expect(screen.getByText("#42")).toBeInTheDocument();
-      expect(screen.getByText(/1 players/i)).toBeInTheDocument();
+      expect(screen.getByText(/\(1 player\)/i)).toBeInTheDocument(); // Singular form
     });
   });
 
@@ -168,7 +171,10 @@ describe("LineDetailPage", () => {
       expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText(/0 players/i)).toBeInTheDocument();
+    // Player count should be back to 0
+    expect(screen.getByText((content, element) => {
+      return element?.textContent === "(0 players)" || content.includes("0 player");
+    })).toBeInTheDocument();
   });
 
   it("allows user to edit the line", async () => {

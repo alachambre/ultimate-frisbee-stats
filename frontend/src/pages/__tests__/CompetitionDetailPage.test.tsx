@@ -36,7 +36,7 @@ describe("CompetitionDetailPage", () => {
 
     expect(screen.getByText("A test competition")).toBeInTheDocument();
     expect(screen.getByText(/Jun 1, 2024 - Jun 30, 2024/i)).toBeInTheDocument();
-    expect(screen.getByText("ongoing")).toBeInTheDocument();
+    expect(screen.getByText("Ongoing")).toBeInTheDocument(); // Capitalized due to i18n
   });
 
   it("shows empty state when roster has no players", async () => {

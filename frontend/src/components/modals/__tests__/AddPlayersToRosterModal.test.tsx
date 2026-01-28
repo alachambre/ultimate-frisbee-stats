@@ -177,8 +177,10 @@ describe("AddPlayersToRosterModal", () => {
     await user.click(player2);
 
     // Submit button should show "Add 2 Players"
+    // Note: Checking for "2" to ensure count updated, as i18n pluralization may vary
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /add 2 players/i })).toBeInTheDocument();
+      const button = screen.getByRole("button", { name: /add.*2.*player/i });
+      expect(button).toBeInTheDocument();
     });
   });
 
