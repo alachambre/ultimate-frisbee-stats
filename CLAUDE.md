@@ -17,11 +17,13 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Current Status
 
-**Phase 6.5 Complete** - Full internationalization (i18n) with French/English support:
-- **Data Model**: Team → Competition → Game → Point hierarchy with 7 entities (teams, players, competitions, games, points, lines, strategies)
-- **Backend**: Complete REST API for all entities, SQLite with foreign keys, domain-organized code structure, production logging for debugging
-- **Frontend**: Full CRUD interfaces for all entities, mobile-first design, comprehensive test coverage, full i18n support
+**Phase 7 Backend Complete** - Calls & Turnovers tracking for playing time and player statistics:
+- **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
+- **Backend**: Complete REST API for all entities including calls/turnovers, SQLite with foreign keys, domain-organized code structure, production logging
+- **Frontend**: Full CRUD interfaces for Phase 6.5 entities, mobile-first design, comprehensive test coverage, full i18n support
 - **Point Tracking**: 4-status workflow (ready→running→scored→completed), ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
+- **Call Tracking** (Phase 7 Backend): Track call/resume timestamps for dead time calculation during points
+- **Turnover Tracking** (Phase 7 Backend): Track possession changes with optional player assignment for player statistics
 - **UI**: Navy/sky blue theme (#1e3a8a → #38bdf8), consistent card design, responsive layouts
 - **i18n**: React-i18next with 9 translation namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies), language selector in AppBar, sport terms stay in English per GLOSSARY.md
 - **Logging**: Essential logs for production debugging (errors, key operations, lifecycle events) - see LOGGING.md
@@ -34,6 +36,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Strategy management (offense/defense plays)
 - Pull tracking (inbound/out of bounds)
 - Point comments and resume functionality for late calls
+- **Call tracking** (Backend): Dead time calculation via call/resume timestamp pairs
+- **Turnover tracking** (Backend): Player turnover statistics with optional player assignment
 - French/English language switching with localStorage persistence
 
 ## Architecture
@@ -72,7 +76,7 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (279 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (343 tests - 100% passing)
 - **Frontend**: Vitest + MSW + React Testing Library (185 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
@@ -82,15 +86,17 @@ backend/app/
 
 **Remaining features** (see `requirements.md` for full details):
 
-**Phase 7: Calls & Turnovers - NEXT**
-- Call model (fouls/violations with timing)
-- Turnover model (with player responsibility)
-- Integrate into point tracking UI
+**Phase 7 Frontend: Calls & Turnovers UI - NEXT**
+- Integrate call tracking into point tracking UI (start/resume call buttons)
+- Integrate turnover tracking into point tracking UI (record turnover with player selection)
+- Display call and turnover history within active point view
+- Backend APIs ready and tested (343 tests passing)
 
 **Phase 8: Statistics Dashboard**
 - Game/competition/team/player analytics
 - Offense/defense efficiency metrics
-- Player playing time tracking
+- Player playing time tracking (using call data for dead time)
+- Turnover statistics per player
 - Visualizations and charts
 
 ## Important Commands
@@ -99,7 +105,7 @@ backend/app/
 ```bash
 cd backend
 source venv/bin/activate
-pytest tests/ -v                    # Run all 279 tests (100% passing ✅)
+pytest tests/ -v                    # Run all 343 tests (100% passing ✅)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -118,11 +124,11 @@ npm run build                       # Production build
 - `backend/app/database.py` - SQLite config with foreign key enforcement
 - `backend/app/logging_config.py` - Logging configuration for production debugging
 - `backend/app/main.py` - FastAPI app with global exception handler and lifecycle logging
-- `backend/app/models/` - SQLAlchemy models organized by domain (base, team, competition, player, game, point, line, strategy)
-- `backend/app/schemas/` - Pydantic schemas organized by domain (enums, team, competition, player, game, point, line, strategy)
-- `backend/app/crud/` - CRUD operations organized by domain (teams, competitions, players, games, points, lines, strategies)
-- `backend/app/routers/` - API endpoints organized by domain (teams, competitions, players, games, points, lines, strategies)
-- `backend/tests/` - 273 comprehensive tests (CRUD + API)
+- `backend/app/models/` - SQLAlchemy models organized by domain (base, team, competition, player, game, point, line, strategy, call, turnover)
+- `backend/app/schemas/` - Pydantic schemas organized by domain (enums, team, competition, player, game, point, line, strategy, call, turnover)
+- `backend/app/crud/` - CRUD operations organized by domain (teams, competitions, players, games, points, lines, strategies, calls, turnovers)
+- `backend/app/routers/` - API endpoints organized by domain (teams, competitions, players, games, points, lines, strategies, calls, turnovers)
+- `backend/tests/` - 343 comprehensive tests (CRUD + API)
 - `backend/README.md` - Comprehensive backend documentation
 
 ### Frontend
