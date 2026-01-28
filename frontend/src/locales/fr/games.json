@@ -49,7 +49,11 @@
     "removePlayerConfirm": "Retirer \"{{playerName}}\" de ce match ? Cela ne supprimera pas le joueur de l'effectif de la compétition.",
     "removePlayerError": "Erreur lors du retrait du joueur du match. Veuillez réessayer.",
     "removePlayer": "Retirer le joueur",
-    "removingPlayer": "Retrait..."
+    "removingPlayer": "Retrait...",
+    "sortBy": "Trier par",
+    "sortByName": "Nom",
+    "sortByPoints": "Points joués",
+    "sortByTime": "Temps de jeu"
   },
   "modal": {
     "create": {

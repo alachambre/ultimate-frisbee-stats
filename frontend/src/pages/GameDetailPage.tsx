@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,10 @@ import {
   alpha,
   Collapse,
   IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,7 +32,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import AddIcon from "@mui/icons-material/Add";
-import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame } from "../services";
+import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
 import { getRunningPoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
@@ -38,9 +42,10 @@ import LivePointTracker from "../components/points/LivePointTracker";
 import PointHistoryList from "../components/points/PointHistoryList";
 import EditPointDialog from "../components/modals/EditPointDialog";
 import PlayersGrid from "../components/players/PlayersGrid";
+import GamePlayerStatsCard from "../components/players/GamePlayerStatsCard";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
-import type { PointWithPlayers, Player } from "../types";
+import type { PointWithPlayers, Player, PlayerGameStats } from "../types";
 
 export default function GameDetailPage() {
   const { t, i18n } = useTranslation(["games", "players", "common"]);
@@ -55,6 +60,7 @@ export default function GameDetailPage() {
   const [showPlayers, setShowPlayers] = useState(false);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
+  const [sortBy, setSortBy] = useState<"name" | "points" | "time">("name");
 
   const {
     data: game,
@@ -70,6 +76,14 @@ export default function GameDetailPage() {
   const { data: runningPoint } = useQuery({
     queryKey: ["runningPoint", gameId],
     queryFn: () => getRunningPoint(Number(gameId)),
+    enabled: !!gameId && game?.status === "started",
+    refetchInterval: game?.status === "started" ? 5000 : false,
+  });
+
+  // Poll for live game statistics every 5 seconds while game is started
+  const { data: liveStats } = useQuery({
+    queryKey: ["liveGameStats", gameId],
+    queryFn: () => getLiveGameStatistics(Number(gameId)),
     enabled: !!gameId && game?.status === "started",
     refetchInterval: game?.status === "started" ? 5000 : false,
   });
@@ -123,6 +137,33 @@ export default function GameDetailPage() {
       setPlayerToRemove(null);
     },
   });
+
+  // Helper function to sort stats
+  const sortStats = (stats: PlayerGameStats[]): PlayerGameStats[] => {
+    const sorted = [...stats];
+    switch (sortBy) {
+      case "points":
+        return sorted.sort((a, b) => b.points_played - a.points_played || a.player_name.localeCompare(b.player_name));
+      case "time":
+        return sorted.sort((a, b) => b.effective_time_seconds - a.effective_time_seconds || a.player_name.localeCompare(b.player_name));
+      case "name":
+      default:
+        return sorted.sort((a, b) => a.player_name.localeCompare(b.player_name));
+    }
+  };
+
+  // Sorted stats by gender
+  const sortedMenStats = useMemo(() => {
+    if (!liveStats) return [];
+    const menIds = game?.players.filter((p) => p.gender === "M").map((p) => p.id) || [];
+    return sortStats(liveStats.filter((s) => menIds.includes(s.player_id)));
+  }, [liveStats, game?.players, sortBy]);
+
+  const sortedWomenStats = useMemo(() => {
+    if (!liveStats) return [];
+    const womenIds = game?.players.filter((p) => p.gender === "W").map((p) => p.id) || [];
+    return sortStats(liveStats.filter((s) => womenIds.includes(s.player_id)));
+  }, [liveStats, game?.players, sortBy]);
 
   if (isLoading) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -368,6 +409,24 @@ export default function GameDetailPage() {
 
           <Collapse in={showPlayers}>
             <Box p={3}>
+              {/* Sorting Controls - only show when game is started and we have stats */}
+              {game.status === "started" && liveStats && liveStats.length > 0 && (
+                <Box mb={3}>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel id="sort-by-label">{t("games:detail.sortBy")}</InputLabel>
+                    <Select
+                      labelId="sort-by-label"
+                      value={sortBy}
+                      label={t("games:detail.sortBy")}
+                      onChange={(e) => setSortBy(e.target.value as "name" | "points" | "time")}
+                    >
+                      <MenuItem value="name">{t("games:detail.sortByName")}</MenuItem>
+                      <MenuItem value="points">{t("games:detail.sortByPoints")}</MenuItem>
+                      <MenuItem value="time">{t("games:detail.sortByTime")}</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
               <Grid container spacing={3}>
                 {/* Men Column */}
                 <Grid size={{ xs: 12, md: 6 }}>
@@ -396,6 +455,14 @@ export default function GameDetailPage() {
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
                         {t("players:empty.noPlayers")}
                       </Typography>
+                    ) : game.status === "started" && sortedMenStats.length > 0 ? (
+                      <Grid container spacing={2}>
+                        {sortedMenStats.map((stats) => (
+                          <Grid size={{ xs: 12, sm: 6 }} key={stats.player_id}>
+                            <GamePlayerStatsCard stats={stats} />
+                          </Grid>
+                        ))}
+                      </Grid>
                     ) : (
                       <PlayersGrid
                         players={game.players
@@ -434,6 +501,14 @@ export default function GameDetailPage() {
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
                         {t("players:empty.noPlayers")}
                       </Typography>
+                    ) : game.status === "started" && sortedWomenStats.length > 0 ? (
+                      <Grid container spacing={2}>
+                        {sortedWomenStats.map((stats) => (
+                          <Grid size={{ xs: 12, sm: 6 }} key={stats.player_id}>
+                            <GamePlayerStatsCard stats={stats} />
+                          </Grid>
+                        ))}
+                      </Grid>
                     ) : (
                       <PlayersGrid
                         players={game.players

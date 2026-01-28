@@ -311,3 +311,15 @@ export interface TurnoverUpdate {
   timestamp?: string;
   comments?: string | null;
 }
+
+// ============================================
+// Statistics Types
+// ============================================
+
+export interface PlayerGameStats {
+  player_id: number;
+  player_name: string;
+  player_number: number;
+  points_played: number;
+  effective_time_seconds: number;
+}

@@ -49,7 +49,11 @@
     "removePlayerConfirm": "Remove \"{{playerName}}\" from this game? This will not delete the player from the competition roster.",
     "removePlayerError": "Error removing player from game. Please try again.",
     "removePlayer": "Remove Player",
-    "removingPlayer": "Removing..."
+    "removingPlayer": "Removing...",
+    "sortBy": "Sort by",
+    "sortByName": "Name",
+    "sortByPoints": "Points Played",
+    "sortByTime": "Playing Time"
   },
   "modal": {
     "create": {
