@@ -140,15 +140,11 @@ export default function GameDetailPage() {
 
   // Helper function to determine highlight based on playing time
   const getHighlight = (stats: PlayerGameStats, allStats: PlayerGameStats[]): "high" | "low" | null => {
-    // Players with 0 time should be highlighted as low priority (need playing time)
-    if (stats.effective_time_seconds === 0) return "low";
+    // Need at least 4 players total to create meaningful quartiles
+    if (allStats.length < 4) return null;
 
-    // Get all players who have played (time > 0)
-    const playersWithTime = allStats.filter((s) => s.effective_time_seconds > 0);
-    if (playersWithTime.length < 4) return null; // Need at least 4 players to create meaningful quartiles
-
-    // Sort by time (descending)
-    const sortedByTime = [...playersWithTime].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
+    // Sort ALL players by time (descending) - includes players with 0 time
+    const sortedByTime = [...allStats].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
 
     // Calculate quartiles (top 25% and bottom 25%)
     // With ~20 players, this means ~5 players on each end will be highlighted
@@ -158,12 +154,13 @@ export default function GameDetailPage() {
     const bottomThreshold = sortedByTime[sortedByTime.length - quartileSize]?.effective_time_seconds || 0;
 
     // Highlight top quartile players (most playing time)
-    if (stats.effective_time_seconds >= topThreshold && stats.effective_time_seconds > bottomThreshold) {
+    // Must have actual playing time to be in top quartile
+    if (stats.effective_time_seconds > 0 && stats.effective_time_seconds >= topThreshold && stats.effective_time_seconds > bottomThreshold) {
       return "high";
     }
 
-    // Highlight bottom quartile players (least playing time)
-    if (stats.effective_time_seconds <= bottomThreshold && stats.effective_time_seconds < topThreshold) {
+    // Highlight bottom quartile players (least playing time, including 0)
+    if (stats.effective_time_seconds <= bottomThreshold) {
       return "low";
     }
 
