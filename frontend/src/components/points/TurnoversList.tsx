@@ -15,9 +15,23 @@ import { getTurnoversByPoint } from '../../services/turnovers';
 interface TurnoversListProps {
   pointId: number;
   startingOnOffense: boolean;
+  pointStartTime: string | null;
 }
 
-export const TurnoversList = ({ pointId, startingOnOffense }: TurnoversListProps) => {
+// Helper function to format elapsed time from point start
+const formatElapsedTime = (startTime: string | null, timestamp: string): string => {
+  if (!startTime) return new Date(timestamp).toLocaleTimeString();
+
+  const start = new Date(startTime);
+  const event = new Date(timestamp);
+  const elapsedSeconds = Math.floor((event.getTime() - start.getTime()) / 1000);
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: TurnoversListProps) => {
   const { t } = useTranslation('points');
 
   const { data: turnovers = [], isLoading, error } = useQuery({
@@ -73,7 +87,7 @@ export const TurnoversList = ({ pointId, startingOnOffense }: TurnoversListProps
                   />
                   <ArrowForwardIcon fontSize="small" color="action" />
                   <Typography variant="body2">
-                    {timestamp.toLocaleTimeString()}
+                    {formatElapsedTime(pointStartTime, turnover.timestamp)}
                   </Typography>
                 </Box>
                 {turnover.player && (

@@ -9,6 +9,9 @@ import i18n from "../locales";
 // Set up MSW server
 const server = setupServer(...handlers);
 
+// Export server for use in tests that need to override handlers
+export { server };
+
 // Start server before all tests
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });

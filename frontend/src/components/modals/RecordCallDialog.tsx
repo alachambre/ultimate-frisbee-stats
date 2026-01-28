@@ -13,7 +13,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createCall } from '../../services/calls';
-import { PointWithPlayers, CallCreate } from '../../types';
+import type { PointWithPlayers, CallCreate } from '../../types';
 
 interface RecordCallDialogProps {
   open: boolean;
@@ -25,7 +25,6 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
   const [comments, setComments] = useState('');
-  const [callTimestamp] = useState(new Date().toISOString());
 
   const mutation = useMutation({
     mutationFn: (newCall: CallCreate) => createCall(newCall),
@@ -39,7 +38,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
   const handleSubmit = () => {
     mutation.mutate({
       point_id: point.id,
-      call_timestamp: callTimestamp,
+      call_timestamp: new Date().toISOString(), // Generate timestamp when call is recorded
       comments: comments.trim() || null,
     });
   };

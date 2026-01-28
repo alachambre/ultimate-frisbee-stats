@@ -31,9 +31,10 @@ import { RecordCallDialog } from "../modals/RecordCallDialog";
 import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
 import { CallsList } from "./CallsList";
 import { TurnoversList } from "./TurnoversList";
-import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer } from "../../types";
+import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Call } from "../../types";
 import { useQuery } from "@tanstack/react-query";
 import { getTurnoversByPoint } from "../../services/turnovers";
+import { getCallsByPoint } from "../../services/calls";
 
 interface LivePointTrackerProps {
   game: GameDetail;
@@ -66,6 +67,16 @@ export default function LivePointTracker({
     queryFn: () => getTurnoversByPoint(activePoint!.id),
     enabled: !!activePoint,
   });
+
+  // Fetch calls for active point (needed to check for pending calls)
+  const { data: calls = [] } = useQuery<Call[]>({
+    queryKey: ['calls', activePoint?.id],
+    queryFn: () => getCallsByPoint(activePoint!.id),
+    enabled: !!activePoint,
+  });
+
+  // Check if there are any pending calls (calls without resume_timestamp)
+  const hasPendingCall = calls.some(call => call.resume_timestamp === null);
 
   // Find scored points (most recent scored point)
   const scoredPoint = useMemo(() => {
@@ -273,8 +284,12 @@ export default function LivePointTracker({
                 </Box>
 
                 {/* Display lists if data exists */}
-                <CallsList pointId={activePoint.id} />
-                <TurnoversList pointId={activePoint.id} startingOnOffense={activePoint.starting_on_offense} />
+                <CallsList pointId={activePoint.id} pointStartTime={activePoint.start_datetime} />
+                <TurnoversList
+                  pointId={activePoint.id}
+                  startingOnOffense={activePoint.starting_on_offense}
+                  pointStartTime={activePoint.start_datetime}
+                />
               </Box>
             )}
 
@@ -285,7 +300,9 @@ export default function LivePointTracker({
                   color="success"
                   startIcon={<CheckCircleIcon />}
                   onClick={() => setIsFinishDialogOpen(true)}
+                  disabled={hasPendingCall}
                   size="large"
+                  title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : ""}
                 >
                   {t("points:tracker.finish", "Finish Point")}
                 </Button>

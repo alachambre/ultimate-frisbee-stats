@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Turnover, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate } from '../types';
+import type { Turnover, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 

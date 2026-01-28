@@ -21,7 +21,8 @@
     "playersOnField": "Joueurs sur le terrain",
     "pullQuestion": "Le pull a-t-il atterri dans le terrain ?",
     "offenseStrategies": "Stratégies attaque",
-    "defenseStrategies": "Stratégies défense"
+    "defenseStrategies": "Stratégies défense",
+    "pendingCallWarning": "Impossible de terminer le point avec un call en attente"
   },
   "dialog": {
     "start": {

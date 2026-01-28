@@ -13,7 +13,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { updateCall } from '../../services/calls';
-import { Call, CallUpdate } from '../../types';
+import type { Call, CallUpdate } from '../../types';
 
 interface ResumeFromCallDialogProps {
   open: boolean;
@@ -24,7 +24,6 @@ interface ResumeFromCallDialogProps {
 export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
-  const [resumeTimestamp] = useState(new Date().toISOString());
 
   const mutation = useMutation({
     mutationFn: (callUpdate: CallUpdate) => updateCall(call.id, callUpdate),
@@ -36,7 +35,7 @@ export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDial
 
   const handleSubmit = () => {
     mutation.mutate({
-      resume_timestamp: resumeTimestamp,
+      resume_timestamp: new Date().toISOString(), // Generate timestamp when resuming
     });
   };
 
@@ -47,9 +46,9 @@ export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDial
     }
   };
 
-  // Calculate duration
+  // Calculate duration using current time for display
   const callTime = new Date(call.call_timestamp);
-  const resumeTime = new Date(resumeTimestamp);
+  const resumeTime = new Date(); // Use current time for duration display
   const durationSeconds = Math.floor((resumeTime.getTime() - callTime.getTime()) / 1000);
   const minutes = Math.floor(durationSeconds / 60);
   const seconds = durationSeconds % 60;

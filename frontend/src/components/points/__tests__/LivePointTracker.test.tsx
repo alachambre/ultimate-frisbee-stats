@@ -1,0 +1,414 @@
+import { render, screen, waitFor } from "../../../test/test-utils";
+import { describe, it, expect, beforeEach } from "vitest";
+import { http, HttpResponse } from "msw";
+import { server } from "../../../test/setup";
+import LivePointTracker from "../LivePointTracker";
+import type { GameDetail, Player, Call } from "../../../types";
+
+const BASE_URL = "http://localhost:8000";
+
+const mockPlayers: Player[] = [
+  { id: 1, name: "Alice", number: 10, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  { id: 2, name: "Bob", number: 20, gender: "M", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  { id: 3, name: "Charlie", number: 30, gender: "M", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  { id: 4, name: "Diana", number: 40, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  { id: 5, name: "Eve", number: 50, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  { id: 6, name: "Frank", number: 60, gender: "M", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  { id: 7, name: "Grace", number: 70, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+];
+
+const createMockGame = (status: "ready" | "started" | "ended" = "started"): GameDetail => ({
+  id: 1,
+  competition_id: 1,
+  opponent_name: "Test Opponents",
+  status,
+  date: null,
+  comments: null,
+  start_datetime: status === "started" ? "2024-01-01T10:00:00Z" : null,
+  end_datetime: null,
+  created_at: "2024-01-01T00:00:00Z",
+  our_score: 0,
+  opponent_score: 0,
+  team_name: "Test Team",
+  competition_name: "Test Competition",
+  points: [],
+  players: mockPlayers,
+});
+
+const createMockRunningPoint = () => ({
+  id: 1,
+  game_id: 1,
+  point_number: 1,
+  starting_on_offense: true,
+  won: null,
+  field_side: null,
+  pull: true,
+  strategy_id: null,
+  comments: null,
+  start_datetime: "2024-01-01T10:05:00Z",
+  end_datetime: null,
+  status: "running" as const,
+  created_at: "2024-01-01T10:05:00Z",
+  players: mockPlayers,
+  strategy: null,
+  duration_seconds: null,
+});
+
+describe("LivePointTracker - Pending Call Feature", () => {
+  beforeEach(() => {
+    // Reset any runtime request handlers we add during tests
+    server.resetHandlers();
+  });
+
+  describe("Finish Point Button - Pending Call Validation", () => {
+    it("enables finish button when there are no calls", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      // Mock empty calls array
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      // Wait for the component to load and queries to complete
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeInTheDocument();
+        expect(finishButton).not.toBeDisabled();
+      });
+    });
+
+    it("enables finish button when all calls are resolved", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      // Mock calls with all having resume_timestamp (resolved)
+      const resolvedCalls: Call[] = [
+        {
+          id: 1,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:06:00Z",
+          resume_timestamp: "2024-01-01T10:07:00Z", // Resolved
+          comments: "Test call 1",
+          created_at: "2024-01-01T10:06:00Z",
+        },
+        {
+          id: 2,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:08:00Z",
+          resume_timestamp: "2024-01-01T10:09:00Z", // Resolved
+          comments: "Test call 2",
+          created_at: "2024-01-01T10:08:00Z",
+        },
+      ];
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json(resolvedCalls);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeInTheDocument();
+        expect(finishButton).not.toBeDisabled();
+      });
+    });
+
+    it("disables finish button when there is one pending call", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      // Mock calls with one pending (null resume_timestamp)
+      const callsWithPending: Call[] = [
+        {
+          id: 1,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:06:00Z",
+          resume_timestamp: null, // Pending!
+          comments: "Pending call",
+          created_at: "2024-01-01T10:06:00Z",
+        },
+      ];
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json(callsWithPending);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeInTheDocument();
+        expect(finishButton).toBeDisabled();
+      });
+    });
+
+    it("disables finish button when there are multiple pending calls", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      // Mock calls with multiple pending
+      const callsWithPending: Call[] = [
+        {
+          id: 1,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:06:00Z",
+          resume_timestamp: null, // Pending
+          comments: "Pending call 1",
+          created_at: "2024-01-01T10:06:00Z",
+        },
+        {
+          id: 2,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:08:00Z",
+          resume_timestamp: null, // Pending
+          comments: "Pending call 2",
+          created_at: "2024-01-01T10:08:00Z",
+        },
+      ];
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json(callsWithPending);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeInTheDocument();
+        expect(finishButton).toBeDisabled();
+      });
+    });
+
+    it("disables finish button when there is a mix of resolved and pending calls", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      // Mock calls with mix of resolved and pending
+      const mixedCalls: Call[] = [
+        {
+          id: 1,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:06:00Z",
+          resume_timestamp: "2024-01-01T10:07:00Z", // Resolved
+          comments: "Resolved call",
+          created_at: "2024-01-01T10:06:00Z",
+        },
+        {
+          id: 2,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:08:00Z",
+          resume_timestamp: null, // Pending - this should disable the button
+          comments: "Pending call",
+          created_at: "2024-01-01T10:08:00Z",
+        },
+      ];
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json(mixedCalls);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeInTheDocument();
+        expect(finishButton).toBeDisabled();
+      });
+    });
+
+    it("shows tooltip warning when finish button is disabled due to pending call", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      const callsWithPending: Call[] = [
+        {
+          id: 1,
+          point_id: 1,
+          call_timestamp: "2024-01-01T10:06:00Z",
+          resume_timestamp: null, // Pending
+          comments: "Pending call",
+          created_at: "2024-01-01T10:06:00Z",
+        },
+      ];
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json(callsWithPending);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeDisabled();
+        expect(finishButton).toHaveAttribute("title", "Cannot finish point with pending call");
+      });
+    });
+
+    it("does not show tooltip when finish button is enabled", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).not.toBeDisabled();
+        expect(finishButton).toHaveAttribute("title", "");
+      });
+    });
+  });
+
+  describe("LivePointTracker - Basic Rendering", () => {
+    it("does not render when game is not started", () => {
+      const game = createMockGame("ready");
+
+      const { container } = render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      // Component should return null for non-started games
+      expect(container.firstChild).toBeNull();
+    });
+
+    it("renders start point button when no active point", async () => {
+      const game = createMockGame();
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /start point/i })).toBeInTheDocument();
+      });
+    });
+
+    it("renders finish point button when point is running", async () => {
+      const game = createMockGame();
+      const activePoint = createMockRunningPoint();
+
+      server.use(
+        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /finish point/i })).toBeInTheDocument();
+      });
+    });
+  });
+});

@@ -652,11 +652,11 @@ The project uses Vitest with React Testing Library and MSW for API mocking.
 **Test Organization:**
 - All tests are organized in `__tests__/` subdirectories within their respective component/page directories
 - Page tests: Comprehensive tests for all page components (Teams, Games, Competitions, Lines)
-- Component tests: Unit tests for shared components (PointTimer, PlayerSelector, PlayerCard, PlayerSelectionUI)
-- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog, CompletePointDialog, Strategy modals)
-- MSW provides realistic API mocking with request interception for all backend endpoints (including strategies)
+- Component tests: Unit tests for shared components (PointTimer, PlayerSelector, PlayerCard, PlayerSelectionUI, CallsList, TurnoversList)
+- Modal tests: Integration tests for all dialogs (Create/Edit modals, StartPointDialog, FinishPointDialog, EditPointDialog, CompletePointDialog, Strategy modals, Call/Turnover dialogs)
+- MSW provides realistic API mocking with request interception for all backend endpoints (including strategies, calls, turnovers)
 - i18n mock in test-utils.tsx ensures all tests use English translations
-- **Current: 185 tests passing across 23 test files (100% pass rate)**
+- **Current: 239 tests passing across 33 test files (100% pass rate)**
 
 ### Development Workflow
 
@@ -694,7 +694,7 @@ Backend is configured to allow all origins in development. If you still see CORS
 - ✅ **localStorage Persistence**: Language preference saved and restored
 - ✅ **Sport Terminology**: Ultimate frisbee terms stay in English (Pull, Turnover, Break) per GLOSSARY.md
 - ✅ **TypeScript Support**: Type-safe translation keys with autocomplete
-- ✅ **Testing**: 185 tests passing (100% pass rate) with i18n mock using English
+- ✅ **Testing**: 239 tests passing (100% pass rate) with i18n mock using English
 
 **Phase 6 Frontend (Complete):**
 - ✅ **Strategy Management UI**: StrategiesPage with full CRUD, CreateStrategyModal, EditStrategyModal
@@ -716,6 +716,18 @@ Backend is configured to allow all origins in development. If you still see CORS
   - Code cleanup: Simplified timer rendering, consolidated duplicate code
 - ⏳ **ABBA Gender Rule**: Not yet implemented (frontend validation only)
 
+**Phase 7: Calls & Turnovers (Complete):**
+- ✅ **Call Tracking**: RecordCallDialog to record call start, ResumeFromCallDialog to record resume
+- ✅ **Turnover Tracking**: RecordTurnoverDialog with automatic possession calculation
+- ✅ **Player Assignment**: Optional player selection for our turnovers (when we have possession)
+- ✅ **Elapsed Time Display**: All events show MM:SS from point start (not absolute time)
+- ✅ **CallsList Component**: Display calls with duration, pending/resolved status, resume button
+- ✅ **TurnoversList Component**: Display turnovers with sequence numbers, player info, possession indicators
+- ✅ **Point Finish Validation**: Prevent finishing point when there's a pending call
+- ✅ **Live Integration**: Call/Turnover buttons and history displayed in LivePointTracker
+- ✅ **Comprehensive Tests**: 48 new tests for dialogs and display components (100% pass rate)
+- ✅ **i18n Support**: All text translated in English/French
+
 **Phase 5 Complete:**
 - ✅ Lines management (create, edit, delete lines with player selection)
 - ✅ Game player selection from competition roster
@@ -729,9 +741,9 @@ Backend is configured to allow all origins in development. If you still see CORS
 ## Future Enhancements
 
 The application roadmap includes:
-- **Calls & Turnovers**: Track fouls, violations, and turnover events (Phase 7)
-- **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics (Phase 8)
+- **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics (Phase 8 - Next)
 - **PWA Features**: Offline support, install prompt, service worker caching
+- **Export/Sharing**: CSV export, PDF reports, share game statistics
 
 ## Contributing
 

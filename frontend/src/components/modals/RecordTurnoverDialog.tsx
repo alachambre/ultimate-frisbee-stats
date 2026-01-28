@@ -15,7 +15,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createTurnover } from '../../services/turnovers';
-import { PointWithPlayers, TurnoverWithPlayer, TurnoverCreate } from '../../types';
+import type { PointWithPlayers, TurnoverWithPlayer, TurnoverCreate } from '../../types';
 import PlayerSelector from '../points/PlayerSelector';
 
 interface RecordTurnoverDialogProps {
@@ -30,7 +30,6 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
   const queryClient = useQueryClient();
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [comments, setComments] = useState('');
-  const [timestamp] = useState(new Date().toISOString());
 
   // Calculate current possession
   // Start with starting_on_offense, then toggle with each turnover
@@ -53,7 +52,7 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
     mutation.mutate({
       point_id: point.id,
       player_id: weHavePossession ? selectedPlayerId : null,
-      timestamp: timestamp,
+      timestamp: new Date().toISOString(), // Generate timestamp when turnover is recorded
       comments: comments.trim() || null,
     });
   };

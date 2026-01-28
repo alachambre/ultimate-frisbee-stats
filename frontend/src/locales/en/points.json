@@ -21,7 +21,8 @@
     "playersOnField": "Players on field",
     "pullQuestion": "Did the pull land inbound?",
     "offenseStrategies": "Offense Strategies",
-    "defenseStrategies": "Defense Strategies"
+    "defenseStrategies": "Defense Strategies",
+    "pendingCallWarning": "Cannot finish point with pending call"
   },
   "dialog": {
     "start": {

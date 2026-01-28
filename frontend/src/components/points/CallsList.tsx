@@ -13,14 +13,28 @@ import { PauseCircle as PauseCircleIcon } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getCallsByPoint } from '../../services/calls';
-import { Call } from '../../types';
+import type { Call } from '../../types';
 import { ResumeFromCallDialog } from '../modals/ResumeFromCallDialog';
 
 interface CallsListProps {
   pointId: number;
+  pointStartTime: string | null;
 }
 
-export const CallsList = ({ pointId }: CallsListProps) => {
+// Helper function to format elapsed time from point start
+const formatElapsedTime = (startTime: string | null, timestamp: string): string => {
+  if (!startTime) return new Date(timestamp).toLocaleTimeString();
+
+  const start = new Date(startTime);
+  const event = new Date(timestamp);
+  const elapsedSeconds = Math.floor((event.getTime() - start.getTime()) / 1000);
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
   const { t } = useTranslation('points');
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
@@ -77,7 +91,7 @@ export const CallsList = ({ pointId }: CallsListProps) => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                     <PauseCircleIcon fontSize="small" color="action" />
                     <Typography variant="body2">
-                      {callTime.toLocaleTimeString()}
+                      {formatElapsedTime(pointStartTime, call.call_timestamp)}
                     </Typography>
                     {isResolved ? (
                       <Chip

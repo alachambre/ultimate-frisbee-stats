@@ -17,14 +17,14 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Current Status
 
-**Phase 7 Backend Complete** - Calls & Turnovers tracking for playing time and player statistics:
+**Phase 7 Complete** - Calls & Turnovers tracking fully integrated frontend + backend:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
 - **Backend**: Complete REST API for all entities including calls/turnovers, SQLite with foreign keys, domain-organized code structure, production logging
-- **Frontend**: Full CRUD interfaces for Phase 6.5 entities, mobile-first design, comprehensive test coverage, full i18n support
+- **Frontend**: Full CRUD interfaces for all Phase 7 entities, mobile-first design, comprehensive test coverage, full i18n support
 - **Point Tracking**: 4-status workflow (ready→running→scored→completed), ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
-- **Call Tracking** (Phase 7 Backend): Track call/resume timestamps for dead time calculation during points
-- **Turnover Tracking** (Phase 7 Backend): Track possession changes with optional player assignment for player statistics
-- **UI**: Navy/sky blue theme (#1e3a8a → #38bdf8), consistent card design, responsive layouts
+- **Call Tracking**: Record call start/resume with elapsed time display, pending call blocks point finish, dead time calculation ready for statistics
+- **Turnover Tracking**: Record turnovers with optional player assignment, automatic possession tracking, displays turnover sequence with elapsed time
+- **UI**: Navy/sky blue theme (#1e3a8a → #38bdf8), consistent card design, responsive layouts, elapsed time display (MM:SS from point start)
 - **i18n**: React-i18next with 9 translation namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies), language selector in AppBar, sport terms stay in English per GLOSSARY.md
 - **Logging**: Essential logs for production debugging (errors, key operations, lifecycle events) - see LOGGING.md
 
@@ -36,8 +36,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Strategy management (offense/defense plays)
 - Pull tracking (inbound/out of bounds)
 - Point comments and resume functionality for late calls
-- **Call tracking** (Backend): Dead time calculation via call/resume timestamp pairs
-- **Turnover tracking** (Backend): Player turnover statistics with optional player assignment
+- **Call tracking**: Record calls with start/resume timestamps, display call duration, prevent finishing point with pending calls
+- **Turnover tracking**: Record turnovers with player assignment, automatic possession calculation, display turnover history
 - French/English language switching with localStorage persistence
 
 ## Architecture
@@ -77,27 +77,22 @@ backend/app/
 
 ### Testing
 - **Backend**: Pytest with comprehensive CRUD and API coverage (343 tests - 100% passing)
-- **Frontend**: Vitest + MSW + React Testing Library (185 tests - 100% passing)
+- **Frontend**: Vitest + MSW + React Testing Library (239 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
 - **Organization**: Tests in `__tests__/` subdirectories
 
 ## Next Steps
 
-**Remaining features** (see `requirements.md` for full details):
-
-**Phase 7 Frontend: Calls & Turnovers UI - NEXT**
-- Integrate call tracking into point tracking UI (start/resume call buttons)
-- Integrate turnover tracking into point tracking UI (record turnover with player selection)
-- Display call and turnover history within active point view
-- Backend APIs ready and tested (343 tests passing)
-
-**Phase 8: Statistics Dashboard**
+**Phase 8: Statistics Dashboard - NEXT**
 - Game/competition/team/player analytics
 - Offense/defense efficiency metrics
-- Player playing time tracking (using call data for dead time)
+- Player playing time tracking (using call data for dead time calculation)
 - Turnover statistics per player
+- Possession statistics and flow
+- Point duration analysis
 - Visualizations and charts
+- Export/sharing capabilities
 
 ## Important Commands
 
@@ -113,7 +108,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd frontend
 npm run dev                         # Starts on http://localhost:5173/
-npm test                            # Run all 185 tests (100% passing ✅)
+npm test                            # Run all 239 tests (100% passing ✅)
 npm run test:coverage               # Run tests with coverage report
 npm run build                       # Production build
 ```
