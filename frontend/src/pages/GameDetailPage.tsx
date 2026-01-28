@@ -138,6 +138,34 @@ export default function GameDetailPage() {
     },
   });
 
+  // Helper function to determine highlight based on playing time
+  const getHighlight = (stats: PlayerGameStats, allStats: PlayerGameStats[]): "high" | "low" | null => {
+    // Only highlight if player has actually played
+    if (stats.effective_time_seconds === 0) return null;
+
+    // Get all players who have played (time > 0)
+    const playersWithTime = allStats.filter((s) => s.effective_time_seconds > 0);
+    if (playersWithTime.length < 4) return null; // Need at least 4 players to create quartiles
+
+    // Sort by time
+    const sortedByTime = [...playersWithTime].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
+
+    // Calculate quartile thresholds
+    const quartileSize = Math.ceil(sortedByTime.length / 4);
+    const topQuartile = sortedByTime.slice(0, quartileSize);
+    const bottomQuartile = sortedByTime.slice(-quartileSize);
+
+    // Check if player is in top or bottom quartile
+    if (topQuartile.some((s) => s.player_id === stats.player_id)) {
+      return "high";
+    }
+    if (bottomQuartile.some((s) => s.player_id === stats.player_id)) {
+      return "low";
+    }
+
+    return null;
+  };
+
   // Helper function to sort stats
   const sortStats = (stats: PlayerGameStats[]): PlayerGameStats[] => {
     const sorted = [...stats];
@@ -459,7 +487,10 @@ export default function GameDetailPage() {
                       <Grid container spacing={2}>
                         {sortedMenStats.map((stats) => (
                           <Grid size={{ xs: 6 }} key={stats.player_id}>
-                            <GamePlayerStatsCard stats={stats} />
+                            <GamePlayerStatsCard
+                              stats={stats}
+                              highlight={liveStats ? getHighlight(stats, liveStats) : null}
+                            />
                           </Grid>
                         ))}
                       </Grid>
@@ -505,7 +536,10 @@ export default function GameDetailPage() {
                       <Grid container spacing={2}>
                         {sortedWomenStats.map((stats) => (
                           <Grid size={{ xs: 6 }} key={stats.player_id}>
-                            <GamePlayerStatsCard stats={stats} />
+                            <GamePlayerStatsCard
+                              stats={stats}
+                              highlight={liveStats ? getHighlight(stats, liveStats) : null}
+                            />
                           </Grid>
                         ))}
                       </Grid>

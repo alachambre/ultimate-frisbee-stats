@@ -3,6 +3,7 @@ import type { PlayerGameStats } from "../../types";
 
 interface GamePlayerStatsCardProps {
   stats: PlayerGameStats;
+  highlight?: "high" | "low" | null;
 }
 
 /**
@@ -14,9 +15,19 @@ function formatTime(seconds: number): string {
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
 
-export default function GamePlayerStatsCard({ stats }: GamePlayerStatsCardProps) {
+export default function GamePlayerStatsCard({ stats, highlight }: GamePlayerStatsCardProps) {
+  const getBackgroundColor = () => {
+    if (highlight === "high") {
+      return "success.lighter"; // Green tint for high playtime
+    }
+    if (highlight === "low") {
+      return "warning.lighter"; // Orange tint for low playtime
+    }
+    return undefined; // Default background
+  };
+
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ backgroundColor: getBackgroundColor() }}>
       <CardContent>
         <Box>
           <Typography variant="body1" fontWeight="medium" mb={0.5}>
