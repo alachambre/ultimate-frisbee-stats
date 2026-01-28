@@ -145,24 +145,24 @@ export default function GameDetailPage() {
 
     // Get all players who have played (time > 0)
     const playersWithTime = allStats.filter((s) => s.effective_time_seconds > 0);
-    if (playersWithTime.length < 3) return null; // Need at least 3 players (reduced from 4 for testing)
+    if (playersWithTime.length < 4) return null; // Need at least 4 players to create meaningful quartiles
 
     // Sort by time (descending)
     const sortedByTime = [...playersWithTime].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
 
-    // For small rosters, use simpler logic: top 33% and bottom 33%
-    const topCount = Math.max(1, Math.floor(sortedByTime.length / 3));
-    const bottomCount = Math.max(1, Math.floor(sortedByTime.length / 3));
+    // Calculate quartiles (top 25% and bottom 25%)
+    // With ~20 players, this means ~5 players on each end will be highlighted
+    const quartileSize = Math.max(1, Math.floor(sortedByTime.length / 4));
 
-    const topThreshold = sortedByTime[topCount - 1]?.effective_time_seconds || 0;
-    const bottomThreshold = sortedByTime[sortedByTime.length - bottomCount]?.effective_time_seconds || 0;
+    const topThreshold = sortedByTime[quartileSize - 1]?.effective_time_seconds || 0;
+    const bottomThreshold = sortedByTime[sortedByTime.length - quartileSize]?.effective_time_seconds || 0;
 
-    // Highlight top players (equal or above top threshold)
+    // Highlight top quartile players (most playing time)
     if (stats.effective_time_seconds >= topThreshold && stats.effective_time_seconds > bottomThreshold) {
       return "high";
     }
 
-    // Highlight bottom players (equal or below bottom threshold)
+    // Highlight bottom quartile players (least playing time)
     if (stats.effective_time_seconds <= bottomThreshold && stats.effective_time_seconds < topThreshold) {
       return "low";
     }
