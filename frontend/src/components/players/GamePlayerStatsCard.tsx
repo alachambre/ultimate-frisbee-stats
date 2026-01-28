@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Box } from "@mui/material";
+import { Card, CardContent, Typography, Box, alpha } from "@mui/material";
 import type { PlayerGameStats } from "../../types";
 
 interface GamePlayerStatsCardProps {
@@ -16,18 +16,24 @@ function formatTime(seconds: number): string {
 }
 
 export default function GamePlayerStatsCard({ stats, highlight }: GamePlayerStatsCardProps) {
-  const getBackgroundColor = () => {
+  const getSxStyles = () => {
     if (highlight === "high") {
-      return "success.lighter"; // Green tint for high playtime
+      return {
+        backgroundColor: (theme: any) => alpha(theme.palette.success.main, 0.08),
+        borderColor: (theme: any) => alpha(theme.palette.success.main, 0.3),
+      };
     }
     if (highlight === "low") {
-      return "warning.lighter"; // Orange tint for low playtime
+      return {
+        backgroundColor: (theme: any) => alpha(theme.palette.warning.main, 0.08),
+        borderColor: (theme: any) => alpha(theme.palette.warning.main, 0.3),
+      };
     }
-    return undefined; // Default background
+    return {};
   };
 
   return (
-    <Card variant="outlined" sx={{ backgroundColor: getBackgroundColor() }}>
+    <Card variant="outlined" sx={getSxStyles()}>
       <CardContent>
         <Box>
           <Typography variant="body1" fontWeight="medium" mb={0.5}>
