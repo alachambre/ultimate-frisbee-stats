@@ -140,8 +140,8 @@ export default function GameDetailPage() {
 
   // Helper function to determine highlight based on playing time
   const getHighlight = (stats: PlayerGameStats, allStats: PlayerGameStats[]): "high" | "low" | null => {
-    // Only highlight if player has actually played
-    if (stats.effective_time_seconds === 0) return null;
+    // Players with 0 time should be highlighted as low priority (need playing time)
+    if (stats.effective_time_seconds === 0) return "low";
 
     // Get all players who have played (time > 0)
     const playersWithTime = allStats.filter((s) => s.effective_time_seconds > 0);
