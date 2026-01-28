@@ -16,7 +16,9 @@ backend/
 │   │   ├── games.py       # Game management endpoints
 │   │   ├── points.py      # Point tracking endpoints
 │   │   ├── lines.py       # Line management endpoints (Phase 5)
-│   │   └── strategies.py  # Strategy management endpoints (Phase 6)
+│   │   ├── strategies.py  # Strategy management endpoints (Phase 6)
+│   │   ├── calls.py       # Call tracking endpoints (Phase 7)
+│   │   └── turnovers.py   # Turnover tracking endpoints (Phase 7)
 │   ├── crud/              # Database operations by domain
 │   │   ├── teams.py       # Team CRUD operations
 │   │   ├── competitions.py # Competition CRUD operations
@@ -24,7 +26,9 @@ backend/
 │   │   ├── games.py       # Game CRUD operations
 │   │   ├── points.py      # Point CRUD operations
 │   │   ├── lines.py       # Line CRUD operations (Phase 5)
-│   │   └── strategies.py  # Strategy CRUD operations (Phase 6)
+│   │   ├── strategies.py  # Strategy CRUD operations (Phase 6)
+│   │   ├── calls.py       # Call CRUD operations (Phase 7)
+│   │   └── turnovers.py   # Turnover CRUD operations (Phase 7)
 │   ├── models/            # SQLAlchemy database models organized by domain
 │   │   ├── base.py        # Base model, enums, association tables
 │   │   ├── team.py        # Team model
@@ -33,7 +37,9 @@ backend/
 │   │   ├── game.py        # Game model
 │   │   ├── point.py       # Point model
 │   │   ├── line.py        # Line model (Phase 5)
-│   │   └── strategy.py    # Strategy model (Phase 6)
+│   │   ├── strategy.py    # Strategy model (Phase 6)
+│   │   ├── call.py        # Call model (Phase 7)
+│   │   └── turnover.py    # Turnover model (Phase 7)
 │   ├── schemas/           # Pydantic request/response schemas organized by domain
 │   │   ├── enums.py       # Shared enums (Gender, CompetitionStatus, GameStatus, PointStatus, StrategyCategory)
 │   │   ├── team.py        # Team schemas
@@ -42,7 +48,9 @@ backend/
 │   │   ├── game.py        # Game schemas
 │   │   ├── point.py       # Point schemas
 │   │   ├── line.py        # Line schemas (Phase 5)
-│   │   └── strategy.py    # Strategy schemas (Phase 6)
+│   │   ├── strategy.py    # Strategy schemas (Phase 6)
+│   │   ├── call.py        # Call schemas (Phase 7)
+│   │   └── turnover.py    # Turnover schemas (Phase 7)
 │   ├── database.py        # Database connection & session management
 │   └── main.py            # FastAPI application setup
 ├── tests/
@@ -61,14 +69,16 @@ backend/
 
 ### Data Model
 
-**Phase 6 - Strategy & Enhanced Point Model:**
+**Phase 7 - Calls & Turnovers:**
 - **Team** → has many Players, Competitions, and Lines
 - **Competition** → belongs to Team, has many Games, has player roster (M:N with Players)
-- **Player** → belongs to Team, has gender (M/W), participates in Competitions, Points, Lines, and Games
+- **Player** → belongs to Team, has gender (M/W), participates in Competitions, Points, Lines, and Games, has Turnovers
 - **Game** → belongs to Competition, has many Points, has 3-status lifecycle, comments, and optional player selection
-- **Point** → belongs to Game, has exactly 7 Players (M2M), optional Strategy, tracks duration, has 4-status lifecycle
+- **Point** → belongs to Game, has exactly 7 Players (M2M), optional Strategy, has Calls and Turnovers, tracks duration, has 4-status lifecycle
 - **Line** → belongs to Team, has many Players (M2M), user-defined player groups (e.g., O-line, D-line)
 - **Strategy** → global entity, has optional Points, named plays with offense/defense category
+- **Call** (Phase 7) → belongs to Point, tracks call/resume timestamps for dead time calculation
+- **Turnover** (Phase 7) → belongs to Point, optional Player, tracks possession changes
 
 Key features:
 - **Competition-based hierarchy**: Team → Competition → Game → Point
@@ -85,6 +95,11 @@ Key features:
   - Named plays for offense and defense
   - Optional assignment to points for tactical tracking
   - Category-based filtering (offense/defense)
+- **Call & Turnover tracking** (Phase 7):
+  - Call tracking: call/resume timestamps for dead time calculation
+  - Turnover tracking: possession changes with optional player assignment
+  - Player statistics: track turnovers per player
+  - Dead time calculation: sum of (resume_timestamp - call_timestamp)
 - Auto-incrementing point numbers per game
 - Automatic score calculation from point results
 - **Live point tracking with duration** (Phase 6):
@@ -93,6 +108,7 @@ Key features:
   - Only one running point per game at a time
   - Additional fields: field_side, pull, strategy_id, comments
 - Cascade deletes (deleting a team removes all related data)
+  - Special: Player deletion sets turnover.player_id to NULL (preserves turnover record)
 - Validation: exactly 7 players per point, strict player selection hierarchy
 
 ## Prerequisites
@@ -324,6 +340,40 @@ pytest tests/ -v --tb=short
 - Proper ISO8601 datetime serialization with 'Z' suffix for UTC times
 - Points ordered descending by point_number (most recent first)
 - finish_point() transitions point to completed status
+
+### Calls (Phase 7)
+- `POST /calls` - Create a call (requires point_id, call_timestamp, optional: resume_timestamp, comments)
+- `GET /calls/{call_id}` - Get call details
+- `PUT /calls/{call_id}` - Update call (set resume_timestamp, comments)
+- `DELETE /calls/{call_id}` - Delete call
+- `GET /calls/points/{point_id}/calls` - List all calls for a point (ordered by timestamp)
+
+**Call Tracking Features:**
+- Track when play stops (call) and resumes for dead time calculation
+- `call_timestamp` (required) - When play stopped
+- `resume_timestamp` (nullable) - When play resumed (null until resolved)
+- Dead time calculation: sum of (resume_timestamp - call_timestamp) for all calls in a point
+- Cascade delete: Point deletion removes all calls
+- Timestamp validation: resume_timestamp must be after call_timestamp
+- Timezone-aware datetime handling (UTC with 'Z' suffix)
+
+### Turnovers (Phase 7)
+- `POST /turnovers` - Create a turnover (requires point_id, timestamp, optional: player_id, comments)
+- `GET /turnovers/{turnover_id}` - Get turnover with player details
+- `PUT /turnovers/{turnover_id}` - Update turnover (player, timestamp, comments)
+- `DELETE /turnovers/{turnover_id}` - Delete turnover
+- `GET /turnovers/points/{point_id}/turnovers` - List all turnovers for a point (ordered by timestamp)
+- `GET /turnovers/players/{player_id}/turnovers` - List all turnovers for a player (ordered by timestamp desc)
+
+**Turnover Tracking Features:**
+- Track possession changes during points
+- Optional player assignment (nullable for unassigned team turnovers)
+- Player statistics: track turnovers per player
+- Cascade delete: Point deletion removes all turnovers
+- SET NULL: Player deletion sets turnover.player_id to NULL (preserves turnover record)
+- Eager loading: Player details included in turnover responses
+- Timestamp validation: Required timestamp field
+- Timezone-aware datetime handling (UTC with 'Z' suffix)
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 
