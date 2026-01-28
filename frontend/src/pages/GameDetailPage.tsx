@@ -80,12 +80,12 @@ export default function GameDetailPage() {
     refetchInterval: game?.status === "started" ? 5000 : false,
   });
 
-  // Poll for live game statistics every 5 seconds while game is started
+  // Fetch game statistics - poll every 5s for started games, fetch once for ended games
   const { data: liveStats } = useQuery({
     queryKey: ["liveGameStats", gameId],
     queryFn: () => getLiveGameStatistics(Number(gameId)),
-    enabled: !!gameId && game?.status === "started",
-    refetchInterval: game?.status === "started" ? 5000 : false,
+    enabled: !!gameId && (game?.status === "started" || game?.status === "ended"),
+    refetchInterval: game?.status === "started" ? 5000 : false, // Only poll for started games
   });
 
   // Get competition data to access players for point tracking
@@ -409,8 +409,8 @@ export default function GameDetailPage() {
 
           <Collapse in={showPlayers}>
             <Box p={3}>
-              {/* Sorting Controls - only show when game is started and we have stats */}
-              {game.status === "started" && liveStats && liveStats.length > 0 && (
+              {/* Sorting Controls - show when we have stats to display */}
+              {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 && (
                 <Box mb={3}>
                   <FormControl size="small" sx={{ minWidth: 200 }}>
                     <InputLabel id="sort-by-label">{t("games:detail.sortBy")}</InputLabel>
@@ -455,7 +455,7 @@ export default function GameDetailPage() {
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
                         {t("players:empty.noPlayers")}
                       </Typography>
-                    ) : game.status === "started" && sortedMenStats.length > 0 ? (
+                    ) : (game.status === "started" || game.status === "ended") && sortedMenStats.length > 0 ? (
                       <Grid container spacing={2}>
                         {sortedMenStats.map((stats) => (
                           <Grid size={{ xs: 6, md: 4 }} key={stats.player_id}>
@@ -501,7 +501,7 @@ export default function GameDetailPage() {
                       <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
                         {t("players:empty.noPlayers")}
                       </Typography>
-                    ) : game.status === "started" && sortedWomenStats.length > 0 ? (
+                    ) : (game.status === "started" || game.status === "ended") && sortedWomenStats.length > 0 ? (
                       <Grid container spacing={2}>
                         {sortedWomenStats.map((stats) => (
                           <Grid size={{ xs: 6, md: 4 }} key={stats.player_id}>
