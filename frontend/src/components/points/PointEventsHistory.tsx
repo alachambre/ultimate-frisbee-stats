@@ -15,6 +15,7 @@ import {
   ArrowForward as ArrowForwardIcon,
   PlayArrow as PlayArrowIcon,
   CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -250,7 +251,11 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                   <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircleIcon fontSize="small" color={weScored ? 'success' : 'error'} />
+                        {weScored ? (
+                          <CheckCircleIcon fontSize="small" color="success" />
+                        ) : (
+                          <CancelIcon fontSize="small" color="error" />
+                        )}
                         <Typography variant="body2" fontWeight="medium">
                           {weScored ? t('dialog.finish.weScored', 'We scored!') : t('dialog.finish.theyScored', 'They scored')}
                         </Typography>

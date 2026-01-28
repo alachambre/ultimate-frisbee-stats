@@ -40,13 +40,6 @@ export default function PointHistoryItem({
   const [playersExpanded, setPlayersExpanded] = useState(false);
   const [chronologyExpanded, setChronologyExpanded] = useState(false);
 
-  const formatDuration = (seconds: number | null | undefined): string => {
-    if (!seconds) return "N/A";
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${String(secs).padStart(2, "0")}`;
-  };
-
   const isWon = point.won === true;
   const isCompleted = point.status === "completed";
   const isRunning = point.status === "running";
@@ -89,9 +82,6 @@ export default function PointHistoryItem({
             )}
             <Typography variant="h6" fontWeight="bold">
               {t("points:history.point")} #{point.point_number}
-              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5, fontWeight: 'normal' }}>
-                ({t("points:tracker.duration")}: {formatDuration(point.duration_seconds)})
-              </Typography>
             </Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>

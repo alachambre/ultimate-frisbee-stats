@@ -108,7 +108,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd frontend
 npm run dev                         # Starts on http://localhost:5173/
-npm test                            # Run all 239 tests (100% passing ✅)
+npm test                            # Run all 258 tests (100% passing ✅)
 npm run test:coverage               # Run tests with coverage report
 npm run build                       # Production build
 ```
@@ -151,17 +151,20 @@ npm run build                       # Production build
 - LivePointTracker basic functionality (10 tests)
 - CallsList (13 tests)
 - TurnoversList (15 tests)
-- All 239 existing tests passing
+- **PointEventsHistory component (19 tests)** - Comprehensive coverage including:
+  - Event sorting/merging logic (calls + turnovers by timestamp)
+  - Point start/scored event rendering (won/lost with correct icons)
+  - Chronological ordering (most recent first)
+  - Possession calculation for turnovers
+  - Call rendering (pending vs resolved with duration)
+  - Error states
+- All 258 tests passing ✅
 
 **What needs tests ⚠️:**
-- **PointEventsHistory component** - New unified chronology component (zero tests)
-  - Event sorting/merging logic (calls + turnovers by timestamp)
-  - Point start/scored event rendering
-  - Chronological ordering (most recent first)
 - **PointHistoryItem enhancements** - New collapsible chronology section not tested
 - **LivePointTracker UI changes** - More Actions menu, chronology integration
 
-**Note:** All existing functionality still works (239 tests passing). These are new features without dedicated test coverage yet.
+**Note:** Core functionality is fully tested. Remaining gaps are minor UI integration points.
 
 ## User Preferences
 - Clean, maintainable code with explanations of React/TypeScript concepts
