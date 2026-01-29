@@ -16,7 +16,7 @@
     "offenseLost": "Offense Lost",
     "defenseLost": "Defense Lost",
     "winRate": "Win Rate",
-    "cleanPointRate": "Clean Point Rate",
+    "cleanPointRate": "Points without Turnover",
     "breakRate": "Break Rate",
     "turnoverRate": "Turnover Rate",
     "cleanBreakRate": "Clean Break Rate",
