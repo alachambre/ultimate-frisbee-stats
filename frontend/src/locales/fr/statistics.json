@@ -18,6 +18,7 @@
     "winRate": "Taux de Victoire",
     "hold": "Hold",
     "cleanHold": "Clean Hold",
+    "break": "Break",
     "cleanPointRate": "Points sans Turnover",
     "breakRate": "Taux de Break",
     "turnoverRate": "Taux de Turnover",

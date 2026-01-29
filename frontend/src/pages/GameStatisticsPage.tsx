@@ -239,16 +239,16 @@ export default function GameStatisticsPage() {
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.winRate")}
-                    value={formatPercent(teamStats.defense.win_rate)}
-                    tooltip={t("statistics:tooltips.winRate")}
+                    label={t("statistics:teamStats.turnoverRate")}
+                    value={formatPercent(teamStats.defense.turnover_rate)}
+                    tooltip={t("statistics:tooltips.turnoverRate")}
                   />
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.turnoverRate")}
-                    value={formatPercent(teamStats.defense.turnover_rate)}
-                    tooltip={t("statistics:tooltips.turnoverRate")}
+                    label={t("statistics:teamStats.break")}
+                    value={formatPercent(teamStats.defense.win_rate)}
+                    tooltip={t("statistics:tooltips.breakRate")}
                   />
                 </Grid>
                 <Grid item xs={6} sm={4}>
