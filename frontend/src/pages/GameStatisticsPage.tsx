@@ -16,10 +16,13 @@ import {
   TableRow,
   Chip,
   Divider,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useTranslation } from "react-i18next";
 import { getGame } from "../services/games";
 import { getLiveGameStatistics, getGameTeamStatistics } from "../services/statistics";
@@ -56,14 +59,22 @@ function StatCard({
         borderRadius: 1,
         bgcolor: "background.default",
       }}
-      title={tooltip}
     >
       <Typography variant="h4" color="primary.main" fontWeight="bold">
         {value}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+        {tooltip && (
+          <Tooltip title={tooltip} arrow>
+            <IconButton size="small" sx={{ p: 0, color: "text.secondary" }}>
+              <InfoOutlinedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
     </Box>
   );
 }
