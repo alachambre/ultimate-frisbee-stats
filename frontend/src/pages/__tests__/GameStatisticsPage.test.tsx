@@ -184,13 +184,13 @@ describe("GameStatisticsPage", () => {
       expect(screen.getByText("Player Statistics")).toBeInTheDocument();
     });
 
-    // Check for player names
-    expect(screen.getByText("John Doe")).toBeInTheDocument();
-    expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    // Check for player names (multiple instances due to card + table views)
+    expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
 
-    // Check for player numbers
-    expect(screen.getByText("#10")).toBeInTheDocument();
-    expect(screen.getByText("#7")).toBeInTheDocument();
+    // Check for player numbers (multiple instances due to card + table views)
+    expect(screen.getAllByText("#10").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("#7").length).toBeGreaterThan(0);
   });
 
   it("allows sorting player statistics", async () => {
@@ -262,9 +262,9 @@ describe("GameStatisticsPage", () => {
       expect(screen.getByText("Player Statistics")).toBeInTheDocument();
     });
 
-    // Both players should be visible initially
-    expect(screen.getByText("Alice")).toBeInTheDocument();
-    expect(screen.getByText("Bob")).toBeInTheDocument();
+    // Both players should be visible initially (multiple instances due to card + table views)
+    expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Bob").length).toBeGreaterThan(0);
 
     // Verify table has sortable columns
     const table = screen.getByRole("table");
@@ -272,8 +272,8 @@ describe("GameStatisticsPage", () => {
 
     // Verify header cells exist
     expect(screen.getByText("Player")).toBeInTheDocument();
-    expect(screen.getByText("Points")).toBeInTheDocument();
-    expect(screen.getByText("Time")).toBeInTheDocument();
+    expect(screen.getAllByText("Points").length).toBeGreaterThan(0); // Appears in table
+    expect(screen.getAllByText("Time").length).toBeGreaterThan(0); // Appears in table
   });
 
   it("hides team statistics when no completed points", async () => {
@@ -397,13 +397,13 @@ describe("GameStatisticsPage", () => {
     render(<GameStatisticsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
     });
 
-    // Check time format (5:00 for 300 seconds)
+    // Check time format (5:00 for 300 seconds) - appears in both card and table
     expect(screen.getAllByText("5:00").length).toBeGreaterThan(0);
 
-    // Check that stats are displayed (using more specific values)
+    // Check that stats are displayed (using more specific values) - appears in both card and table
     expect(screen.getAllByText("3 (75%)").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2 (67%)").length).toBeGreaterThan(0);
   });

@@ -130,27 +130,39 @@ export default function PointPlayerSelection({
           }}
           fullWidth
           aria-label="starting on offense or defense"
-          sx={{
+          sx={(theme) => ({
             "& .MuiToggleButton-root": {
               py: 1.5,
               textTransform: "none",
               fontWeight: 500,
               "&.Mui-selected": {
-                backgroundColor: "primary.main",
+                fontWeight: "bold",
                 color: "white",
                 "&:hover": {
-                  backgroundColor: "primary.dark",
+                  opacity: 0.9,
+                },
+              },
+              "&.Mui-selected[value='offense']": {
+                backgroundColor: theme.colors.offense.main,
+                "&:hover": {
+                  backgroundColor: theme.colors.offense.dark,
+                },
+              },
+              "&.Mui-selected[value='defense']": {
+                backgroundColor: theme.colors.defense.main,
+                "&:hover": {
+                  backgroundColor: theme.colors.defense.dark,
                 },
               },
             },
-          }}
+          })}
         >
           <ToggleButton value="offense" aria-label="on offense">
-            <FlashOnIcon sx={{ mr: 1, fontSize: 20, color: "#0ea5e9" }} />
+            <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
             {t('points:tracker.offense')}
           </ToggleButton>
           <ToggleButton value="defense" aria-label="on defense">
-            <ShieldIcon sx={{ mr: 1, fontSize: 20, color: "#f97316" }} />
+            <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
             {t('points:tracker.defense')}
           </ToggleButton>
         </ToggleButtonGroup>

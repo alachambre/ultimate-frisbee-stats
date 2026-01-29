@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
-import AppsIcon from "@mui/icons-material/Apps";
 import { getStrategies, deleteStrategy } from "../services/strategies";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
@@ -29,7 +28,7 @@ import type { Strategy, StrategyCategory } from "../types";
 export default function StrategiesPage() {
   const { t } = useTranslation(["strategies", "common"]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<StrategyCategory | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<StrategyCategory>("offense");
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
   const [deletingStrategy, setDeletingStrategy] = useState<Strategy | null>(null);
   const queryClient = useQueryClient();
@@ -54,9 +53,7 @@ export default function StrategiesPage() {
   // Filter and sort strategies by category (alphabetical)
   const filteredStrategies = useMemo(() => {
     if (!strategies) return [];
-    const filtered = selectedCategory === "all"
-      ? strategies
-      : strategies.filter((s) => s.category === selectedCategory);
+    const filtered = strategies.filter((s) => s.category === selectedCategory);
 
     // Sort alphabetically by name
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -92,36 +89,44 @@ export default function StrategiesPage() {
             exclusive
             onChange={(_, newValue) => {
               if (newValue !== null) {
-                setSelectedCategory(newValue as StrategyCategory | "all");
+                setSelectedCategory(newValue as StrategyCategory);
               }
             }}
             aria-label="strategy category filter"
-            sx={{
+            sx={(theme) => ({
               "& .MuiToggleButton-root": {
                 px: 3,
                 py: 1,
                 textTransform: "none",
                 fontWeight: 500,
                 "&.Mui-selected": {
-                  backgroundColor: "primary.main",
+                  fontWeight: "bold",
                   color: "white",
                   "&:hover": {
-                    backgroundColor: "primary.dark",
+                    opacity: 0.9,
+                  },
+                },
+                "&.Mui-selected[value='offense']": {
+                  backgroundColor: theme.colors.offense.main,
+                  "&:hover": {
+                    backgroundColor: theme.colors.offense.dark,
+                  },
+                },
+                "&.Mui-selected[value='defense']": {
+                  backgroundColor: theme.colors.defense.main,
+                  "&:hover": {
+                    backgroundColor: theme.colors.defense.dark,
                   },
                 },
               },
-            }}
+            })}
           >
-            <ToggleButton value="all" aria-label="all strategies">
-              <AppsIcon sx={{ mr: 1, fontSize: 20 }} />
-              {t("strategies:page.filter.all")}
-            </ToggleButton>
             <ToggleButton value="offense" aria-label="offense strategies">
-              <FlashOnIcon sx={{ mr: 1, fontSize: 20, color: "#0ea5e9" }} />
+              <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
               {t("strategies:form.offense")}
             </ToggleButton>
             <ToggleButton value="defense" aria-label="defense strategies">
-              <ShieldIcon sx={{ mr: 1, fontSize: 20, color: "#f97316" }} />
+              <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
               {t("strategies:form.defense")}
             </ToggleButton>
           </ToggleButtonGroup>

@@ -90,14 +90,14 @@ export default function PlayerSelectionUI({
                         <MaleIcon
                           sx={{
                             fontSize: 18,
-                            color: "primary.main",
+                            color: (theme) => theme.colors.men.main,
                           }}
                         />
                       ) : (
                         <FemaleIcon
                           sx={{
                             fontSize: 18,
-                            color: "secondary.main",
+                            color: (theme) => theme.colors.women.main,
                           }}
                         />
                       )}

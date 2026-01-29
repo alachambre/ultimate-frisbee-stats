@@ -76,9 +76,9 @@ export default function PointHistoryItem({
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Box display="flex" alignItems="center" gap={1}>
             {point.starting_on_offense ? (
-              <FlashOnIcon sx={{ color: "#0ea5e9" }} />
+              <FlashOnIcon sx={{ color: (theme) => theme.colors.offense.main }} />
             ) : (
-              <ShieldIcon sx={{ color: "#f97316" }} />
+              <ShieldIcon sx={{ color: (theme) => theme.colors.defense.main }} />
             )}
             <Typography variant="h6" fontWeight="bold">
               {t("points:history.point")} #{point.point_number}

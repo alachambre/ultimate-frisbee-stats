@@ -1,22 +1,12 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EditStrategyModal from "../EditStrategyModal";
 import { createStrategy } from "../../../services";
 import { resetMockData } from "../../../test/mocks/handlers";
 import type { Strategy } from "../../../types";
 
 let mockStrategy: Strategy;
-
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
 
 describe("EditStrategyModal", () => {
   beforeEach(async () => {
@@ -30,7 +20,7 @@ describe("EditStrategyModal", () => {
   });
 
   it("displays all form fields with existing values", () => {
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -44,7 +34,7 @@ describe("EditStrategyModal", () => {
   });
 
   it("has offense category selected for offensive strategy", () => {
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -59,7 +49,7 @@ describe("EditStrategyModal", () => {
 
   it("allows editing strategy name", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -76,7 +66,7 @@ describe("EditStrategyModal", () => {
 
   it("allows changing category from offense to defense", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -93,7 +83,7 @@ describe("EditStrategyModal", () => {
 
   it("allows editing description", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -110,7 +100,7 @@ describe("EditStrategyModal", () => {
 
   it("disables save button when name is empty", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -128,7 +118,7 @@ describe("EditStrategyModal", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={onClose}
@@ -145,7 +135,7 @@ describe("EditStrategyModal", () => {
   it("saves changes successfully", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <EditStrategyModal
         isOpen={true}
         onClose={onClose}

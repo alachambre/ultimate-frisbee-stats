@@ -92,12 +92,19 @@ backend/app/
 ```
 
 ### Design System
-- **Theme**: Navy (#1e3a8a) to sky blue (#38bdf8) gradient, centralized in `App.tsx`
+- **Theme**: Semantic color system with centralized theme in `App.tsx` and `test-utils.tsx`
+  - **Offense**: Navy (#1e3a8a main, #3b82f6 light, #1e40af dark)
+  - **Defense**: Sky blue (#0ea5e9 main, #38bdf8 light, #0284c7 dark)
+  - **Men**: Navy (#1e3a8a, same as offense)
+  - **Women**: Sky blue (#38bdf8, same as defense.light)
+  - **Gradients**: Primary gradient (navy → sky blue) for visual elements
+  - **Architecture**: Theme extended via both `@mui/material/styles` and `@mui/system` module augmentation for full sx prop support
+  - **Zero hardcoded colors** in component files - all use `theme.colors.*` or `theme.gradients.*`
 - **Components**: Material UI v7 (Button, Card, Dialog, TextField, etc.)
 - **Responsive**: Mobile-first using MUI breakpoints
 - **Icons**: @mui/icons-material (FlashOn for offense, Shield for defense, Language for language selector)
 - **Type Safety**: TypeScript throughout with strict mode
-- **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
+- **i18n**: react-i18next with 10 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
 - **Backend**: Pytest with comprehensive CRUD and API coverage (357 tests - 100% passing)
@@ -130,7 +137,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd frontend
 npm run dev                         # Starts on http://localhost:5173/
-npm test                            # Run all 258 tests (100% passing ✅)
+npm test                            # Run all 266 tests (100% passing ✅)
 npm run test:coverage               # Run tests with coverage report
 npm run build                       # Production build
 ```
@@ -149,8 +156,8 @@ npm run build                       # Production build
 - `backend/README.md` - Comprehensive backend documentation
 
 ### Frontend
-- `frontend/src/App.tsx` - Root with MUI theme (custom gradients), React Router, TanStack Query, I18nextProvider
-- `frontend/src/theme.d.ts` - TypeScript declarations for theme extensions (gradients)
+- `frontend/src/App.tsx` - Root with MUI theme (semantic colors, custom gradients), React Router, TanStack Query, I18nextProvider
+- `frontend/src/theme.d.ts` - TypeScript module augmentation for theme extensions (@mui/material/styles + @mui/system for sx prop support)
 - `frontend/src/pages/` - All page components with routes (including GameStatisticsPage)
 - `frontend/src/components/` - Organized by domain (teams/, players/, games/, modals/)
 - `frontend/src/components/Layout.tsx` - AppBar with language selector (🇬🇧/🇫🇷)
@@ -212,3 +219,8 @@ npm run build                       # Production build
 - ABBA mixity rule: Frontend validation logic (alternating 4M+3W ↔ 3M+4W)
 - i18n: 10 namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies, statistics), language detection with localStorage, sport terms stay in English
 - Statistics dashboard: `/statistics/games/:gameId` route for team and player analytics
+- **Theme System**: Semantic color architecture with zero hardcoded colors in components
+  - All colors defined once in `App.tsx` (production) and `test-utils.tsx` (tests)
+  - Components reference colors via `theme.colors.offense/defense/men/women` and `theme.gradients.*`
+  - MUI theme properly extended via dual module augmentation for sx prop support
+  - Strategy cards feature gradient borders using `theme.gradients.primary`

@@ -1,7 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import FinishPointDialog from "../FinishPointDialog";
 import type { PointWithPlayers } from "../../../types";
 
@@ -22,18 +21,10 @@ const mockRunningPoint: PointWithPlayers = {
   ],
 };
 
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
 
 describe("FinishPointDialog", () => {
   it("displays elapsed time with PointTimer", () => {
-    renderWithQueryClient(
+    render(
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
@@ -46,7 +37,7 @@ describe("FinishPointDialog", () => {
   });
 
   it("displays offense/defense in title", () => {
-    renderWithQueryClient(
+    render(
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
@@ -58,7 +49,7 @@ describe("FinishPointDialog", () => {
   });
 
   it("has won and lost toggle buttons", () => {
-    renderWithQueryClient(
+    render(
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
@@ -72,7 +63,7 @@ describe("FinishPointDialog", () => {
 
   it("enables finish button only when outcome is selected", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}
@@ -92,7 +83,7 @@ describe("FinishPointDialog", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <FinishPointDialog
         open={true}
         onClose={onClose}
@@ -110,7 +101,7 @@ describe("FinishPointDialog", () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
 
-    renderWithQueryClient(
+    render(
       <FinishPointDialog
         open={true}
         onClose={vi.fn()}

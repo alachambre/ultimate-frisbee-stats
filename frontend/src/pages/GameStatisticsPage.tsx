@@ -59,7 +59,7 @@ function CircularStat({
   percentage: number;
   count?: number;
   total?: number;
-  color: string;
+  color: string | ((theme: any) => string);
   tooltip?: string;
 }) {
   const displayPercentage = Math.round(percentage * 100);
@@ -91,7 +91,7 @@ function CircularStat({
           size={140}
           thickness={4}
           sx={{
-            color: color,
+            color: typeof color === 'function' ? color : color,
             "& .MuiCircularProgress-circle": {
               strokeLinecap: "round",
             },
@@ -111,7 +111,11 @@ function CircularStat({
             justifyContent: "center",
           }}
         >
-          <Typography variant="h4" fontWeight="bold" color={color}>
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            sx={{ color: typeof color === 'function' ? color : color }}
+          >
             {displayPercentage}%
           </Typography>
           {count !== undefined && total !== undefined && (
@@ -326,7 +330,7 @@ export default function GameStatisticsPage() {
           {/* Offense Statistics */}
           <Box sx={{ mb: 4 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-              <FlashOnIcon sx={{ color: "#0ea5e9" }} />
+              <FlashOnIcon sx={{ color: (theme) => theme.colors.offense.main }} />
               <Typography variant="h6">
                 {t("statistics:teamStats.offense")}
               </Typography>
@@ -338,7 +342,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.offense.hold_rate}
                   count={teamStats.offense.points_won}
                   total={teamStats.offense.points_started}
-                  color="#0ea5e9"
+                  color={(theme) => theme.colors.offense.main}
                   tooltip={t("statistics:tooltips.holdRate")}
                 />
               </Grid>
@@ -348,7 +352,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.offense.clean_hold_rate}
                   count={teamStats.offense.points_won_no_turnover}
                   total={teamStats.offense.points_won}
-                  color="#38bdf8"
+                  color={(theme) => theme.colors.offense.light}
                   tooltip={t("statistics:tooltips.cleanPointRate")}
                 />
               </Grid>
@@ -360,7 +364,7 @@ export default function GameStatisticsPage() {
           {/* Defense Statistics */}
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-              <ShieldIcon sx={{ color: "#f97316" }} />
+              <ShieldIcon sx={{ color: (theme) => theme.colors.defense.main }} />
               <Typography variant="h6">
                 {t("statistics:teamStats.defense")}
               </Typography>
@@ -372,7 +376,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.defense.turnover_rate}
                   count={teamStats.defense.points_with_turnover}
                   total={teamStats.defense.points_started}
-                  color="#f97316"
+                  color={(theme) => theme.colors.defense.main}
                   tooltip={t("statistics:tooltips.turnoverRate")}
                 />
               </Grid>
@@ -382,7 +386,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.defense.break_rate}
                   count={teamStats.defense.points_won}
                   total={teamStats.defense.points_started}
-                  color="#fb923c"
+                  color={(theme) => theme.colors.defense.light}
                   tooltip={t("statistics:tooltips.breakRate")}
                 />
               </Grid>
@@ -392,7 +396,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.defense.clean_break_rate}
                   count={teamStats.defense.points_won_no_turnover}
                   total={teamStats.defense.points_won}
-                  color="#fdba74"
+                  color={(theme) => theme.colors.defense.dark}
                   tooltip={t("statistics:tooltips.cleanBreakRate")}
                 />
               </Grid>
@@ -456,7 +460,7 @@ export default function GameStatisticsPage() {
                       >
                         <Tooltip title={t("statistics:tooltips.holdRate")} arrow>
                           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                            <FlashOnIcon fontSize="small" sx={{ color: "#0ea5e9" }} />
+                            <FlashOnIcon fontSize="small" sx={{ color: (theme) => theme.colors.offense.main }} />
                             {t("statistics:playerStats.offenseWinRate")}
                           </Box>
                         </Tooltip>
@@ -470,7 +474,7 @@ export default function GameStatisticsPage() {
                       >
                         <Tooltip title={t("statistics:tooltips.cleanPointRate")} arrow>
                           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                            <FlashOnIcon fontSize="small" sx={{ color: "#0ea5e9" }} />
+                            <FlashOnIcon fontSize="small" sx={{ color: (theme) => theme.colors.offense.main }} />
                             {t("statistics:playerStats.cleanPoints")}
                           </Box>
                         </Tooltip>
@@ -484,7 +488,7 @@ export default function GameStatisticsPage() {
                       >
                         <Tooltip title={t("statistics:tooltips.turnoverRate")} arrow>
                           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                            <ShieldIcon fontSize="small" sx={{ color: "#f97316" }} />
+                            <ShieldIcon fontSize="small" sx={{ color: (theme) => theme.colors.defense.main }} />
                             {t("statistics:playerStats.forcedTurnovers")}
                           </Box>
                         </Tooltip>
@@ -498,7 +502,7 @@ export default function GameStatisticsPage() {
                       >
                         <Tooltip title={t("statistics:tooltips.breakRate")} arrow>
                           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                            <ShieldIcon fontSize="small" sx={{ color: "#f97316" }} />
+                            <ShieldIcon fontSize="small" sx={{ color: (theme) => theme.colors.defense.main }} />
                             {t("statistics:playerStats.defenseWinRate")}
                           </Box>
                         </Tooltip>
@@ -512,7 +516,7 @@ export default function GameStatisticsPage() {
                       >
                         <Tooltip title={t("statistics:tooltips.cleanBreakRate")} arrow>
                           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                            <ShieldIcon fontSize="small" sx={{ color: "#f97316" }} />
+                            <ShieldIcon fontSize="small" sx={{ color: (theme) => theme.colors.defense.main }} />
                             {t("statistics:playerStats.cleanBreak")}
                           </Box>
                         </Tooltip>

@@ -1,18 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AddPlayersToRosterModal from "../AddPlayersToRosterModal";
 import { createTeam, createPlayer, createCompetition } from "../../../services";
-
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
 
 describe("AddPlayersToRosterModal", () => {
   let teamId: number;
@@ -37,7 +27,7 @@ describe("AddPlayersToRosterModal", () => {
 
   it("displays available players from the team", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={vi.fn()}
@@ -72,7 +62,7 @@ describe("AddPlayersToRosterModal", () => {
     // Assume Player One has ID 1 (first player created in beforeEach)
     const player1Id = 1;
 
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={vi.fn()}
@@ -108,7 +98,7 @@ describe("AddPlayersToRosterModal", () => {
     // Assume all three players have IDs 1, 2, 3 (created in beforeEach)
     const allPlayerIds = [1, 2, 3];
 
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={vi.fn()}
@@ -131,7 +121,7 @@ describe("AddPlayersToRosterModal", () => {
 
   it("allows selecting players with checkboxes", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={vi.fn()}
@@ -185,7 +175,7 @@ describe("AddPlayersToRosterModal", () => {
   });
 
   it("disables submit button when no players are selected", async () => {
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={vi.fn()}
@@ -206,7 +196,7 @@ describe("AddPlayersToRosterModal", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={onClose}
@@ -229,7 +219,7 @@ describe("AddPlayersToRosterModal", () => {
   it("adds selected players successfully", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <AddPlayersToRosterModal
         isOpen={true}
         onClose={onClose}

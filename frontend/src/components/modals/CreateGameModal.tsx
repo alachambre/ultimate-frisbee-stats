@@ -189,9 +189,14 @@ export default function CreateGameModal({
                         sx={{
                           height: 20,
                           fontSize: "0.7rem",
-                          backgroundColor:
-                            player.gender === "M" ? "#e3f2fd" : "#fce4ec",
-                          color: player.gender === "M" ? "#1976d2" : "#c2185b",
+                          backgroundColor: (theme) =>
+                            player.gender === "M"
+                              ? `${theme.colors.men.main}20`
+                              : `${theme.colors.women.main}20`,
+                          color: (theme) =>
+                            player.gender === "M"
+                              ? theme.colors.men.main
+                              : theme.colors.women.main,
                         }}
                       />
                     </Box>
@@ -293,16 +298,16 @@ export default function CreateGameModal({
                       label={`${selectedMen} ${t("common:labels.male")}`}
                       size="small"
                       sx={{
-                        backgroundColor: "#e3f2fd",
-                        color: "#1976d2",
+                        backgroundColor: (theme) => `${theme.colors.men.main}20`,
+                        color: (theme) => theme.colors.men.main,
                       }}
                     />
                     <Chip
                       label={`${selectedWomen} ${t("common:labels.female")}`}
                       size="small"
                       sx={{
-                        backgroundColor: "#fce4ec",
-                        color: "#c2185b",
+                        backgroundColor: (theme) => `${theme.colors.women.main}20`,
+                        color: (theme) => theme.colors.women.main,
                       }}
                     />
                   </>
@@ -351,11 +356,11 @@ export default function CreateGameModal({
                     variant="outlined"
                     onClick={handleSelectAllMen}
                     sx={{
-                      borderColor: "#1976d2",
-                      color: "#1976d2",
+                      borderColor: (theme) => theme.colors.men.main,
+                      color: (theme) => theme.colors.men.main,
                       "&:hover": {
-                        borderColor: "#1565c0",
-                        backgroundColor: "#e3f2fd",
+                        borderColor: (theme) => theme.colors.men.main,
+                        backgroundColor: (theme) => `${theme.colors.men.main}10`,
                       },
                     }}
                   >
@@ -368,11 +373,11 @@ export default function CreateGameModal({
                     variant="outlined"
                     onClick={handleSelectAllWomen}
                     sx={{
-                      borderColor: "#c2185b",
-                      color: "#c2185b",
+                      borderColor: (theme) => theme.colors.women.main,
+                      color: (theme) => theme.colors.women.main,
                       "&:hover": {
-                        borderColor: "#ad1457",
-                        backgroundColor: "#fce4ec",
+                        borderColor: (theme) => theme.colors.women.main,
+                        backgroundColor: (theme) => `${theme.colors.women.main}10`,
                       },
                     }}
                   >

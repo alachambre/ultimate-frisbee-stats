@@ -3,6 +3,10 @@
     "title": "Statistiques du Match",
     "backToGame": "Retour au Match"
   },
+  "view": {
+    "offense": "Attaque",
+    "defense": "Défense"
+  },
   "teamStats": {
     "title": "Statistiques d'Équipe",
     "overview": "Vue d'ensemble",
@@ -30,12 +34,18 @@
     "playersCount": "joueur(s)",
     "playerName": "Joueur",
     "pointsPlayed": "Points",
+    "offensePoints": "Points O",
+    "defensePoints": "Points D",
     "playingTime": "Temps",
     "offenseWinRate": "Hold",
     "defenseWinRate": "Break",
     "cleanPoints": "Clean Hold",
     "cleanBreak": "Clean Break",
-    "forcedTurnovers": "Turnover"
+    "forcedTurnovers": "Turnover",
+    "sortBy": "Trier par",
+    "sortByPoints": "Points (+ d'abord)",
+    "sortByTime": "Temps (+ d'abord)",
+    "sortByName": "Nom (A-Z)"
   },
   "tooltips": {
     "cleanPointRate": "Pourcentage de points gagnés sans turnover",
@@ -43,6 +53,8 @@
     "turnoverRate": "Pourcentage de points défensifs où on a forcé au moins un turnover",
     "cleanBreakRate": "Pourcentage de breaks sans turnover",
     "holdRate": "Pourcentage de points offensifs gagnés (holds)",
-    "forcedTurnovers": "Points où on a forcé l'adversaire à faire un turnover"
+    "forcedTurnovers": "Points où on a forcé l'adversaire à faire un turnover",
+    "offensePoints": "Nombre de points offensifs complétés joués",
+    "defensePoints": "Nombre de points défensifs complétés joués"
   }
 }

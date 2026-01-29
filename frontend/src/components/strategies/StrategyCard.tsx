@@ -26,18 +26,30 @@ export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCar
   return (
     <Card
       elevation={0}
-      sx={{
+      sx={(theme) => ({
         height: "100%",
-        border: "2px solid transparent",
-        background: (theme) =>
-          `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+        background: theme.palette.background.paper,
+        borderRadius: 1,
+        position: "relative",
         transition: "transform 0.2s, box-shadow 0.2s",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          inset: 0,
+          borderRadius: 1,
+          padding: "2px",
+          background: theme.gradients.primary,
+          WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+        },
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: (theme) =>
-            `0 8px 24px ${theme.palette.primary.main}4D`,
+          boxShadow: isOffense
+            ? "0 8px 24px rgba(30, 58, 138, 0.3)"
+            : "0 8px 24px rgba(14, 165, 233, 0.3)",
         },
-      }}
+      })}
     >
       <CardContent sx={{ width: "100%", textAlign: "center", py: 4, position: "relative" }}>
         {/* Action buttons */}
@@ -60,9 +72,9 @@ export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCar
 
         {/* Icon */}
         {isOffense ? (
-          <FlashOnIcon sx={{ fontSize: 48, color: "#0ea5e9", mb: 2 }} />
+          <FlashOnIcon sx={{ fontSize: 48, color: (theme) => theme.colors.offense.main, mb: 2 }} />
         ) : (
-          <ShieldIcon sx={{ fontSize: 48, color: "#f97316", mb: 2 }} />
+          <ShieldIcon sx={{ fontSize: 48, color: (theme) => theme.colors.defense.main, mb: 2 }} />
         )}
 
         {/* Name */}

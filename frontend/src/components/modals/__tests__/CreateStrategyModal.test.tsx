@@ -1,21 +1,11 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CreateStrategyModal from "../CreateStrategyModal";
-
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
 
 describe("CreateStrategyModal", () => {
   it("displays all form fields", () => {
-    renderWithQueryClient(
+    render(
       <CreateStrategyModal isOpen={true} onClose={vi.fn()} />
     );
 
@@ -26,7 +16,7 @@ describe("CreateStrategyModal", () => {
   });
 
   it("disables create button when form is incomplete", () => {
-    renderWithQueryClient(
+    render(
       <CreateStrategyModal isOpen={true} onClose={vi.fn()} />
     );
 
@@ -36,7 +26,7 @@ describe("CreateStrategyModal", () => {
 
   it("enables create button when name and category are filled", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <CreateStrategyModal isOpen={true} onClose={vi.fn()} />
     );
 
@@ -59,7 +49,7 @@ describe("CreateStrategyModal", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <CreateStrategyModal isOpen={true} onClose={onClose} />
     );
 
@@ -72,7 +62,7 @@ describe("CreateStrategyModal", () => {
   it("creates offensive strategy successfully", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <CreateStrategyModal isOpen={true} onClose={onClose} />
     );
 
@@ -102,7 +92,7 @@ describe("CreateStrategyModal", () => {
   it("creates defensive strategy successfully", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <CreateStrategyModal isOpen={true} onClose={onClose} />
     );
 

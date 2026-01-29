@@ -46,7 +46,7 @@ export default function StrategyForm({
           }}
           fullWidth
           aria-label="strategy category"
-          sx={{
+          sx={(theme) => ({
             "& .MuiToggleButton-root": {
               py: 1.5,
               textTransform: "none",
@@ -54,21 +54,31 @@ export default function StrategyForm({
               "&.Mui-selected": {
                 fontWeight: "bold",
                 color: "white",
-                backgroundColor: "primary.main",
                 "&:hover": {
-                  backgroundColor: "primary.dark",
                   opacity: 0.9,
                 },
               },
+              "&.Mui-selected[value='offense']": {
+                backgroundColor: theme.colors.offense.main,
+                "&:hover": {
+                  backgroundColor: theme.colors.offense.dark,
+                },
+              },
+              "&.Mui-selected[value='defense']": {
+                backgroundColor: theme.colors.defense.main,
+                "&:hover": {
+                  backgroundColor: theme.colors.defense.dark,
+                },
+              },
             },
-          }}
+          })}
         >
           <ToggleButton value="offense" aria-label="offense">
-            <FlashOnIcon sx={{ mr: 1, fontSize: 20, color: "#0ea5e9" }} />
+            <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
             {t("strategies:form.offense")}
           </ToggleButton>
           <ToggleButton value="defense" aria-label="defense">
-            <ShieldIcon sx={{ mr: 1, fontSize: 20, color: "#f97316" }} />
+            <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
             {t("strategies:form.defense")}
           </ToggleButton>
         </ToggleButtonGroup>

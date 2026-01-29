@@ -1,7 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PointPlayerSelection from "../PointPlayerSelection";
 import type { Player } from "../../../types";
 import { createTeam, createPlayer } from "../../../services";
@@ -18,18 +17,9 @@ const mockPlayers: Player[] = [
   { id: 8, name: "Henry", number: 80, gender: "M", team_id: 1, created_at: "2024-01-01" },
 ];
 
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
-
 describe("PointPlayerSelection", () => {
   it("displays offense/defense toggle buttons", () => {
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}
@@ -51,7 +41,7 @@ describe("PointPlayerSelection", () => {
     const user = userEvent.setup();
     const onStartingOnOffenseChange = vi.fn();
 
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}
@@ -72,7 +62,7 @@ describe("PointPlayerSelection", () => {
   });
 
   it("displays player selector with all players", () => {
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}
@@ -92,7 +82,7 @@ describe("PointPlayerSelection", () => {
   });
 
   it("displays player count header with gender breakdown", () => {
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}
@@ -132,7 +122,7 @@ describe("PointPlayerSelection", () => {
 
     await addPlayersToLine(line.id, createdPlayers.slice(0, 4).map((p) => p.id));
 
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={team.id}
         players={createdPlayers}
@@ -180,7 +170,7 @@ describe("PointPlayerSelection", () => {
     const user = userEvent.setup();
     const onSelectedLineIdChange = vi.fn();
 
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={team.id}
         players={createdPlayers}
@@ -228,7 +218,7 @@ describe("PointPlayerSelection", () => {
     const user = userEvent.setup();
     const onSelectedPlayerIdsChange = vi.fn();
 
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={team.id}
         players={createdPlayers}
@@ -278,7 +268,7 @@ describe("PointPlayerSelection", () => {
     const user = userEvent.setup();
     const onSelectedPlayerIdsChange = vi.fn();
 
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={team.id}
         players={createdPlayers}
@@ -306,7 +296,7 @@ describe("PointPlayerSelection", () => {
 
   it("shows success color when 7 players selected with valid gender ratio", () => {
     // IDs: 2,3,6,8 (4 men: Bob, Charlie, Frank, Henry) + 1,4,5 (3 women: Alice, Diana, Eve)
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}
@@ -334,7 +324,7 @@ describe("PointPlayerSelection", () => {
       { id: 9, name: "Iris", number: 90, gender: "W" as const, team_id: 1, created_at: "2024-01-01" },
     ];
 
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={extendedPlayers}
@@ -357,7 +347,7 @@ describe("PointPlayerSelection", () => {
 
   it("validates against required gender ratio when provided", () => {
     // IDs: 2,3,6,8 (4 men: Bob, Charlie, Frank, Henry) + 1,4,5 (3 women: Alice, Diana, Eve)
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}
@@ -380,7 +370,7 @@ describe("PointPlayerSelection", () => {
   });
 
   it("shows warning color when less than 7 players selected", () => {
-    renderWithQueryClient(
+    render(
       <PointPlayerSelection
         teamId={1}
         players={mockPlayers}

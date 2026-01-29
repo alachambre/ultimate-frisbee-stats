@@ -1,7 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EditPointDialog from "../EditPointDialog";
 import type { PointWithPlayers, Player } from "../../../types";
 import { createTeam, createCompetition, createGame, createPlayer } from "../../../services";
@@ -45,18 +44,10 @@ const mockRunningPoint: PointWithPlayers = {
   players: mockPlayers.slice(0, 7),
 };
 
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
 
 describe("EditPointDialog", () => {
   it("displays point number in title", () => {
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}
@@ -70,7 +61,7 @@ describe("EditPointDialog", () => {
   });
 
   it("initializes form with point data", () => {
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}
@@ -90,7 +81,7 @@ describe("EditPointDialog", () => {
   });
 
   it("shows outcome radio buttons only for completed points", () => {
-    const { rerender } = renderWithQueryClient(
+    const { rerender } = render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}
@@ -107,24 +98,13 @@ describe("EditPointDialog", () => {
 
     // Active point should not show outcome
     rerender(
-      <QueryClientProvider
-        client={
-          new QueryClient({
-            defaultOptions: {
-              queries: { retry: false },
-              mutations: { retry: false },
-            },
-          })
-        }
-      >
-        <EditPointDialog
-          open={true}
-          onClose={vi.fn()}
-          point={mockRunningPoint}
-          players={mockPlayers}
-          teamId={1}
-        />
-      </QueryClientProvider>
+      <EditPointDialog
+        open={true}
+        onClose={vi.fn()}
+        point={mockRunningPoint}
+        players={mockPlayers}
+        teamId={1}
+      />
     );
 
     expect(screen.queryByText("Outcome")).not.toBeInTheDocument();
@@ -132,7 +112,7 @@ describe("EditPointDialog", () => {
 
 
   it("displays player selector with correct initial selection", () => {
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}
@@ -162,7 +142,7 @@ describe("EditPointDialog", () => {
 
   it("allows changing outcome for completed points", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}
@@ -186,7 +166,7 @@ describe("EditPointDialog", () => {
 
   it("disables save button when less than 7 players selected", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}
@@ -216,7 +196,7 @@ describe("EditPointDialog", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={onClose}
@@ -269,7 +249,7 @@ describe("EditPointDialog", () => {
       player_ids: createdPlayers.map((p) => p.id),
     });
 
-    renderWithQueryClient(
+    render(
       <EditPointDialog
         open={true}
         onClose={vi.fn()}

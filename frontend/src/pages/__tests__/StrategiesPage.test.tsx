@@ -34,48 +34,40 @@ describe("StrategiesPage", () => {
     render(<StrategiesPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /all strategies/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /offense strategies/i })).toBeInTheDocument();
     });
-    expect(screen.getByRole("button", { name: /offense strategies/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /defense strategies/i })).toBeInTheDocument();
   });
 
-  it("displays all strategies by default", async () => {
+  it("displays offense strategies by default", async () => {
     render(<StrategiesPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
-      expect(screen.getByText("Zone Defense")).toBeInTheDocument();
     });
+
+    // Defense strategy should not be visible by default
+    expect(screen.queryByText("Zone Defense")).not.toBeInTheDocument();
   });
 
   it("filters strategies by offense category", async () => {
-    const user = userEvent.setup();
     render(<StrategiesPage />);
 
+    // Offense is selected by default, should only see offensive strategy
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
-      expect(screen.getByText("Zone Defense")).toBeInTheDocument();
     });
 
-    // Click offense filter
-    const offenseButton = screen.getByRole("button", { name: /offense strategies/i });
-    await user.click(offenseButton);
-
-    // Should only see offensive strategy
-    await waitFor(() => {
-      expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
-      expect(screen.queryByText("Zone Defense")).not.toBeInTheDocument();
-    });
+    expect(screen.queryByText("Zone Defense")).not.toBeInTheDocument();
   });
 
   it("filters strategies by defense category", async () => {
     const user = userEvent.setup();
     render(<StrategiesPage />);
 
+    // Initially shows offense strategy
     await waitFor(() => {
       expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
-      expect(screen.getByText("Zone Defense")).toBeInTheDocument();
     });
 
     // Click defense filter

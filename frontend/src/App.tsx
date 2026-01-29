@@ -34,12 +34,29 @@ const theme = createTheme({
       paper: "#ffffff",
     },
   },
-  // Custom theme extensions
   gradients: {
     primary: "linear-gradient(135deg, #1e3a8a 0%, #38bdf8 100%)",
     primaryReverse: "linear-gradient(180deg, #1e3a8a 0%, #38bdf8 100%)",
     light: "linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%)",
-    middle: "#2b7cc1", // Middle color between primary and secondary for visual progression
+    middle: "#2b7cc1",
+  },
+  colors: {
+    offense: {
+      main: "#1e3a8a",
+      light: "#3b82f6",
+      dark: "#1e40af",
+    },
+    defense: {
+      main: "#0ea5e9",
+      light: "#38bdf8",
+      dark: "#0284c7",
+    },
+    men: {
+      main: "#1e3a8a",
+    },
+    women: {
+      main: "#38bdf8",
+    },
   },
 });
 

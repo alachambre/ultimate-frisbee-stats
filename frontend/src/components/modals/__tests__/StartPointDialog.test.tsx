@@ -1,7 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import StartPointDialog from "../StartPointDialog";
 import type { Player } from "../../../types";
 import { createTeam, createGame, createCompetition, createPlayer } from "../../../services";
@@ -17,18 +16,9 @@ const mockPlayers: Player[] = [
   { id: 8, name: "Henry", number: 80, gender: "M", team_id: 1, created_at: "2024-01-01" },
 ];
 
-const renderWithQueryClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
-
 describe("StartPointDialog", () => {
   it("disables start button when less than 7 players selected", () => {
-    renderWithQueryClient(
+    render(
       <StartPointDialog
         open={true}
         onClose={vi.fn()}
@@ -44,7 +34,7 @@ describe("StartPointDialog", () => {
 
   it("enables start button when exactly 7 players selected", async () => {
     const user = userEvent.setup();
-    renderWithQueryClient(
+    render(
       <StartPointDialog
         open={true}
         onClose={vi.fn()}
@@ -92,7 +82,7 @@ describe("StartPointDialog", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderWithQueryClient(
+    render(
       <StartPointDialog
         open={true}
         onClose={onClose}
@@ -134,7 +124,7 @@ describe("StartPointDialog", () => {
         )
       );
 
-      renderWithQueryClient(
+      render(
         <StartPointDialog
           open={true}
           onClose={vi.fn()}
@@ -177,7 +167,7 @@ describe("StartPointDialog", () => {
         )
       );
 
-      renderWithQueryClient(
+      render(
         <StartPointDialog
           open={true}
           onClose={vi.fn()}
@@ -247,7 +237,7 @@ describe("StartPointDialog", () => {
         )
       );
 
-      renderWithQueryClient(
+      render(
         <StartPointDialog
           open={true}
           onClose={vi.fn()}
@@ -323,7 +313,7 @@ describe("StartPointDialog", () => {
         )
       );
 
-      renderWithQueryClient(
+      render(
         <StartPointDialog
           open={true}
           onClose={vi.fn()}
