@@ -11,6 +11,8 @@ class PlayerOffenseStats(BaseModel):
     points_won: int
     points_lost: int
     win_rate: float
+    points_won_no_turnover: int
+    clean_point_rate: float  # points_won_no_turnover / points_won (only won points)
 
     class Config:
         from_attributes = True
@@ -22,6 +24,9 @@ class PlayerDefenseStats(BaseModel):
     points_won: int
     points_lost: int
     win_rate: float
+    points_with_turnover: int
+    turnover_rate: float  # points_with_turnover / points_played
+    points_lost_no_turnover: int
 
     class Config:
         from_attributes = True
@@ -36,7 +41,6 @@ class PlayerGameStats(BaseModel):
     effective_time_seconds: int  # Total effective time (point duration - call durations)
     offense: PlayerOffenseStats
     defense: PlayerDefenseStats
-    turnovers: int  # Number of turnovers attributed to this player
 
     class Config:
         from_attributes = True

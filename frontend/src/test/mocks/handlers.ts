@@ -1206,14 +1206,18 @@ export const handlers = [
         points_won: 0,
         points_lost: 0,
         win_rate: 0.0,
+        points_won_no_turnover: 0,
+        clean_point_rate: 0.0,
       },
       defense: {
         points_played: 0,
         points_won: 0,
         points_lost: 0,
         win_rate: 0.0,
+        points_with_turnover: 0,
+        turnover_rate: 0.0,
+        points_lost_no_turnover: 0,
       },
-      turnovers: 0,
     }));
 
     return HttpResponse.json(stats);

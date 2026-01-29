@@ -321,6 +321,8 @@ export interface PlayerOffenseStats {
   points_won: number;
   points_lost: number;
   win_rate: number;
+  points_won_no_turnover: number;
+  clean_point_rate: number;
 }
 
 export interface PlayerDefenseStats {
@@ -328,6 +330,9 @@ export interface PlayerDefenseStats {
   points_won: number;
   points_lost: number;
   win_rate: number;
+  points_with_turnover: number;
+  turnover_rate: number;
+  points_lost_no_turnover: number;
 }
 
 export interface PlayerGameStats {
@@ -338,5 +343,4 @@ export interface PlayerGameStats {
   effective_time_seconds: number;
   offense: PlayerOffenseStats;
   defense: PlayerDefenseStats;
-  turnovers: number;
 }

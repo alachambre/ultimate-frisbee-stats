@@ -380,68 +380,6 @@ def test_get_live_game_player_stats_offense_defense_breakdown(db_session: Sessio
     assert player2_stats["offense"]["win_rate"] == 0.0
 
 
-def test_get_live_game_player_stats_with_turnovers(db_session: Session, sample_game: models.Game, sample_team: models.Team):
-    """Test turnover counting for players"""
-    # Create 3 players
-    player1 = models.Player(name="Player 1", number=1, gender="M", team_id=sample_team.id)
-    player2 = models.Player(name="Player 2", number=2, gender="W", team_id=sample_team.id)
-    player3 = models.Player(name="Player 3", number=3, gender="M", team_id=sample_team.id)
-    db_session.add_all([player1, player2, player3])
-    db_session.commit()
-
-    # Add to game
-    sample_game.players.extend([player1, player2, player3])
-    db_session.commit()
-
-    # Point 1 with players 1 and 2
-    point1 = models.Point(
-        game_id=sample_game.id,
-        point_number=1,
-        starting_on_offense=True,
-        won=True,
-        status=models.PointStatusEnum.completed,
-        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
-        end_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc)
-    )
-    point1.players.extend([player1, player2])
-    db_session.add(point1)
-    db_session.flush()
-
-    # Add 2 turnovers for player1, 1 for player2
-    turnover1 = models.Turnover(
-        point_id=point1.id,
-        player_id=player1.id,
-        timestamp=datetime(2024, 1, 1, 10, 0, 30, tzinfo=timezone.utc)
-    )
-    turnover2 = models.Turnover(
-        point_id=point1.id,
-        player_id=player1.id,
-        timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc)
-    )
-    turnover3 = models.Turnover(
-        point_id=point1.id,
-        player_id=player2.id,
-        timestamp=datetime(2024, 1, 1, 10, 1, 30, tzinfo=timezone.utc)
-    )
-    db_session.add_all([turnover1, turnover2, turnover3])
-    db_session.commit()
-
-    stats = crud.get_live_game_player_stats(db_session, sample_game.id)
-
-    # Player 1: 2 turnovers
-    player1_stats = next(s for s in stats if s["player_id"] == player1.id)
-    assert player1_stats["turnovers"] == 2
-
-    # Player 2: 1 turnover
-    player2_stats = next(s for s in stats if s["player_id"] == player2.id)
-    assert player2_stats["turnovers"] == 1
-
-    # Player 3: 0 turnovers (didn't play)
-    player3_stats = next(s for s in stats if s["player_id"] == player3.id)
-    assert player3_stats["turnovers"] == 0
-    assert player3_stats["points_played"] == 0
-
-
 def test_get_live_game_player_stats_mixed_offense_defense(db_session: Session, sample_game: models.Game, sample_player: models.Player):
     """Test player who plays both offense and defense"""
     # Add player to game
