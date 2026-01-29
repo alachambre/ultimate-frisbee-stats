@@ -115,10 +115,6 @@ backend/app/
 - Team-level (all-time) aggregations
 - Advanced visualizations and charts
 - Export/sharing capabilities
-  - Point duration analysis
-  - Break/hold percentages
-  - Visualizations and charts
-  - Export/sharing capabilities
 
 ## Important Commands
 

@@ -62,9 +62,13 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Cleaner dialog UIs with offense/defense icons
 
 **Statistics & Analytics:**
-- View point history with durations
-- Track offensive and defensive performance
-- Analyze player participation across games
+- Comprehensive game statistics dashboard at `/statistics/games/:id`
+- Team statistics with offense/defense breakdown (Hold, Clean Hold, Break, Clean Break, Turnover rates)
+- Player statistics table with playing time, offense/defense win rates, clean points, forced turnovers
+- Info icon tooltips explaining each statistic
+- Real-time statistics for ongoing games (integrated into GameDetailPage)
+- Visual highlighting of top/bottom performers by playing time
+- Sortable player roster by name, points played, or playing time
 
 ## Quick Start
 
@@ -155,10 +159,11 @@ frontend/
 │   │   ├── LinesPage.tsx           # Line list/management (integrated into TeamDetailPage)
 │   │   ├── LineDetailPage.tsx      # Individual line with player management
 │   │   ├── GamesPage.tsx           # Game list/management
-│   │   └── GameDetailPage.tsx      # Individual game with score and points
+│   │   ├── GameDetailPage.tsx      # Individual game with score and points
+│   │   └── GameStatisticsPage.tsx  # Game statistics dashboard with team/player analytics
 │   ├── locales/          # i18n translation files
 │   │   ├── index.ts      # i18n configuration (language detection, resources)
-│   │   ├── en/           # English translations (9 JSON files)
+│   │   ├── en/           # English translations (10 JSON files)
 │   │   │   ├── common.json       # Shared: actions, status, labels, validation
 │   │   │   ├── navigation.json   # AppBar menu items
 │   │   │   ├── teams.json
@@ -167,8 +172,9 @@ frontend/
 │   │   │   ├── games.json
 │   │   │   ├── points.json       # Point tracking UI
 │   │   │   ├── lines.json
-│   │   │   └── strategies.json
-│   │   └── fr/           # French translations (9 JSON files, same structure)
+│   │   │   ├── strategies.json
+│   │   │   └── statistics.json   # Statistics dashboard labels and tooltips
+│   │   └── fr/           # French translations (10 JSON files, same structure)
 │   ├── services/         # API layer (mirrors backend CRUD)
 │   │   ├── api.ts        # Axios client configuration
 │   │   ├── teams.ts      # Team API calls
@@ -178,6 +184,7 @@ frontend/
 │   │   ├── games.ts      # Game API calls
 │   │   ├── points.ts     # Point API calls
 │   │   ├── strategies.ts # Strategy API calls
+│   │   ├── statistics.ts # Statistics API calls (game team/player stats)
 │   │   └── index.ts      # Central export point
 │   ├── types/            # TypeScript types (mirrors backend schemas)
 │   │   ├── index.ts      # All type definitions
@@ -741,7 +748,8 @@ Backend is configured to allow all origins in development. If you still see CORS
 ## Future Enhancements
 
 The application roadmap includes:
-- **Advanced Statistics**: Comprehensive analytics dashboard with charts and metrics (Phase 8 - Next)
+- **Competition/Team Aggregations**: Statistics aggregated across multiple games (Phase 8 - In Progress)
+- **Advanced Visualizations**: Charts and graphs for trends over time
 - **PWA Features**: Offline support, install prompt, service worker caching
 - **Export/Sharing**: CSV export, PDF reports, share game statistics
 
