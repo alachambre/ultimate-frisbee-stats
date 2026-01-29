@@ -175,7 +175,7 @@ export default function GameStatisticsPage() {
               <Grid container spacing={2}>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.pointsStarted")}
+                    label={t("statistics:teamStats.offensePoints")}
                     value={teamStats.offense.points_started}
                   />
                 </Grid>
@@ -228,7 +228,7 @@ export default function GameStatisticsPage() {
               <Grid container spacing={2}>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.pointsStarted")}
+                    label={t("statistics:teamStats.defensePoints")}
                     value={teamStats.defense.points_started}
                   />
                 </Grid>
