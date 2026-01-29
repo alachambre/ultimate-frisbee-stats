@@ -1177,4 +1177,82 @@ export const handlers = [
     turnovers.splice(turnoverIndex, 1);
     return new HttpResponse(null, { status: 204 });
   }),
+
+  // ============================================
+  // Statistics Endpoints
+  // ============================================
+
+  // GET /statistics/games/:gameId/live - Get live player statistics
+  http.get(`${BASE_URL}/statistics/games/:gameId/live`, ({ params }) => {
+    const gameId = Number(params.gameId);
+    const game = games.find((g) => g.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    const gamePlayerIds = gamePlayers.get(gameId) || [];
+    const gamePlayers_list = players.filter((p) => gamePlayerIds.includes(p.id));
+
+    // Return empty stats for all players
+    const stats = gamePlayers_list.map((player) => ({
+      player_id: player.id,
+      player_name: player.name,
+      player_number: player.number,
+      points_played: 0,
+      effective_time_seconds: 0,
+      offense: {
+        points_played: 0,
+        points_won: 0,
+        points_lost: 0,
+        win_rate: 0.0,
+      },
+      defense: {
+        points_played: 0,
+        points_won: 0,
+        points_lost: 0,
+        win_rate: 0.0,
+      },
+      turnovers: 0,
+    }));
+
+    return HttpResponse.json(stats);
+  }),
+
+  // GET /statistics/games/:gameId/team - Get team statistics
+  http.get(`${BASE_URL}/statistics/games/:gameId/team`, ({ params }) => {
+    const gameId = Number(params.gameId);
+    const game = games.find((g) => g.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    // Return empty team stats
+    return HttpResponse.json({
+      game_id: gameId,
+      total_completed_points: 0,
+      offense: {
+        points_started: 0,
+        points_won: 0,
+        points_lost: 0,
+        win_rate: 0.0,
+        points_won_no_turnover: 0,
+        clean_point_rate: 0.0,
+        break_rate: 0.0,
+      },
+      defense: {
+        points_started: 0,
+        points_won: 0,
+        points_lost: 0,
+        win_rate: 0.0,
+        points_with_turnover: 0,
+        turnover_rate: 0.0,
+        points_won_no_turnover: 0,
+        clean_break_rate: 0.0,
+        points_lost_no_turnover: 0,
+        hold_rate: 0.0,
+      },
+    });
+  }),
 ];

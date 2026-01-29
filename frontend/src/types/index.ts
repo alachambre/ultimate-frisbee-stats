@@ -316,10 +316,27 @@ export interface TurnoverUpdate {
 // Statistics Types
 // ============================================
 
+export interface PlayerOffenseStats {
+  points_played: number;
+  points_won: number;
+  points_lost: number;
+  win_rate: number;
+}
+
+export interface PlayerDefenseStats {
+  points_played: number;
+  points_won: number;
+  points_lost: number;
+  win_rate: number;
+}
+
 export interface PlayerGameStats {
   player_id: number;
   player_name: string;
   player_number: number;
   points_played: number;
   effective_time_seconds: number;
+  offense: PlayerOffenseStats;
+  defense: PlayerDefenseStats;
+  turnovers: number;
 }
