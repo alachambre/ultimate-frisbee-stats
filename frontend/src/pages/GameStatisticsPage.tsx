@@ -181,13 +181,13 @@ export default function GameStatisticsPage() {
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.pointsWon")}
+                    label={t("statistics:teamStats.offenseWon")}
                     value={teamStats.offense.points_won}
                   />
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.pointsLost")}
+                    label={t("statistics:teamStats.offenseLost")}
                     value={teamStats.offense.points_lost}
                   />
                 </Grid>
@@ -234,13 +234,13 @@ export default function GameStatisticsPage() {
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.pointsWon")}
+                    label={t("statistics:teamStats.defenseWon")}
                     value={teamStats.defense.points_won}
                   />
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.pointsLost")}
+                    label={t("statistics:teamStats.defenseLost")}
                     value={teamStats.defense.points_lost}
                   />
                 </Grid>
