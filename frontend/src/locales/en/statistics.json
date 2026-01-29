@@ -19,6 +19,8 @@
     "hold": "Hold",
     "cleanHold": "Clean Hold",
     "break": "Break",
+    "turnover": "Turnover",
+    "cleanBreak": "Clean Break",
     "cleanPointRate": "Points without Turnover",
     "breakRate": "Break Rate",
     "turnoverRate": "Turnover Rate",
