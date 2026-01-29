@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+import os
 
 from app.database import init_db
 from app.routers import teams, players, games, points, competitions, lines, strategies, calls, turnovers, statistics
@@ -18,9 +19,21 @@ app = FastAPI(
 )
 
 # CORS middleware to allow frontend to communicate with backend
+# Get allowed origins from environment variable, fallback to localhost for development
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+allowed_origins = [FRONTEND_URL]
+
+# Allow localhost variants for development
+if "localhost" in FRONTEND_URL or "127.0.0.1" in FRONTEND_URL:
+    allowed_origins.extend([
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

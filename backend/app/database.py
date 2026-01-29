@@ -8,6 +8,11 @@ DATABASE_URL = os.getenv(
     "sqlite:///./ultimate_stats.db"  # SQLite fallback for easy local testing
 )
 
+# Fix for some providers using postgres:// instead of postgresql://
+# SQLAlchemy 1.4+ requires postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # SQLite-specific: Use check_same_thread=False to allow FastAPI to work properly
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
