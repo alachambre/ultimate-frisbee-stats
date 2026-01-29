@@ -15,17 +15,11 @@
     "defenseWon": "Defense Won",
     "offenseLost": "Offense Lost",
     "defenseLost": "Defense Lost",
-    "winRate": "Win Rate",
     "hold": "Hold",
     "cleanHold": "Clean Hold",
     "break": "Break",
     "turnover": "Turnover",
-    "cleanBreak": "Clean Break",
-    "cleanPointRate": "Points without Turnover",
-    "breakRate": "Break Rate",
-    "turnoverRate": "Turnover Rate",
-    "cleanBreakRate": "Clean Break Rate",
-    "holdRate": "Hold Rate"
+    "cleanBreak": "Clean Break"
   },
   "playerStats": {
     "title": "Player Statistics",
@@ -34,21 +28,12 @@
     "playerName": "Player",
     "pointsPlayed": "Points",
     "playingTime": "Time",
-    "offense": "Offense",
-    "defense": "Defense",
     "offenseWinRate": "O Win Rate",
     "defenseWinRate": "D Win Rate",
     "cleanPoints": "Clean Points",
-    "forcedTurnovers": "Forced Ds",
-    "sortBy": "Sort by",
-    "sortByName": "Name",
-    "sortByPoints": "Points Played",
-    "sortByTime": "Playing Time",
-    "sortByOffenseWinRate": "Offense Win Rate",
-    "sortByDefenseWinRate": "Defense Win Rate"
+    "forcedTurnovers": "Forced Ds"
   },
   "tooltips": {
-    "winRate": "Percentage of points won",
     "cleanPointRate": "Percentage of won points that had no turnovers",
     "breakRate": "Percentage of defensive points won (breaks)",
     "turnoverRate": "Percentage of defensive points where we forced at least one turnover",
