@@ -25,6 +25,9 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     - player_number: int
     - points_played: int (number of completed points)
     - effective_time_seconds: int (total playing time minus call durations)
+    - offense: dict (points_played, points_won, points_lost, win_rate)
+    - defense: dict (points_played, points_won, points_lost, win_rate)
+    - turnovers: int (number of turnovers attributed to this player)
     """
     # Get the game to verify it exists
     game = db.query(Game).filter(Game.id == game_id).first()
@@ -39,27 +42,66 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
         Point.end_datetime.isnot(None)
     ).all()
 
-    # If no completed points, return empty stats for all players in the game
-    if not completed_points:
-        players = db.query(Player).join(
-            Game.players
-        ).filter(Game.id == game_id).all()
+    # Get all turnovers for this game
+    turnovers_by_player = {}
+    for point in completed_points:
+        turnovers = db.query(Turnover).filter(Turnover.point_id == point.id).all()
+        for turnover in turnovers:
+            if turnover.player_id:
+                turnovers_by_player[turnover.player_id] = turnovers_by_player.get(turnover.player_id, 0) + 1
 
+    # Get all players in the game
+    all_game_players = db.query(Player).join(
+        Game.players
+    ).filter(Game.id == game_id).all()
+
+    # If no completed points, return empty stats for all players
+    if not completed_points:
         return sorted([
             {
                 "player_id": player.id,
                 "player_name": player.name,
                 "player_number": player.number,
                 "points_played": 0,
-                "effective_time_seconds": 0
+                "effective_time_seconds": 0,
+                "offense": {
+                    "points_played": 0,
+                    "points_won": 0,
+                    "points_lost": 0,
+                    "win_rate": 0.0
+                },
+                "defense": {
+                    "points_played": 0,
+                    "points_won": 0,
+                    "points_lost": 0,
+                    "win_rate": 0.0
+                },
+                "turnovers": turnovers_by_player.get(player.id, 0)
             }
-            for player in players
+            for player in all_game_players
         ], key=lambda x: x["player_number"])
 
     # Build a dict to accumulate stats for each player
     player_stats: Dict[int, Dict] = {}
 
-    # Get all players who played in at least one completed point
+    # Initialize stats for all game players
+    for player in all_game_players:
+        player_stats[player.id] = {
+            "player_id": player.id,
+            "player_name": player.name,
+            "player_number": player.number,
+            "points_played": 0,
+            "effective_time_seconds": 0,
+            "offense_played": 0,
+            "offense_won": 0,
+            "offense_lost": 0,
+            "defense_played": 0,
+            "defense_won": 0,
+            "defense_lost": 0,
+            "turnovers": turnovers_by_player.get(player.id, 0)
+        }
+
+    # Process each completed point
     for point in completed_points:
         # Calculate point duration in seconds
         point_duration = int((point.end_datetime - point.start_datetime).total_seconds())
@@ -77,35 +119,53 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
 
         # Update stats for each player in this point
         for player in point.players:
-            if player.id not in player_stats:
-                player_stats[player.id] = {
-                    "player_id": player.id,
-                    "player_name": player.name,
-                    "player_number": player.number,
-                    "points_played": 0,
-                    "effective_time_seconds": 0
-                }
+            if player.id in player_stats:
+                player_stats[player.id]["points_played"] += 1
+                player_stats[player.id]["effective_time_seconds"] += effective_time
 
-            player_stats[player.id]["points_played"] += 1
-            player_stats[player.id]["effective_time_seconds"] += effective_time
+                # Track offense/defense separately
+                if point.starting_on_offense:
+                    player_stats[player.id]["offense_played"] += 1
+                    if point.won:
+                        player_stats[player.id]["offense_won"] += 1
+                    else:
+                        player_stats[player.id]["offense_lost"] += 1
+                else:
+                    player_stats[player.id]["defense_played"] += 1
+                    if point.won:
+                        player_stats[player.id]["defense_won"] += 1
+                    else:
+                        player_stats[player.id]["defense_lost"] += 1
 
-    # Also include players in the game who haven't played any completed points yet
-    all_game_players = db.query(Player).join(
-        Game.players
-    ).filter(Game.id == game_id).all()
+    # Calculate win rates and format response
+    result = []
+    for player_id, stats in player_stats.items():
+        offense_win_rate = stats["offense_won"] / stats["offense_played"] if stats["offense_played"] > 0 else 0.0
+        defense_win_rate = stats["defense_won"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
 
-    for player in all_game_players:
-        if player.id not in player_stats:
-            player_stats[player.id] = {
-                "player_id": player.id,
-                "player_name": player.name,
-                "player_number": player.number,
-                "points_played": 0,
-                "effective_time_seconds": 0
-            }
+        result.append({
+            "player_id": stats["player_id"],
+            "player_name": stats["player_name"],
+            "player_number": stats["player_number"],
+            "points_played": stats["points_played"],
+            "effective_time_seconds": stats["effective_time_seconds"],
+            "offense": {
+                "points_played": stats["offense_played"],
+                "points_won": stats["offense_won"],
+                "points_lost": stats["offense_lost"],
+                "win_rate": offense_win_rate
+            },
+            "defense": {
+                "points_played": stats["defense_played"],
+                "points_won": stats["defense_won"],
+                "points_lost": stats["defense_lost"],
+                "win_rate": defense_win_rate
+            },
+            "turnovers": stats["turnovers"]
+        })
 
     # Return sorted by player number
-    return sorted(player_stats.values(), key=lambda x: x["player_number"])
+    return sorted(result, key=lambda x: x["player_number"])
 
 
 def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:

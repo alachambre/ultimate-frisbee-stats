@@ -23,51 +23,24 @@
   - Defense: points_started, points_won, win_rate, turnover_rate, clean_break_rate, hold_rate
   - Turnover attribution: Possession tracking based on starting_on_offense + turnover sequence
   - Only completed points counted
-  - 15 tests (29 total statistics tests, 372 total backend tests passing)
+  - 15 tests
+
+### ✅ Completed: Game-Level Player Statistics
+- **Backend**: Extended `GET /statistics/games/{game_id}/live`
+  - Added offense breakdown: points_played, points_won, points_lost, win_rate per player
+  - Added defense breakdown: points_played, points_won, points_lost, win_rate per player
+  - Added turnover counting: Number of turnovers attributed to each player
+  - All stats calculated from completed points only
+  - 5 new tests (35 total statistics tests, 377 total backend tests passing)
 
 ---
 
-## 🔄 Next: Game-Level Player Statistics & Frontend Dashboard
+## 🔄 Next: Frontend Dashboard
 
-### Phase 2: Game-Level Player Statistics (NEXT)
-**Priority**: HIGH - Extend existing player stats
+### Phase 3: Frontend Statistics Dashboard (NEXT)
+**Priority**: HIGH - Visualize backend statistics
 
-### Phase 2: Game-Level Player Statistics
-**Priority**: MEDIUM
-
-**Endpoint**: `GET /statistics/games/{game_id}/players`
-
-Extend existing live stats with:
-```json
-{
-  "player_id": 1,
-  "player_name": "Alice",
-  "points_played": 10,
-  "effective_time_seconds": 1800,
-  "offense": {
-    "points_played": 6,
-    "points_won": 5,
-    "win_rate": 0.833,
-    "points_lost": 1
-  },
-  "defense": {
-    "points_played": 4,
-    "points_won": 3,
-    "win_rate": 0.75,
-    "points_lost": 1
-  },
-  "turnovers": 2  // turnovers attributed to this player
-}
-```
-
-**Implementation**:
-- Extend existing `get_live_game_player_stats()` function
-- Add offense/defense breakdowns
-- Include turnover count from turnovers table
-
----
-
-### Phase 3: Competition-Level Aggregations
+### Phase 4: Competition-Level Aggregations
 **Priority**: MEDIUM
 
 **Endpoints**:
@@ -78,7 +51,7 @@ Extend existing live stats with:
 
 ---
 
-### Phase 4: Team-Level (All-Time) Aggregations
+### Phase 5: Team-Level (All-Time) Aggregations
 **Priority**: LOW
 
 **Endpoints**:
@@ -89,7 +62,7 @@ Extend existing live stats with:
 
 ---
 
-### Phase 5: Frontend Statistics Dashboard
+### Phase 3: Frontend Statistics Dashboard
 **Priority**: MEDIUM (after backend phases 1-2)
 
 **Pages/Components**:
@@ -110,12 +83,12 @@ Extend existing live stats with:
 ## Implementation Order
 
 ### ✅ Completed:
-1. Live game statistics
+1. Live game statistics (basic)
 2. Game-level team statistics
+3. Game-level player statistics (offense/defense/turnovers)
 
 ### Next Session:
-3. 🔄 Game-level player statistics (extend existing endpoint)
-4. Frontend dashboard for game stats (display team statistics)
+4. 🔄 Frontend statistics dashboard (display all backend stats)
 
 ### Future Sessions:
 5. Competition/team aggregations

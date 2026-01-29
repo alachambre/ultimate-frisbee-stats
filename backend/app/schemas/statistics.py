@@ -5,6 +5,28 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+class PlayerOffenseStats(BaseModel):
+    """Offensive statistics for a player"""
+    points_played: int
+    points_won: int
+    points_lost: int
+    win_rate: float
+
+    class Config:
+        from_attributes = True
+
+
+class PlayerDefenseStats(BaseModel):
+    """Defensive statistics for a player"""
+    points_played: int
+    points_won: int
+    points_lost: int
+    win_rate: float
+
+    class Config:
+        from_attributes = True
+
+
 class PlayerGameStats(BaseModel):
     """Statistics for a player in a specific game"""
     player_id: int
@@ -12,6 +34,9 @@ class PlayerGameStats(BaseModel):
     player_number: int
     points_played: int  # Number of completed points played
     effective_time_seconds: int  # Total effective time (point duration - call durations)
+    offense: PlayerOffenseStats
+    defense: PlayerDefenseStats
+    turnovers: int  # Number of turnovers attributed to this player
 
     class Config:
         from_attributes = True

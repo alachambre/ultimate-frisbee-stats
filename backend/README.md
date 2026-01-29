@@ -384,7 +384,9 @@ pytest tests/ -v --tb=short
 
 **Live Player Statistics:**
 - Real-time playing time tracking for all players in game roster
-- Returns: player_id, player_name, player_number, points_played, effective_time_seconds
+- Returns: player_id, player_name, player_number, points_played, effective_time_seconds, offense stats, defense stats, turnovers
+- Offense/defense breakdown: For each player, shows points_played, points_won, points_lost, win_rate on offense and defense separately
+- Turnover tracking: Count of turnovers attributed to each player
 - Only completed points are counted
 - Effective time = point duration - call durations (dead time)
 - Sorted by player number for easy scanning
@@ -393,6 +395,8 @@ pytest tests/ -v --tb=short
   - Post-game analysis: One-time fetch for final statistics
   - Rotation management: Identify overused/underused players
   - Fair play time: Ensure balanced playing time across roster
+  - Performance analysis: Track individual offense/defense efficiency
+  - Turnover awareness: Identify players with high turnover counts
 
 **Team Statistics:**
 - Offensive and defensive efficiency metrics
@@ -454,9 +458,9 @@ git commit -m "Your commit message"
 - Complete test isolation - no side effects between tests
 
 ### Test Coverage
-- **372 tests passing** (Phase 8 - Partial)
-  - 19 Statistics CRUD tests (Phase 8 - live player stats + team stats)
-  - 10 Statistics API tests (Phase 8)
+- **377 tests passing** (Phase 8 - In Progress)
+  - 22 Statistics CRUD tests (Phase 8 - live player stats + team stats + offense/defense breakdowns)
+  - 13 Statistics API tests (Phase 8)
   - 14 Call CRUD tests (Phase 7)
   - 14 Call API tests (Phase 7)
   - 17 Turnover CRUD tests (Phase 7)
