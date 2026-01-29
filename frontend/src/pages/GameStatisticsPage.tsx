@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -18,16 +19,20 @@ import {
   Divider,
   Tooltip,
   IconButton,
+  CircularProgress,
+  TableSortLabel,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTranslation } from "react-i18next";
 import { getGame } from "../services/games";
 import { getLiveGameStatistics, getGameTeamStatistics } from "../services/statistics";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
+import GameTimer from "../components/games/GameTimer";
 
 // Helper function to format time (seconds to MM:SS)
 function formatTime(seconds: number): string {
@@ -41,30 +46,83 @@ function formatPercent(value: number): string {
   return `${(value * 100).toFixed(0)}%`;
 }
 
-// Stat card component for team statistics
-function StatCard({
+// Circular progress stat component
+function CircularStat({
   label,
-  value,
-  tooltip
+  percentage,
+  count,
+  total,
+  color,
+  tooltip,
 }: {
   label: string;
-  value: string | number;
+  percentage: number;
+  count?: number;
+  total?: number;
+  color: string;
   tooltip?: string;
 }) {
+  const displayPercentage = Math.round(percentage * 100);
+
   return (
-    <Box
-      sx={{
-        textAlign: "center",
-        p: 2,
-        borderRadius: 1,
-        bgcolor: "background.default",
-      }}
-    >
-      <Typography variant="h4" color="primary.main" fontWeight="bold">
-        {value}
-      </Typography>
+    <Box sx={{ textAlign: "center" }}>
+      <Box
+        sx={{
+          position: "relative",
+          display: "inline-flex",
+          mb: 2,
+        }}
+      >
+        {/* Background circle */}
+        <CircularProgress
+          variant="determinate"
+          value={100}
+          size={140}
+          thickness={4}
+          sx={{
+            color: "rgba(0, 0, 0, 0.1)",
+            position: "absolute",
+          }}
+        />
+        {/* Progress circle */}
+        <CircularProgress
+          variant="determinate"
+          value={displayPercentage}
+          size={140}
+          thickness={4}
+          sx={{
+            color: color,
+            "& .MuiCircularProgress-circle": {
+              strokeLinecap: "round",
+            },
+          }}
+        />
+        {/* Center content */}
+        <Box
+          sx={{
+            top: 0,
+            left: 0,
+            bottom: 0,
+            right: 0,
+            position: "absolute",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography variant="h4" fontWeight="bold" color={color}>
+            {displayPercentage}%
+          </Typography>
+          {count !== undefined && total !== undefined && (
+            <Typography variant="body2" color="text.secondary">
+              {count}/{total}
+            </Typography>
+          )}
+        </Box>
+      </Box>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body1" fontWeight="medium" color="text.primary">
           {label}
         </Typography>
         {tooltip && (
@@ -79,10 +137,15 @@ function StatCard({
   );
 }
 
+type SortColumn = "name" | "points" | "time" | "offenseWinRate" | "defenseWinRate" | "cleanPoints" | "cleanBreak" | "forcedTurnovers";
+type SortDirection = "asc" | "desc";
+
 export default function GameStatisticsPage() {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation(["statistics", "common"]);
+  const { t } = useTranslation(["statistics", "games", "common"]);
+  const [sortColumn, setSortColumn] = useState<SortColumn>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   // Fetch game details
   const {
@@ -117,6 +180,47 @@ export default function GameStatisticsPage() {
     enabled: !!gameId,
   });
 
+  // Sort player stats - must be before early returns to follow Rules of Hooks
+  const sortedPlayerStats = useMemo(() => {
+    if (!playerStats) return [];
+
+    const sorted = [...playerStats];
+    sorted.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortColumn) {
+        case "name":
+          comparison = a.player_name.localeCompare(b.player_name);
+          break;
+        case "points":
+          comparison = a.points_played - b.points_played;
+          break;
+        case "time":
+          comparison = a.effective_time_seconds - b.effective_time_seconds;
+          break;
+        case "offenseWinRate":
+          comparison = a.offense.hold_rate - b.offense.hold_rate;
+          break;
+        case "defenseWinRate":
+          comparison = a.defense.break_rate - b.defense.break_rate;
+          break;
+        case "cleanPoints":
+          comparison = a.offense.clean_hold_rate - b.offense.clean_hold_rate;
+          break;
+        case "cleanBreak":
+          comparison = a.defense.clean_break_rate - b.defense.clean_break_rate;
+          break;
+        case "forcedTurnovers":
+          comparison = a.defense.turnover_rate - b.defense.turnover_rate;
+          break;
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [playerStats, sortColumn, sortDirection]);
+
   if (isLoadingGame || isLoadingTeamStats || isLoadingPlayerStats) {
     return <LoadingState message={t("common:loading")} />;
   }
@@ -135,11 +239,22 @@ export default function GameStatisticsPage() {
     navigate(`/games/${gameId}`);
   };
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new column with default ascending
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <PageHeader
-        title={t("statistics:page.title")}
-        subtitle={`${game.opponent} - ${new Date(game.date).toLocaleDateString()}`}
+        title={`${game.team_name} vs ${game.opponent_name} - ${t("statistics:page.title")}`}
+        subtitle={`${game.competition_name} • ${new Date(game.date || game.created_at).toLocaleDateString()}`}
       />
 
       <Button
@@ -147,133 +262,144 @@ export default function GameStatisticsPage() {
         onClick={handleBack}
         sx={{ mb: 3 }}
       >
-        {t("common:backToGame")}
+        {t("statistics:backToGame")}
       </Button>
 
-      {/* Team Statistics Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          {t("statistics:teamStats.title")}
-        </Typography>
-
-        {!teamStats || teamStats.total_completed_points === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {t("statistics:playerStats.noData")}
+      {/* Game Overview Section */}
+      <Paper sx={{ mb: 3 }}>
+        <Box p={4} textAlign="center">
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+            <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+            <Typography variant="body2" color="text.secondary">
+              {game.competition_name}
+            </Typography>
+          </Box>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            {game.status === "ended" ? t("games:detail.finalScore") : t("games:detail.score")}
           </Typography>
-        ) : (
-          <Box>
-            {/* Overview */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                {t("statistics:teamStats.overview")}
+          <Typography variant="h2" fontWeight="bold">
+            {game.our_score} - {game.opponent_score}
+          </Typography>
+
+          {/* Game Timer */}
+          {game.start_datetime && (
+            <Box mt={2}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {t("games:detail.gameDuration")}
               </Typography>
-              <StatCard
-                label={t("statistics:teamStats.totalPoints")}
-                value={teamStats.total_completed_points}
+              <GameTimer
+                startDatetime={game.start_datetime}
+                endDatetime={game.end_datetime}
               />
             </Box>
+          )}
 
-            <Divider sx={{ my: 3 }} />
-
-            {/* Offense Statistics */}
-            <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <FlashOnIcon color="primary" />
-                <Typography variant="h6">
-                  {t("statistics:teamStats.offense")}
-                </Typography>
-              </Box>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.offensePoints")}
-                    value={teamStats.offense.points_started}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.offenseWon")}
-                    value={teamStats.offense.points_won}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.offenseLost")}
-                    value={teamStats.offense.points_lost}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.hold")}
-                    value={formatPercent(teamStats.offense.win_rate)}
-                    tooltip={t("statistics:tooltips.holdRate")}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.cleanHold")}
-                    value={formatPercent(teamStats.offense.clean_point_rate)}
-                    tooltip={t("statistics:tooltips.cleanPointRate")}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* Defense Statistics */}
+          <Box mt={2} display="flex" justifyContent="center" gap={4}>
             <Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <ShieldIcon color="secondary" />
-                <Typography variant="h6">
-                  {t("statistics:teamStats.defense")}
-                </Typography>
-              </Box>
-              <Grid container spacing={2}>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.defensePoints")}
-                    value={teamStats.defense.points_started}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.defenseWon")}
-                    value={teamStats.defense.points_won}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.defenseLost")}
-                    value={teamStats.defense.points_lost}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.turnover")}
-                    value={formatPercent(teamStats.defense.turnover_rate)}
-                    tooltip={t("statistics:tooltips.turnoverRate")}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.break")}
-                    value={formatPercent(teamStats.defense.win_rate)}
-                    tooltip={t("statistics:tooltips.breakRate")}
-                  />
-                </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.cleanBreak")}
-                    value={formatPercent(teamStats.defense.clean_break_rate)}
-                    tooltip={t("statistics:tooltips.cleanBreakRate")}
-                  />
-                </Grid>
-              </Grid>
+              <Typography variant="body2" color="text.secondary">
+                {game.team_name}
+              </Typography>
+              <Typography variant="h5" fontWeight="bold">
+                {game.our_score}
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem />
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                {game.opponent_name}
+              </Typography>
+              <Typography variant="h5" fontWeight="bold">
+                {game.opponent_score}
+              </Typography>
             </Box>
           </Box>
-        )}
+        </Box>
       </Paper>
+
+      {/* Team Statistics Section */}
+      {teamStats && teamStats.total_completed_points > 0 && (
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {t("statistics:teamStats.title")}
+          </Typography>
+
+          {/* Offense Statistics */}
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+              <FlashOnIcon sx={{ color: "#0ea5e9" }} />
+              <Typography variant="h6">
+                {t("statistics:teamStats.offense")}
+              </Typography>
+            </Box>
+            <Grid container spacing={3} justifyContent="center">
+              <Grid item xs={6} sm={4}>
+                <CircularStat
+                  label={t("statistics:teamStats.hold")}
+                  percentage={teamStats.offense.hold_rate}
+                  count={teamStats.offense.points_won}
+                  total={teamStats.offense.points_started}
+                  color="#0ea5e9"
+                  tooltip={t("statistics:tooltips.holdRate")}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4}>
+                <CircularStat
+                  label={t("statistics:teamStats.cleanHold")}
+                  percentage={teamStats.offense.clean_hold_rate}
+                  count={teamStats.offense.points_won_no_turnover}
+                  total={teamStats.offense.points_won}
+                  color="#38bdf8"
+                  tooltip={t("statistics:tooltips.cleanPointRate")}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* Defense Statistics */}
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+              <ShieldIcon sx={{ color: "#f97316" }} />
+              <Typography variant="h6">
+                {t("statistics:teamStats.defense")}
+              </Typography>
+            </Box>
+            <Grid container spacing={3} justifyContent="center">
+              <Grid item xs={6} sm={4}>
+                <CircularStat
+                  label={t("statistics:teamStats.turnover")}
+                  percentage={teamStats.defense.turnover_rate}
+                  count={teamStats.defense.points_with_turnover}
+                  total={teamStats.defense.points_started}
+                  color="#f97316"
+                  tooltip={t("statistics:tooltips.turnoverRate")}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4}>
+                <CircularStat
+                  label={t("statistics:teamStats.break")}
+                  percentage={teamStats.defense.break_rate}
+                  count={teamStats.defense.points_won}
+                  total={teamStats.defense.points_started}
+                  color="#fb923c"
+                  tooltip={t("statistics:tooltips.breakRate")}
+                />
+              </Grid>
+              <Grid item xs={6} sm={4}>
+                <CircularStat
+                  label={t("statistics:teamStats.cleanBreak")}
+                  percentage={teamStats.defense.clean_break_rate}
+                  count={teamStats.defense.points_won_no_turnover}
+                  total={teamStats.defense.points_won}
+                  color="#fdba74"
+                  tooltip={t("statistics:tooltips.cleanBreakRate")}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </Paper>
+      )}
 
       {/* Player Statistics Section */}
       <Paper sx={{ p: 3 }}>
@@ -295,27 +421,107 @@ export default function GameStatisticsPage() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>{t("statistics:playerStats.playerName")}</TableCell>
-                    <TableCell align="center">{t("statistics:playerStats.pointsPlayed")}</TableCell>
-                    <TableCell align="center">{t("statistics:playerStats.playingTime")}</TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                        <FlashOnIcon fontSize="small" color="primary" />
-                        {t("statistics:playerStats.offenseWinRate")}
-                      </Box>
+                    <TableCell>
+                      <TableSortLabel
+                        active={sortColumn === "name"}
+                        direction={sortColumn === "name" ? sortDirection : "asc"}
+                        onClick={() => handleSort("name")}
+                      >
+                        {t("statistics:playerStats.playerName")}
+                      </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">
-                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                        <ShieldIcon fontSize="small" color="secondary" />
-                        {t("statistics:playerStats.defenseWinRate")}
-                      </Box>
+                      <TableSortLabel
+                        active={sortColumn === "points"}
+                        direction={sortColumn === "points" ? sortDirection : "asc"}
+                        onClick={() => handleSort("points")}
+                      >
+                        {t("statistics:playerStats.pointsPlayed")}
+                      </TableSortLabel>
                     </TableCell>
-                    <TableCell align="center">{t("statistics:playerStats.cleanPoints")}</TableCell>
-                    <TableCell align="center">{t("statistics:playerStats.forcedTurnovers")}</TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortColumn === "time"}
+                        direction={sortColumn === "time" ? sortDirection : "asc"}
+                        onClick={() => handleSort("time")}
+                      >
+                        {t("statistics:playerStats.playingTime")}
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortColumn === "offenseWinRate"}
+                        direction={sortColumn === "offenseWinRate" ? sortDirection : "asc"}
+                        onClick={() => handleSort("offenseWinRate")}
+                      >
+                        <Tooltip title={t("statistics:tooltips.holdRate")} arrow>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                            <FlashOnIcon fontSize="small" sx={{ color: "#0ea5e9" }} />
+                            {t("statistics:playerStats.offenseWinRate")}
+                          </Box>
+                        </Tooltip>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortColumn === "cleanPoints"}
+                        direction={sortColumn === "cleanPoints" ? sortDirection : "asc"}
+                        onClick={() => handleSort("cleanPoints")}
+                      >
+                        <Tooltip title={t("statistics:tooltips.cleanPointRate")} arrow>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                            <FlashOnIcon fontSize="small" sx={{ color: "#0ea5e9" }} />
+                            {t("statistics:playerStats.cleanPoints")}
+                          </Box>
+                        </Tooltip>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortColumn === "forcedTurnovers"}
+                        direction={sortColumn === "forcedTurnovers" ? sortDirection : "asc"}
+                        onClick={() => handleSort("forcedTurnovers")}
+                      >
+                        <Tooltip title={t("statistics:tooltips.turnoverRate")} arrow>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                            <ShieldIcon fontSize="small" sx={{ color: "#f97316" }} />
+                            {t("statistics:playerStats.forcedTurnovers")}
+                          </Box>
+                        </Tooltip>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortColumn === "defenseWinRate"}
+                        direction={sortColumn === "defenseWinRate" ? sortDirection : "asc"}
+                        onClick={() => handleSort("defenseWinRate")}
+                      >
+                        <Tooltip title={t("statistics:tooltips.breakRate")} arrow>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                            <ShieldIcon fontSize="small" sx={{ color: "#f97316" }} />
+                            {t("statistics:playerStats.defenseWinRate")}
+                          </Box>
+                        </Tooltip>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center">
+                      <TableSortLabel
+                        active={sortColumn === "cleanBreak"}
+                        direction={sortColumn === "cleanBreak" ? sortDirection : "asc"}
+                        onClick={() => handleSort("cleanBreak")}
+                      >
+                        <Tooltip title={t("statistics:tooltips.cleanBreakRate")} arrow>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                            <ShieldIcon fontSize="small" sx={{ color: "#f97316" }} />
+                            {t("statistics:playerStats.cleanBreak")}
+                          </Box>
+                        </Tooltip>
+                      </TableSortLabel>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {playerStats.map((stat) => (
+                  {sortedPlayerStats.map((stat) => (
                     <TableRow key={stat.player_id} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -331,25 +537,27 @@ export default function GameStatisticsPage() {
                       <TableCell align="center">{formatTime(stat.effective_time_seconds)}</TableCell>
                       <TableCell align="center">
                         {stat.offense.points_played > 0
-                          ? formatPercent(stat.offense.win_rate)
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        {stat.defense.points_played > 0
-                          ? formatPercent(stat.defense.win_rate)
+                          ? `${stat.offense.points_won} (${formatPercent(stat.offense.hold_rate)})`
                           : "-"}
                       </TableCell>
                       <TableCell align="center">
                         {stat.offense.points_won > 0
-                          ? `${stat.offense.points_won_no_turnover} (${formatPercent(stat.offense.clean_point_rate)})`
+                          ? `${stat.offense.points_won_no_turnover} (${formatPercent(stat.offense.clean_hold_rate)})`
                           : "-"}
                       </TableCell>
-                      <TableCell
-                        align="center"
-                        title={t("statistics:tooltips.forcedTurnovers")}
-                      >
+                      <TableCell align="center">
                         {stat.defense.points_played > 0
                           ? `${stat.defense.points_with_turnover} (${formatPercent(stat.defense.turnover_rate)})`
+                          : "-"}
+                      </TableCell>
+                      <TableCell align="center">
+                        {stat.defense.points_played > 0
+                          ? `${stat.defense.points_won} (${formatPercent(stat.defense.break_rate)})`
+                          : "-"}
+                      </TableCell>
+                      <TableCell align="center">
+                        {stat.defense.points_won > 0
+                          ? `${stat.defense.points_won_no_turnover} (${formatPercent(stat.defense.clean_break_rate)})`
                           : "-"}
                       </TableCell>
                     </TableRow>

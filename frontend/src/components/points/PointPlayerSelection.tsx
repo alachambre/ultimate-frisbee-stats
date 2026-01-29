@@ -146,11 +146,11 @@ export default function PointPlayerSelection({
           }}
         >
           <ToggleButton value="offense" aria-label="on offense">
-            <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
+            <FlashOnIcon sx={{ mr: 1, fontSize: 20, color: "#0ea5e9" }} />
             {t('points:tracker.offense')}
           </ToggleButton>
           <ToggleButton value="defense" aria-label="on defense">
-            <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
+            <ShieldIcon sx={{ mr: 1, fontSize: 20, color: "#f97316" }} />
             {t('points:tracker.defense')}
           </ToggleButton>
         </ToggleButtonGroup>

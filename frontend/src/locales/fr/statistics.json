@@ -6,6 +6,9 @@
   "teamStats": {
     "title": "Statistiques d'Équipe",
     "overview": "Vue d'ensemble",
+    "opponent": "Adversaire",
+    "score": "Score",
+    "gameDuration": "Durée du Match",
     "totalPoints": "Points Complétés",
     "offense": "Attaque",
     "defense": "Défense",
@@ -28,10 +31,11 @@
     "playerName": "Joueur",
     "pointsPlayed": "Points",
     "playingTime": "Temps",
-    "offenseWinRate": "Taux O",
-    "defenseWinRate": "Taux D",
-    "cleanPoints": "Points Propres",
-    "forcedTurnovers": "D Forcées"
+    "offenseWinRate": "Hold",
+    "defenseWinRate": "Break",
+    "cleanPoints": "Clean Hold",
+    "cleanBreak": "Clean Break",
+    "forcedTurnovers": "Turnover"
   },
   "tooltips": {
     "cleanPointRate": "Pourcentage de points gagnés sans turnover",

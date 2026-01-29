@@ -320,18 +320,20 @@ export interface PlayerOffenseStats {
   points_played: number;
   points_won: number;
   points_lost: number;
-  win_rate: number;
+  hold_rate: number;
   points_won_no_turnover: number;
-  clean_point_rate: number;
+  clean_hold_rate: number;
 }
 
 export interface PlayerDefenseStats {
   points_played: number;
   points_won: number;
   points_lost: number;
-  win_rate: number;
+  break_rate: number;
   points_with_turnover: number;
   turnover_rate: number;
+  points_won_no_turnover: number;
+  clean_break_rate: number;
   points_lost_no_turnover: number;
 }
 
@@ -349,17 +351,17 @@ export interface OffenseStats {
   points_started: number;
   points_won: number;
   points_lost: number;
-  win_rate: number;
+  hold_rate: number;
   points_won_no_turnover: number;
-  clean_point_rate: number;
-  break_rate: number;
+  clean_hold_rate: number;
+  broken_rate: number;
 }
 
 export interface DefenseStats {
   points_started: number;
   points_won: number;
   points_lost: number;
-  win_rate: number;
+  break_rate: number;
   points_with_turnover: number;
   turnover_rate: number;
   points_won_no_turnover: number;

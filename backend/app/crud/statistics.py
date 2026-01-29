@@ -26,7 +26,7 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     - points_played: int (number of completed points)
     - effective_time_seconds: int (total playing time minus call durations)
     - offense: dict (points_played, points_won, points_lost, win_rate, points_won_no_turnover, clean_point_rate)
-    - defense: dict (points_played, points_won, points_lost, win_rate, points_with_turnover, turnover_rate, points_lost_no_turnover)
+    - defense: dict (points_played, points_won, points_lost, win_rate, points_with_turnover, turnover_rate, points_won_no_turnover, clean_break_rate, points_lost_no_turnover)
     """
     # Get the game to verify it exists
     game = db.query(Game).filter(Game.id == game_id).first()
@@ -59,17 +59,19 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
                     "points_played": 0,
                     "points_won": 0,
                     "points_lost": 0,
-                    "win_rate": 0.0,
+                    "hold_rate": 0.0,
                     "points_won_no_turnover": 0,
-                    "clean_point_rate": 0.0
+                    "clean_hold_rate": 0.0
                 },
                 "defense": {
                     "points_played": 0,
                     "points_won": 0,
                     "points_lost": 0,
-                    "win_rate": 0.0,
+                    "break_rate": 0.0,
                     "points_with_turnover": 0,
                     "turnover_rate": 0.0,
+                    "points_won_no_turnover": 0,
+                    "clean_break_rate": 0.0,
                     "points_lost_no_turnover": 0
                 }
             }
@@ -95,6 +97,7 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
             "defense_won": 0,
             "defense_lost": 0,
             "defense_with_turnover": 0,
+            "defense_won_no_turnover": 0,
             "defense_lost_no_turnover": 0
         }
 
@@ -114,8 +117,27 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
         # Effective time for this point
         effective_time = max(0, point_duration - call_dead_time)
 
-        # Check if there are any turnovers in this point
-        turnovers = db.query(Turnover).filter(Turnover.point_id == point.id).all()
+        # Get turnovers for this point and calculate OUR vs THEIR turnovers
+        turnovers = db.query(Turnover).filter(Turnover.point_id == point.id).order_by(Turnover.timestamp).all()
+
+        # Count turnovers by possession (same logic as team stats)
+        our_turnovers = 0
+        their_turnovers = 0
+        for idx, turnover in enumerate(turnovers):
+            turnover_number = idx + 1  # 1-indexed
+            if point.starting_on_offense:
+                # We start with possession
+                if turnover_number % 2 == 1:  # Odd = our turnover
+                    our_turnovers += 1
+                else:  # Even = their turnover
+                    their_turnovers += 1
+            else:
+                # They start with possession
+                if turnover_number % 2 == 1:  # Odd = their turnover
+                    their_turnovers += 1
+                else:  # Even = our turnover
+                    our_turnovers += 1
+
         has_turnovers = len(turnovers) > 0
 
         # Update stats for each player in this point
@@ -129,8 +151,8 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
                     player_stats[player.id]["offense_played"] += 1
                     if point.won:
                         player_stats[player.id]["offense_won"] += 1
-                        # Track clean points (won without any turnovers)
-                        if not has_turnovers:
+                        # Track clean holds (won without OUR turnovers)
+                        if our_turnovers == 0:
                             player_stats[player.id]["offense_won_no_turnover"] += 1
                     else:
                         player_stats[player.id]["offense_lost"] += 1
@@ -138,6 +160,9 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
                     player_stats[player.id]["defense_played"] += 1
                     if point.won:
                         player_stats[player.id]["defense_won"] += 1
+                        # Track clean breaks (won without OUR turnovers)
+                        if our_turnovers == 0:
+                            player_stats[player.id]["defense_won_no_turnover"] += 1
                     else:
                         player_stats[player.id]["defense_lost"] += 1
                         # Track points lost without any turnovers
@@ -152,14 +177,16 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     result = []
     for player_id, stats in player_stats.items():
         # Offense rates
-        offense_win_rate = stats["offense_won"] / stats["offense_played"] if stats["offense_played"] > 0 else 0.0
-        # Clean point rate: of points won, how many had no turnovers
-        clean_point_rate = stats["offense_won_no_turnover"] / stats["offense_won"] if stats["offense_won"] > 0 else 0.0
+        hold_rate = stats["offense_won"] / stats["offense_played"] if stats["offense_played"] > 0 else 0.0
+        # Clean hold rate: of points won, how many had no turnovers
+        clean_hold_rate = stats["offense_won_no_turnover"] / stats["offense_won"] if stats["offense_won"] > 0 else 0.0
 
         # Defense rates
-        defense_win_rate = stats["defense_won"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
+        break_rate = stats["defense_won"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
         # Turnover rate: of points played on defense, how many had turnovers
         turnover_rate = stats["defense_with_turnover"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
+        # Clean break rate: of points won on defense, how many had no turnovers
+        clean_break_rate = stats["defense_won_no_turnover"] / stats["defense_won"] if stats["defense_won"] > 0 else 0.0
 
         result.append({
             "player_id": stats["player_id"],
@@ -171,17 +198,19 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
                 "points_played": stats["offense_played"],
                 "points_won": stats["offense_won"],
                 "points_lost": stats["offense_lost"],
-                "win_rate": offense_win_rate,
+                "hold_rate": hold_rate,
                 "points_won_no_turnover": stats["offense_won_no_turnover"],
-                "clean_point_rate": clean_point_rate
+                "clean_hold_rate": clean_hold_rate
             },
             "defense": {
                 "points_played": stats["defense_played"],
                 "points_won": stats["defense_won"],
                 "points_lost": stats["defense_lost"],
-                "win_rate": defense_win_rate,
+                "break_rate": break_rate,
                 "points_with_turnover": stats["defense_with_turnover"],
                 "turnover_rate": turnover_rate,
+                "points_won_no_turnover": stats["defense_won_no_turnover"],
+                "clean_break_rate": clean_break_rate,
                 "points_lost_no_turnover": stats["defense_lost_no_turnover"]
             }
         })
@@ -284,15 +313,15 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
                 defense_points_with_turnover += 1
 
     # Calculate offense rates
-    offense_win_rate = offense_won / offense_started if offense_started > 0 else 0.0
-    offense_clean_point_rate = offense_won_no_turnover / offense_won if offense_won > 0 else 0.0
-    offense_break_rate = offense_lost / offense_started if offense_started > 0 else 0.0
+    offense_hold_rate = offense_won / offense_started if offense_started > 0 else 0.0
+    offense_clean_hold_rate = offense_won_no_turnover / offense_won if offense_won > 0 else 0.0
+    offense_broken_rate = offense_lost / offense_started if offense_started > 0 else 0.0
 
     # Calculate defense rates
-    defense_win_rate = defense_won / defense_started if defense_started > 0 else 0.0
+    defense_break_rate = defense_won / defense_started if defense_started > 0 else 0.0
     defense_turnover_rate = defense_points_with_turnover / defense_started if defense_started > 0 else 0.0
-    defense_clean_break_rate = defense_won_no_turnover / defense_started if defense_started > 0 else 0.0
-    defense_hold_rate = defense_won / defense_started if defense_started > 0 else 0.0
+    defense_clean_break_rate = defense_won_no_turnover / defense_won if defense_won > 0 else 0.0
+    defense_hold_rate = defense_break_rate  # Same as break_rate (kept for backward compatibility)
 
     return {
         "game_id": game_id,
@@ -301,16 +330,16 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
             "points_started": offense_started,
             "points_won": offense_won,
             "points_lost": offense_lost,
-            "win_rate": offense_win_rate,
+            "hold_rate": offense_hold_rate,
             "points_won_no_turnover": offense_won_no_turnover,
-            "clean_point_rate": offense_clean_point_rate,
-            "break_rate": offense_break_rate
+            "clean_hold_rate": offense_clean_hold_rate,
+            "broken_rate": offense_broken_rate
         },
         "defense": {
             "points_started": defense_started,
             "points_won": defense_won,
             "points_lost": defense_lost,
-            "win_rate": defense_win_rate,
+            "break_rate": defense_break_rate,
             "points_with_turnover": defense_points_with_turnover,
             "turnover_rate": defense_turnover_rate,
             "points_won_no_turnover": defense_won_no_turnover,

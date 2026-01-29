@@ -45,7 +45,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - **Point Tracking**: 4-status workflow (ready→running→scored→completed), ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
 - **Call Tracking**: Record call start/resume with elapsed time display, pending call blocks point finish, dead time calculation ready for statistics
 - **Turnover Tracking**: Record turnovers with optional player assignment, automatic possession tracking, displays turnover sequence with elapsed time
-- **Statistics Dashboard**: Game-level team and player statistics with offense/defense breakdown, clean points tracking, forced turnovers, win rates
+- **Statistics Dashboard**: Game-level team and player statistics with offense/defense breakdown, clean points tracking, forced turnovers, win rates, circular progress indicators, tooltips on all stat columns, sortable player table
 - **UI**: Navy/sky blue theme (#1e3a8a → #38bdf8), consistent card design, responsive layouts, elapsed time display (MM:SS from point start)
 - **i18n**: React-i18next with 10 translation namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies, statistics), language selector in AppBar, sport terms stay in English per GLOSSARY.md
 - **Logging**: Essential logs for production debugging (errors, key operations, lifecycle events) - see LOGGING.md
@@ -100,8 +100,8 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (380 tests - 100% passing)
-- **Frontend**: Vitest + MSW + React Testing Library (258 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (357 tests - 100% passing)
+- **Frontend**: Vitest + MSW + React Testing Library (266 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
 - **Organization**: Tests in `__tests__/` subdirectories
@@ -180,7 +180,14 @@ npm run build                       # Production build
   - Possession calculation for turnovers
   - Call rendering (pending vs resolved with duration)
   - Error states
-- All 258 tests passing ✅
+- **GameStatisticsPage (8 tests)** - Comprehensive coverage including:
+  - Game overview display (score, competition, team breakdown)
+  - Team statistics with circular progress indicators
+  - Player statistics table with sorting
+  - Conditional rendering based on data availability
+  - Stat value formatting (count + percentage)
+  - Navigation and routing
+- All 266 tests passing ✅
 
 **What needs tests ⚠️:**
 - **PointHistoryItem enhancements** - New collapsible chronology section not tested

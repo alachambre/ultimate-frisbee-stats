@@ -72,9 +72,9 @@ export default function FinishPointDialog({
       <DialogTitle>
         <Box display="flex" alignItems="center" gap={1}>
           {isOffense ? (
-            <FlashOnIcon color="primary" />
+            <FlashOnIcon sx={{ color: "#0ea5e9" }} />
           ) : (
-            <ShieldIcon color="secondary" />
+            <ShieldIcon sx={{ color: "#f97316" }} />
           )}
           Finish {isOffense ? t("points:tracker.offense") : t("points:tracker.defense")} Point
         </Box>

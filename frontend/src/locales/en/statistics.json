@@ -6,6 +6,9 @@
   "teamStats": {
     "title": "Team Statistics",
     "overview": "Overview",
+    "opponent": "Opponent",
+    "score": "Score",
+    "gameDuration": "Game Duration",
     "totalPoints": "Total Completed Points",
     "offense": "Offense",
     "defense": "Defense",
@@ -28,10 +31,11 @@
     "playerName": "Player",
     "pointsPlayed": "Points",
     "playingTime": "Time",
-    "offenseWinRate": "O Win Rate",
-    "defenseWinRate": "D Win Rate",
-    "cleanPoints": "Clean Points",
-    "forcedTurnovers": "Forced Ds"
+    "offenseWinRate": "Hold",
+    "defenseWinRate": "Break",
+    "cleanPoints": "Clean Hold",
+    "cleanBreak": "Clean Break",
+    "forcedTurnovers": "Turnover"
   },
   "tooltips": {
     "cleanPointRate": "Percentage of won points that had no turnovers",

@@ -117,11 +117,11 @@ export default function StrategiesPage() {
               {t("strategies:page.filter.all")}
             </ToggleButton>
             <ToggleButton value="offense" aria-label="offense strategies">
-              <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
+              <FlashOnIcon sx={{ mr: 1, fontSize: 20, color: "#0ea5e9" }} />
               {t("strategies:form.offense")}
             </ToggleButton>
             <ToggleButton value="defense" aria-label="defense strategies">
-              <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
+              <ShieldIcon sx={{ mr: 1, fontSize: 20, color: "#f97316" }} />
               {t("strategies:form.defense")}
             </ToggleButton>
           </ToggleButtonGroup>

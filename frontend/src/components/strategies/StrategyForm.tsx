@@ -64,11 +64,11 @@ export default function StrategyForm({
           }}
         >
           <ToggleButton value="offense" aria-label="offense">
-            <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
+            <FlashOnIcon sx={{ mr: 1, fontSize: 20, color: "#0ea5e9" }} />
             {t("strategies:form.offense")}
           </ToggleButton>
           <ToggleButton value="defense" aria-label="defense">
-            <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
+            <ShieldIcon sx={{ mr: 1, fontSize: 20, color: "#f97316" }} />
             {t("strategies:form.defense")}
           </ToggleButton>
         </ToggleButtonGroup>

@@ -60,9 +60,9 @@ export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCar
 
         {/* Icon */}
         {isOffense ? (
-          <FlashOnIcon sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+          <FlashOnIcon sx={{ fontSize: 48, color: "#0ea5e9", mb: 2 }} />
         ) : (
-          <ShieldIcon sx={{ fontSize: 48, color: "secondary.main", mb: 2 }} />
+          <ShieldIcon sx={{ fontSize: 48, color: "#f97316", mb: 2 }} />
         )}
 
         {/* Name */}

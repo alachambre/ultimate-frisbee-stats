@@ -279,13 +279,13 @@ def test_get_live_game_statistics_offense_defense_breakdown(client: TestClient, 
     assert player_stats["offense"]["points_played"] == 2
     assert player_stats["offense"]["points_won"] == 1
     assert player_stats["offense"]["points_lost"] == 1
-    assert player_stats["offense"]["win_rate"] == 0.5
+    assert player_stats["offense"]["hold_rate"] == 0.5
 
     # Verify defense stats
     assert player_stats["defense"]["points_played"] == 1
     assert player_stats["defense"]["points_won"] == 1
     assert player_stats["defense"]["points_lost"] == 0
-    assert player_stats["defense"]["win_rate"] == 1.0
+    assert player_stats["defense"]["break_rate"] == 1.0
 
 
 def test_get_live_game_statistics_clean_points(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
@@ -338,7 +338,7 @@ def test_get_live_game_statistics_clean_points(client: TestClient, sample_game: 
     player_stats = data[0]
     assert player_stats["offense"]["points_won"] == 2
     assert player_stats["offense"]["points_won_no_turnover"] == 1
-    assert player_stats["offense"]["clean_point_rate"] == 0.5
+    assert player_stats["offense"]["clean_hold_rate"] == 0.5
 
 
 def test_get_live_game_statistics_defense_turnovers(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
@@ -447,13 +447,13 @@ def test_get_game_team_statistics_success(client: TestClient, sample_game: model
     assert data["offense"]["points_started"] == 2
     assert data["offense"]["points_won"] == 1
     assert data["offense"]["points_lost"] == 1
-    assert data["offense"]["win_rate"] == 0.5
+    assert data["offense"]["hold_rate"] == 0.5
 
     # Defense
     assert data["defense"]["points_started"] == 2
     assert data["defense"]["points_won"] == 1
     assert data["defense"]["points_lost"] == 1
-    assert data["defense"]["win_rate"] == 0.5
+    assert data["defense"]["break_rate"] == 0.5
 
 
 def test_get_game_team_statistics_game_not_found(client: TestClient):
@@ -476,9 +476,9 @@ def test_get_game_team_statistics_no_completed_points(client: TestClient, sample
 
     # All stats should be zero or 0.0
     assert data["offense"]["points_started"] == 0
-    assert data["offense"]["win_rate"] == 0.0
+    assert data["offense"]["hold_rate"] == 0.0
     assert data["defense"]["points_started"] == 0
-    assert data["defense"]["win_rate"] == 0.0
+    assert data["defense"]["break_rate"] == 0.0
 
 
 def test_get_game_team_statistics_with_turnovers(client: TestClient, sample_game: models.Game, db_session: Session):
@@ -543,7 +543,7 @@ def test_get_game_team_statistics_with_turnovers(client: TestClient, sample_game
     assert data["offense"]["points_started"] == 2
     assert data["offense"]["points_won"] == 2
     assert data["offense"]["points_won_no_turnover"] == 1
-    assert data["offense"]["clean_point_rate"] == 0.5  # 1 out of 2
+    assert data["offense"]["clean_hold_rate"] == 0.5  # 1 out of 2
 
     # Defense: 1 started, 1 with turnover
     assert data["defense"]["points_started"] == 1
