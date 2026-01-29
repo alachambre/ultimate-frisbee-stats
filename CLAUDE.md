@@ -36,7 +36,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
   - Returns: offense stats (win_rate, clean_point_rate, break_rate), defense stats (win_rate, turnover_rate, clean_break_rate, hold_rate)
   - Turnover attribution logic: Possession tracking based on starting_on_offense + turnover sequence
   - Only completed points counted
-  - 35 comprehensive backend tests (377 total passing)
+  - 40 comprehensive backend tests (380 total passing)
 
 **Phase 7 Complete** - Calls & Turnovers tracking fully integrated frontend + backend:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
@@ -99,7 +99,7 @@ backend/app/
 - **i18n**: react-i18next with 9 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (377 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (380 tests - 100% passing)
 - **Frontend**: Vitest + MSW + React Testing Library (258 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
@@ -125,7 +125,7 @@ backend/app/
 ```bash
 cd backend
 source venv/bin/activate
-pytest tests/ -v                    # Run all 377 tests (100% passing ✅)
+pytest tests/ -v                    # Run all 380 tests (100% passing ✅)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -148,7 +148,7 @@ npm run build                       # Production build
 - `backend/app/schemas/` - Pydantic schemas organized by domain (enums, team, competition, player, game, point, line, strategy, call, turnover)
 - `backend/app/crud/` - CRUD operations organized by domain (teams, competitions, players, games, points, lines, strategies, calls, turnovers)
 - `backend/app/routers/` - API endpoints organized by domain (teams, competitions, players, games, points, lines, strategies, calls, turnovers)
-- `backend/tests/` - 377 comprehensive tests (CRUD + API)
+- `backend/tests/` - 380 comprehensive tests (CRUD + API)
 - `backend/README.md` - Comprehensive backend documentation
 
 ### Frontend

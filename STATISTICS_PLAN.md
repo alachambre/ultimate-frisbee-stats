@@ -36,7 +36,7 @@
     - **points_lost_no_turnover**: Points where opponent scored without us ever forcing a turnover
   - All stats calculated from completed points only
   - Statistics match requirements.md specifications
-  - 32 total statistics tests, 375 total backend tests passing
+  - 40 total statistics tests (25 CRUD + 15 API), 380 total backend tests passing
 
 ---
 

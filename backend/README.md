@@ -462,9 +462,9 @@ git commit -m "Your commit message"
 - Complete test isolation - no side effects between tests
 
 ### Test Coverage
-- **377 tests passing** (Phase 8 - In Progress)
-  - 22 Statistics CRUD tests (Phase 8 - live player stats + team stats + offense/defense breakdowns)
-  - 13 Statistics API tests (Phase 8)
+- **380 tests passing** (Phase 8 - In Progress)
+  - 25 Statistics CRUD tests (Phase 8 - live player stats + team stats + offense/defense breakdowns + turnover tracking)
+  - 15 Statistics API tests (Phase 8)
   - 14 Call CRUD tests (Phase 7)
   - 14 Call API tests (Phase 7)
   - 17 Turnover CRUD tests (Phase 7)
