@@ -5,7 +5,7 @@ import {
   Paper,
   Typography,
   Box,
-  Grid2 as Grid,
+  Grid,
   Alert,
   Button,
   Table,
@@ -173,39 +173,39 @@ export default function GameStatisticsPage() {
                 </Typography>
               </Box>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.pointsStarted")}
                     value={teamStats.offense.points_started}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.pointsWon")}
                     value={teamStats.offense.points_won}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.pointsLost")}
                     value={teamStats.offense.points_lost}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.winRate")}
                     value={formatPercent(teamStats.offense.win_rate)}
                     tooltip={t("statistics:tooltips.winRate")}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.cleanPointRate")}
                     value={formatPercent(teamStats.offense.clean_point_rate)}
                     tooltip={t("statistics:tooltips.cleanPointRate")}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.breakRate")}
                     value={formatPercent(teamStats.offense.break_rate)}
@@ -226,46 +226,46 @@ export default function GameStatisticsPage() {
                 </Typography>
               </Box>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.pointsStarted")}
                     value={teamStats.defense.points_started}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.pointsWon")}
                     value={teamStats.defense.points_won}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.pointsLost")}
                     value={teamStats.defense.points_lost}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.winRate")}
                     value={formatPercent(teamStats.defense.win_rate)}
                     tooltip={t("statistics:tooltips.winRate")}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.turnoverRate")}
                     value={formatPercent(teamStats.defense.turnover_rate)}
                     tooltip={t("statistics:tooltips.turnoverRate")}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.cleanBreakRate")}
                     value={formatPercent(teamStats.defense.clean_break_rate)}
                     tooltip={t("statistics:tooltips.cleanBreakRate")}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
+                <Grid item xs={6} sm={4}>
                   <StatCard
                     label={t("statistics:teamStats.holdRate")}
                     value={formatPercent(teamStats.defense.hold_rate)}
