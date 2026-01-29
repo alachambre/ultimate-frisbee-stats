@@ -28,10 +28,15 @@
 ### ✅ Completed: Game-Level Player Statistics
 - **Backend**: Extended `GET /statistics/games/{game_id}/live`
   - Added offense breakdown: points_played, points_won, points_lost, win_rate per player
+    - **points_won_no_turnover**: Points won without ANY turnovers
+    - **clean_point_rate**: Percentage of won points that were clean (points_won_no_turnover / points_won)
   - Added defense breakdown: points_played, points_won, points_lost, win_rate per player
-  - Added turnover counting: Number of turnovers attributed to each player
+    - **points_with_turnover**: Points where we forced the opponent to turn it over (got a "D")
+    - **turnover_rate**: Percentage of defensive points where we forced a turnover (points_with_turnover / points_played)
+    - **points_lost_no_turnover**: Points where opponent scored without us ever forcing a turnover
   - All stats calculated from completed points only
-  - 5 new tests (35 total statistics tests, 377 total backend tests passing)
+  - Statistics match requirements.md specifications
+  - 32 total statistics tests, 375 total backend tests passing
 
 ---
 
@@ -104,6 +109,22 @@
 - Possession tracking uses turnover sequence + starting_on_offense
 - Statistics are read-only (no mutations)
 - Cache considerations: Stats are expensive to calculate, consider caching for ended games
+
+## Clarifications from requirements.md
+
+**Terminology:**
+- "Percentile" in requirements.md means **percentage/rate** (e.g., win_rate = 0.75 = 75%)
+
+**Offense Statistics:**
+- **Clean point rate** = points_won_no_turnover / **points_won** (not points_played)
+  - Measures: "Of the points we won on offense, what % were clean?"
+
+**Defense Statistics:**
+- **Turnover tracking**: When starting in defense, ANY turnover means we forced a "D"
+  - 1 turnover = We forced a D and scored
+  - 2+ turnovers = We forced a D (even if we turned it back later)
+  - Tracks: "How often did we get possession back when defending?"
+- **points_lost_no_turnover**: Opponent scored without us ever forcing a turnover (clean hold for them)
 
 ---
 

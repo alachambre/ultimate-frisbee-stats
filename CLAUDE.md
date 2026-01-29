@@ -20,9 +20,12 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 **Phase 8 (In Progress)** - Statistics implementation:
 - **Live Player Statistics**: Real-time player statistics with offense/defense breakdown ✅
   - Backend API: GET /statistics/games/{game_id}/live
-  - Returns: points_played, effective_time_seconds, offense breakdown, defense breakdown, turnovers
-  - Offense/defense breakdown: points_played, points_won, points_lost, win_rate for each player
-  - Turnover tracking: Count of turnovers attributed to each player
+  - Returns: points_played, effective_time_seconds, offense breakdown, defense breakdown
+  - **Offense**: points_played, points_won, points_lost, win_rate, points_won_no_turnover, clean_point_rate
+    - clean_point_rate = percentage of won points without any turnovers
+  - **Defense**: points_played, points_won, points_lost, win_rate, points_with_turnover, turnover_rate, points_lost_no_turnover
+    - points_with_turnover = points where we forced opponent to turn it over (got a "D")
+    - turnover_rate = percentage of defensive points where we forced a turnover
   - Frontend: Integrated into GameDetailPage player roster section
   - 5-second polling for started games, one-time fetch for ended games
   - Sorting: by name/points/time with persistent selection

@@ -384,9 +384,13 @@ pytest tests/ -v --tb=short
 
 **Live Player Statistics:**
 - Real-time playing time tracking for all players in game roster
-- Returns: player_id, player_name, player_number, points_played, effective_time_seconds, offense stats, defense stats, turnovers
-- Offense/defense breakdown: For each player, shows points_played, points_won, points_lost, win_rate on offense and defense separately
-- Turnover tracking: Count of turnovers attributed to each player
+- Returns: player_id, player_name, player_number, points_played, effective_time_seconds, offense stats, defense stats
+- **Offense breakdown**: points_played, points_won, points_lost, win_rate, points_won_no_turnover, clean_point_rate
+  - clean_point_rate = percentage of won points that had zero turnovers
+- **Defense breakdown**: points_played, points_won, points_lost, win_rate, points_with_turnover, turnover_rate, points_lost_no_turnover
+  - points_with_turnover = points where we forced the opponent to turn it over (got a "D")
+  - turnover_rate = percentage of defensive points where we forced a turnover
+  - points_lost_no_turnover = opponent scored without us ever forcing a turnover
 - Only completed points are counted
 - Effective time = point duration - call durations (dead time)
 - Sorted by player number for easy scanning
@@ -396,7 +400,7 @@ pytest tests/ -v --tb=short
   - Rotation management: Identify overused/underused players
   - Fair play time: Ensure balanced playing time across roster
   - Performance analysis: Track individual offense/defense efficiency
-  - Turnover awareness: Identify players with high turnover counts
+  - Defensive pressure: See how often each player forces turnovers on defense
 
 **Team Statistics:**
 - Offensive and defensive efficiency metrics
