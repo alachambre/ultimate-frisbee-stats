@@ -16,6 +16,8 @@
     "offenseLost": "Attaques Perdues",
     "defenseLost": "Défenses Perdues",
     "winRate": "Taux de Victoire",
+    "hold": "Hold",
+    "cleanHold": "Clean Hold",
     "cleanPointRate": "Points sans Turnover",
     "breakRate": "Taux de Break",
     "turnoverRate": "Taux de Turnover",

@@ -193,14 +193,14 @@ export default function GameStatisticsPage() {
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.winRate")}
+                    label={t("statistics:teamStats.hold")}
                     value={formatPercent(teamStats.offense.win_rate)}
-                    tooltip={t("statistics:tooltips.winRate")}
+                    tooltip={t("statistics:tooltips.holdRate")}
                   />
                 </Grid>
                 <Grid item xs={6} sm={4}>
                   <StatCard
-                    label={t("statistics:teamStats.cleanPointRate")}
+                    label={t("statistics:teamStats.cleanHold")}
                     value={formatPercent(teamStats.offense.clean_point_rate)}
                     tooltip={t("statistics:tooltips.cleanPointRate")}
                   />
