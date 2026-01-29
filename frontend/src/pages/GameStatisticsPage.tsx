@@ -258,13 +258,6 @@ export default function GameStatisticsPage() {
                     tooltip={t("statistics:tooltips.cleanBreakRate")}
                   />
                 </Grid>
-                <Grid item xs={6} sm={4}>
-                  <StatCard
-                    label={t("statistics:teamStats.holdRate")}
-                    value={formatPercent(teamStats.defense.hold_rate)}
-                    tooltip={t("statistics:tooltips.holdRate")}
-                  />
-                </Grid>
               </Grid>
             </Box>
           </Box>
