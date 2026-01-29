@@ -1,0 +1,51 @@
+{
+  "page": {
+    "title": "Statistiques du Match",
+    "backToGame": "Retour au Match"
+  },
+  "teamStats": {
+    "title": "Statistiques d'Équipe",
+    "overview": "Vue d'ensemble",
+    "totalPoints": "Points Complétés",
+    "offense": "Attaque",
+    "defense": "Défense",
+    "pointsStarted": "Points Commencés",
+    "pointsWon": "Points Gagnés",
+    "pointsLost": "Points Perdus",
+    "winRate": "Taux de Victoire",
+    "cleanPointRate": "Taux de Points Propres",
+    "breakRate": "Taux de Break",
+    "turnoverRate": "Taux de Turnover",
+    "cleanBreakRate": "Taux de Break Propres",
+    "holdRate": "Taux de Hold"
+  },
+  "playerStats": {
+    "title": "Statistiques des Joueurs",
+    "noData": "Aucune statistique disponible. Complétez des points pour voir les statistiques.",
+    "playersCount": "joueur(s)",
+    "playerName": "Joueur",
+    "pointsPlayed": "Points",
+    "playingTime": "Temps",
+    "offense": "Attaque",
+    "defense": "Défense",
+    "offenseWinRate": "Taux O",
+    "defenseWinRate": "Taux D",
+    "cleanPoints": "Points Propres",
+    "forcedTurnovers": "D Forcées",
+    "sortBy": "Trier par",
+    "sortByName": "Nom",
+    "sortByPoints": "Points Joués",
+    "sortByTime": "Temps de Jeu",
+    "sortByOffenseWinRate": "Taux en Attaque",
+    "sortByDefenseWinRate": "Taux en Défense"
+  },
+  "tooltips": {
+    "winRate": "Pourcentage de points gagnés",
+    "cleanPointRate": "Pourcentage de points gagnés sans turnover",
+    "breakRate": "Pourcentage de points défensifs gagnés (breaks)",
+    "turnoverRate": "Pourcentage de points défensifs où on a forcé au moins un turnover",
+    "cleanBreakRate": "Pourcentage de breaks sans turnover",
+    "holdRate": "Pourcentage de points offensifs gagnés (holds)",
+    "forcedTurnovers": "Points où on a forcé l'adversaire à faire un turnover"
+  }
+}

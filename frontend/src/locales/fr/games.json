@@ -53,7 +53,8 @@
     "sortBy": "Trier par",
     "sortByName": "Nom",
     "sortByPoints": "Points joués",
-    "sortByTime": "Temps de jeu"
+    "sortByTime": "Temps de jeu",
+    "viewStatistics": "Statistiques"
   },
   "modal": {
     "create": {

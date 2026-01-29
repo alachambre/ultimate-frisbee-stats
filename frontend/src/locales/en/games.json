@@ -53,7 +53,8 @@
     "sortBy": "Sort by",
     "sortByName": "Name",
     "sortByPoints": "Points Played",
-    "sortByTime": "Playing Time"
+    "sortByTime": "Playing Time",
+    "viewStatistics": "Statistics"
   },
   "modal": {
     "create": {

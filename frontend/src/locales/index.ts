@@ -12,6 +12,7 @@ import gamesEN from './en/games.json';
 import pointsEN from './en/points.json';
 import linesEN from './en/lines.json';
 import strategiesEN from './en/strategies.json';
+import statisticsEN from './en/statistics.json';
 
 // Import French translations
 import commonFR from './fr/common.json';
@@ -23,6 +24,7 @@ import gamesFR from './fr/games.json';
 import pointsFR from './fr/points.json';
 import linesFR from './fr/lines.json';
 import strategiesFR from './fr/strategies.json';
+import statisticsFR from './fr/statistics.json';
 
 const resources = {
   en: {
@@ -35,6 +37,7 @@ const resources = {
     points: pointsEN,
     lines: linesEN,
     strategies: strategiesEN,
+    statistics: statisticsEN,
   },
   fr: {
     common: commonFR,
@@ -46,6 +49,7 @@ const resources = {
     points: pointsFR,
     lines: linesFR,
     strategies: strategiesFR,
+    statistics: statisticsFR,
   },
 };
 

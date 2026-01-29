@@ -80,16 +80,16 @@ All the points bellow should be available at game level / competition level / ge
 
 ### Offense
 
-- Number & percentile of points scored when starting in offense
-- Number & percentile of points scored when starting in offense without any turnover
-- Number & percentile of points lost when starting in offense (break from the opponent)
+- Number & percentage of points scored when starting in offense
+- Number & percentage of points scored when starting in offense without any turnover
+- Number & percentage of points lost when starting in offense (break from the opponent)
 
 ### Defense
 
-- Number & percentile of point with at least one turnover when starting in defense
-- Number & percentile of point scored without any turnover from our team  when starting in defense
-- Number & percentile of point scored when starting in defense but with turnover from our team
-- Number & percentile of point scored by the opponent without turnover
+- Number & percentage of point with at least one turnover when starting in defense
+- Number & percentage of point scored without any turnover from our team  when starting in defense
+- Number & percentage of point scored when starting in defense but with turnover from our team
+- Number & percentage of point scored by the opponent without turnover
 
 ## Players
 
@@ -98,15 +98,15 @@ All the points bellow should be available at game level / competition level / ge
 
 ### Offense
 
-- Percentile of point scored against all points played when starting in offense
-- Percentile of point scored without turn against all points scored when starting in offense
-- Percentile of point lost against all points played when starting in offense
+- percentage of point scored against all points played (by the player) when starting in offense
+- percentage of point scored without turn against all points scored (with the player playing) when starting in offense
+- percentage of point lost against all points played (by the player) when starting in offense
 
 ### Defense
 
-- Percentile of points with at least one turnover against all points played when starting in defense
-- Percentile of points scored against all points played when starting in defense
-- Percentile of points scored by the opponent without any turnover against all points played when starting in defense
+- percentage of points with at least one turnover against all points played (by the player) when starting in defense
+- percentage of points scored against all points played (by the player) when starting in defense
+- percentage of points scored by the opponent without any turnover against all points played (by the player) when starting in defense
 
 ---
 

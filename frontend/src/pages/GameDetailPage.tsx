@@ -32,6 +32,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import AddIcon from "@mui/icons-material/Add";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
 import { getRunningPoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
@@ -284,6 +285,19 @@ export default function GameDetailPage() {
             </Box>
           </Box>
           <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              startIcon={<BarChartIcon />}
+              onClick={() => navigate(`/statistics/games/${game.id}`)}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("games:detail.viewStatistics")}
+              </Box>
+            </Button>
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
