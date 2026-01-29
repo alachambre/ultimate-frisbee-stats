@@ -41,12 +41,13 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 **Phase 7 Complete** - Calls & Turnovers tracking fully integrated frontend + backend:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
 - **Backend**: Complete REST API for all entities including calls/turnovers, SQLite with foreign keys, domain-organized code structure, production logging
-- **Frontend**: Full CRUD interfaces for all Phase 7 entities, mobile-first design, comprehensive test coverage, full i18n support
+- **Frontend**: Full CRUD interfaces for all entities, statistics dashboard, mobile-first design, comprehensive test coverage, full i18n support
 - **Point Tracking**: 4-status workflow (ready→running→scored→completed), ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
 - **Call Tracking**: Record call start/resume with elapsed time display, pending call blocks point finish, dead time calculation ready for statistics
 - **Turnover Tracking**: Record turnovers with optional player assignment, automatic possession tracking, displays turnover sequence with elapsed time
+- **Statistics Dashboard**: Game-level team and player statistics with offense/defense breakdown, clean points tracking, forced turnovers, win rates
 - **UI**: Navy/sky blue theme (#1e3a8a → #38bdf8), consistent card design, responsive layouts, elapsed time display (MM:SS from point start)
-- **i18n**: React-i18next with 9 translation namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies), language selector in AppBar, sport terms stay in English per GLOSSARY.md
+- **i18n**: React-i18next with 10 translation namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies, statistics), language selector in AppBar, sport terms stay in English per GLOSSARY.md
 - **Logging**: Essential logs for production debugging (errors, key operations, lifecycle events) - see LOGGING.md
 
 **Key Features:**
@@ -108,12 +109,12 @@ backend/app/
 ## Next Steps
 
 **Phase 8: Statistics Dashboard - IN PROGRESS**
-- ✅ Live game statistics: Player playing time tracking during games (complete)
-- **Remaining analytics:**
-  - Game/competition/team aggregated statistics
-  - Offense/defense efficiency metrics
-  - Turnover statistics per player
-  - Possession statistics and flow
+- ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)
+- ✅ Frontend dashboard at `/statistics/games/:gameId` with complete team and player statistics display
+- 🔄 Competition-level aggregations (team + player stats across all games in competition)
+- Team-level (all-time) aggregations
+- Advanced visualizations and charts
+- Export/sharing capabilities
   - Point duration analysis
   - Break/hold percentages
   - Visualizations and charts
@@ -154,16 +155,16 @@ npm run build                       # Production build
 ### Frontend
 - `frontend/src/App.tsx` - Root with MUI theme (custom gradients), React Router, TanStack Query, I18nextProvider
 - `frontend/src/theme.d.ts` - TypeScript declarations for theme extensions (gradients)
-- `frontend/src/pages/` - All page components with routes
+- `frontend/src/pages/` - All page components with routes (including GameStatisticsPage)
 - `frontend/src/components/` - Organized by domain (teams/, players/, games/, modals/)
 - `frontend/src/components/Layout.tsx` - AppBar with language selector (🇬🇧/🇫🇷)
 - `frontend/src/services/` - API layer matching backend endpoints
 - `frontend/src/types/index.ts` - TypeScript types matching backend schemas
 - `frontend/src/types/i18n.d.ts` - TypeScript types for i18next (CustomTypeOptions with resources)
-- `frontend/src/locales/` - i18n translation files (~300 strings across 9 namespaces)
+- `frontend/src/locales/` - i18n translation files (~350 strings across 10 namespaces)
   - `index.ts` - i18n configuration (language detection, resources, fallback)
-  - `en/` - 9 English translation files (common, navigation, teams, players, competitions, games, points, lines, strategies)
-  - `fr/` - 9 French translation files (same structure)
+  - `en/` - 10 English translation files (common, navigation, teams, players, competitions, games, points, lines, strategies, statistics)
+  - `fr/` - 10 French translation files (same structure)
 - `frontend/src/test/mocks/handlers.ts` - MSW handlers for all endpoints
 - `frontend/src/test/test-utils.tsx` - Test utilities with i18n mock (English only, zero test changes needed)
 - `frontend/README.md` - Comprehensive frontend documentation with theme system, i18n guide
@@ -206,4 +207,5 @@ npm run build                       # Production build
 - Active point polling: 5-second intervals with React Query
 - Timezone: UTC with 'Z' suffix serialization
 - ABBA mixity rule: Frontend validation logic (alternating 4M+3W ↔ 3M+4W)
-- i18n: 9 namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies), language detection with localStorage, sport terms stay in English
+- i18n: 10 namespaces (common, navigation, teams, players, competitions, games, points, lines, strategies, statistics), language detection with localStorage, sport terms stay in English
+- Statistics dashboard: `/statistics/games/:gameId` route for team and player analytics

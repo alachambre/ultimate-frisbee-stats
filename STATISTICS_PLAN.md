@@ -38,14 +38,25 @@
   - Statistics match requirements.md specifications
   - 40 total statistics tests (25 CRUD + 15 API), 380 total backend tests passing
 
+### ✅ Completed: Frontend Statistics Dashboard
+- **Frontend**: GameStatisticsPage at `/statistics/games/:gameId`
+  - Displays team statistics (offense/defense breakdown)
+  - Displays player statistics table with all metrics
+  - StatCard component for visual stat display
+  - Format helpers for percentages and time (MM:SS)
+  - i18n support with statistics namespace (EN/FR)
+  - "View Statistics" button in GameDetailPage
+  - Mobile-responsive layout with Material UI Grid
+  - Tooltips for metric explanations
+
 ---
 
-## 🔄 Next: Frontend Dashboard
+## 🔄 Next: Competition-Level Aggregations
 
-### Phase 3: Frontend Statistics Dashboard (NEXT)
-**Priority**: HIGH - Visualize backend statistics
+### Phase 4: Competition-Level Aggregations (NEXT)
+**Priority**: MEDIUM
 
-### Phase 4: Competition-Level Aggregations
+### Phase 5: Competition-Level Aggregations
 **Priority**: MEDIUM
 
 **Endpoints**:
@@ -56,7 +67,7 @@
 
 ---
 
-### Phase 5: Team-Level (All-Time) Aggregations
+### Phase 6: Team-Level (All-Time) Aggregations
 **Priority**: LOW
 
 **Endpoints**:
@@ -67,20 +78,14 @@
 
 ---
 
-### Phase 3: Frontend Statistics Dashboard
-**Priority**: MEDIUM (after backend phases 1-2)
-
-**Pages/Components**:
-1. `GameStatsPage` - Game-level statistics with charts
-2. `CompetitionStatsPage` - Competition-level statistics
-3. `PlayerStatsCard` - Enhanced player stats display
-4. Charts/visualizations (Chart.js or similar)
+### Phase 7: Advanced Visualizations
+**Priority**: LOW (future enhancement)
 
 **Features**:
-- Offense/defense efficiency charts
-- Playing time distribution
-- Turnover statistics
-- Win/loss trends
+- Charts/graphs (Chart.js or similar)
+- Offense/defense efficiency trends
+- Playing time distribution visualizations
+- Win/loss trends over time
 - Export to CSV/PDF
 
 ---
@@ -91,14 +96,15 @@
 1. Live game statistics (basic)
 2. Game-level team statistics
 3. Game-level player statistics (offense/defense/turnovers)
+4. Frontend statistics dashboard (display all backend stats)
 
 ### Next Session:
-4. 🔄 Frontend statistics dashboard (display all backend stats)
+5. 🔄 Competition-level aggregations (backend + frontend)
 
 ### Future Sessions:
-5. Competition/team aggregations
-6. Advanced visualizations
-7. Export/sharing features
+6. Team-level (all-time) aggregations
+7. Advanced visualizations (charts/graphs)
+8. Export/sharing features
 
 ---
 
