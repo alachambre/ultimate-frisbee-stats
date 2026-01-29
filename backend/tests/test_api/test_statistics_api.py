@@ -288,6 +288,112 @@ def test_get_live_game_statistics_offense_defense_breakdown(client: TestClient, 
     assert player_stats["defense"]["win_rate"] == 1.0
 
 
+def test_get_live_game_statistics_clean_points(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
+    """Test that clean points and rates are calculated correctly"""
+    # Add player to game
+    sample_game.players.append(sample_player)
+    db_session.commit()
+
+    # Point 1: Offense won without turnovers (clean)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc)
+    )
+    point1.players.append(sample_player)
+    db_session.add(point1)
+
+    # Point 2: Offense won with turnovers (not clean)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 7, 0, tzinfo=timezone.utc)
+    )
+    point2.players.append(sample_player)
+    db_session.add(point2)
+    db_session.flush()
+
+    # Add turnover to point 2
+    turnover = models.Turnover(
+        point_id=point2.id,
+        timestamp=datetime(2024, 1, 1, 10, 6, 0, tzinfo=timezone.utc)
+    )
+    db_session.add(turnover)
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/live")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+
+    player_stats = data[0]
+    assert player_stats["offense"]["points_won"] == 2
+    assert player_stats["offense"]["points_won_no_turnover"] == 1
+    assert player_stats["offense"]["clean_point_rate"] == 0.5
+
+
+def test_get_live_game_statistics_defense_turnovers(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
+    """Test that defense turnover tracking works correctly"""
+    # Add player to game
+    sample_game.players.append(sample_player)
+    db_session.commit()
+
+    # Point 1: Defense with turnover (forced a D)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 3, 0, tzinfo=timezone.utc)
+    )
+    point1.players.append(sample_player)
+    db_session.add(point1)
+    db_session.flush()
+
+    turnover1 = models.Turnover(
+        point_id=point1.id,
+        timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc)
+    )
+    db_session.add(turnover1)
+
+    # Point 2: Defense lost without turnover (opponent scored cleanly)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 7, 0, tzinfo=timezone.utc)
+    )
+    point2.players.append(sample_player)
+    db_session.add(point2)
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/live")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+
+    player_stats = data[0]
+    assert player_stats["defense"]["points_played"] == 2
+    assert player_stats["defense"]["points_with_turnover"] == 1
+    assert player_stats["defense"]["turnover_rate"] == 0.5
+    assert player_stats["defense"]["points_lost_no_turnover"] == 1
+
+
 # Tests for team statistics endpoint
 
 

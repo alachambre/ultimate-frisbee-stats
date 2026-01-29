@@ -380,6 +380,221 @@ def test_get_live_game_player_stats_offense_defense_breakdown(db_session: Sessio
     assert player2_stats["offense"]["win_rate"] == 0.0
 
 
+def test_get_live_game_player_stats_offense_clean_points(db_session: Session, sample_game: models.Game, sample_player: models.Player):
+    """Test offense clean point tracking (won without turnovers)"""
+    # Add player to game
+    sample_game.players.append(sample_player)
+    db_session.commit()
+
+    # Point 1: Offense won with no turnovers (clean)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc)
+    )
+    point1.players.append(sample_player)
+    db_session.add(point1)
+
+    # Point 2: Offense won with turnovers (not clean)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 7, 0, tzinfo=timezone.utc)
+    )
+    point2.players.append(sample_player)
+    db_session.add(point2)
+    db_session.flush()
+
+    # Add turnovers to point 2
+    turnover1 = models.Turnover(
+        point_id=point2.id,
+        timestamp=datetime(2024, 1, 1, 10, 6, 0, tzinfo=timezone.utc)
+    )
+    db_session.add(turnover1)
+
+    # Point 3: Offense won with no turnovers (clean)
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 10, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 12, 0, tzinfo=timezone.utc)
+    )
+    point3.players.append(sample_player)
+    db_session.add(point3)
+    db_session.commit()
+
+    stats = crud.get_live_game_player_stats(db_session, sample_game.id)
+
+    assert len(stats) == 1
+    player_stats = stats[0]
+
+    # 3 offense points, all won
+    assert player_stats["offense"]["points_played"] == 3
+    assert player_stats["offense"]["points_won"] == 3
+    assert player_stats["offense"]["points_lost"] == 0
+    assert player_stats["offense"]["win_rate"] == 1.0
+
+    # 2 clean points (point 1 and 3)
+    assert player_stats["offense"]["points_won_no_turnover"] == 2
+    # Clean point rate: 2 out of 3 won points = 0.667
+    assert abs(player_stats["offense"]["clean_point_rate"] - 0.667) < 0.01
+
+
+def test_get_live_game_player_stats_defense_turnover_tracking(db_session: Session, sample_game: models.Game, sample_player: models.Player):
+    """Test defense turnover tracking (forced Ds)"""
+    # Add player to game
+    sample_game.players.append(sample_player)
+    db_session.commit()
+
+    # Point 1: Defense won with turnover (we forced a D and scored)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 3, 0, tzinfo=timezone.utc)
+    )
+    point1.players.append(sample_player)
+    db_session.add(point1)
+    db_session.flush()
+
+    # Add turnover (we forced a D)
+    turnover1 = models.Turnover(
+        point_id=point1.id,
+        timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc)
+    )
+    db_session.add(turnover1)
+
+    # Point 2: Defense won with multiple turnovers (we forced a D but turned it back)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 8, 0, tzinfo=timezone.utc)
+    )
+    point2.players.append(sample_player)
+    db_session.add(point2)
+    db_session.flush()
+
+    # Add 2 turnovers (we forced a D, turned it back)
+    turnover2_1 = models.Turnover(
+        point_id=point2.id,
+        timestamp=datetime(2024, 1, 1, 10, 6, 0, tzinfo=timezone.utc)
+    )
+    turnover2_2 = models.Turnover(
+        point_id=point2.id,
+        timestamp=datetime(2024, 1, 1, 10, 7, 0, tzinfo=timezone.utc)
+    )
+    db_session.add_all([turnover2_1, turnover2_2])
+
+    # Point 3: Defense lost without turnover (opponent scored cleanly)
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 10, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 12, 0, tzinfo=timezone.utc)
+    )
+    point3.players.append(sample_player)
+    db_session.add(point3)
+    db_session.commit()
+
+    stats = crud.get_live_game_player_stats(db_session, sample_game.id)
+
+    assert len(stats) == 1
+    player_stats = stats[0]
+
+    # 3 defense points
+    assert player_stats["defense"]["points_played"] == 3
+    assert player_stats["defense"]["points_won"] == 2
+    assert player_stats["defense"]["points_lost"] == 1
+    assert abs(player_stats["defense"]["win_rate"] - 0.667) < 0.01
+
+    # 2 points with turnovers (we forced Ds on point 1 and 2)
+    assert player_stats["defense"]["points_with_turnover"] == 2
+    # Turnover rate: 2 out of 3 defense points = 0.667
+    assert abs(player_stats["defense"]["turnover_rate"] - 0.667) < 0.01
+
+    # 1 point lost without turnover (point 3)
+    assert player_stats["defense"]["points_lost_no_turnover"] == 1
+
+
+def test_get_live_game_player_stats_defense_lost_no_turnover(db_session: Session, sample_game: models.Game, sample_player: models.Player):
+    """Test tracking when opponent scores cleanly (no Ds forced)"""
+    # Add player to game
+    sample_game.players.append(sample_player)
+    db_session.commit()
+
+    # Point 1: Defense lost without turnover (opponent marched it down)
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc)
+    )
+    point1.players.append(sample_player)
+    db_session.add(point1)
+
+    # Point 2: Defense lost with turnover (we forced a D but turned it back)
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 7, 0, tzinfo=timezone.utc)
+    )
+    point2.players.append(sample_player)
+    db_session.add(point2)
+    db_session.flush()
+
+    # Add turnover to point 2
+    turnover = models.Turnover(
+        point_id=point2.id,
+        timestamp=datetime(2024, 1, 1, 10, 6, 0, tzinfo=timezone.utc)
+    )
+    db_session.add(turnover)
+    db_session.commit()
+
+    stats = crud.get_live_game_player_stats(db_session, sample_game.id)
+
+    assert len(stats) == 1
+    player_stats = stats[0]
+
+    # 2 defense points, both lost
+    assert player_stats["defense"]["points_played"] == 2
+    assert player_stats["defense"]["points_won"] == 0
+    assert player_stats["defense"]["points_lost"] == 2
+
+    # 1 point with turnover
+    assert player_stats["defense"]["points_with_turnover"] == 1
+
+    # 1 point lost without turnover (point 1 - opponent scored cleanly)
+    assert player_stats["defense"]["points_lost_no_turnover"] == 1
+
+
 def test_get_live_game_player_stats_mixed_offense_defense(db_session: Session, sample_game: models.Game, sample_player: models.Player):
     """Test player who plays both offense and defense"""
     # Add player to game
