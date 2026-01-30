@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from "../../../test/test-utils";
-import { describe, it, expect, vi } from "vitest";
-import userEvent from "@testing-library/user-event";
+import { describe, it, expect } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import { CallsList } from "../CallsList";

@@ -194,8 +194,6 @@ describe("GameStatisticsPage", () => {
   });
 
   it("allows sorting player statistics", async () => {
-    const user = userEvent.setup();
-
     // Override the player stats endpoint to return actual data
     server.use(
       http.get(`${BASE_URL}/statistics/games/:gameId/live`, () => {

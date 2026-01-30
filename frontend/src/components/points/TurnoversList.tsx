@@ -62,7 +62,6 @@ export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: Tu
       </Typography>
       <Stack spacing={1}>
         {turnovers.map((turnover, index) => {
-          const timestamp = new Date(turnover.timestamp);
           // Calculate possession before this turnover
           const possessionBeforeTurnover = index % 2 === 0 ? startingOnOffense : !startingOnOffense;
           // If we had possession, this is our turnover (lost disc)

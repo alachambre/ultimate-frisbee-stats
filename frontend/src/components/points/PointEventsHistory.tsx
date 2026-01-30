@@ -12,7 +12,6 @@ import {
 import {
   PauseCircle as PauseCircleIcon,
   SwapHoriz as SwapHorizIcon,
-  ArrowForward as ArrowForwardIcon,
   PlayArrow as PlayArrowIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
@@ -125,7 +124,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
           {t('pointEvents')} ({events.length})
         </Typography>
         <Stack spacing={1}>
-          {events.map((event, index) => {
+          {events.map((event) => {
             if (event.type === 'call') {
               const call = event.data;
               const callTime = new Date(call.call_timestamp);

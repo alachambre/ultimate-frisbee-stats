@@ -258,7 +258,6 @@ export default function GameStatisticsPage() {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <PageHeader
         title={`${game.team_name} vs ${game.opponent_name} - ${t("statistics:page.title")}`}
-        subtitle={`${game.competition_name} • ${new Date(game.date || game.created_at).toLocaleDateString()}`}
       />
 
       <Button
@@ -336,7 +335,7 @@ export default function GameStatisticsPage() {
               </Typography>
             </Box>
             <Grid container spacing={3} justifyContent="center">
-              <Grid item xs={6} sm={4}>
+              <Grid size={{ xs: 6, sm: 4 }}>
                 <CircularStat
                   label={t("statistics:teamStats.hold")}
                   percentage={teamStats.offense.hold_rate}
@@ -346,7 +345,7 @@ export default function GameStatisticsPage() {
                   tooltip={t("statistics:tooltips.holdRate")}
                 />
               </Grid>
-              <Grid item xs={6} sm={4}>
+              <Grid size={{ xs: 6, sm: 4 }}>
                 <CircularStat
                   label={t("statistics:teamStats.cleanHold")}
                   percentage={teamStats.offense.clean_hold_rate}
@@ -370,7 +369,7 @@ export default function GameStatisticsPage() {
               </Typography>
             </Box>
             <Grid container spacing={3} justifyContent="center">
-              <Grid item xs={6} sm={4}>
+              <Grid size={{ xs: 6, sm: 4 }}>
                 <CircularStat
                   label={t("statistics:teamStats.turnover")}
                   percentage={teamStats.defense.turnover_rate}
@@ -380,7 +379,7 @@ export default function GameStatisticsPage() {
                   tooltip={t("statistics:tooltips.turnoverRate")}
                 />
               </Grid>
-              <Grid item xs={6} sm={4}>
+              <Grid size={{ xs: 6, sm: 4 }}>
                 <CircularStat
                   label={t("statistics:teamStats.break")}
                   percentage={teamStats.defense.break_rate}
@@ -390,7 +389,7 @@ export default function GameStatisticsPage() {
                   tooltip={t("statistics:tooltips.breakRate")}
                 />
               </Grid>
-              <Grid item xs={6} sm={4}>
+              <Grid size={{ xs: 6, sm: 4 }}>
                 <CircularStat
                   label={t("statistics:teamStats.cleanBreak")}
                   percentage={teamStats.defense.clean_break_rate}
