@@ -4,9 +4,10 @@
 A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the sidelines during games.
 
 **Tech Stack:**
-- Backend: FastAPI + SQLAlchemy + SQLite
+- Backend: FastAPI + SQLAlchemy + PostgreSQL (Supabase in production, SQLite locally)
 - Frontend: React + TypeScript + Material UI + TanStack Query
 - Testing: Pytest (backend), Vitest + MSW + React Testing Library (frontend)
+- **Deployment**: Railway (backend) + Vercel (frontend) + Supabase (database)
 
 **Key Documentation:**
 - `requirements.md` - Full requirements for Phases 4-8
@@ -14,6 +15,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `backend/README.md` - Backend API documentation
 - `frontend/README.md` - Frontend architecture
 - `LOGGING.md` - Backend logging guide for production debugging
+- `DEPLOYMENT.md` - Full deployment guide
+- `DEPLOYMENT_STATUS.md` - Current deployment status and live URLs
 
 ## Current Status
 
@@ -210,9 +213,27 @@ npm run build                       # Production build
 - **Testing philosophy**: Write meaningful tests for core functionality and edge cases, not chasing coverage metrics
 - **Documentation**: Proactively update CLAUDE.md when making significant changes
 
+## Deployment
+
+**Live URLs:**
+- Frontend: https://ultimate-frisbee-stats.vercel.app
+- Backend: https://ultimate-frisbee-stats-production.up.railway.app
+
+**Architecture:**
+- Railway auto-deploys backend on push to `main`
+- Vercel auto-deploys frontend on push to `main`
+- Supabase PostgreSQL with Transaction Pooler (port 6543)
+
+**Key deployment fixes applied:**
+- API services use shared `apiClient` with `VITE_API_BASE_URL`
+- `vercel.json` rewrites for SPA routing
+- `player_number` is `Optional[int]` in statistics schema for PostgreSQL compatibility
+
+See `DEPLOYMENT.md` for setup guide and `DEPLOYMENT_STATUS.md` for current status.
+
 ## Development Notes
-- Backend: Port 8000, SQLite database recreated when models change (no migrations)
-- Frontend: Port 5173, MUI v7 Grid API
+- Backend: Port 8000, SQLite locally (PostgreSQL in production via Supabase)
+- Frontend: Port 5173, MUI v7 Grid API (use `size` prop, not `item`)
 - Component patterns: Domain-organized, shared components extracted (e.g., AddPlayersModal, PlayerForm, StrategyForm)
 - Active point polling: 5-second intervals with React Query
 - Timezone: UTC with 'Z' suffix serialization
