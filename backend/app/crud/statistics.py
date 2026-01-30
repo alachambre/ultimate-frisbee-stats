@@ -76,7 +76,7 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
                 }
             }
             for player in all_game_players
-        ], key=lambda x: x["player_number"])
+        ], key=lambda x: (x["player_number"] is None, x["player_number"] or 0))
 
     # Build a dict to accumulate stats for each player
     player_stats: Dict[int, Dict] = {}
@@ -215,8 +215,8 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
             }
         })
 
-    # Return sorted by player number
-    return sorted(result, key=lambda x: x["player_number"])
+    # Return sorted by player number (None values sorted last)
+    return sorted(result, key=lambda x: (x["player_number"] is None, x["player_number"] or 0))
 
 
 def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
