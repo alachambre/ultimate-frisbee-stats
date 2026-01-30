@@ -1,14 +1,12 @@
-import axios from "axios";
+import { apiClient } from "./api";
 import type { PlayerGameStats, GameTeamStats } from "../types";
 
-const API_BASE_URL = "http://localhost:8000";
-
 export async function getLiveGameStatistics(gameId: number): Promise<PlayerGameStats[]> {
-  const response = await axios.get(`${API_BASE_URL}/statistics/games/${gameId}/live`);
+  const response = await apiClient.get(`/statistics/games/${gameId}/live`);
   return response.data;
 }
 
 export async function getGameTeamStatistics(gameId: number): Promise<GameTeamStats> {
-  const response = await axios.get(`${API_BASE_URL}/statistics/games/${gameId}/team`);
+  const response = await apiClient.get(`/statistics/games/${gameId}/team`);
   return response.data;
 }
