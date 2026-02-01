@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import {
   Box,
   Card,
   CardContent,
   Typography,
   Chip,
-  Button,
   Stack,
   Alert,
 } from '@mui/material';
@@ -21,7 +19,6 @@ import { useTranslation } from 'react-i18next';
 import { getCallsByPoint } from '../../services/calls';
 import { getTurnoversByPoint } from '../../services/turnovers';
 import type { Call, TurnoverWithPlayer } from '../../types';
-import { ResumeFromCallDialog } from '../modals/ResumeFromCallDialog';
 
 interface PointEventsHistoryProps {
   pointId: number;
@@ -56,8 +53,6 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
 
 export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime, strategy, pull, pointStatus, endDateTime, won }: PointEventsHistoryProps) => {
   const { t } = useTranslation('points');
-  const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
-  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
   const { data: calls = [], isLoading: callsLoading, error: callsError } = useQuery({
     queryKey: ['calls', pointId],
@@ -68,11 +63,6 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
     queryKey: ['turnovers', pointId],
     queryFn: () => getTurnoversByPoint(pointId),
   });
-
-  const handleResumeClick = (call: Call) => {
-    setSelectedCall(call);
-    setResumeDialogOpen(true);
-  };
 
   if (callsLoading || turnoversLoading) {
     return null; // Don't show loading state for this optional component
@@ -166,20 +156,9 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                       </Typography>
                     </Box>
                     {call.comments && (
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
                         {call.comments}
                       </Typography>
-                    )}
-                    {!isResolved && (
-                      <Box sx={{ mt: 1, ml: 3 }}>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => handleResumeClick(call)}
-                        >
-                          {t('resumeFromCall')}
-                        </Button>
-                      </Box>
                     )}
                   </CardContent>
                 </Card>
@@ -222,7 +201,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                       </Typography>
                     )}
                     {turnover.comments && (
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', mt: 0.5 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', mt: 0.5, whiteSpace: 'pre-wrap' }}>
                         {turnover.comments}
                       </Typography>
                     )}
@@ -307,17 +286,6 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
           })}
         </Stack>
       </Box>
-
-      {selectedCall && (
-        <ResumeFromCallDialog
-          open={resumeDialogOpen}
-          onClose={() => {
-            setResumeDialogOpen(false);
-            setSelectedCall(null);
-          }}
-          call={selectedCall}
-        />
-      )}
     </>
   );
 };

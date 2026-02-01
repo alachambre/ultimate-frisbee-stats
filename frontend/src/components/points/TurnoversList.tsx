@@ -101,7 +101,7 @@ export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: Tu
                   </Typography>
                 )}
                 {turnover.comments && (
-                  <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', mt: 0.5 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', mt: 0.5, whiteSpace: 'pre-wrap' }}>
                     {turnover.comments}
                   </Typography>
                 )}

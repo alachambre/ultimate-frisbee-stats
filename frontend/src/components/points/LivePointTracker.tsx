@@ -25,6 +25,7 @@ import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
@@ -36,6 +37,7 @@ import AddCommentDialog from "../modals/AddCommentDialog";
 import SelectStrategyDialog from "../modals/SelectStrategyDialog";
 import { RecordCallDialog } from "../modals/RecordCallDialog";
 import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
+import { ResumeFromCallDialog } from "../modals/ResumeFromCallDialog";
 import { PointEventsHistory } from "./PointEventsHistory";
 import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Call } from "../../types";
 import { useQuery } from "@tanstack/react-query";
@@ -65,6 +67,7 @@ export default function LivePointTracker({
   const [isStrategyDialogOpen, setIsStrategyDialogOpen] = useState(false);
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
   const [isTurnoverDialogOpen, setIsTurnoverDialogOpen] = useState(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
   const [moreActionsAnchor, setMoreActionsAnchor] = useState<null | HTMLElement>(null);
   const queryClient = useQueryClient();
 
@@ -84,6 +87,7 @@ export default function LivePointTracker({
 
   // Check if there are any pending calls (calls without resume_timestamp)
   const hasPendingCall = calls.some(call => call.resume_timestamp === null);
+  const pendingCall = calls.find(call => call.resume_timestamp === null);
 
   // Find scored points (most recent scored point)
   const scoredPoint = useMemo(() => {
@@ -303,13 +307,44 @@ export default function LivePointTracker({
             {/* Action Buttons */}
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
               {currentPoint.status === "running" ? (
-                <>
-                  <Tooltip title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : t("points:tracker.finish", "Finish Point")}>
-                    <span>
+                hasPendingCall ? (
+                  // When there's a pending call, show Resume + More Actions buttons
+                  <>
+                    <Button
+                      variant="contained"
+                      color="warning"
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => setIsResumeDialogOpen(true)}
+                      size="large"
+                    >
+                      {t("points:tracker.resume", "Resume")}
+                    </Button>
+                    <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                      <IconButton
+                        color="primary"
+                        onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                        size="large"
+                        sx={{
+                          border: 1,
+                          borderRadius: 1,
+                          borderColor: 'primary.main',
+                          '&:hover': {
+                            borderColor: 'primary.dark',
+                            bgcolor: 'primary.lighter'
+                          }
+                        }}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                ) : (
+                  // Normal action buttons when no pending call
+                  <>
+                    <Tooltip title={t("points:tracker.finish", "Finish Point")}>
                       <IconButton
                         color="success"
                         onClick={() => setIsFinishDialogOpen(true)}
-                        disabled={hasPendingCall}
                         size="large"
                         sx={{
                           border: 1,
@@ -318,22 +353,16 @@ export default function LivePointTracker({
                           '&:hover': {
                             borderColor: 'success.dark',
                             bgcolor: 'success.lighter'
-                          },
-                          '&.Mui-disabled': {
-                            borderColor: 'action.disabled'
                           }
                         }}
                       >
                         <CheckCircleIcon />
                       </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : t("points:recordCall", "Record Call")}>
-                    <span>
+                    </Tooltip>
+                    <Tooltip title={t("points:recordCall", "Record Call")}>
                       <IconButton
                         color="primary"
                         onClick={() => setIsCallDialogOpen(true)}
-                        disabled={hasPendingCall}
                         size="large"
                         sx={{
                           border: 1,
@@ -342,22 +371,16 @@ export default function LivePointTracker({
                           '&:hover': {
                             borderColor: 'primary.dark',
                             bgcolor: 'primary.lighter'
-                          },
-                          '&.Mui-disabled': {
-                            borderColor: 'action.disabled'
                           }
                         }}
                       >
                         <PauseCircleIcon />
                       </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : t("points:recordTurnover", "Record Turnover")}>
-                    <span>
+                    </Tooltip>
+                    <Tooltip title={t("points:recordTurnover", "Record Turnover")}>
                       <IconButton
                         color="primary"
                         onClick={() => setIsTurnoverDialogOpen(true)}
-                        disabled={hasPendingCall}
                         size="large"
                         sx={{
                           border: 1,
@@ -366,35 +389,32 @@ export default function LivePointTracker({
                           '&:hover': {
                             borderColor: 'primary.dark',
                             bgcolor: 'primary.lighter'
-                          },
-                          '&.Mui-disabled': {
-                            borderColor: 'action.disabled'
                           }
                         }}
                       >
                         <SwapHorizIcon />
                       </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
-                    <IconButton
-                      color="primary"
-                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                      size="large"
-                      sx={{
-                        border: 1,
-                        borderRadius: 1,
-                        borderColor: 'primary.main',
-                        '&:hover': {
-                          borderColor: 'primary.dark',
-                          bgcolor: 'primary.lighter'
-                        }
-                      }}
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                  </Tooltip>
-                </>
+                    </Tooltip>
+                    <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                      <IconButton
+                        color="primary"
+                        onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                        size="large"
+                        sx={{
+                          border: 1,
+                          borderRadius: 1,
+                          borderColor: 'primary.main',
+                          '&:hover': {
+                            borderColor: 'primary.dark',
+                            bgcolor: 'primary.lighter'
+                          }
+                        }}
+                      >
+                        <MoreVertIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )
               ) : (
                 <>
                   <Tooltip title={t("points:tracker.complete", "Complete Point")}>
@@ -479,7 +499,7 @@ export default function LivePointTracker({
                     {t("points:tracker.comment", "Comment")}
                   </Typography>
                 </Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
                   {currentPoint.comments}
                 </Typography>
               </Box>
@@ -567,6 +587,14 @@ export default function LivePointTracker({
           onClose={() => setIsTurnoverDialogOpen(false)}
           point={activePoint}
           existingTurnovers={existingTurnovers}
+        />
+      )}
+
+      {pendingCall && (
+        <ResumeFromCallDialog
+          open={isResumeDialogOpen}
+          onClose={() => setIsResumeDialogOpen(false)}
+          call={pendingCall}
         />
       )}
     </>

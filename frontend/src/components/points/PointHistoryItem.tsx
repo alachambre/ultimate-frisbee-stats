@@ -166,7 +166,7 @@ export default function PointHistoryItem({
             {point.comments && (
               <Box display="flex" alignItems="flex-start" gap={0.5}>
                 <CommentIcon sx={{ fontSize: 18, color: 'text.secondary', mt: 0.25 }} />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
                   {point.comments}
                 </Typography>
               </Box>

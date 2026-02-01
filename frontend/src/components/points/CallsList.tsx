@@ -108,7 +108,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
                     )}
                   </Box>
                   {call.comments && (
-                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
                       {call.comments}
                     </Typography>
                   )}
