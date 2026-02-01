@@ -47,9 +47,9 @@ const theme = createTheme({
       dark: "#1e40af",
     },
     defense: {
-      main: "#0ea5e9",
-      light: "#38bdf8",
-      dark: "#0284c7",
+      main: "#1e3a8a",
+      light: "#3b82f6",
+      dark: "#1e40af",
     },
     men: {
       main: "#1e3a8a",

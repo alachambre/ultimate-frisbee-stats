@@ -438,24 +438,16 @@ export default function GameDetailPage() {
                   {showPlayers ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
               </Box>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setIsAddPlayersModalOpen(true)}
-                size="small"
-                disabled={game.status === "ended"}
-              >
-                {t("games:detail.addPlayers")}
-              </Button>
             </Box>
           </Box>
 
           <Collapse in={showPlayers}>
             <Box p={3}>
-              {/* Sorting Controls - show when we have stats to display */}
-              {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 && (
-                <Box mb={3}>
-                  <FormControl size="small" sx={{ minWidth: 200 }}>
+              {/* Controls Row - Sorting + Add Players Button */}
+              <Box mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+                {/* Sorting Controls - show when we have stats to display */}
+                {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 ? (
+                  <FormControl size="small" sx={{ minWidth: { xs: 120, sm: 200 } }}>
                     <InputLabel id="sort-by-label">{t("games:detail.sortBy")}</InputLabel>
                     <Select
                       labelId="sort-by-label"
@@ -468,8 +460,29 @@ export default function GameDetailPage() {
                       <MenuItem value="time">{t("games:detail.sortByTime")}</MenuItem>
                     </Select>
                   </FormControl>
-                </Box>
-              )}
+                ) : (
+                  <Box />
+                )}
+
+                {/* Add Players Button - icon only on mobile, with text on desktop */}
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setIsAddPlayersModalOpen(true)}
+                  disabled={game.status === "ended"}
+                  sx={{
+                    minWidth: { xs: "auto", sm: "auto" },
+                    height: 40, // Match the FormControl height
+                    "& .MuiButton-startIcon": {
+                      margin: { xs: 0, sm: "0 8px 0 -4px" }
+                    }
+                  }}
+                >
+                  <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                    {t("games:detail.addPlayers")}
+                  </Box>
+                </Button>
+              </Box>
               <Grid container spacing={3}>
                 {/* Men Column */}
                 <Grid size={{ xs: 12, md: 6 }}>

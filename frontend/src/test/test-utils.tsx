@@ -40,8 +40,8 @@ const theme = createTheme({
       dark: "#1e40af",
     },
     defense: {
-      main: "#0ea5e9",
-      light: "#38bdf8",
+      main: "#38bdf8",
+      light: "#7dd3fc",
       dark: "#0284c7",
     },
     men: {

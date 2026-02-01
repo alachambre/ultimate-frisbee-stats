@@ -75,7 +75,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={mutation.isPending}>
-          {t('common:cancel')}
+          {t('common:action.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
@@ -83,7 +83,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
           disabled={mutation.isPending}
           startIcon={mutation.isPending ? <CircularProgress size={16} /> : undefined}
         >
-          {mutation.isPending ? t('common:saving') : t('common:record')}
+          {mutation.isPending ? t('common:action.saving') : t('common:action.record')}
         </Button>
       </DialogActions>
     </Dialog>

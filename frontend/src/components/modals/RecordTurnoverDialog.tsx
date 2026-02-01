@@ -99,7 +99,7 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={mutation.isPending}>
-          {t('common:cancel')}
+          {t('common:action.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
@@ -107,7 +107,7 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
           disabled={mutation.isPending}
           startIcon={mutation.isPending ? <CircularProgress size={16} /> : undefined}
         >
-          {mutation.isPending ? t('common:saving') : t('common:record')}
+          {mutation.isPending ? t('common:action.saving') : t('common:action.record')}
         </Button>
       </DialogActions>
     </Dialog>
