@@ -16,7 +16,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createTurnover } from '../../services/turnovers';
 import type { PointWithPlayers, TurnoverWithPlayer, TurnoverCreate } from '../../types';
-import PlayerSelector from '../points/PlayerSelector';
 
 interface RecordTurnoverDialogProps {
   open: boolean;
@@ -28,7 +27,6 @@ interface RecordTurnoverDialogProps {
 export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }: RecordTurnoverDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [comments, setComments] = useState('');
 
   // Calculate current possession
@@ -42,7 +40,6 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
     mutationFn: (newTurnover: TurnoverCreate) => createTurnover(newTurnover),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['turnovers', point.id] });
-      setSelectedPlayerId(null);
       setComments('');
       onClose();
     },
@@ -51,7 +48,7 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
   const handleSubmit = () => {
     mutation.mutate({
       point_id: point.id,
-      player_id: weHavePossession ? selectedPlayerId : null,
+      player_id: null, // Player designation removed from UI
       timestamp: new Date().toISOString(), // Generate timestamp when turnover is recorded
       comments: comments.trim() || null,
     });
@@ -59,7 +56,6 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
 
   const handleClose = () => {
     if (!mutation.isPending) {
-      setSelectedPlayerId(null);
       setComments('');
       mutation.reset();
       onClose();
@@ -88,21 +84,6 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
               size="small"
             />
           </Box>
-
-          {/* Player selection - only if we have possession */}
-          {weHavePossession && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {t('selectPlayerResponsible')}
-              </Typography>
-              <PlayerSelector
-                players={point.players}
-                selectedIds={selectedPlayerId ? [selectedPlayerId] : []}
-                onChange={(ids) => setSelectedPlayerId(ids[0] || null)}
-                required={false}
-              />
-            </Box>
-          )}
 
           {/* Comments */}
           <TextField

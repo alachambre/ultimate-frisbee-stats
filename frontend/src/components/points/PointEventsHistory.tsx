@@ -221,11 +221,6 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                         {t('turnoverBy')}: <strong>{turnover.player.name}</strong>
                       </Typography>
                     )}
-                    {!turnover.player && isOurTurnover && (
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontStyle: 'italic' }}>
-                        {t('teamTurnover')}
-                      </Typography>
-                    )}
                     {turnover.comments && (
                       <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', mt: 0.5 }}>
                         {turnover.comments}

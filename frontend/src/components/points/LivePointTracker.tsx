@@ -11,6 +11,8 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -294,115 +296,211 @@ export default function LivePointTracker({
                       ? t("points:tracker.editComment", "Edit Comment")
                       : t("points:tracker.addComment", "Add Comment")}
                   </ListItemText>
-                </MenuItem>,
-                activePoint && activePoint.status === 'running' && (
-                  <MenuItem
-                    key="record-call"
-                    onClick={() => {
-                      setIsCallDialogOpen(true);
-                      setMoreActionsAnchor(null);
-                    }}
-                  >
-                    <ListItemIcon>
-                      <PauseCircleIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>
-                      {t("points:recordCall")}
-                    </ListItemText>
-                  </MenuItem>
-                ),
-                activePoint && activePoint.status === 'running' && (
-                  <MenuItem
-                    key="record-turnover"
-                    onClick={() => {
-                      setIsTurnoverDialogOpen(true);
-                      setMoreActionsAnchor(null);
-                    }}
-                  >
-                    <ListItemIcon>
-                      <SwapHorizIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>
-                      {t("points:recordTurnover")}
-                    </ListItemText>
-                  </MenuItem>
-                )
+                </MenuItem>
               ].filter(Boolean)}
             </Menu>
 
-            {/* Display chronology for active points (running or scored) */}
-            {currentPoint && (
-              <Box mt={2}>
-                <PointEventsHistory
-                  pointId={currentPoint.id}
-                  startingOnOffense={currentPoint.starting_on_offense}
-                  pointStartTime={currentPoint.start_datetime}
-                  strategy={currentPoint.strategy}
-                  pull={currentPoint.pull}
-                  pointStatus={currentPoint.status}
-                  endDateTime={currentPoint.end_datetime}
-                  won={currentPoint.won}
-                />
-              </Box>
-            )}
-
+            {/* Action Buttons */}
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
               {currentPoint.status === "running" ? (
                 <>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    startIcon={<CheckCircleIcon />}
-                    onClick={() => setIsFinishDialogOpen(true)}
-                    disabled={hasPendingCall}
-                    size="large"
-                    title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : ""}
-                  >
-                    {t("points:tracker.finish", "Finish Point")}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<MoreVertIcon />}
-                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                    size="large"
-                  >
-                    {t("common:action.moreActions", "More Actions")}
-                  </Button>
+                  <Tooltip title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : t("points:tracker.finish", "Finish Point")}>
+                    <span>
+                      <IconButton
+                        color="success"
+                        onClick={() => setIsFinishDialogOpen(true)}
+                        disabled={hasPendingCall}
+                        size="large"
+                        sx={{
+                          border: 1,
+                          borderRadius: 1,
+                          borderColor: 'success.main',
+                          '&:hover': {
+                            borderColor: 'success.dark',
+                            bgcolor: 'success.lighter'
+                          },
+                          '&.Mui-disabled': {
+                            borderColor: 'action.disabled'
+                          }
+                        }}
+                      >
+                        <CheckCircleIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : t("points:recordCall", "Record Call")}>
+                    <span>
+                      <IconButton
+                        color="primary"
+                        onClick={() => setIsCallDialogOpen(true)}
+                        disabled={hasPendingCall}
+                        size="large"
+                        sx={{
+                          border: 1,
+                          borderRadius: 1,
+                          borderColor: 'primary.main',
+                          '&:hover': {
+                            borderColor: 'primary.dark',
+                            bgcolor: 'primary.lighter'
+                          },
+                          '&.Mui-disabled': {
+                            borderColor: 'action.disabled'
+                          }
+                        }}
+                      >
+                        <PauseCircleIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={hasPendingCall ? t("points:tracker.pendingCallWarning", "Cannot finish point with pending call") : t("points:recordTurnover", "Record Turnover")}>
+                    <span>
+                      <IconButton
+                        color="primary"
+                        onClick={() => setIsTurnoverDialogOpen(true)}
+                        disabled={hasPendingCall}
+                        size="large"
+                        sx={{
+                          border: 1,
+                          borderRadius: 1,
+                          borderColor: 'primary.main',
+                          '&:hover': {
+                            borderColor: 'primary.dark',
+                            bgcolor: 'primary.lighter'
+                          },
+                          '&.Mui-disabled': {
+                            borderColor: 'action.disabled'
+                          }
+                        }}
+                      >
+                        <SwapHorizIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                    <IconButton
+                      color="primary"
+                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                      size="large"
+                      sx={{
+                        border: 1,
+                        borderRadius: 1,
+                        borderColor: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          bgcolor: 'primary.lighter'
+                        }
+                      }}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+                  </Tooltip>
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="outlined"
-                    color="warning"
-                    startIcon={<RestartAltIcon />}
-                    onClick={() => restartPointMutation.mutate()}
-                    disabled={restartPointMutation.isPending}
-                    size="large"
-                  >
-                    {restartPointMutation.isPending
-                      ? t("points:tracker.resuming", "Resuming...")
-                      : t("points:tracker.resume")}
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<DoneAllIcon />}
-                    onClick={() => setIsCompleteDialogOpen(true)}
-                    size="large"
-                  >
-                    {t("points:tracker.complete")}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<MoreVertIcon />}
-                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                    size="large"
-                  >
-                    {t("common:action.moreActions", "More Actions")}
-                  </Button>
+                  <Tooltip title={t("points:tracker.complete", "Complete Point")}>
+                    <IconButton
+                      color="success"
+                      onClick={() => setIsCompleteDialogOpen(true)}
+                      size="large"
+                      sx={{
+                        border: 1,
+                        borderRadius: 1,
+                        borderColor: 'success.main',
+                        '&:hover': {
+                          borderColor: 'success.dark',
+                          bgcolor: 'success.lighter'
+                        }
+                      }}
+                    >
+                      <DoneAllIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}>
+                    <span>
+                      <IconButton
+                        color="warning"
+                        onClick={() => restartPointMutation.mutate()}
+                        disabled={restartPointMutation.isPending}
+                        size="large"
+                        sx={{
+                          border: 1,
+                          borderRadius: 1,
+                          borderColor: 'warning.main',
+                          '&:hover': {
+                            borderColor: 'warning.dark',
+                            bgcolor: 'warning.lighter'
+                          },
+                          '&.Mui-disabled': {
+                            borderColor: 'action.disabled'
+                          }
+                        }}
+                      >
+                        <RestartAltIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                    <IconButton
+                      color="primary"
+                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                      size="large"
+                      sx={{
+                        border: 1,
+                        borderRadius: 1,
+                        borderColor: 'primary.main',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          bgcolor: 'primary.lighter'
+                        }
+                      }}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+                  </Tooltip>
                 </>
               )}
             </Box>
+
+            {/* Display comment if exists */}
+            {currentPoint.comments && (
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: 'primary.main'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <CommentIcon fontSize="small" color="primary" />
+                  <Typography variant="body2" fontWeight="medium" color="primary">
+                    {t("points:tracker.comment", "Comment")}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {currentPoint.comments}
+                </Typography>
+              </Box>
+            )}
+
+            {/* Divider before chronology */}
+            <Divider sx={{ my: 3 }} />
+
+            {/* Display chronology for active points (running or scored) */}
+            {currentPoint && (
+              <PointEventsHistory
+                pointId={currentPoint.id}
+                startingOnOffense={currentPoint.starting_on_offense}
+                pointStartTime={currentPoint.start_datetime}
+                strategy={currentPoint.strategy}
+                pull={currentPoint.pull}
+                pointStatus={currentPoint.status}
+                endDateTime={currentPoint.end_datetime}
+                won={currentPoint.won}
+              />
+            )}
           </Box>
         )}
       </Paper>
