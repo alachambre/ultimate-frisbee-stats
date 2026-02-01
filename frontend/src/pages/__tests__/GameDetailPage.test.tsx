@@ -43,22 +43,21 @@ describe("GameDetailPage", () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     });
 
     expect(screen.getAllByText(/Test Team/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Not Started/i)).toBeInTheDocument();
   });
 
   it("shows score and empty points list", async () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     });
 
-    // Check score display
-    expect(screen.getByText(/0 - 0/i)).toBeInTheDocument();
+    // Check score display - should appear twice (once for Test Team, once for Rival Team)
+    expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(2);
 
     // Check empty points message
     expect(
@@ -71,7 +70,7 @@ describe("GameDetailPage", () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     });
 
     // Click Edit button
@@ -99,7 +98,7 @@ describe("GameDetailPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Updated Rival/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Updated Rival/i)).toBeInTheDocument();
     });
   });
 
@@ -108,23 +107,22 @@ describe("GameDetailPage", () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     });
 
-    // Initially should be not started
-    expect(screen.getByText(/Not Started/i)).toBeInTheDocument();
-
-    // Click Start Game button
+    // Click Start Game button (should be visible for ready games)
     const startButton = screen.getByRole("button", { name: /start game/i });
     await user.click(startButton);
 
-    // Status should update to Ongoing
+    // Start button should no longer be visible
     await waitFor(() => {
-      expect(screen.getByText(/Ongoing/i)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /start game/i })).not.toBeInTheDocument();
     });
 
-    // Start button should no longer be visible
-    expect(screen.queryByRole("button", { name: /start game/i })).not.toBeInTheDocument();
+    // End Game button should now be visible
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /end game/i })).toBeInTheDocument();
+    });
 
     // Click End Game button
     const endButton = screen.getByRole("button", { name: /end game/i });
@@ -139,17 +137,15 @@ describe("GameDetailPage", () => {
     const confirmButton = screen.getByRole("button", { name: /end game/i });
     await user.click(confirmButton);
 
-    // Dialog should close and status should update
+    // Dialog should close
     await waitFor(() => {
       expect(screen.queryByText(/mark game as ended/i)).not.toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      expect(screen.getByText(/Finished/i)).toBeInTheDocument();
-    });
-
     // End button should no longer be visible
-    expect(screen.queryByRole("button", { name: /end game/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /end game/i })).not.toBeInTheDocument();
+    });
   });
 
   it("deletes game with confirmation", async () => {
@@ -163,7 +159,7 @@ describe("GameDetailPage", () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     });
 
     // Click Delete button
@@ -242,24 +238,25 @@ describe("GameDetailPage", () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Expand players section
-    const expandButton = screen.getByRole("button", { name: /show players/i });
-    await user.click(expandButton);
+    // Open roster dialog
+    const rosterButton = screen.getByRole("button", { name: /roster/i });
+    await user.click(rosterButton);
 
-    // Click Add Players button
+    // Dialog should open
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /add players/i })).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText(/players \(\d+\)/i)).toBeInTheDocument();
     });
 
+    // Click Add Players button in the dialog
     const addButton = screen.getByRole("button", { name: /add players/i });
     await user.click(addButton);
 
-    // Modal should open
+    // Add players modal should open (now there are 2 dialogs: roster + add players)
     await waitFor(() => {
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(screen.getByText(/add players to game/i)).toBeInTheDocument();
     });
 
@@ -276,9 +273,9 @@ describe("GameDetailPage", () => {
     const addPlayersButton = screen.getByRole("button", { name: /add 1 player/i });
     await user.click(addPlayersButton);
 
-    // Modal should close
+    // Add players modal should close
     await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.queryByText(/add players to game/i)).not.toBeInTheDocument();
     });
   });
 
@@ -288,14 +285,14 @@ describe("GameDetailPage", () => {
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Expand players section
-    const expandButton = screen.getByRole("button", { name: /show players/i });
-    await user.click(expandButton);
+    // Open roster dialog
+    const rosterButton = screen.getByRole("button", { name: /roster/i });
+    await user.click(rosterButton);
 
-    // Wait for players to load
+    // Wait for dialog to open and players to load
     await waitFor(() => {
       const playersSection = screen.getByText(/players \(\d+\)/i);
       expect(playersSection).toBeInTheDocument();
@@ -337,21 +334,27 @@ describe("GameDetailPage", () => {
     }
   });
 
-  it("displays player roster in collapsible section", async () => {
+  it("displays player roster in dialog", async () => {
     const user = userEvent.setup();
 
     render(<GameDetailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/vs Rival Team/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Players section should be collapsed by default
-    expect(screen.getByText(/players \(\d+\)/i)).toBeInTheDocument();
+    // Roster button should be visible
+    const rosterButton = screen.getByRole("button", { name: /roster/i });
+    expect(rosterButton).toBeInTheDocument();
 
-    // Expand players section
-    const expandButton = screen.getByRole("button", { name: /show players/i });
-    await user.click(expandButton);
+    // Open roster dialog
+    await user.click(rosterButton);
+
+    // Dialog should open with player sections
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText(/players \(\d+\)/i)).toBeInTheDocument();
+    });
 
     // Gender sections should appear - check that at least one of each exists
     await waitFor(() => {
@@ -359,14 +362,13 @@ describe("GameDetailPage", () => {
       expect(screen.getAllByText(/women \(\d+\)/i).length).toBeGreaterThan(0);
     });
 
-    // Collapse again
-    const collapseButton = screen.getByRole("button", { name: /hide players/i });
-    await user.click(collapseButton);
+    // Close dialog
+    const closeButton = screen.getByRole("button", { name: /close/i });
+    await user.click(closeButton);
 
-    // Gender sections should be hidden
+    // Dialog should close
     await waitFor(() => {
-      // Just verify the button label changed back
-      expect(screen.getByRole("button", { name: /show players/i })).toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
   });
 
@@ -411,14 +413,19 @@ describe("GameDetailPage", () => {
 
     render(<GameDetailPage />);
 
-    // Wait for game to load
+    // Wait for game to load (no more "final score" label, just check the title)
     await waitFor(() => {
-      expect(screen.getByText(/final score/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
     });
 
-    // Expand players section
-    const expandButton = screen.getByRole("button", { name: /show players/i });
-    await user.click(expandButton);
+    // Open roster dialog
+    const rosterButton = screen.getByRole("button", { name: /roster/i });
+    await user.click(rosterButton);
+
+    // Wait for dialog to open
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
 
     // Add Players button should be disabled
     const addButton = screen.getByRole("button", { name: /add players/i });
@@ -430,7 +437,15 @@ describe("GameDetailPage", () => {
       expect(screen.getByText("Player 2")).toBeInTheDocument();
     });
 
-    // Check that no delete buttons are present
+    // Close the roster dialog to check main page buttons
+    const closeButton = screen.getByRole("button", { name: /close/i });
+    await user.click(closeButton);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    // Check that main game delete button is present
     const deleteButtons = screen.queryAllByRole("button", { name: /delete/i });
     expect(deleteButtons.length).toBe(1); // Only the main game delete button
   });

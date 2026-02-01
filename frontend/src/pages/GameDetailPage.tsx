@@ -17,7 +17,6 @@ import {
   Divider,
   Grid,
   alpha,
-  Collapse,
   IconButton,
   Select,
   MenuItem,
@@ -28,11 +27,10 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import AddIcon from "@mui/icons-material/Add";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import GroupIcon from "@mui/icons-material/Group";
+import CloseIcon from "@mui/icons-material/Close";
 import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
 import { getRunningPoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
@@ -58,10 +56,10 @@ export default function GameDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPoint, setEditingPoint] = useState<PointWithPlayers | null>(null);
   const [deletingPoint, setDeletingPoint] = useState<PointWithPlayers | null>(null);
-  const [showPlayers, setShowPlayers] = useState(false);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "points" | "time">("name");
+  const [isRosterDialogOpen, setIsRosterDialogOpen] = useState(false);
 
   const {
     data: game,
@@ -252,39 +250,24 @@ export default function GameDetailPage() {
         >
           {t("common:action.back")}
         </Button>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="flex-start"
-          flexDirection={{ xs: "column", sm: "row" }}
-          gap={{ xs: 2, sm: 0 }}
-        >
-          <Box>
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              vs {game.opponent_name}
-            </Typography>
-            <Box display="flex" gap={1} alignItems="center" mb={1}>
-              <CalendarTodayIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-              <Typography variant="body2" color="text.secondary">
-                {game.date
-                  ? new Date(game.date).toLocaleDateString(i18n.language === "fr" ? "fr-FR" : "en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : t("games:detail.dateNotSet")}
-              </Typography>
-            </Box>
-            <Box display="flex" gap={1} flexWrap="wrap">
-              <Chip
-                label={t(`games:status.${game.status}`)}
-                color={game.status === "started" ? "primary" : "default"}
-                size="small"
-              />
-              <Chip label={game.team_name} variant="outlined" size="small" />
-            </Box>
-          </Box>
-          <Box display="flex" gap={1}>
+        <Box textAlign="center">
+          <Typography variant="h4" fontWeight="bold" mb={3}>
+            {game.team_name} vs {game.opponent_name}
+          </Typography>
+          <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
+            <Button
+              variant="outlined"
+              startIcon={<GroupIcon />}
+              onClick={() => setIsRosterDialogOpen(true)}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("games:detail.roster")}
+              </Box>
+            </Button>
             <Button
               variant="outlined"
               startIcon={<BarChartIcon />}
@@ -363,16 +346,29 @@ export default function GameDetailPage() {
       {/* Score Section */}
       <Paper sx={{ mb: 3 }}>
         <Box p={4} textAlign="center">
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            {game.status === "ended" ? t("games:detail.finalScore") : t("games:detail.score")}
-          </Typography>
-          <Typography variant="h2" fontWeight="bold">
-            {game.our_score} - {game.opponent_score}
-          </Typography>
+          <Box display="flex" justifyContent="center" gap={4}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {game.team_name}
+              </Typography>
+              <Typography variant="h3" fontWeight="bold">
+                {game.our_score}
+              </Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem />
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {game.opponent_name}
+              </Typography>
+              <Typography variant="h3" fontWeight="bold">
+                {game.opponent_score}
+              </Typography>
+            </Box>
+          </Box>
 
           {/* Game Timer */}
           {game.start_datetime && (
-            <Box mt={2}>
+            <Box mt={3}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 {t("games:detail.gameDuration")}
               </Typography>
@@ -382,26 +378,6 @@ export default function GameDetailPage() {
               />
             </Box>
           )}
-
-          <Box mt={2} display="flex" justifyContent="center" gap={4}>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                {game.team_name}
-              </Typography>
-              <Typography variant="h5" fontWeight="bold">
-                {game.our_score}
-              </Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem />
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                {game.opponent_name}
-              </Typography>
-              <Typography variant="h5" fontWeight="bold">
-                {game.opponent_score}
-              </Typography>
-            </Box>
-          </Box>
         </Box>
       </Paper>
 
@@ -417,174 +393,172 @@ export default function GameDetailPage() {
         </Paper>
       )}
 
-      {/* Selected Players Section */}
+      {/* Roster Dialog */}
       {competition && (
-        <Paper sx={{ mb: 3 }}>
-          <Box
-            p={3}
-            borderBottom={showPlayers ? "1px solid" : "none"}
-            borderColor="divider"
-          >
+        <Dialog
+          open={isRosterDialogOpen}
+          onClose={() => setIsRosterDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+          fullScreen={false}
+        >
+          <DialogTitle>
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Typography variant="h6">
-                  {t("games:detail.rosterSection", { count: game.players.length })}
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => setShowPlayers(!showPlayers)}
-                  aria-label={showPlayers ? t("games:detail.hidePlayers") : t("games:detail.showPlayers")}
-                >
-                  {showPlayers ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              </Box>
+              <Typography variant="h6">
+                {t("games:detail.rosterSection", { count: game.players.length })}
+              </Typography>
+              <IconButton
+                edge="end"
+                color="inherit"
+                onClick={() => setIsRosterDialogOpen(false)}
+                aria-label="close"
+              >
+                <CloseIcon />
+              </IconButton>
             </Box>
-          </Box>
+          </DialogTitle>
+          <DialogContent>
+            {/* Controls Row - Sorting + Add Players Button */}
+            <Box mt={2} mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+              {/* Sorting Controls - show when we have stats to display */}
+              {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 ? (
+                <FormControl size="small" sx={{ minWidth: { xs: 120, sm: 200 } }}>
+                  <InputLabel id="sort-by-label">{t("games:detail.sortBy")}</InputLabel>
+                  <Select
+                    labelId="sort-by-label"
+                    value={sortBy}
+                    label={t("games:detail.sortBy")}
+                    onChange={(e) => setSortBy(e.target.value as "name" | "points" | "time")}
+                  >
+                    <MenuItem value="name">{t("games:detail.sortByName")}</MenuItem>
+                    <MenuItem value="points">{t("games:detail.sortByPoints")}</MenuItem>
+                    <MenuItem value="time">{t("games:detail.sortByTime")}</MenuItem>
+                  </Select>
+                </FormControl>
+              ) : (
+                <Box />
+              )}
 
-          <Collapse in={showPlayers}>
-            <Box p={3}>
-              {/* Controls Row - Sorting + Add Players Button */}
-              <Box mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-                {/* Sorting Controls - show when we have stats to display */}
-                {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 ? (
-                  <FormControl size="small" sx={{ minWidth: { xs: 120, sm: 200 } }}>
-                    <InputLabel id="sort-by-label">{t("games:detail.sortBy")}</InputLabel>
-                    <Select
-                      labelId="sort-by-label"
-                      value={sortBy}
-                      label={t("games:detail.sortBy")}
-                      onChange={(e) => setSortBy(e.target.value as "name" | "points" | "time")}
-                    >
-                      <MenuItem value="name">{t("games:detail.sortByName")}</MenuItem>
-                      <MenuItem value="points">{t("games:detail.sortByPoints")}</MenuItem>
-                      <MenuItem value="time">{t("games:detail.sortByTime")}</MenuItem>
-                    </Select>
-                  </FormControl>
-                ) : (
-                  <Box />
-                )}
-
-                {/* Add Players Button - icon only on mobile, with text on desktop */}
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setIsAddPlayersModalOpen(true)}
-                  disabled={game.status === "ended"}
+              {/* Add Players Button - icon only on mobile, with text on desktop */}
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setIsAddPlayersModalOpen(true)}
+                disabled={game.status === "ended"}
+                sx={{
+                  minWidth: { xs: "auto", sm: "auto" },
+                  height: 40, // Match the FormControl height
+                  "& .MuiButton-startIcon": {
+                    margin: { xs: 0, sm: "0 8px 0 -4px" }
+                  }
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  {t("games:detail.addPlayers")}
+                </Box>
+              </Button>
+            </Box>
+            <Grid container spacing={3}>
+              {/* Men Column */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Paper
+                  variant="outlined"
                   sx={{
-                    minWidth: { xs: "auto", sm: "auto" },
-                    height: 40, // Match the FormControl height
-                    "& .MuiButton-startIcon": {
-                      margin: { xs: 0, sm: "0 8px 0 -4px" }
-                    }
+                    p: 2.5,
+                    borderColor: "primary.main",
+                    borderWidth: 2,
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.primary.main, 0.02),
                   }}
                 >
-                  <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                    {t("games:detail.addPlayers")}
-                  </Box>
-                </Button>
-              </Box>
-              <Grid container spacing={3}>
-                {/* Men Column */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Paper
-                    variant="outlined"
+                  <Typography
+                    variant="h6"
+                    gutterBottom
                     sx={{
-                      p: 2.5,
-                      borderColor: "primary.main",
-                      borderWidth: 2,
-                      backgroundColor: (theme) =>
-                        alpha(theme.palette.primary.main, 0.02),
+                      color: "primary.main",
+                      fontWeight: "bold",
+                      mb: 2,
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        color: "primary.main",
-                        fontWeight: "bold",
-                        mb: 2,
-                      }}
-                    >
-                      {t("games:detail.men")} ({game.players.filter((p) => p.gender === "M").length})
+                    {t("games:detail.men")} ({game.players.filter((p) => p.gender === "M").length})
+                  </Typography>
+                  {game.players.filter((p) => p.gender === "M").length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                      {t("players:empty.noPlayers")}
                     </Typography>
-                    {game.players.filter((p) => p.gender === "M").length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        {t("players:empty.noPlayers")}
-                      </Typography>
-                    ) : (game.status === "started" || game.status === "ended") && sortedMenStats.length > 0 ? (
-                      <Grid container spacing={2}>
-                        {sortedMenStats.map((stats) => (
-                          <Grid size={{ xs: 6 }} key={stats.player_id}>
-                            <GamePlayerStatsCard
-                              stats={stats}
-                              highlight={liveStats ? getHighlight(stats, liveStats) : null}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <PlayersGrid
-                        players={game.players
-                          .filter((p) => p.gender === "M")
-                          .sort((a, b) => a.name.localeCompare(b.name))}
-                        onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
-                      />
-                    )}
-                  </Paper>
-                </Grid>
-
-                {/* Women Column */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      borderColor: "secondary.main",
-                      borderWidth: 2,
-                      backgroundColor: (theme) =>
-                        alpha(theme.palette.secondary.main, 0.02),
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        color: "secondary.main",
-                        fontWeight: "bold",
-                        mb: 2,
-                      }}
-                    >
-                      {t("games:detail.women")} ({game.players.filter((p) => p.gender === "W").length})
-                    </Typography>
-                    {game.players.filter((p) => p.gender === "W").length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        {t("players:empty.noPlayers")}
-                      </Typography>
-                    ) : (game.status === "started" || game.status === "ended") && sortedWomenStats.length > 0 ? (
-                      <Grid container spacing={2}>
-                        {sortedWomenStats.map((stats) => (
-                          <Grid size={{ xs: 6 }} key={stats.player_id}>
-                            <GamePlayerStatsCard
-                              stats={stats}
-                              highlight={liveStats ? getHighlight(stats, liveStats) : null}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <PlayersGrid
-                        players={game.players
-                          .filter((p) => p.gender === "W")
-                          .sort((a, b) => a.name.localeCompare(b.name))}
-                        onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
-                      />
-                    )}
-                  </Paper>
-                </Grid>
+                  ) : (game.status === "started" || game.status === "ended") && sortedMenStats.length > 0 ? (
+                    <Grid container spacing={2}>
+                      {sortedMenStats.map((stats) => (
+                        <Grid size={{ xs: 6 }} key={stats.player_id}>
+                          <GamePlayerStatsCard
+                            stats={stats}
+                            highlight={liveStats ? getHighlight(stats, liveStats) : null}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <PlayersGrid
+                      players={game.players
+                        .filter((p) => p.gender === "M")
+                        .sort((a, b) => a.name.localeCompare(b.name))}
+                      onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
+                    />
+                  )}
+                </Paper>
               </Grid>
-            </Box>
-          </Collapse>
-        </Paper>
+
+              {/* Women Column */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2.5,
+                    borderColor: "secondary.main",
+                    borderWidth: 2,
+                    backgroundColor: (theme) =>
+                      alpha(theme.palette.secondary.main, 0.02),
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      color: "secondary.main",
+                      fontWeight: "bold",
+                      mb: 2,
+                    }}
+                  >
+                    {t("games:detail.women")} ({game.players.filter((p) => p.gender === "W").length})
+                  </Typography>
+                  {game.players.filter((p) => p.gender === "W").length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                      {t("players:empty.noPlayers")}
+                    </Typography>
+                  ) : (game.status === "started" || game.status === "ended") && sortedWomenStats.length > 0 ? (
+                    <Grid container spacing={2}>
+                      {sortedWomenStats.map((stats) => (
+                        <Grid size={{ xs: 6 }} key={stats.player_id}>
+                          <GamePlayerStatsCard
+                            stats={stats}
+                            highlight={liveStats ? getHighlight(stats, liveStats) : null}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <PlayersGrid
+                      players={game.players
+                        .filter((p) => p.gender === "W")
+                        .sort((a, b) => a.name.localeCompare(b.name))}
+                      onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
+                    />
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Live Point Tracker */}
