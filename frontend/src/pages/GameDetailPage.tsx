@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Chip,
   Divider,
   Grid,
   alpha,
@@ -47,7 +46,7 @@ import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player, PlayerGameStats } from "../types";
 
 export default function GameDetailPage() {
-  const { t, i18n } = useTranslation(["games", "players", "common"]);
+  const { t } = useTranslation(["games", "players", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

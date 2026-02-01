@@ -45,7 +45,7 @@ export default function GameTimer({ startDatetime, endDatetime }: GameTimerProps
 
   return (
     <Typography
-      variant="h4"
+      variant="h5"
       fontWeight="bold"
       sx={{
         fontFamily: "monospace",
