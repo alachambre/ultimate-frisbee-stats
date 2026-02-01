@@ -345,7 +345,6 @@ export default function LivePointTracker({
                       variant="contained"
                       color="warning"
                       onClick={() => setIsResumeDialogOpen(true)}
-                      size="large"
                       aria-label={t("points:tracker.resume", "Resume")}
                       sx={{ minWidth: 'auto', px: 2 }}
                     >
@@ -354,7 +353,6 @@ export default function LivePointTracker({
                     <Button
                       variant="outlined"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                      size="large"
                       aria-label={t("common:action.moreActions", "More Actions")}
                       sx={{
                         minWidth: 'auto',
@@ -382,7 +380,6 @@ export default function LivePointTracker({
                       variant="outlined"
                       color="success"
                       onClick={() => setIsFinishDialogOpen(true)}
-                      size="large"
                       aria-label={t("points:tracker.finish", "Finish Point")}
                       sx={{ minWidth: 'auto', px: 2 }}
                     >
@@ -391,7 +388,6 @@ export default function LivePointTracker({
                     <Button
                       variant="outlined"
                       onClick={() => setIsCallDialogOpen(true)}
-                      size="large"
                       aria-label={t("points:recordCall", "Record Call")}
                       sx={{
                         minWidth: 'auto',
@@ -414,7 +410,6 @@ export default function LivePointTracker({
                     <Button
                       variant="outlined"
                       onClick={() => setIsTurnoverDialogOpen(true)}
-                      size="large"
                       aria-label={t("points:recordTurnover", "Record Turnover")}
                       sx={{
                         minWidth: 'auto',
@@ -437,7 +432,6 @@ export default function LivePointTracker({
                     <Button
                       variant="outlined"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                      size="large"
                       aria-label={t("common:action.moreActions", "More Actions")}
                       sx={{
                         minWidth: 'auto',
@@ -465,7 +459,6 @@ export default function LivePointTracker({
                     variant="outlined"
                     color="success"
                     onClick={() => setIsCompleteDialogOpen(true)}
-                    size="large"
                     aria-label={t("points:tracker.complete", "Complete Point")}
                     sx={{ minWidth: 'auto', px: 2 }}
                   >
@@ -476,7 +469,6 @@ export default function LivePointTracker({
                     color="warning"
                     onClick={() => restartPointMutation.mutate()}
                     disabled={restartPointMutation.isPending}
-                    size="large"
                     aria-label={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}
                     sx={{ minWidth: 'auto', px: 2 }}
                   >
@@ -485,7 +477,6 @@ export default function LivePointTracker({
                   <Button
                     variant="outlined"
                     onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                    size="large"
                     aria-label={t("common:action.moreActions", "More Actions")}
                     sx={{
                       minWidth: 'auto',
