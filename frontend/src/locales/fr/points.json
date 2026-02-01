@@ -55,7 +55,8 @@
       "outcome": "Résultat",
       "won": "Gagné",
       "lost": "Perdu",
-      "finishing": "Finalisation..."
+      "finishing": "Finalisation...",
+      "possessionWarning": "Le résultat ne correspond pas à la possession actuelle. Un turnover est peut-être manquant."
     },
     "complete": {
       "title": "Compléter le point",

@@ -61,7 +61,25 @@ describe("FinishPointDialog", () => {
     expect(screen.getByRole("button", { name: /lost the point/i })).toBeInTheDocument();
   });
 
-  it("enables finish button only when outcome is selected", async () => {
+  it("preselects outcome based on possession and enables finish button", async () => {
+    render(
+      <FinishPointDialog
+        open={true}
+        onClose={vi.fn()}
+        activePoint={mockRunningPoint}
+      />
+    );
+
+    // With starting_on_offense=true and no turnovers, we have possession, so "Won" should be preselected
+    const wonButton = screen.getByRole("button", { name: /won the point/i });
+    expect(wonButton).toHaveClass("Mui-selected");
+
+    // Finish button should be enabled since outcome is preselected
+    const finishButton = screen.getByRole("button", { name: /finish point/i });
+    expect(finishButton).toBeEnabled();
+  });
+
+  it("shows warning when user changes preselected outcome", async () => {
     const user = userEvent.setup();
     render(
       <FinishPointDialog
@@ -71,13 +89,25 @@ describe("FinishPointDialog", () => {
       />
     );
 
-    const finishButton = screen.getByRole("button", { name: /finish point/i });
-    expect(finishButton).toBeDisabled();
-
+    // Won should be preselected (we have possession)
     const wonButton = screen.getByRole("button", { name: /won the point/i });
+    expect(wonButton).toHaveClass("Mui-selected");
+
+    // No warning initially
+    expect(screen.queryByText(/doesn't match the current possession/i)).not.toBeInTheDocument();
+
+    // Change to Lost
+    const lostButton = screen.getByRole("button", { name: /lost the point/i });
+    await user.click(lostButton);
+
+    // Warning should appear
+    expect(screen.getByText(/doesn't match the current possession/i)).toBeInTheDocument();
+
+    // Change back to Won
     await user.click(wonButton);
 
-    expect(finishButton).toBeEnabled();
+    // Warning should disappear
+    expect(screen.queryByText(/doesn't match the current possession/i)).not.toBeInTheDocument();
   });
 
   it("calls onClose when cancel is clicked", async () => {

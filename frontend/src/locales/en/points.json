@@ -55,7 +55,8 @@
       "outcome": "Outcome",
       "won": "Won",
       "lost": "Lost",
-      "finishing": "Finishing..."
+      "finishing": "Finishing...",
+      "possessionWarning": "The outcome doesn't match the current possession. A turnover may be missing."
     },
     "complete": {
       "title": "Complete Point",

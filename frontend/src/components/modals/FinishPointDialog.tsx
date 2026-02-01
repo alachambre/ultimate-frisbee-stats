@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,11 +15,13 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import WarningIcon from "@mui/icons-material/Warning";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
+import { getTurnoversByPoint } from "../../services/turnovers";
 import PointTimer from "../points/PointTimer";
-import type { PointWithPlayers } from "../../types";
+import type { PointWithPlayers, TurnoverWithPlayer } from "../../types";
 
 interface FinishPointDialogProps {
   open: boolean;
@@ -36,7 +38,41 @@ export default function FinishPointDialog({
 }: FinishPointDialogProps) {
   const { t } = useTranslation(["points", "common"]);
   const [won, setWon] = useState<boolean | null>(null);
+  const [preselectedWon, setPreselectedWon] = useState<boolean | null>(null);
+  const [showWarning, setShowWarning] = useState(false);
   const queryClient = useQueryClient();
+  const initializedRef = useRef(false);
+
+  // Fetch turnovers for the active point
+  const { data: turnovers = [] } = useQuery<TurnoverWithPlayer[]>({
+    queryKey: ['turnovers', activePoint.id],
+    queryFn: () => getTurnoversByPoint(activePoint.id),
+    enabled: open && !!activePoint.id,
+  });
+
+  // Calculate current possession based on starting position and turnovers
+  const weHavePossession = useMemo(() => {
+    const currentlyHavePossession = (activePoint.starting_on_offense ? 1 : 0) + turnovers.length;
+    return currentlyHavePossession % 2 === 1;
+  }, [activePoint.starting_on_offense, turnovers.length]);
+
+  // Preselect outcome when dialog opens based on possession
+  useEffect(() => {
+    if (open && !initializedRef.current) {
+      // Only initialize once when dialog opens
+      initializedRef.current = true;
+      // This is a legitimate use of setState in useEffect for initialization when the dialog opens
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPreselectedWon(weHavePossession);
+       
+      setWon(weHavePossession);
+       
+      setShowWarning(false);
+    } else if (!open) {
+      // Reset initialization flag when dialog closes
+      initializedRef.current = false;
+    }
+  }, [open, weHavePossession]);
 
   const finishMutation = useMutation({
     mutationFn: () =>
@@ -55,6 +91,8 @@ export default function FinishPointDialog({
 
   const handleClose = () => {
     setWon(null);
+    setPreselectedWon(null);
+    setShowWarning(false);
     finishMutation.reset();
     onClose();
   };
@@ -62,6 +100,16 @@ export default function FinishPointDialog({
   const handleSubmit = () => {
     if (won !== null) {
       finishMutation.mutate();
+    }
+  };
+
+  const handleOutcomeChange = (newWon: boolean) => {
+    setWon(newWon);
+    // Show warning if user changed from the preselected value
+    if (preselectedWon !== null && newWon !== preselectedWon) {
+      setShowWarning(true);
+    } else {
+      setShowWarning(false);
     }
   };
 
@@ -82,7 +130,7 @@ export default function FinishPointDialog({
       <DialogContent>
         {finishMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(finishMutation.error as any)?.response?.data?.detail ||
+            {(finishMutation.error as Error & { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
               t("common:error.generic")}
           </Alert>
         )}
@@ -97,6 +145,13 @@ export default function FinishPointDialog({
           )}
         </Box>
 
+        {/* Warning if user changed preselection */}
+        {showWarning && (
+          <Alert severity="warning" icon={<WarningIcon />} sx={{ mb: 2 }}>
+            {t("points:dialog.finish.possessionWarning", "The outcome doesn't match the current possession. A turnover may be missing.")}
+          </Alert>
+        )}
+
         {/* Outcome */}
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -107,7 +162,7 @@ export default function FinishPointDialog({
             exclusive
             onChange={(_, newValue) => {
               if (newValue !== null) {
-                setWon(newValue === "won");
+                handleOutcomeChange(newValue === "won");
               }
             }}
             fullWidth
