@@ -45,7 +45,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
 - **Backend**: Complete REST API for all entities including calls/turnovers, SQLite with foreign keys, domain-organized code structure, production logging
 - **Frontend**: Full CRUD interfaces for all entities, statistics dashboard, mobile-first design, comprehensive test coverage, full i18n support
-- **Point Tracking**: 4-status workflow (ready→running→scored→completed), ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
+- **Point Tracking**: 4-status workflow (ready→running→scored→completed), flexible player selection, pull launch timing, ABBA gender rule enforcement, pull tracking, strategy selection, resume functionality
 - **Call Tracking**: Record call start/resume with elapsed time display, pending call blocks point finish, dead time calculation ready for statistics
 - **Turnover Tracking**: Record turnovers with optional player assignment, automatic possession tracking, displays turnover sequence with elapsed time
 - **Statistics Dashboard**: Game-level team and player statistics with offense/defense breakdown, clean points tracking, forced turnovers, win rates, circular progress indicators, tooltips on all stat columns, sortable player table
@@ -118,6 +118,74 @@ backend/app/
 - **Organization**: Tests in `__tests__/` subdirectories
 
 ## Next Steps
+
+**Point Lifecycle Refactor - IN PROGRESS**
+Improving the point creation and player selection workflow to better match real-world usage.
+
+**Current Workflow Issues:**
+- Points start immediately in "running" state (timer starts)
+- Player selection happens during point creation (before pull is launched)
+- Timer starts before the pull, which doesn't match real game flow
+
+**New Workflow (using existing `ready` status):**
+```
+ready → running → scored → completed
+```
+
+1. **Create Point** (status = `ready`)
+   - Select: Offense/Defense
+   - Select: Strategy (optional)
+   - NO player selection yet
+   - Timer NOT started
+   - Point number assigned
+
+2. **While `ready`** (before launching pull)
+   - Available actions:
+     - **"Select Players"** (new) - Select/change 7 players anytime
+     - **"Launch Pull"** (new main action) - Start the point
+     - Strategy selection (existing)
+     - Comments (existing)
+
+3. **Launch Pull** (ready → running transition)
+   - Click "Launch Pull" button
+   - Sets `status = running`
+   - Sets `start_datetime = now()` (timer starts)
+   - **If Defense**: Immediately show pull question (inbounds/out of bounds)
+   - **If Offense**: Pull already out, timer already running
+
+4. **While `running`**
+   - Timer running, all existing actions available
+   - **"Manage Players"** action - can still modify players
+
+5. **Complete Point** (scored → completed validation)
+   - **NEW Validation**: Must have exactly 7 players assigned
+   - Returns error if player count ≠ 7
+
+**Implementation Changes:**
+
+Backend (Non-breaking - no DB schema changes):
+- `PointCreate` schema: Make `player_ids` optional (defaults to empty list)
+- Point creation: Default `status = 'ready'` (not 'running')
+- `start_datetime` remains NULL until "Launch Pull" clicked
+- Add validation in complete endpoint: require 7 players
+- Update tests to reflect new workflow
+
+Frontend:
+- `StartPointDialog`: Remove player selection UI (keep offense/defense, strategy)
+- `LivePointTracker`:
+  - Add "Launch Pull" button (when status='ready')
+  - Add "Select/Manage Players" action button
+  - Pull question appears AFTER "Launch Pull" (for defense)
+- New `ManagePlayersDialog`: Player selection (7 players with ABBA validation)
+- `CompletePointDialog`: Add validation error if players missing
+- Update all tests
+
+**Benefits:**
+- ✅ Timer starts when pull is launched (matches real game)
+- ✅ Flexible player selection (can be done before or during point)
+- ✅ Better mobile UX (simpler point creation flow)
+- ✅ No breaking changes (uses existing 'ready' status)
+- ✅ Existing data unaffected (old points stay as-is)
 
 **Phase 8: Statistics Dashboard - IN PROGRESS**
 - ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)
