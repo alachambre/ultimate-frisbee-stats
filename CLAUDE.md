@@ -65,6 +65,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - **Turnover tracking**: Record turnovers with player assignment, automatic possession calculation, display turnover history
 - **Live player statistics**: Real-time player stats (points played, effective playing time) with visual highlighting for rotation management
 - **Team statistics**: Game-level offense/defense efficiency metrics (win rates, clean point rates, break rates, turnover rates)
+- **Mobile-optimized UI**: Clean game detail page with centered layout, roster in dialog, minimal clutter
 - French/English language switching with localStorage persistence
 
 ## Architecture
@@ -245,3 +246,7 @@ See `DEPLOYMENT.md` for setup guide and `DEPLOYMENT_STATUS.md` for current statu
   - Components reference colors via `theme.colors.offense/defense/men/women` and `theme.gradients.*`
   - MUI theme properly extended via dual module augmentation for sx prop support
   - Strategy cards feature gradient borders using `theme.gradients.primary`
+- **Pre-commit Hooks**: Husky + lint-staged automatically runs on commit
+  - ESLint with auto-fix (`eslint --fix`)
+  - TypeScript type checking (`tsc --noEmit`)
+  - Catches linting/type errors before deployment

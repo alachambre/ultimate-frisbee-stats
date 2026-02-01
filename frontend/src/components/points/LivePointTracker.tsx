@@ -131,11 +131,12 @@ export default function LivePointTracker({
       queryClient.setQueryData(["runningPoint", game.id], updatedPoint);
 
       // 2. Update game cache - replace the scored point with the running point
-      queryClient.setQueryData(["game", String(game.id)], (oldData: any) => {
-        if (!oldData) return oldData;
+      queryClient.setQueryData(["game", String(game.id)], (oldData: unknown) => {
+        if (!oldData || typeof oldData !== 'object') return oldData;
+        const gameData = oldData as { points: PointWithPlayers[] };
         return {
-          ...oldData,
-          points: oldData.points.map((p: any) =>
+          ...gameData,
+          points: gameData.points.map((p) =>
             p.id === updatedPoint.id ? updatedPoint : p
           ),
         };
@@ -386,6 +387,7 @@ export default function LivePointTracker({
                         color="success"
                         onClick={() => setIsFinishDialogOpen(true)}
                         size="large"
+                        aria-label="Finish Point"
                         sx={{
                           border: 1,
                           borderRadius: 1,

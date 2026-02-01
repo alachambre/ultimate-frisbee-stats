@@ -43,6 +43,11 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 - Filter games by team and competition
 - Won/Lost/Tie display on game cards with color-coded outcomes
 - Player management disabled for finished games (prevents accidental changes)
+- **Mobile-optimized game detail page**:
+  - Clean centered header with "Team vs Opponent" title
+  - Team score breakdown without redundant labels
+  - Player roster in dedicated dialog (accessed via "Roster" button)
+  - Reduced visual clutter for sideline use
 
 **Live Point Tracking (4-Status Workflow):**
 - Real-time point-by-point tracking during games
@@ -286,6 +291,7 @@ npm install
 - `@testing-library/user-event` - User interaction simulation
 - `@testing-library/jest-dom` - DOM matchers
 - `eslint` - Code linting
+- `husky` + `lint-staged` - Pre-commit hooks (auto-fix linting, type checking)
 
 ## Configuration
 
@@ -672,6 +678,29 @@ The project uses Vitest with React Testing Library and MSW for API mocking.
 3. Check the app at http://localhost:5173 (auto-refreshes)
 4. Build for production: `npm run build`
 
+### Pre-commit Hooks
+
+The project uses Husky and lint-staged to automatically check code quality before each commit:
+
+**What runs on commit:**
+- `eslint --fix` - Automatically fixes linting issues
+- `tsc --noEmit` - Type checks without emitting files
+
+**Configuration:**
+- Root `package.json` - Husky setup with `prepare` script
+- Frontend `package.json` - lint-staged configuration
+- `.husky/pre-commit` - Git hook that runs lint-staged
+
+**How it works:**
+- Only staged `.ts` and `.tsx` files are checked
+- Commit is blocked if there are unfixable errors
+- Prevents deployment failures from linting/type errors
+
+To skip the hooks (not recommended):
+```bash
+git commit --no-verify
+```
+
 ## Troubleshooting
 
 ### Node version warnings
@@ -692,6 +721,19 @@ uvicorn app.main:app --reload
 Backend is configured to allow all origins in development. If you still see CORS errors, check the backend's CORS middleware configuration in `app/main.py`.
 
 ## Recent Enhancements
+
+**Mobile UI Improvements (January 2026):**
+- ✅ **Game Detail Page Redesign**: Cleaner mobile-first layout
+  - Removed date display and status/team chips for reduced clutter
+  - Centered "Team vs Opponent" title format
+  - Larger score numbers (h3) with team breakdown
+  - Player roster moved to dedicated dialog (opened via "Roster" button)
+  - Responsive Add Players button (icon-only on mobile)
+- ✅ **Translation Fixes**: Corrected missing translation keys in dialog components
+- ✅ **Pre-commit Hooks**: Husky + lint-staged for automatic code quality checks
+  - ESLint with auto-fix
+  - TypeScript type checking
+  - Prevents deployment failures
 
 **Phase 6.5: Internationalization (Complete):**
 - ✅ **French/English Support**: Full i18n with react-i18next

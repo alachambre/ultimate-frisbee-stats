@@ -78,7 +78,7 @@ describe("RecordTurnoverDialog", () => {
     expect(screen.getByText(/possession/i)).toBeInTheDocument();
   });
 
-  it("shows player selection when we have possession", async () => {
+  it("shows possession indicator when we have possession", async () => {
     const offensivePoint = { ...mockPoint, starting_on_offense: true };
 
     renderWithQueryClient(
@@ -90,17 +90,14 @@ describe("RecordTurnoverDialog", () => {
       />
     );
 
-    // Should show player selection text
+    // Should show possession indicator showing we have the disc
     await waitFor(() => {
-      expect(screen.getByText(/select player responsible/i)).toBeInTheDocument();
+      expect(screen.getByText(/possession/i)).toBeInTheDocument();
+      expect(screen.getByText(/we have.*disc/i)).toBeInTheDocument();
     }, { timeout: 2000 });
-
-    // Players are in tabs - check tabs exist
-    const tabs = screen.getAllByRole("tab");
-    expect(tabs.length).toBeGreaterThan(0);
   });
 
-  it("does not show player selection when they have possession", () => {
+  it("shows possession indicator when they have possession", () => {
     const defensivePoint = { ...mockPoint, starting_on_offense: false };
 
     renderWithQueryClient(
@@ -112,7 +109,8 @@ describe("RecordTurnoverDialog", () => {
       />
     );
 
-    expect(screen.queryByText(/select player responsible/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/possession/i)).toBeInTheDocument();
+    expect(screen.getByText(/they have.*disc/i)).toBeInTheDocument();
   });
 
   it("shows comments text field", () => {
@@ -187,6 +185,6 @@ describe("RecordTurnoverDialog", () => {
     );
 
     // After one turnover on offense, they should have possession
-    expect(screen.queryByText(/select player responsible/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/they have.*disc/i)).toBeInTheDocument();
   });
 });

@@ -141,7 +141,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       });
     });
 
-    it("disables finish button when there is one pending call", async () => {
+    it("hides finish button and shows resume button when there is one pending call", async () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
 
@@ -176,13 +176,14 @@ describe("LivePointTracker - Pending Call Feature", () => {
       );
 
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
-        expect(finishButton).toBeInTheDocument();
-        expect(finishButton).toBeDisabled();
+        // Finish button should not be present when there's a pending call
+        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        // Resume button should be present instead
+        expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
       });
     });
 
-    it("disables finish button when there are multiple pending calls", async () => {
+    it("hides finish button and shows resume button when there are multiple pending calls", async () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
 
@@ -225,13 +226,14 @@ describe("LivePointTracker - Pending Call Feature", () => {
       );
 
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
-        expect(finishButton).toBeInTheDocument();
-        expect(finishButton).toBeDisabled();
+        // Finish button should not be present when there are pending calls
+        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        // Resume button should be present instead
+        expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
       });
     });
 
-    it("disables finish button when there is a mix of resolved and pending calls", async () => {
+    it("hides finish button when there is a mix of resolved and pending calls", async () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
 
@@ -249,7 +251,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
           id: 2,
           point_id: 1,
           call_timestamp: "2024-01-01T10:08:00Z",
-          resume_timestamp: null, // Pending - this should disable the button
+          resume_timestamp: null, // Pending - this should hide the finish button
           comments: "Pending call",
           created_at: "2024-01-01T10:08:00Z",
         },
@@ -274,13 +276,14 @@ describe("LivePointTracker - Pending Call Feature", () => {
       );
 
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
-        expect(finishButton).toBeInTheDocument();
-        expect(finishButton).toBeDisabled();
+        // Finish button should not be present even with resolved calls if there's any pending
+        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        // Resume button should be present instead
+        expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
       });
     });
 
-    it("shows tooltip warning when finish button is disabled due to pending call", async () => {
+    it("shows resume button instead of finish button when there is a pending call", async () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
 
@@ -314,13 +317,15 @@ describe("LivePointTracker - Pending Call Feature", () => {
       );
 
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
-        expect(finishButton).toBeDisabled();
-        expect(finishButton).toHaveAttribute("title", "Cannot finish point with pending call");
+        // Finish button should not be present
+        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        // Resume button should be present instead
+        const resumeButton = screen.getByRole("button", { name: /resume/i });
+        expect(resumeButton).toBeInTheDocument();
       });
     });
 
-    it("does not show tooltip when finish button is enabled", async () => {
+    it("shows finish button when there are no pending calls", async () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
 
@@ -344,8 +349,8 @@ describe("LivePointTracker - Pending Call Feature", () => {
 
       await waitFor(() => {
         const finishButton = screen.getByRole("button", { name: /finish point/i });
+        expect(finishButton).toBeInTheDocument();
         expect(finishButton).not.toBeDisabled();
-        expect(finishButton).toHaveAttribute("title", "");
       });
     });
   });

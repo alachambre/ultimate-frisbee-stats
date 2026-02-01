@@ -45,7 +45,7 @@ describe("FinishPointDialog", () => {
       />
     );
 
-    expect(screen.getByText(/finish offense point/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /finish point/i })).toBeInTheDocument();
   });
 
   it("has won and lost toggle buttons", () => {

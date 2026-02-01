@@ -334,7 +334,6 @@ describe("PointEventsHistory", () => {
       await waitFor(() => {
         expect(screen.getByText(/pending/i)).toBeInTheDocument();
         expect(screen.getByText("Contest")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /resume from call/i })).toBeInTheDocument();
         // Verify no duration is shown (only for resolved calls)
         expect(screen.queryByText(/duration.*:/i)).not.toBeInTheDocument();
       });
@@ -372,7 +371,6 @@ describe("PointEventsHistory", () => {
         // Verify both calls are present - one pending, one resolved
         expect(screen.getByText(/pending/i)).toBeInTheDocument(); // Call #2 is pending
         expect(screen.getByText(/duration.*1:00/i)).toBeInTheDocument(); // Call #1 duration (1 min)
-        expect(screen.getByRole("button", { name: /resume from call/i })).toBeInTheDocument();
       });
     });
   });
@@ -483,7 +481,7 @@ describe("PointEventsHistory", () => {
       });
     });
 
-    it("renders team turnover when no player is assigned", async () => {
+    it("renders turnover when no player is assigned", async () => {
       const turnovers = [
         createMockTurnover(1, "2024-01-01T10:02:00Z", null, "Out of bounds"),
       ];
@@ -511,7 +509,7 @@ describe("PointEventsHistory", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/team turnover/i)).toBeInTheDocument();
+        expect(screen.getByText(/turnover #1/i)).toBeInTheDocument();
         expect(screen.getByText("Out of bounds")).toBeInTheDocument();
       });
     });

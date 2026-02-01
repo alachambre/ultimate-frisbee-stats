@@ -30,6 +30,7 @@ import AddIcon from "@mui/icons-material/Add";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import GroupIcon from "@mui/icons-material/Group";
 import CloseIcon from "@mui/icons-material/Close";
+import CommentIcon from "@mui/icons-material/Comment";
 import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
 import { getRunningPoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
@@ -184,13 +185,13 @@ export default function GameDetailPage() {
     if (!liveStats) return [];
     const menIds = game?.players.filter((p) => p.gender === "M").map((p) => p.id) || [];
     return sortStats(liveStats.filter((s) => menIds.includes(s.player_id)));
-  }, [liveStats, game?.players, sortBy]);
+  }, [liveStats, game?.players, sortBy, sortStats]);
 
   const sortedWomenStats = useMemo(() => {
     if (!liveStats) return [];
     const womenIds = game?.players.filter((p) => p.gender === "W").map((p) => p.id) || [];
     return sortStats(liveStats.filter((s) => womenIds.includes(s.player_id)));
-  }, [liveStats, game?.players, sortBy]);
+  }, [liveStats, game?.players, sortBy, sortStats]);
 
   if (isLoading) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -240,7 +241,7 @@ export default function GameDetailPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Header */}
-      <Box mb={4}>
+      <Box mb={2}>
         <Button
           component={Link}
           to="/games"
@@ -250,7 +251,7 @@ export default function GameDetailPage() {
           {t("common:action.back")}
         </Button>
         <Box textAlign="center">
-          <Typography variant="h4" fontWeight="bold" mb={3}>
+          <Typography variant="h4" fontWeight="bold" mb={2}>
             {game.team_name} vs {game.opponent_name}
           </Typography>
           <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
@@ -377,20 +378,41 @@ export default function GameDetailPage() {
               />
             </Box>
           )}
+
+          {/* Game Comment */}
+          {game.comments && (
+            <Box mt={3}>
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: 'primary.main',
+                  textAlign: 'left',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <CommentIcon
+                    fontSize="small"
+                    sx={{ color: 'primary.main' }}
+                  />
+                  <Typography
+                    variant="body2"
+                    fontWeight="medium"
+                    sx={{ color: 'primary.main' }}
+                  >
+                    {t("games:detail.comments")}
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {game.comments}
+                </Typography>
+              </Box>
+            </Box>
+          )}
         </Box>
       </Paper>
-
-      {/* Comments Section */}
-      {game.comments && (
-        <Paper sx={{ mb: 3, p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            {t("games:detail.comments")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {game.comments}
-          </Typography>
-        </Paper>
-      )}
 
       {/* Roster Dialog */}
       {competition && (
