@@ -132,8 +132,20 @@ export default function PointHistoryItem({
           {isRunning && (
             <Chip
               label={t("points:status.running")}
-              color="primary"
               size="small"
+              sx={point.starting_on_offense ? {
+                bgcolor: (theme) => theme.colors.offense.main,
+                color: 'white',
+                '& .MuiChip-label': {
+                  color: 'white'
+                }
+              } : {
+                bgcolor: (theme) => theme.colors.defense.main,
+                color: 'white',
+                '& .MuiChip-label': {
+                  color: 'white'
+                }
+              }}
             />
           )}
           {isScored && (
@@ -152,20 +164,81 @@ export default function PointHistoryItem({
           )}
         </Box>
 
-        {/* Strategy and Comments with icons */}
+        {/* Strategy and Comments with styled boxes */}
         {(point.strategy || point.comments) && (
           <Box mb={2}>
             {point.strategy && (
-              <Box display="flex" alignItems="center" gap={0.5} mb={point.comments ? 1 : 0}>
-                <EmojiObjectsIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                <Typography variant="body2" color="text.secondary">
-                  {point.strategy.name}
-                </Typography>
+              <Box
+                sx={{
+                  p: 2,
+                  mb: point.comments ? 2 : 0,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: (theme) => point.starting_on_offense
+                    ? theme.colors.offense.main
+                    : theme.colors.defense.main
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiObjectsIcon
+                    fontSize="small"
+                    sx={{
+                      color: (theme) => point.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    fontWeight="medium"
+                    sx={{
+                      color: (theme) => point.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  >
+                    {point.starting_on_offense
+                      ? t("points:tracker.offense", "Offense")
+                      : t("points:tracker.defense", "Defense")
+                    } / {point.strategy.name}
+                  </Typography>
+                </Box>
               </Box>
             )}
             {point.comments && (
-              <Box display="flex" alignItems="flex-start" gap={0.5}>
-                <CommentIcon sx={{ fontSize: 18, color: 'text.secondary', mt: 0.25 }} />
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: (theme) => point.starting_on_offense
+                    ? theme.colors.offense.main
+                    : theme.colors.defense.main
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <CommentIcon
+                    fontSize="small"
+                    sx={{
+                      color: (theme) => point.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    fontWeight="medium"
+                    sx={{
+                      color: (theme) => point.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  >
+                    {t("points:tracker.comment", "Comment")}
+                  </Typography>
+                </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
                   {point.comments}
                 </Typography>

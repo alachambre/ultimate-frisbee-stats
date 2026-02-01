@@ -13,6 +13,7 @@ import {
   ListItemText,
   IconButton,
   Tooltip,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -60,6 +61,7 @@ export default function LivePointTracker({
   onPointUpdated,
 }: LivePointTrackerProps) {
   const { t } = useTranslation(["points", "common"]);
+  const theme = useTheme();
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
@@ -151,7 +153,18 @@ export default function LivePointTracker({
 
   return (
     <>
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 3,
+          ...(currentPoint && {
+            borderTop: 3,
+            borderColor: (theme) => currentPoint.starting_on_offense
+              ? theme.colors.offense.main
+              : theme.colors.defense.main
+          })
+        }}
+      >
         <Typography variant="h6" fontWeight="bold" gutterBottom>
           {t("points:tracker.title", "Live Point Tracking")}
         </Typography>
@@ -191,7 +204,14 @@ export default function LivePointTracker({
                         : t("points:tracker.defense")
                     }
                     size="small"
-                    color={currentPoint.starting_on_offense ? "primary" : "default"}
+                    sx={currentPoint.starting_on_offense ? {} : {
+                      bgcolor: (theme) => theme.colors.defense.main,
+                      color: 'white',
+                      '& .MuiChip-label': {
+                        color: 'white'
+                      }
+                    }}
+                    color={currentPoint.starting_on_offense ? "primary" : undefined}
                   />
                   {currentPoint.status === "scored" && (
                     <Chip
@@ -205,7 +225,16 @@ export default function LivePointTracker({
                 </Box>
               </Box>
               <Box textAlign="center">
-                <Typography variant="body2" color="text.secondary" gutterBottom>
+                <Typography
+                  variant="body2"
+                  gutterBottom
+                  sx={{
+                    color: (theme) => currentPoint.starting_on_offense
+                      ? theme.colors.offense.main
+                      : theme.colors.defense.main,
+                    fontWeight: 'medium'
+                  }}
+                >
                   {currentPoint.status === "running"
                     ? t("points:tracker.elapsedTime", "Elapsed Time")
                     : t("points:tracker.duration", "Duration")}
@@ -215,6 +244,9 @@ export default function LivePointTracker({
                     key={`${currentPoint.id}-${currentPoint.status}`}
                     startDatetime={currentPoint.start_datetime}
                     endDatetime={currentPoint.status === "scored" ? currentPoint.end_datetime || undefined : undefined}
+                    color={currentPoint.starting_on_offense
+                      ? theme.colors.offense.main
+                      : theme.colors.defense.main}
                   />
                 )}
               </Box>
@@ -321,16 +353,24 @@ export default function LivePointTracker({
                     </Button>
                     <Tooltip title={t("common:action.moreActions", "More Actions")}>
                       <IconButton
-                        color="primary"
                         onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
                         size="large"
                         sx={{
                           border: 1,
                           borderRadius: 1,
-                          borderColor: 'primary.main',
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
                           '&:hover': {
-                            borderColor: 'primary.dark',
-                            bgcolor: 'primary.lighter'
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                            bgcolor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.light + '20'
+                              : theme.colors.defense.light + '20'
                           }
                         }}
                       >
@@ -361,16 +401,24 @@ export default function LivePointTracker({
                     </Tooltip>
                     <Tooltip title={t("points:recordCall", "Record Call")}>
                       <IconButton
-                        color="primary"
                         onClick={() => setIsCallDialogOpen(true)}
                         size="large"
                         sx={{
                           border: 1,
                           borderRadius: 1,
-                          borderColor: 'primary.main',
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
                           '&:hover': {
-                            borderColor: 'primary.dark',
-                            bgcolor: 'primary.lighter'
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                            bgcolor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.light + '20'
+                              : theme.colors.defense.light + '20'
                           }
                         }}
                       >
@@ -379,16 +427,24 @@ export default function LivePointTracker({
                     </Tooltip>
                     <Tooltip title={t("points:recordTurnover", "Record Turnover")}>
                       <IconButton
-                        color="primary"
                         onClick={() => setIsTurnoverDialogOpen(true)}
                         size="large"
                         sx={{
                           border: 1,
                           borderRadius: 1,
-                          borderColor: 'primary.main',
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
                           '&:hover': {
-                            borderColor: 'primary.dark',
-                            bgcolor: 'primary.lighter'
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                            bgcolor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.light + '20'
+                              : theme.colors.defense.light + '20'
                           }
                         }}
                       >
@@ -397,16 +453,24 @@ export default function LivePointTracker({
                     </Tooltip>
                     <Tooltip title={t("common:action.moreActions", "More Actions")}>
                       <IconButton
-                        color="primary"
                         onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
                         size="large"
                         sx={{
                           border: 1,
                           borderRadius: 1,
-                          borderColor: 'primary.main',
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
                           '&:hover': {
-                            borderColor: 'primary.dark',
-                            bgcolor: 'primary.lighter'
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                            bgcolor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.light + '20'
+                              : theme.colors.defense.light + '20'
                           }
                         }}
                       >
@@ -461,16 +525,24 @@ export default function LivePointTracker({
                   </Tooltip>
                   <Tooltip title={t("common:action.moreActions", "More Actions")}>
                     <IconButton
-                      color="primary"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
                       size="large"
                       sx={{
                         border: 1,
                         borderRadius: 1,
-                        borderColor: 'primary.main',
+                        borderColor: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        color: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
                         '&:hover': {
-                          borderColor: 'primary.dark',
-                          bgcolor: 'primary.lighter'
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.dark
+                            : theme.colors.defense.dark,
+                          bgcolor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.light + '20'
+                            : theme.colors.defense.light + '20'
                         }
                       }}
                     >
@@ -481,6 +553,47 @@ export default function LivePointTracker({
               )}
             </Box>
 
+            {/* Display strategy if exists */}
+            {currentPoint.strategy && (
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  borderLeft: 3,
+                  borderColor: (theme) => currentPoint.starting_on_offense
+                    ? theme.colors.offense.main
+                    : theme.colors.defense.main
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiObjectsIcon
+                    fontSize="small"
+                    sx={{
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    fontWeight="medium"
+                    sx={{
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  >
+                    {currentPoint.starting_on_offense
+                      ? t("points:tracker.offense", "Offense")
+                      : t("points:tracker.defense", "Defense")
+                    } / {currentPoint.strategy.name}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
             {/* Display comment if exists */}
             {currentPoint.comments && (
               <Box
@@ -490,12 +603,29 @@ export default function LivePointTracker({
                   bgcolor: 'action.hover',
                   borderRadius: 1,
                   borderLeft: 3,
-                  borderColor: 'primary.main'
+                  borderColor: (theme) => currentPoint.starting_on_offense
+                    ? theme.colors.offense.main
+                    : theme.colors.defense.main
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <CommentIcon fontSize="small" color="primary" />
-                  <Typography variant="body2" fontWeight="medium" color="primary">
+                  <CommentIcon
+                    fontSize="small"
+                    sx={{
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    fontWeight="medium"
+                    sx={{
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main
+                    }}
+                  >
                     {t("points:tracker.comment", "Comment")}
                   </Typography>
                 </Box>

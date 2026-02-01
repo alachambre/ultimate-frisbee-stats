@@ -4,9 +4,10 @@ import { Typography } from "@mui/material";
 interface PointTimerProps {
   startDatetime: string; // ISO string
   endDatetime?: string | null; // ISO string - if provided, shows static duration
+  color?: string; // Optional color for the timer
 }
 
-export default function PointTimer({ startDatetime, endDatetime }: PointTimerProps) {
+export default function PointTimer({ startDatetime, endDatetime, color }: PointTimerProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export default function PointTimer({ startDatetime, endDatetime }: PointTimerPro
       fontWeight="bold"
       sx={{
         fontFamily: "monospace",
-        color: "primary.main",
+        color: color || "primary.main",
       }}
     >
       {formatTime(elapsedSeconds)}
