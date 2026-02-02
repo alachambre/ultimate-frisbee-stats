@@ -129,7 +129,7 @@ export default function StartPointDialog({
               }
             }}
             fullWidth
-            aria-label="starting on offense or defense"
+            aria-label={t("common:ariaLabel.startingPosition")}
             sx={(theme) => ({
               "& .MuiToggleButton-root": {
                 py: 1.5,
@@ -157,11 +157,11 @@ export default function StartPointDialog({
               },
             })}
           >
-            <ToggleButton value="offense" aria-label="on offense">
+            <ToggleButton value="offense" aria-label={t("common:ariaLabel.onOffense")}>
               <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
               {t("points:tracker.offense")}
             </ToggleButton>
-            <ToggleButton value="defense" aria-label="on defense">
+            <ToggleButton value="defense" aria-label={t("common:ariaLabel.onDefense")}>
               <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
               {t("points:tracker.defense")}
             </ToggleButton>

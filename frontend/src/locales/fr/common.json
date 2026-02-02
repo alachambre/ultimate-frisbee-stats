@@ -27,6 +27,17 @@
     "hide": "Masquer",
     "moreActions": "Plus d'actions"
   },
+  "ariaLabel": {
+    "close": "Fermer",
+    "editPoint": "Modifier le point",
+    "deletePoint": "Supprimer le point",
+    "startingPosition": "Départ en attaque ou défense",
+    "onOffense": "En attaque",
+    "onDefense": "En défense",
+    "pointOutcome": "Résultat du point",
+    "wonPoint": "Point gagné",
+    "lostPoint": "Point perdu"
+  },
   "status": {
     "active": "Actif",
     "inactive": "Inactif",

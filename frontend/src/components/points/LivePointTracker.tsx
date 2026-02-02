@@ -12,6 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
   useTheme,
+  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -402,7 +403,7 @@ export default function LivePointTracker({
                     </ListItemText>
                   </MenuItem>
                 ),
-                hasValidPlayerComposition && (currentPoint.status === "ready" || currentPoint.status === "running") && (
+                hasValidPlayerComposition && (
                   <MenuItem
                     key="manage-players"
                     onClick={() => {
@@ -463,121 +464,187 @@ export default function LivePointTracker({
                       ? t("points:tracker.launching", "Launching...")
                       : t("points:tracker.launchPull", "Launch Pull")}
                   </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                    aria-label={t("common:action.moreActions", "More Actions")}
-                    sx={{
-                      minWidth: 'auto',
-                      px: 2,
-                      borderColor: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      '&:hover': {
+                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                    <Button
+                      variant="outlined"
+                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                      aria-label={t("common:action.moreActions", "More Actions")}
+                      sx={{
+                        minWidth: 'auto',
+                        px: 2,
                         borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.dark
-                          : theme.colors.defense.dark,
-                      }
-                    }}
-                  >
-                    <MoreVertIcon />
-                  </Button>
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        color: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        '&:hover': {
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.dark
+                            : theme.colors.defense.dark,
+                        }
+                      }}
+                    >
+                      <MoreVertIcon />
+                    </Button>
+                  </Tooltip>
                 </>
               ) : currentPoint.status === "running" ? (
                 hasPendingCall ? (
                   // When there's a pending call, show Resume + More Actions buttons
                   <>
-                    <Button
-                      variant="contained"
-                      color="warning"
-                      onClick={() => setIsResumeDialogOpen(true)}
-                      aria-label={t("points:tracker.resume", "Resume")}
-                      sx={{ minWidth: 'auto', px: 2 }}
-                    >
-                      <PlayArrowIcon />
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                      aria-label={t("common:action.moreActions", "More Actions")}
-                      sx={{
-                        minWidth: 'auto',
-                        px: 2,
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        color: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        '&:hover': {
+                    <Tooltip title={t("points:tracker.resume", "Resume")}>
+                      <Button
+                        variant="contained"
+                        color="warning"
+                        onClick={() => setIsResumeDialogOpen(true)}
+                        aria-label={t("points:tracker.resume", "Resume")}
+                        sx={{ minWidth: 'auto', px: 2 }}
+                      >
+                        <PlayArrowIcon />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                      <Button
+                        variant="outlined"
+                        onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                        aria-label={t("common:action.moreActions", "More Actions")}
+                        sx={{
+                          minWidth: 'auto',
+                          px: 2,
                           borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.dark
-                            : theme.colors.defense.dark,
-                        }
-                      }}
-                    >
-                      <MoreVertIcon />
-                    </Button>
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          '&:hover': {
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                          }
+                        }}
+                      >
+                        <MoreVertIcon />
+                      </Button>
+                    </Tooltip>
                   </>
                 ) : (
                   // Normal action buttons when no pending call
                   <>
+                    <Tooltip title={t("points:tracker.finish", "Finish Point")}>
+                      <Button
+                        variant="outlined"
+                        color="success"
+                        onClick={() => setIsFinishDialogOpen(true)}
+                        aria-label={t("points:tracker.finish", "Finish Point")}
+                        sx={{ minWidth: 'auto', px: 2 }}
+                      >
+                        <CheckCircleIcon />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={t("points:recordCall", "Record Call")}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setIsCallDialogOpen(true)}
+                        aria-label={t("points:recordCall", "Record Call")}
+                        sx={{
+                          minWidth: 'auto',
+                          px: 2,
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          '&:hover': {
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                          }
+                        }}
+                      >
+                        <PauseCircleIcon />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={t("points:recordTurnover", "Record Turnover")}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setIsTurnoverDialogOpen(true)}
+                        aria-label={t("points:recordTurnover", "Record Turnover")}
+                        sx={{
+                          minWidth: 'auto',
+                          px: 2,
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          '&:hover': {
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                          }
+                        }}
+                      >
+                        <SwapHorizIcon />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={t("common:action.moreActions", "More Actions")}>
+                      <Button
+                        variant="outlined"
+                        onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                        aria-label={t("common:action.moreActions", "More Actions")}
+                        sx={{
+                          minWidth: 'auto',
+                          px: 2,
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          '&:hover': {
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                          }
+                        }}
+                      >
+                        <MoreVertIcon />
+                      </Button>
+                    </Tooltip>
+                  </>
+                )
+              ) : (
+                <>
+                  <Tooltip title={t("points:tracker.complete", "Complete Point")}>
                     <Button
                       variant="outlined"
                       color="success"
-                      onClick={() => setIsFinishDialogOpen(true)}
-                      aria-label={t("points:tracker.finish", "Finish Point")}
+                      onClick={() => setIsCompleteDialogOpen(true)}
+                      aria-label={t("points:tracker.complete", "Complete Point")}
                       sx={{ minWidth: 'auto', px: 2 }}
                     >
-                      <CheckCircleIcon />
+                      <DoneAllIcon />
                     </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setIsCallDialogOpen(true)}
-                      aria-label={t("points:recordCall", "Record Call")}
-                      sx={{
-                        minWidth: 'auto',
-                        px: 2,
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        color: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        '&:hover': {
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.dark
-                            : theme.colors.defense.dark,
-                        }
-                      }}
-                    >
-                      <PauseCircleIcon />
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setIsTurnoverDialogOpen(true)}
-                      aria-label={t("points:recordTurnover", "Record Turnover")}
-                      sx={{
-                        minWidth: 'auto',
-                        px: 2,
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        color: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        '&:hover': {
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.dark
-                            : theme.colors.defense.dark,
-                        }
-                      }}
-                    >
-                      <SwapHorizIcon />
-                    </Button>
+                  </Tooltip>
+                  <Tooltip title={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}>
+                    <span>
+                      <Button
+                        variant="outlined"
+                        color="warning"
+                        onClick={() => restartPointMutation.mutate()}
+                        disabled={restartPointMutation.isPending}
+                        aria-label={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}
+                        sx={{ minWidth: 'auto', px: 2 }}
+                      >
+                        <RestartAltIcon />
+                      </Button>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
                     <Button
                       variant="outlined"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
@@ -600,51 +667,7 @@ export default function LivePointTracker({
                     >
                       <MoreVertIcon />
                     </Button>
-                  </>
-                )
-              ) : (
-                <>
-                  <Button
-                    variant="outlined"
-                    color="success"
-                    onClick={() => setIsCompleteDialogOpen(true)}
-                    aria-label={t("points:tracker.complete", "Complete Point")}
-                    sx={{ minWidth: 'auto', px: 2 }}
-                  >
-                    <DoneAllIcon />
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="warning"
-                    onClick={() => restartPointMutation.mutate()}
-                    disabled={restartPointMutation.isPending}
-                    aria-label={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}
-                    sx={{ minWidth: 'auto', px: 2 }}
-                  >
-                    <RestartAltIcon />
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                    aria-label={t("common:action.moreActions", "More Actions")}
-                    sx={{
-                      minWidth: 'auto',
-                      px: 2,
-                      borderColor: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      '&:hover': {
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.dark
-                          : theme.colors.defense.dark,
-                      }
-                    }}
-                  >
-                    <MoreVertIcon />
-                  </Button>
+                  </Tooltip>
                 </>
               )}
             </Box>
@@ -759,11 +782,11 @@ export default function LivePointTracker({
         onSuccess={onPointUpdated}
       />
 
-      {activePoint && (
+      {currentPoint && (
         <ManagePlayersDialog
           open={isManagePlayersDialogOpen}
           onClose={() => setIsManagePlayersDialogOpen(false)}
-          point={activePoint}
+          point={currentPoint}
           teamId={teamId}
           players={players}
           onSuccess={onPointUpdated}

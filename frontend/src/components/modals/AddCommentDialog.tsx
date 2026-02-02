@@ -29,15 +29,14 @@ export default function AddCommentDialog({
   onSuccess,
 }: AddCommentDialogProps) {
   const { t } = useTranslation(["points", "common"]);
-  const [comments, setComments] = useState<string>("");
+  const [comments, setComments] = useState<string>(point.comments || "");
   const queryClient = useQueryClient();
 
-  // Initialize comments from point when dialog opens
+  // Update comments when point changes
   useEffect(() => {
-    if (open) {
-      setComments(point.comments || "");
-    }
-  }, [open, point.comments]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setComments(point.comments || "");
+  }, [point.comments]);
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -64,12 +63,12 @@ export default function AddCommentDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {point.comments ? t("points:tracker.editComment", "Edit Comment") : t("points:dialog.addComment.title")}
+        {point.comments ? t("points:tracker.editComment") : t("points:dialog.addComment.title")}
       </DialogTitle>
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(updateMutation.error as any)?.response?.data?.detail ||
+            {(updateMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
               t("common:error.generic")}
           </Alert>
         )}

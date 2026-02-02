@@ -138,7 +138,7 @@ export default function FinishPointDialog({
         {/* Elapsed Time */}
         <Box sx={{ mb: 3, textAlign: "center" }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            {t("points:tracker.elapsedTime", "Elapsed Time")}
+            {t("points:tracker.elapsedTime")}
           </Typography>
           {activePoint.start_datetime && (
             <PointTimer startDatetime={activePoint.start_datetime} />
@@ -166,7 +166,7 @@ export default function FinishPointDialog({
               }
             }}
             fullWidth
-            aria-label="point outcome"
+            aria-label={t("common:ariaLabel.pointOutcome")}
             sx={{
               "& .MuiToggleButton-root": {
                 py: 1.5,
@@ -195,13 +195,13 @@ export default function FinishPointDialog({
               },
             }}
           >
-            <ToggleButton value="won" aria-label="won the point">
+            <ToggleButton value="won" aria-label={t("common:ariaLabel.wonPoint")}>
               <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} />
-              {t("points:dialog.finish.won", "Won")}
+              {t("points:dialog.finish.won")}
             </ToggleButton>
-            <ToggleButton value="lost" aria-label="lost the point">
+            <ToggleButton value="lost" aria-label={t("common:ariaLabel.lostPoint")}>
               <CancelIcon sx={{ mr: 1, fontSize: 20 }} />
-              {t("points:dialog.finish.lost", "Lost")}
+              {t("points:dialog.finish.lost")}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>

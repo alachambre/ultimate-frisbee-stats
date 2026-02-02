@@ -27,6 +27,17 @@
     "hide": "Hide",
     "moreActions": "More Actions"
   },
+  "ariaLabel": {
+    "close": "Close",
+    "editPoint": "Edit point",
+    "deletePoint": "Delete point",
+    "startingPosition": "Starting on offense or defense",
+    "onOffense": "On offense",
+    "onDefense": "On defense",
+    "pointOutcome": "Point outcome",
+    "wonPoint": "Won the point",
+    "lostPoint": "Lost the point"
+  },
   "status": {
     "label": "Status",
     "active": "Active",

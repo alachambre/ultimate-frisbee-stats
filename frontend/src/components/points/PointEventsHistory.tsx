@@ -136,10 +136,10 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PauseCircleIcon fontSize="small" color="action" />
                         <Typography variant="body2" fontWeight="medium">
-                          Call
+                          {t('events.call')}
                           {isResolved && (
                             <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
-                              ({t('callDuration').toLowerCase()}: {durationText})
+                              ({t('callDuration')}: {durationText})
                             </Typography>
                           )}
                         </Typography>
@@ -230,7 +230,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                           <CancelIcon fontSize="small" color="error" />
                         )}
                         <Typography variant="body2" fontWeight="medium">
-                          {weScored ? t('dialog.finish.weScored', 'We scored!') : t('dialog.finish.theyScored', 'They scored')}
+                          {weScored ? t('history.weScored') : t('history.theyScored')}
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary" fontWeight="medium">
@@ -258,7 +258,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PlayArrowIcon fontSize="small" color="primary" />
                         <Typography variant="body2" fontWeight="medium">
-                          {t('pointStart', 'Point Start')} {startingOnOffense ? t('tracker.inOffense', 'in offense') : t('tracker.inDefense', 'in defense')}
+                          {t('pointStart')} {startingOnOffense ? t('tracker.inOffense') : t('tracker.inDefense')}
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary" fontWeight="medium">
@@ -269,12 +269,12 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                       <Box sx={{ ml: 3 }}>
                         {strategy && (
                           <Typography variant="body2" color="text.secondary">
-                            {t('tracker.strategy')}: <strong>{strategy.name}</strong>
+                            {t('events.strategy')}: <strong>{strategy.name}</strong>
                           </Typography>
                         )}
                         {pull !== null && pull !== undefined && !startingOnOffense && (
                           <Typography variant="body2" color="text.secondary">
-                            Pull: <strong>{pull ? t('dialog.start.inbounds') : t('dialog.start.outOfBounds')}</strong>
+                            {t('events.pullPrefix')}<strong>{pull ? t('dialog.start.inbounds') : t('dialog.start.outOfBounds')}</strong>
                           </Typography>
                         )}
                       </Box>

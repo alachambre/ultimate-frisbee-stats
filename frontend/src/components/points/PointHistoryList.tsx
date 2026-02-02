@@ -1,4 +1,5 @@
 import { Box, Typography, Stack } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import PointHistoryItem from "./PointHistoryItem";
 import type { PointWithPlayers } from "../../types";
 
@@ -13,11 +14,13 @@ export default function PointHistoryList({
   onEditPoint,
   onDeletePoint,
 }: PointHistoryListProps) {
+  const { t } = useTranslation("points");
+
   if (points.length === 0) {
     return (
       <Box textAlign="center" py={4}>
         <Typography variant="body1" color="text.secondary">
-          No points yet. Start tracking points above.
+          {t("empty.noPointsYet")}
         </Typography>
       </Box>
     );

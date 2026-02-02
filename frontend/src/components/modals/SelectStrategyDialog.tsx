@@ -48,12 +48,11 @@ export default function SelectStrategyDialog({
     enabled: open,
   });
 
-  // Initialize strategy when dialog opens or point changes
+  // Update strategy when point changes
   useEffect(() => {
-    if (open) {
-      setStrategyId(point.strategy?.id || "");
-    }
-  }, [open, point.strategy?.id]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStrategyId(point.strategy?.id || "");
+  }, [point.strategy?.id]);
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -85,7 +84,7 @@ export default function SelectStrategyDialog({
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(updateMutation.error as any)?.response?.data?.detail ||
+            {(updateMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
               t("common:error.generic")}
           </Alert>
         )}
@@ -93,8 +92,8 @@ export default function SelectStrategyDialog({
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
             {point.starting_on_offense
-              ? t("points:tracker.offenseStrategies", "Offense Strategies")
-              : t("points:tracker.defenseStrategies", "Defense Strategies")}
+              ? t("points:tracker.offenseStrategies")
+              : t("points:tracker.defenseStrategies")}
           </Typography>
         </Box>
 

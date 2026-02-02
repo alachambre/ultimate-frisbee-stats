@@ -88,14 +88,14 @@ export default function PointHistoryItem({
             <IconButton
               size="small"
               onClick={() => onEdit(point)}
-              aria-label="edit point"
+              aria-label={t("common:ariaLabel.editPoint")}
             >
               <EditIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
               onClick={() => onDelete(point)}
-              aria-label="delete point"
+              aria-label={t("common:ariaLabel.deletePoint")}
               color="error"
             >
               <DeleteIcon fontSize="small" />
@@ -108,7 +108,7 @@ export default function PointHistoryItem({
           {isCompleted && (
             <Chip
               icon={isWon ? <CheckCircleIcon /> : <CancelIcon />}
-              label={isWon ? t("points:dialog.finish.won", "Won") : t("points:dialog.finish.lost", "Lost")}
+              label={isWon ? t("points:dialog.finish.won") : t("points:dialog.finish.lost")}
               color={isWon ? "success" : "error"}
               size="small"
             />
@@ -236,7 +236,7 @@ export default function PointHistoryItem({
                         : theme.colors.defense.main
                     }}
                   >
-                    {t("points:tracker.comment", "Comment")}
+                    {t("points:tracker.comment")}
                   </Typography>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>

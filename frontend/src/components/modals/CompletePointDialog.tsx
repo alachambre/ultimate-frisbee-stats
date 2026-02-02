@@ -86,14 +86,14 @@ export default function CompletePointDialog({
             <Chip
               label={
                 scoredPoint.starting_on_offense
-                  ? `Started on ${t("points:tracker.offense")}`
-                  : `Started on ${t("points:tracker.defense")}`
+                  ? `${t("points:history.startedOn")} ${t("points:tracker.offense")}`
+                  : `${t("points:history.startedOn")} ${t("points:tracker.defense")}`
               }
               size="small"
               color={scoredPoint.starting_on_offense ? "primary" : "default"}
             />
             <Chip
-              label={scoredPoint.won ? t("points:dialog.finish.won", "Won") : t("points:dialog.finish.lost", "Lost")}
+              label={scoredPoint.won ? t("points:dialog.finish.won") : t("points:dialog.finish.lost")}
               size="small"
               color={scoredPoint.won ? "success" : "error"}
             />

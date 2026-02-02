@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -71,12 +71,19 @@ export default function GameDetailPage() {
     enabled: !!gameId,
   });
 
+  // Check if there's a scored point (no active point to poll for)
+  const hasScoredPoint = useMemo(() => {
+    return game?.points.some((p) => p.status === "scored") ?? false;
+  }, [game?.points]);
+
   // Poll for active point (ready or running) every 5 seconds while game is started
+  // Disable if there's a scored point (backend will return 404)
   const { data: activePoint } = useQuery({
     queryKey: ["activePoint", gameId],
     queryFn: () => getActivePoint(Number(gameId)),
-    enabled: !!gameId && game?.status === "started",
-    refetchInterval: game?.status === "started" ? 5000 : false,
+    enabled: !!gameId && game?.status === "started" && !hasScoredPoint,
+    refetchInterval: game?.status === "started" && !hasScoredPoint ? 5000 : false,
+    retry: false, // Don't retry on 404 (no active point)
   });
 
   // Fetch game statistics - poll every 5s for started games, fetch once for ended games
@@ -167,7 +174,7 @@ export default function GameDetailPage() {
   };
 
   // Helper function to sort stats
-  const sortStats = (stats: PlayerGameStats[]): PlayerGameStats[] => {
+  const sortStats = useCallback((stats: PlayerGameStats[]): PlayerGameStats[] => {
     const sorted = [...stats];
     switch (sortBy) {
       case "points":
@@ -178,20 +185,20 @@ export default function GameDetailPage() {
       default:
         return sorted.sort((a, b) => a.player_name.localeCompare(b.player_name));
     }
-  };
+  }, [sortBy]);
 
   // Sorted stats by gender
   const sortedMenStats = useMemo(() => {
     if (!liveStats) return [];
     const menIds = game?.players.filter((p) => p.gender === "M").map((p) => p.id) || [];
     return sortStats(liveStats.filter((s) => menIds.includes(s.player_id)));
-  }, [liveStats, game?.players, sortBy, sortStats]);
+  }, [liveStats, game?.players, sortStats]);
 
   const sortedWomenStats = useMemo(() => {
     if (!liveStats) return [];
     const womenIds = game?.players.filter((p) => p.gender === "W").map((p) => p.id) || [];
     return sortStats(liveStats.filter((s) => womenIds.includes(s.player_id)));
-  }, [liveStats, game?.players, sortBy, sortStats]);
+  }, [liveStats, game?.players, sortStats]);
 
   if (isLoading) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -432,7 +439,7 @@ export default function GameDetailPage() {
                 edge="end"
                 color="inherit"
                 onClick={() => setIsRosterDialogOpen(false)}
-                aria-label="close"
+                aria-label={t("common:ariaLabel.close")}
               >
                 <CloseIcon />
               </IconButton>

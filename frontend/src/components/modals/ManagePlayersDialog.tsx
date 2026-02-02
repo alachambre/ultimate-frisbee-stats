@@ -205,7 +205,7 @@ export default function ManagePlayersDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t("points:dialog.managePlayers.title", "Select Players")}</DialogTitle>
+      <DialogTitle>{t("points:dialog.managePlayers.title")}</DialogTitle>
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -219,14 +219,14 @@ export default function ManagePlayersDialog({
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Box>
               <Typography variant="body2" color="text.secondary">
-                {t("points:dialog.managePlayers.expected", "Expected")}:
+                {t("points:dialog.managePlayers.expected")}:
               </Typography>
               <Chip
                 icon={requiredGenderRatio?.men === 4 ? <MaleIcon /> : <FemaleIcon />}
                 label={
                   requiredGenderRatio?.men === 4
-                    ? t("points:dialog.start.men", "Men")
-                    : t("points:dialog.start.women", "Women")
+                    ? t("points:dialog.start.men")
+                    : t("points:dialog.start.women")
                 }
                 size="small"
                 sx={{
@@ -237,12 +237,12 @@ export default function ManagePlayersDialog({
                 }}
               />
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                {requiredGenderRatio?.men || "?"} men, {requiredGenderRatio?.women || "?"} women
+                {requiredGenderRatio?.men || "?"} {t("common:labels.men").toLowerCase()}, {requiredGenderRatio?.women || "?"} {t("common:labels.women").toLowerCase()}
               </Typography>
             </Box>
             <Box sx={{ textAlign: "right" }}>
               <Typography variant="body2" color="text.secondary">
-                {t("points:dialog.managePlayers.selected", "Selected")}:
+                {t("points:dialog.managePlayers.selected")}:
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
                 <Typography
@@ -272,20 +272,20 @@ export default function ManagePlayersDialog({
         {/* Line filter */}
         <FormControl fullWidth sx={{ mb: 2 }}>
           <InputLabel id="line-filter-label">
-            {t("points:dialog.managePlayers.filterByLine", "Filter by line")}
+            {t("points:dialog.managePlayers.filterByLine")}
           </InputLabel>
           <Select
             labelId="line-filter-label"
             value={filterLineId}
-            label={t("points:dialog.managePlayers.filterByLine", "Filter by line")}
+            label={t("points:dialog.managePlayers.filterByLine")}
             onChange={(e) => setFilterLineId(e.target.value as number | "")}
           >
             <MenuItem value="">
-              <em>{t("points:dialog.managePlayers.allPlayers", "All players")}</em>
+              <em>{t("points:dialog.managePlayers.allPlayers")}</em>
             </MenuItem>
             {lines.map((line: LineWithPlayers) => (
               <MenuItem key={line.id} value={line.id}>
-                {line.name} ({line.players.length} players)
+                {line.name} ({t("points:dialog.managePlayers.playersCount", { count: line.players.length })})
               </MenuItem>
             ))}
           </Select>
@@ -294,7 +294,7 @@ export default function ManagePlayersDialog({
         {/* Validation error */}
         {selectedPlayerIds.length === 7 && !isValidSelection && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {t("points:dialog.managePlayers.genderError", "Selected players don't match the required gender composition.")}
+            {t("points:dialog.managePlayers.genderError")}
           </Alert>
         )}
 
@@ -302,7 +302,7 @@ export default function ManagePlayersDialog({
         {selectedPlayers.length > 0 && (
           <Box sx={{ mb: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {t("points:dialog.managePlayers.selectedPlayers", "Selected players")}:
+              {t("points:dialog.managePlayers.selectedPlayers")}:
             </Typography>
             <Box display="flex" flexWrap="wrap" gap={0.5}>
               {selectedPlayers.map((player) => (
@@ -346,7 +346,7 @@ export default function ManagePlayersDialog({
           >
             <Tab
               icon={<MaleIcon />}
-              label={t("points:dialog.start.men", "Men")}
+              label={t("points:dialog.start.men")}
               iconPosition="start"
               sx={{
                 color: theme.colors.men.main,
@@ -360,7 +360,7 @@ export default function ManagePlayersDialog({
             />
             <Tab
               icon={<FemaleIcon />}
-              label={t("points:dialog.start.women", "Women")}
+              label={t("points:dialog.start.women")}
               iconPosition="start"
               sx={{
                 color: theme.colors.women.main,
@@ -399,7 +399,7 @@ export default function ManagePlayersDialog({
             {menPlayers.length === 0 && (
               <ListItem>
                 <ListItemText
-                  primary={t("points:dialog.managePlayers.noMen", "No men available")}
+                  primary={t("points:dialog.managePlayers.noMen")}
                   secondary={null}
                 />
               </ListItem>
@@ -431,7 +431,7 @@ export default function ManagePlayersDialog({
             {womenPlayers.length === 0 && (
               <ListItem>
                 <ListItemText
-                  primary={t("points:dialog.managePlayers.noWomen", "No women available")}
+                  primary={t("points:dialog.managePlayers.noWomen")}
                   secondary={null}
                 />
               </ListItem>
@@ -449,7 +449,7 @@ export default function ManagePlayersDialog({
           disabled={updateMutation.isPending || !isValidSelection}
         >
           {updateMutation.isPending
-            ? t("common:action.saving", "Saving...")
+            ? t("common:action.saving")
             : t("common:action.save")}
         </Button>
       </DialogActions>

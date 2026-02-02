@@ -16,8 +16,13 @@
     "noStrategy": "No strategy",
     "changeStrategy": "Change Strategy",
     "selectStrategy": "Select Strategy",
+    "selectPlayers": "Select Players",
+    "managePlayers": "Manage Players",
+    "launchPull": "Launch Pull",
+    "launching": "Launching...",
     "addComment": "Add Comment",
     "editComment": "Edit Comment",
+    "comment": "Comment",
     "elapsedTime": "Elapsed Time",
     "duration": "Duration",
     "playersOnField": "Players on field",
@@ -80,6 +85,19 @@
       "title": "Select Strategy",
       "noStrategies": "No strategies available",
       "createFirst": "Create strategies for this team first"
+    },
+    "managePlayers": {
+      "title": "Select Players",
+      "expected": "Expected",
+      "selected": "Selected",
+      "filterByLine": "Filter by line",
+      "allPlayers": "All players",
+      "playersCount": "{{count}} player",
+      "playersCount_plural": "{{count}} players",
+      "genderError": "Selected players don't match the required gender composition",
+      "selectedPlayers": "Selected players",
+      "noMen": "No men available",
+      "noWomen": "No women available"
     }
   },
   "history": {
@@ -87,7 +105,10 @@
     "point": "Point",
     "break": "Break!",
     "broken": "Broken",
-    "comment": "Comment"
+    "comment": "Comment",
+    "weScored": "We scored!",
+    "theyScored": "They scored",
+    "startedOn": "Started on"
   },
   "status": {
     "ready": "Ready",
@@ -97,7 +118,8 @@
   },
   "empty": {
     "noPoints": "No points yet",
-    "startFirst": "Start tracking your first point"
+    "startFirst": "Start tracking your first point",
+    "noPointsYet": "No points yet. Start tracking points above."
   },
   "pointEvents": "Chronology",
   "pointStart": "Point start",
@@ -124,5 +146,10 @@
   "selectPlayerResponsible": "Select player responsible (optional)",
   "noCalls": "No calls recorded",
   "noTurnovers": "No turnovers recorded",
-  "turnoverSequence": "Turnover #{{number}}"
+  "turnoverSequence": "Turnover #{{number}}",
+  "events": {
+    "call": "Call",
+    "pullPrefix": "Pull: ",
+    "strategy": "Strategy"
+  }
 }

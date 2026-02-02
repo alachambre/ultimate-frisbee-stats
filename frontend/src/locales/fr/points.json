@@ -16,8 +16,13 @@
     "noStrategy": "Aucune stratégie sélectionnée",
     "changeStrategy": "Changer de stratégie",
     "selectStrategy": "Sélectionner une stratégie",
+    "selectPlayers": "Sélectionner les joueurs",
+    "managePlayers": "Gérer les joueurs",
+    "launchPull": "Lancer le Pull",
+    "launching": "Lancement...",
     "addComment": "Ajouter un commentaire",
     "editComment": "Modifier le commentaire",
+    "comment": "Commentaire",
     "elapsedTime": "Temps écoulé",
     "duration": "Durée",
     "playersOnField": "Joueurs sur le terrain",
@@ -80,6 +85,19 @@
       "title": "Sélectionner une stratégie",
       "noStrategies": "Aucune stratégie disponible",
       "createFirst": "Créez d'abord des stratégies pour cette équipe"
+    },
+    "managePlayers": {
+      "title": "Sélectionner les joueurs",
+      "expected": "Attendu",
+      "selected": "Sélectionnés",
+      "filterByLine": "Filtrer par ligne",
+      "allPlayers": "Tous les joueurs",
+      "playersCount": "{{count}} joueur",
+      "playersCount_plural": "{{count}} joueurs",
+      "genderError": "Les joueurs sélectionnés ne correspondent pas à la composition de genre requise",
+      "selectedPlayers": "Joueurs sélectionnés",
+      "noMen": "Aucun homme disponible",
+      "noWomen": "Aucune femme disponible"
     }
   },
   "history": {
@@ -87,7 +105,10 @@
     "point": "Point",
     "break": "Break !",
     "broken": "Broken",
-    "comment": "Commentaire"
+    "comment": "Commentaire",
+    "weScored": "On a marqué !",
+    "theyScored": "Ils ont marqué",
+    "startedOn": "Commencé en"
   },
   "status": {
     "ready": "Prêt",
@@ -97,7 +118,8 @@
   },
   "empty": {
     "noPoints": "Aucun point pour le moment",
-    "startFirst": "Commencez à suivre votre premier point"
+    "startFirst": "Commencez à suivre votre premier point",
+    "noPointsYet": "Aucun point pour le moment. Commencez à suivre les points ci-dessus."
   },
   "pointEvents": "Chronologie",
   "pointStart": "Début du point",
@@ -124,5 +146,10 @@
   "selectPlayerResponsible": "Sélectionner le joueur responsable (optionnel)",
   "noCalls": "Aucun call enregistré",
   "noTurnovers": "Aucun turnover enregistré",
-  "turnoverSequence": "Turnover #{{number}}"
+  "turnoverSequence": "Turnover #{{number}}",
+  "events": {
+    "call": "Call",
+    "pullPrefix": "Pull : ",
+    "strategy": "Stratégie"
+  }
 }
