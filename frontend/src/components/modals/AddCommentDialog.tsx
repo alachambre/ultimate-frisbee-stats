@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -29,14 +29,9 @@ export default function AddCommentDialog({
   onSuccess,
 }: AddCommentDialogProps) {
   const { t } = useTranslation(["points", "common"]);
+  // Initialize from point.comments - component will remount when point changes (via key prop)
   const [comments, setComments] = useState<string>(point.comments || "");
   const queryClient = useQueryClient();
-
-  // Update comments when point changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setComments(point.comments || "");
-  }, [point.comments]);
 
   const updateMutation = useMutation({
     mutationFn: () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -35,6 +35,7 @@ export default function SelectStrategyDialog({
   onSuccess,
 }: SelectStrategyDialogProps) {
   const { t } = useTranslation(["points", "common"]);
+  // Initialize from point.strategy - component will remount when point changes (via key prop)
   const [strategyId, setStrategyId] = useState<number | "">(point.strategy?.id || "");
   const queryClient = useQueryClient();
 
@@ -47,12 +48,6 @@ export default function SelectStrategyDialog({
     queryFn: () => getStrategies(category),
     enabled: open,
   });
-
-  // Update strategy when point changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStrategyId(point.strategy?.id || "");
-  }, [point.strategy?.id]);
 
   const updateMutation = useMutation({
     mutationFn: () => {

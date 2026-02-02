@@ -306,3 +306,10 @@ See `DEPLOYMENT.md` for setup guide and `DEPLOYMENT_STATUS.md` for current statu
   - ESLint with auto-fix (`eslint --fix`)
   - TypeScript type checking (`tsc --noEmit`)
   - Catches linting/type errors before deployment
+- **Dialog Form State Pattern**: NEVER use useEffect to sync state from props
+  - ✅ **Correct**: Initialize state directly from props: `useState(point.comments || "")`
+  - ✅ **Correct**: Use `key` prop on dialog to force remount: `<AddCommentDialog key={point.id} point={point} />`
+  - ❌ **Wrong**: Using useEffect to sync state causes `react-hooks/set-state-in-effect` errors
+  - **Why**: The `key` prop forces component remount when the entity changes, naturally resetting all state
+  - **Examples**: AddCommentDialog, SelectStrategyDialog, EditPointDialog - all use `key={point.id}`
+  - **Rule**: This pattern applies to ALL form dialogs editing a single entity

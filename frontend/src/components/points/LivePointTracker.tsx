@@ -813,6 +813,7 @@ export default function LivePointTracker({
 
       {currentPoint && (
         <AddCommentDialog
+          key={currentPoint.id}
           open={isCommentDialogOpen}
           onClose={() => setIsCommentDialogOpen(false)}
           point={currentPoint}
@@ -823,6 +824,7 @@ export default function LivePointTracker({
 
       {currentPoint && (
         <SelectStrategyDialog
+          key={currentPoint.id}
           open={isStrategyDialogOpen}
           onClose={() => setIsStrategyDialogOpen(false)}
           point={currentPoint}
