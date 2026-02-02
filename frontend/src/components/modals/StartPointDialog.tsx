@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -33,7 +33,6 @@ export default function StartPointDialog({
   onSuccess,
 }: StartPointDialogProps) {
   const { t } = useTranslation(["points", "common"]);
-  const [startingOnOffense, setStartingOnOffense] = useState<boolean>(true);
   const queryClient = useQueryClient();
 
   // Fetch game data to get existing points
@@ -43,10 +42,11 @@ export default function StartPointDialog({
     enabled: open,
   });
 
-  // Preselect offense/defense based on previous point result
-  useEffect(() => {
-    if (!open || !game?.points || game.points.length === 0) {
-      return;
+  // Lazy state initialization: calculate default based on previous point result
+  // This only runs once on mount, avoiding the need for useEffect
+  const [startingOnOffense, setStartingOnOffense] = useState<boolean>(() => {
+    if (!game?.points || game.points.length === 0) {
+      return true; // Default to offense for first point
     }
 
     // Get the most recent completed point
@@ -58,10 +58,11 @@ export default function StartPointDialog({
       const lastPoint = completedPoints[0];
       // If we won the previous point, we start on defense (opponent gets possession)
       // If we lost the previous point, we start on offense (we get possession back)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStartingOnOffense(!lastPoint.won);
+      return !lastPoint.won;
     }
-  }, [open, game]);
+
+    return true; // Default to offense if no completed points
+  });
 
   const startMutation = useMutation({
     mutationFn: async () => {

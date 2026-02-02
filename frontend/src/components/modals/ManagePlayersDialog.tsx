@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -37,17 +37,13 @@ export default function ManagePlayersDialog({
   onSuccess,
 }: ManagePlayersDialogProps) {
   const { t } = useTranslation(["points", "common"]);
-  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
+
+  // Lazy state initialization from point.players
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(() =>
+    point.players?.map((p) => p.id) || []
+  );
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const queryClient = useQueryClient();
-
-  // Initialize selectedPlayerIds from point.players when dialog opens
-  useEffect(() => {
-    if (open && point.players) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedPlayerIds(point.players.map((p) => p.id));
-    }
-  }, [open, point.players]);
 
   // Fetch game data to get existing points for ABBA pattern
   const { data: game } = useQuery({
@@ -132,7 +128,8 @@ export default function ManagePlayersDialog({
   });
 
   const handleClose = () => {
-    setSelectedPlayerIds([]);
+    // Reset to point's current players for next time dialog opens
+    setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
     setSelectedLineId("");
     updateMutation.reset();
     onClose();

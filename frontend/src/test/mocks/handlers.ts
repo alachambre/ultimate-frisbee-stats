@@ -1117,13 +1117,17 @@ export const handlers = [
   // GET /turnovers/players/:playerId/turnovers - Get all turnovers for a player
   http.get(`${BASE_URL}/turnovers/players/:playerId/turnovers`, ({ params }) => {
     const playerId = Number(params.playerId);
+    // Return turnovers without the player field (API doesn't include it for this endpoint)
     const playerTurnovers = turnovers
       .filter((t) => t.player_id === playerId)
-      .map((t) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { player, ...rest } = t;
-        return rest; // Remove player field for this endpoint
-      });
+      .map((t) => ({
+        id: t.id,
+        point_id: t.point_id,
+        player_id: t.player_id,
+        timestamp: t.timestamp,
+        comments: t.comments,
+        created_at: t.created_at,
+      }));
     return HttpResponse.json(playerTurnovers);
   }),
 
