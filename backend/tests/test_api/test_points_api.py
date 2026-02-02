@@ -17,7 +17,7 @@ def test_create_point_api(client, sample_game, sample_players):
     assert data["starting_on_offense"] is True
     assert data["won"] is None  # Non-completed points have no winner yet
     assert data["status"] == "ready"
-    assert data["start_datetime"] is not None
+    assert data["start_datetime"] is None  # Not set until transitioning to 'running'
     assert data["end_datetime"] is None
     assert len(data["players"]) == 7
     assert "id" in data
@@ -83,8 +83,8 @@ def test_create_point_finished_game_api(client, sample_game, sample_players):
 
 
 def test_create_point_wrong_player_count_api(client, sample_game, sample_players):
-    """Test POST /points with wrong number of players"""
-    # Only 5 players instead of 7
+    """Test POST /points with wrong number of players is now allowed"""
+    # Only 5 players instead of 7 - now allowed during creation
     player_ids = [p.id for p in sample_players[:5]]
 
     response = client.post("/points", json={
@@ -93,7 +93,9 @@ def test_create_point_wrong_player_count_api(client, sample_game, sample_players
         "player_ids": player_ids
     })
 
-    assert response.status_code == 422  # Pydantic validation error
+    assert response.status_code == 201  # Allowed - validation happens at completion
+    data = response.json()
+    assert len(data["players"]) == 5
 
 
 def test_create_point_invalid_player_ids_api(client, sample_game):
@@ -107,7 +109,7 @@ def test_create_point_invalid_player_ids_api(client, sample_game):
     })
 
     assert response.status_code == 400
-    assert "7 players" in response.json()["detail"]
+    assert "player IDs not found" in response.json()["detail"]
 
 
 def test_create_point_with_strategy_api(client, sample_game, sample_players, sample_strategy):

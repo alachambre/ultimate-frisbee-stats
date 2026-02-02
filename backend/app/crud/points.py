@@ -29,12 +29,27 @@ def get_running_point_for_game(db: Session, game_id: int) -> Optional[models.Poi
     ).first()
 
 
+def get_active_point_for_game(db: Session, game_id: int) -> Optional[models.Point]:
+    """Get the active (ready or running) point for a game, if any"""
+    return db.query(models.Point).options(
+        joinedload(models.Point.players),
+        joinedload(models.Point.strategy)
+    ).filter(
+        models.Point.game_id == game_id,
+        models.Point.status.in_([models.PointStatusEnum.ready, models.PointStatusEnum.running])
+    ).first()
+
+
 def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
     try:
-        # Check for existing running point for this game
-        running_point = get_running_point_for_game(db, point.game_id)
-        if running_point:
-            raise ValueError(f"Game {point.game_id} already has a running point (ID: {running_point.id})")
+        # Check for existing ready or running point for this game
+        active_point = db.query(models.Point).filter(
+            models.Point.game_id == point.game_id,
+            models.Point.status.in_([models.PointStatusEnum.ready, models.PointStatusEnum.running])
+        ).first()
+        if active_point:
+            status_name = active_point.status.value
+            raise ValueError(f"Game {point.game_id} already has a {status_name} point (ID: {active_point.id})")
 
         # Validate strategy exists if provided
         if point.strategy_id:
@@ -68,18 +83,19 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
             comments=point.comments,
             won=None,  # Nullable while not completed
             status=models.PointStatusEnum.ready,
-            start_datetime=point.start_datetime if point.start_datetime else datetime.now(timezone.utc)
+            start_datetime=point.start_datetime  # Will be None initially, set when transitioning to 'running'
         )
         db.add(db_point)
         db.flush()  # Get the ID without committing
 
-        # Add the players to the point
-        players = db.query(models.Player).filter(models.Player.id.in_(point.player_ids)).all()
-        if len(players) != 7:
-            db.rollback()
-            raise ValueError(f"Expected 7 players, but found {len(players)}")
-
-        db_point.players = players
+        # Add the players to the point (if provided)
+        if point.player_ids:
+            players = db.query(models.Player).filter(models.Player.id.in_(point.player_ids)).all()
+            if len(players) != len(point.player_ids):
+                db.rollback()
+                raise ValueError(f"Some player IDs not found: {point.player_ids}")
+            # Allow any number of players during creation - validation happens at completion
+            db_point.players = players
         db.commit()
         db.refresh(db_point)
         return db_point
@@ -129,7 +145,23 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
             if point_update.comments is not None:
                 db_point.comments = point_update.comments
             if point_update.status is not None:
-                db_point.status = point_update.status
+                # Convert schema enum to model enum for comparison
+                new_status_value = point_update.status.value if hasattr(point_update.status, 'value') else point_update.status
+                new_status_enum = models.PointStatusEnum(new_status_value)
+
+                # Set start_datetime when transitioning from 'ready' to 'running' (if not already set)
+                if (new_status_enum == models.PointStatusEnum.running and
+                    db_point.status == models.PointStatusEnum.ready and
+                    db_point.start_datetime is None):
+                    db_point.start_datetime = datetime.now(timezone.utc)
+
+                # Validate player count when completing a point
+                if new_status_enum == models.PointStatusEnum.completed:
+                    player_count = len(db_point.players)
+                    if player_count != 7:
+                        db.rollback()
+                        raise ValueError(f"Cannot complete point: must have exactly 7 players (currently has {player_count})")
+                db_point.status = new_status_enum
             if point_update.strategy_id is not None:
                 # Validate strategy exists
                 strategy = db.query(models.Strategy).filter(models.Strategy.id == point_update.strategy_id).first()
@@ -151,11 +183,17 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                     raise ValueError("end_datetime must be after start_datetime")
 
             if point_update.player_ids is not None:
-                players = db.query(models.Player).filter(models.Player.id.in_(point_update.player_ids)).all()
-                if len(players) != 7:
-                    db.rollback()
-                    raise ValueError(f"Expected 7 players, but found {len(players)}")
-                db_point.players = players
+                if len(point_update.player_ids) == 0:
+                    # Allow clearing players
+                    db_point.players = []
+                else:
+                    players = db.query(models.Player).filter(models.Player.id.in_(point_update.player_ids)).all()
+                    if len(players) != len(point_update.player_ids):
+                        db.rollback()
+                        raise ValueError(f"Some player IDs not found: {point_update.player_ids}")
+                    # Allow any number of players during update
+                    # Validation for exactly 7 happens when transitioning to 'completed' status
+                    db_point.players = players
 
             db.commit()
             db.refresh(db_point)

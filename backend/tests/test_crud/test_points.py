@@ -22,7 +22,7 @@ def test_create_point(db_session, sample_game, sample_players):
     assert point.starting_on_offense is True
     assert point.won is None  # Nullable while not completed
     assert point.status == models.PointStatusEnum.ready
-    assert point.start_datetime is not None
+    assert point.start_datetime is None  # Not set until transitioning to 'running'
     assert point.end_datetime is None
     assert len(point.players) == 7
     assert point.created_at is not None
@@ -66,19 +66,19 @@ def test_create_point_auto_increment_number(db_session, sample_game, sample_play
 
 
 def test_create_point_wrong_player_count(db_session, sample_game, sample_players):
-    """Test that creating a point with wrong number of players fails"""
-    from pydantic import ValidationError
-
+    """Test that creating a point with wrong number of players is allowed during creation"""
     # Only 5 players instead of 7
     player_ids = [p.id for p in sample_players[:5]]
 
-    # Pydantic validates this before it reaches the database
-    with pytest.raises(ValidationError):
-        point_data = PointCreate(
-            game_id=sample_game.id,
-            starting_on_offense=True,
-            player_ids=player_ids
-        )
+    # Now allowed - validation happens when completing the point
+    point_data = PointCreate(
+        game_id=sample_game.id,
+        starting_on_offense=True,
+        player_ids=player_ids
+    )
+    point = points.create_point(db_session, point_data)
+    assert point.id is not None
+    assert len(point.players) == 5
 
 
 def test_create_point_invalid_player_ids(db_session, sample_game):
@@ -92,7 +92,7 @@ def test_create_point_invalid_player_ids(db_session, sample_game):
         player_ids=player_ids
     )
 
-    with pytest.raises(ValueError, match="Expected 7 players"):
+    with pytest.raises(ValueError, match="Some player IDs not found"):
         points.create_point(db_session, point_data)
 
 
@@ -288,9 +288,15 @@ def test_finish_point(db_session, sample_game, sample_players):
 
     assert point.status == models.PointStatusEnum.ready
     assert point.won is None
+    assert point.start_datetime is None
 
     # Transition to running status
-    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+    updated_point = points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+
+    # Verify start_datetime was set during transition
+    assert updated_point is not None
+    assert updated_point.status == models.PointStatusEnum.running
+    assert updated_point.start_datetime is not None
 
     # Finish the point
     finished_point = points.finish_point(

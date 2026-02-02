@@ -38,9 +38,10 @@ def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
 
     try:
         created_point = crud.create_point(db, point)
+        player_count = len(point.player_ids) if point.player_ids else 0
         logger.info(
             f"Point created: id={created_point.id}, game={point.game_id}, "
-            f"offense={point.starting_on_offense}, players={len(point.player_ids)}"
+            f"offense={point.starting_on_offense}, players={player_count}, status=ready"
         )
         return created_point
     except ValueError as e:
@@ -123,5 +124,19 @@ def get_running_point(game_id: int, db: Session = Depends(get_db)):
     point = crud.get_running_point_for_game(db, game_id)
     if not point:
         raise HTTPException(status_code=404, detail="No running point found for this game")
+    return point
+
+
+@router.get("/games/{game_id}/active", response_model=schemas.PointWithPlayers)
+def get_active_point(game_id: int, db: Session = Depends(get_db)):
+    """Get the active (ready or running) point for a game"""
+    # Verify game exists
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    point = crud.get_active_point_for_game(db, game_id)
+    if not point:
+        raise HTTPException(status_code=404, detail="No active point found for this game")
     return point
 

@@ -16,9 +16,9 @@ class PointBase(BaseModel):
 
 class PointCreate(PointBase):
     game_id: int
-    player_ids: List[int] = Field(..., min_length=7, max_length=7)
+    player_ids: Optional[List[int]] = Field(default=None)  # Optional - can select players after creating point
     strategy_id: Optional[int] = None
-    start_datetime: Optional[datetime] = None  # Defaults to now if None
+    start_datetime: Optional[datetime] = None  # Will be set when transitioning to 'running'
 
 
 class PointFinish(BaseModel):
