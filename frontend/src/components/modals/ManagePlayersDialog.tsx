@@ -213,7 +213,7 @@ export default function ManagePlayersDialog({
                 size="small"
                 sx={{
                   mt: 0.5,
-                  bgcolor: requiredGenderRatio?.men === 4 ? theme.colors.men : theme.colors.women,
+                  bgcolor: requiredGenderRatio?.men === 4 ? theme.colors.men.main : theme.colors.women.main,
                   color: "white",
                   "& .MuiChip-icon": { color: "white" },
                 }}
@@ -234,11 +234,11 @@ export default function ManagePlayersDialog({
                     color: isValidSelection ? theme.palette.success.main : theme.palette.text.primary
                   }}
                 >
-                  <Box component="span" sx={{ color: theme.colors.men }}>
+                  <Box component="span" sx={{ color: theme.colors.men.main }}>
                     {selectedMen}M
                   </Box>
                   {" + "}
-                  <Box component="span" sx={{ color: theme.colors.women }}>
+                  <Box component="span" sx={{ color: theme.colors.women.main }}>
                     {selectedWomen}W
                   </Box>
                 </Typography>
@@ -282,8 +282,8 @@ export default function ManagePlayersDialog({
 
         {/* Men list */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <MaleIcon sx={{ color: theme.colors.men }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.men }}>
+          <MaleIcon sx={{ color: theme.colors.men.main }} />
+          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.men.main }}>
             {t("points:dialog.start.men", "Men")}
           </Typography>
         </Box>
@@ -318,8 +318,8 @@ export default function ManagePlayersDialog({
 
         {/* Women list */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <FemaleIcon sx={{ color: theme.colors.women }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.women }}>
+          <FemaleIcon sx={{ color: theme.colors.women.main }} />
+          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.women.main }}>
             {t("points:dialog.start.women", "Women")}
           </Typography>
         </Box>
