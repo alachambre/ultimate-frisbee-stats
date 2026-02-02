@@ -28,7 +28,7 @@
   },
   "dialog": {
     "start": {
-      "title": "Démarrer un nouveau point",
+      "title": "Créer un nouveau point",
       "selectPlayers": "Sélectionner 7 joueurs",
       "mixity": "Mixité",
       "men": "Hommes",
