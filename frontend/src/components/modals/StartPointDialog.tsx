@@ -154,10 +154,6 @@ export default function StartPointDialog({
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
-
-        <Alert severity="info" sx={{ mt: 2 }}>
-          {t("points:dialog.start.selectPlayersLater", "Players can be selected after creating the point.")}
-        </Alert>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={startMutation.isPending}>
