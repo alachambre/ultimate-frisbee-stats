@@ -517,6 +517,26 @@ export default function LivePointTracker({
                     </Button>
                     <Button
                       variant="outlined"
+                      startIcon={<GroupIcon />}
+                      onClick={() => setIsManagePlayersDialogOpen(true)}
+                      sx={{
+                        borderColor: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        color: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        '&:hover': {
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.dark
+                            : theme.colors.defense.dark,
+                        }
+                      }}
+                    >
+                      {currentPoint.players.length}/7
+                    </Button>
+                    <Button
+                      variant="outlined"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
                       aria-label={t("common:action.moreActions", "More Actions")}
                       sx={{
