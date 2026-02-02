@@ -1,7 +1,8 @@
 {
   "page": {
     "title": "Game Statistics",
-    "backToGame": "Back to Game"
+    "backToGame": "Back to Game",
+    "exportCSV": "Export CSV"
   },
   "view": {
     "offense": "Offense",

@@ -1,7 +1,8 @@
 {
   "page": {
     "title": "Statistiques du Match",
-    "backToGame": "Retour au Match"
+    "backToGame": "Retour au Match",
+    "exportCSV": "Exporter CSV"
   },
   "view": {
     "offense": "Attaque",

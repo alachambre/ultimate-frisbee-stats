@@ -260,7 +260,7 @@ describe("GameStatisticsPage", () => {
       expect(screen.getByText("Player Statistics")).toBeInTheDocument();
     });
 
-    // Both players should be visible initially (multiple instances due to card + table views)
+    // Both players should be visible initially
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Bob").length).toBeGreaterThan(0);
 
@@ -268,10 +268,10 @@ describe("GameStatisticsPage", () => {
     const table = screen.getByRole("table");
     expect(table).toBeInTheDocument();
 
-    // Verify header cells exist
+    // Verify header cells exist (using partial matches for the tab-specific column names)
     expect(screen.getByText("Player")).toBeInTheDocument();
-    expect(screen.getAllByText("Points").length).toBeGreaterThan(0); // Appears in table
-    expect(screen.getAllByText("Time").length).toBeGreaterThan(0); // Appears in table
+    expect(screen.getByText("Game time")).toBeInTheDocument();
+    expect(screen.getByText("Offense points")).toBeInTheDocument(); // In offense tab by default
   });
 
   it("hides team statistics when no completed points", async () => {
@@ -404,5 +404,204 @@ describe("GameStatisticsPage", () => {
     // Check that stats are displayed (using more specific values) - appears in both card and table
     expect(screen.getAllByText("3 (75%)").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2 (67%)").length).toBeGreaterThan(0);
+  });
+
+  it("exports game data to CSV when export button is clicked", async () => {
+    const user = userEvent.setup();
+
+    // Set up game with points
+    server.use(
+      http.get(`${BASE_URL}/games/:gameId`, () => {
+        return HttpResponse.json({
+          id: 1,
+          competition_id: 1,
+          competition_name: "Test Competition",
+          team_name: "Test Team",
+          opponent_name: "Rival Team",
+          our_score: 2,
+          opponent_score: 1,
+          status: "started",
+          start_datetime: "2024-01-15T10:00:00Z",
+          end_datetime: null,
+          points: [
+            {
+              id: 1,
+              game_id: 1,
+              point_number: 1,
+              starting_on_offense: true,
+              won: true,
+              status: "completed",
+              field_side: "home",
+              pull: true,
+              start_datetime: "2024-01-15T10:05:00Z",
+              end_datetime: "2024-01-15T10:08:00Z",
+              duration_seconds: 180,
+              comments: "Great point",
+              players: [
+                { id: 1, name: "John Doe", number: 10, gender: "M" },
+                { id: 2, name: "Jane Smith", number: 7, gender: "W" },
+              ],
+              strategy: { id: 1, name: "Ho Stack" },
+            },
+          ],
+          players: [],
+        });
+      }),
+      http.get(`${BASE_URL}/statistics/games/:gameId/team`, () => {
+        return HttpResponse.json({
+          game_id: 1,
+          total_completed_points: 2,
+          offense: {
+            points_started: 1,
+            points_won: 1,
+            points_lost: 0,
+            hold_rate: 1.0,
+            points_won_no_turnover: 1,
+            clean_hold_rate: 1.0,
+            broken_rate: 0.0,
+          },
+          defense: {
+            points_started: 1,
+            points_won: 1,
+            points_lost: 0,
+            break_rate: 1.0,
+            points_with_turnover: 1,
+            turnover_rate: 1.0,
+            points_won_no_turnover: 0,
+            clean_break_rate: 0.0,
+            points_lost_no_turnover: 0,
+            hold_rate: 0.0,
+          },
+        });
+      }),
+      http.get(`${BASE_URL}/statistics/games/:gameId/live`, () => {
+        return HttpResponse.json([
+          {
+            player_id: 1,
+            player_name: "John Doe",
+            player_number: 10,
+            points_played: 2,
+            effective_time_seconds: 360,
+            offense: {
+              points_played: 1,
+              points_won: 1,
+              points_lost: 0,
+              hold_rate: 1.0,
+              points_won_no_turnover: 1,
+              clean_hold_rate: 1.0,
+            },
+            defense: {
+              points_played: 1,
+              points_won: 1,
+              points_lost: 0,
+              break_rate: 1.0,
+              points_with_turnover: 1,
+              turnover_rate: 1.0,
+              points_won_no_turnover: 0,
+              clean_break_rate: 0.0,
+              points_lost_no_turnover: 0,
+            },
+          },
+        ]);
+      }),
+      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        return HttpResponse.json([]);
+      }),
+      http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+        return HttpResponse.json([]);
+      })
+    );
+
+    render(<GameStatisticsPage />);
+
+    // Wait for page to load
+    await waitFor(() => {
+      expect(screen.getByText("Test Competition")).toBeInTheDocument();
+    });
+
+    // Set up mocks for CSV download AFTER page is loaded
+    const createObjectURLMock = vi.fn(() => "blob:mock-url");
+    const revokeObjectURLMock = vi.fn();
+    const originalCreateObjectURL = global.URL.createObjectURL;
+    const originalRevokeObjectURL = global.URL.revokeObjectURL;
+    global.URL.createObjectURL = createObjectURLMock;
+    global.URL.revokeObjectURL = revokeObjectURLMock;
+
+    const mockLink = {
+      setAttribute: vi.fn(),
+      click: vi.fn(),
+      style: {},
+    } as unknown as HTMLAnchorElement;
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      if (tag === "a") {
+        return mockLink;
+      }
+      return originalCreateElement(tag);
+    });
+    const originalAppendChild = document.body.appendChild.bind(document.body);
+    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation((node: Node) => {
+      if (node === mockLink) {
+        return mockLink;
+      }
+      return originalAppendChild(node);
+    });
+    const originalRemoveChild = document.body.removeChild.bind(document.body);
+    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation((node: Node) => {
+      if (node === mockLink) {
+        return mockLink;
+      }
+      return originalRemoveChild(node);
+    });
+
+    // Find and click the export button
+    const exportButton = screen.getByRole("button", { name: /export csv/i });
+    expect(exportButton).toBeInTheDocument();
+    expect(exportButton).not.toBeDisabled();
+
+    await user.click(exportButton);
+
+    // Wait for the export to complete
+    await waitFor(() => {
+      expect(createElementSpy).toHaveBeenCalledWith("a");
+    }, { timeout: 3000 });
+
+    // Verify CSV download was triggered
+    expect(mockLink.setAttribute).toHaveBeenCalledWith("href", "blob:mock-url");
+    expect(mockLink.setAttribute).toHaveBeenCalledWith(
+      "download",
+      expect.stringContaining("Test_Team_vs_Rival_Team_statistics.csv")
+    );
+    expect(mockLink.click).toHaveBeenCalled();
+
+    // Verify the CSV content was created with a Blob
+    expect(createObjectURLMock).toHaveBeenCalled();
+    const blobCall = createObjectURLMock.mock.calls[0][0];
+    expect(blobCall).toBeInstanceOf(Blob);
+    expect(blobCall.type).toBe("text/csv;charset=utf-8;");
+
+    // Read the blob content to verify it contains expected data
+    const csvContent = await blobCall.text();
+    expect(csvContent).toContain("GAME INFORMATION");
+    expect(csvContent).toContain("Test Competition");
+    expect(csvContent).toContain("Test Team vs Rival Team");
+    expect(csvContent).toContain("TEAM STATISTICS");
+    expect(csvContent).toContain("PLAYER STATISTICS");
+    expect(csvContent).toContain("John Doe");
+    expect(csvContent).toContain("POINTS DETAIL");
+    expect(csvContent).toContain("Point 1");
+    expect(csvContent).toContain("Ho Stack");
+
+    // Verify cleanup
+    expect(appendChildSpy).toHaveBeenCalledWith(mockLink);
+    expect(removeChildSpy).toHaveBeenCalledWith(mockLink);
+    expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url");
+
+    // Restore mocks
+    createElementSpy.mockRestore();
+    appendChildSpy.mockRestore();
+    removeChildSpy.mockRestore();
+    global.URL.createObjectURL = originalCreateObjectURL;
+    global.URL.revokeObjectURL = originalRevokeObjectURL;
   });
 });
