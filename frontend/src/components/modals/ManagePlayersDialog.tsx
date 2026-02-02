@@ -20,6 +20,8 @@ import {
   ListItemText,
   Checkbox,
   useTheme,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
@@ -57,6 +59,7 @@ export default function ManagePlayersDialog({
     point.players?.map((p) => p.id) || []
   );
   const [filterLineId, setFilterLineId] = useState<number | "">("");
+  const [activeTab, setActiveTab] = useState<number>(0); // 0 = Men, 1 = Women
 
   // Fetch lines for filtering
   const { data: lines = [] } = useQuery({
@@ -152,6 +155,7 @@ export default function ManagePlayersDialog({
     // Reset to point's current players for next time dialog opens
     setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
     setFilterLineId("");
+    setActiveTab(0);
     updateMutation.reset();
     onClose();
   };
@@ -280,77 +284,101 @@ export default function ManagePlayersDialog({
           </Alert>
         )}
 
-        {/* Men list */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <MaleIcon sx={{ color: theme.colors.men.main }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.men.main }}>
-            {t("points:dialog.start.men", "Men")}
-          </Typography>
+        {/* Gender Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={activeTab}
+            onChange={(_, newValue) => setActiveTab(newValue)}
+            variant="fullWidth"
+          >
+            <Tab
+              icon={<MaleIcon />}
+              label={t("points:dialog.start.men", "Men")}
+              iconPosition="start"
+              sx={{
+                color: theme.colors.men.main,
+                "&.Mui-selected": {
+                  color: theme.colors.men.main,
+                },
+              }}
+            />
+            <Tab
+              icon={<FemaleIcon />}
+              label={t("points:dialog.start.women", "Women")}
+              iconPosition="start"
+              sx={{
+                color: theme.colors.women.main,
+                "&.Mui-selected": {
+                  color: theme.colors.women.main,
+                },
+              }}
+            />
+          </Tabs>
         </Box>
-        <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mb: 2 }}>
-          {menPlayers.map((player) => (
-            <ListItem key={player.id} disablePadding>
-              <ListItemButton onClick={() => togglePlayer(player.id)} dense>
-                <ListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    checked={selectedPlayerIds.includes(player.id)}
-                    tabIndex={-1}
-                    disableRipple
-                  />
-                </ListItemIcon>
-                <ListItemText
-                  primary={player.name}
-                  secondary={player.number ? `#${player.number}` : null}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          {menPlayers.length === 0 && (
-            <ListItem>
-              <ListItemText
-                primary={t("points:dialog.managePlayers.noMen", "No men available")}
-                secondary={null}
-              />
-            </ListItem>
-          )}
-        </List>
 
-        {/* Women list */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <FemaleIcon sx={{ color: theme.colors.women.main }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.women.main }}>
-            {t("points:dialog.start.women", "Women")}
-          </Typography>
-        </Box>
-        <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
-          {womenPlayers.map((player) => (
-            <ListItem key={player.id} disablePadding>
-              <ListItemButton onClick={() => togglePlayer(player.id)} dense>
-                <ListItemIcon>
-                  <Checkbox
-                    edge="start"
-                    checked={selectedPlayerIds.includes(player.id)}
-                    tabIndex={-1}
-                    disableRipple
+        {/* Men Tab Panel */}
+        {activeTab === 0 && (
+          <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
+            {menPlayers.map((player) => (
+              <ListItem key={player.id} disablePadding>
+                <ListItemButton onClick={() => togglePlayer(player.id)} dense>
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={selectedPlayerIds.includes(player.id)}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={player.name}
+                    secondary={player.number ? `#${player.number}` : null}
                   />
-                </ListItemIcon>
+                </ListItemButton>
+              </ListItem>
+            ))}
+            {menPlayers.length === 0 && (
+              <ListItem>
                 <ListItemText
-                  primary={player.name}
-                  secondary={player.number ? `#${player.number}` : null}
+                  primary={t("points:dialog.managePlayers.noMen", "No men available")}
+                  secondary={null}
                 />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          {womenPlayers.length === 0 && (
-            <ListItem>
-              <ListItemText
-                primary={t("points:dialog.managePlayers.noWomen", "No women available")}
-                secondary={null}
-              />
-            </ListItem>
-          )}
-        </List>
+              </ListItem>
+            )}
+          </List>
+        )}
+
+        {/* Women Tab Panel */}
+        {activeTab === 1 && (
+          <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
+            {womenPlayers.map((player) => (
+              <ListItem key={player.id} disablePadding>
+                <ListItemButton onClick={() => togglePlayer(player.id)} dense>
+                  <ListItemIcon>
+                    <Checkbox
+                      edge="start"
+                      checked={selectedPlayerIds.includes(player.id)}
+                      tabIndex={-1}
+                      disableRipple
+                    />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={player.name}
+                    secondary={player.number ? `#${player.number}` : null}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+            {womenPlayers.length === 0 && (
+              <ListItem>
+                <ListItemText
+                  primary={t("points:dialog.managePlayers.noWomen", "No women available")}
+                  secondary={null}
+                />
+              </ListItem>
+            )}
+          </List>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>
