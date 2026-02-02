@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -42,9 +42,8 @@ export default function StartPointDialog({
     enabled: open,
   });
 
-  // Lazy state initialization: calculate default based on previous point result
-  // This only runs once on mount, avoiding the need for useEffect
-  const [startingOnOffense, setStartingOnOffense] = useState<boolean>(() => {
+  // Compute the correct initial value based on previous point result
+  const computedStartingOnOffense = useMemo(() => {
     if (!game?.points || game.points.length === 0) {
       return true; // Default to offense for first point
     }
@@ -62,7 +61,14 @@ export default function StartPointDialog({
     }
 
     return true; // Default to offense if no completed points
-  });
+  }, [game]);
+
+  const [startingOnOffense, setStartingOnOffense] = useState<boolean>(computedStartingOnOffense);
+
+  // Reset to computed value when dialog opens
+  const handleDialogEntered = () => {
+    setStartingOnOffense(computedStartingOnOffense);
+  };
 
   const startMutation = useMutation({
     mutationFn: async () => {
@@ -82,7 +88,6 @@ export default function StartPointDialog({
   });
 
   const handleClose = () => {
-    setStartingOnOffense(true);
     startMutation.reset();
     onClose();
   };
@@ -92,7 +97,15 @@ export default function StartPointDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="xs"
+      fullWidth
+      TransitionProps={{
+        onEntered: handleDialogEntered,
+      }}
+    >
       <DialogTitle>{t("points:dialog.start.title")}</DialogTitle>
       <DialogContent>
         {startMutation.error && (
