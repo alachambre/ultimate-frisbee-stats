@@ -120,7 +120,7 @@ backend/app/
 ## Next Steps
 
 **Point Lifecycle Refactor - COMPLETE ✅**
-Backend implementation complete. Frontend implementation pending.
+Both backend and frontend implementation complete!
 
 **New Workflow:**
 Points now support flexible player selection and timer start, matching real-world game flow:
@@ -129,13 +129,13 @@ ready → running → scored → completed
 ```
 
 1. **Create Point** (status = `ready`)
-   - Select: Offense/Defense, Strategy (optional)
+   - Select: Offense/Defense (pre-selected based on previous point result)
    - Player selection optional (can be done later)
    - Timer NOT started (start_datetime = NULL)
    - Point number assigned
 
 2. **While `ready`** (before launching pull)
-   - Select/change players (0-7 allowed)
+   - Select/change players (requires exactly 7 with valid ABBA gender ratio)
    - Update strategy, comments, field metadata
 
 3. **Launch Pull** (ready → running transition)
@@ -150,20 +150,29 @@ ready → running → scored → completed
    - Backend validation: Requires exactly 7 players
    - Returns 400 error if player count ≠ 7
 
-**Backend Changes (Non-breaking - Complete ✅):**
+**Backend Changes (Complete ✅):**
 - ✅ `PointCreate.player_ids` now optional (defaults to None)
 - ✅ Points created with `status='ready'`, `start_datetime=None`
 - ✅ Auto-set `start_datetime` on ready→running transition
 - ✅ Validate 7 players only on completion (not creation)
 - ✅ New endpoint: `GET /points/games/{game_id}/active` (finds ready OR running point)
-- ✅ 357 backend tests passing (35 CRUD + 31 API tests updated)
+- ✅ 380 backend tests passing
 
-**Frontend Changes (Pending):**
-- Modify `StartPointDialog`: Remove player selection UI
-- Add "Launch Pull" button in `LivePointTracker` (when status='ready')
-- Create `ManagePlayersDialog` component for player selection
-- Update `CompletePointDialog`: Show validation error if < 7 players
-- Update all frontend tests
+**Frontend Changes (Complete ✅):**
+- ✅ `StartPointDialog`: No player selection, offense/defense pre-selected based on previous point
+- ✅ "Launch Pull" button in `LivePointTracker` (when status='ready')
+- ✅ `ManagePlayersDialog`: New mobile-first player selection with tabs, line filter, ABBA validation
+  - Gender-separated tabs (Men/Women) with colored indicators
+  - Selected players shown as chips (deletable)
+  - Line filter dropdown to narrow player list
+  - Strict validation: exactly 7 players with correct ABBA gender ratio
+  - Selected players sorted by gender then name
+- ✅ `CompletePointDialog`: Shows validation error if < 7 players
+- ✅ Proper query key management (`activePoint` instead of `runningPoint`)
+
+**TODO - Player Selection UI:**
+- ⚠️ **Tests needed** for `ManagePlayersDialog` and updated workflows
+- 🔄 **Reuse player selection UI**: The new `ManagePlayersDialog` should be reused in other places where we select players (e.g., line management, game roster selection)
 
 **Phase 8: Statistics Dashboard - IN PROGRESS**
 - ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)
