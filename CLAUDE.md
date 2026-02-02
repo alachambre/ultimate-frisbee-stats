@@ -171,9 +171,8 @@ ready → running → scored → completed
 - ✅ Proper query key management (`activePoint` instead of `runningPoint`)
 
 **TODO - Player Selection UI:**
-- ⚠️ **Tests needed** for `ManagePlayersDialog` and updated workflows
+- ✅ **Tests complete** for `ManagePlayersDialog` - 26 comprehensive tests covering pre-selection, validation, gender tabs, player toggling
 - 🔄 **Reuse player selection UI**: The new `ManagePlayersDialog` should be reused in other places where we select players (e.g., line management, game roster selection)
-- ⚠️ **Verify pre-selection**: When editing a point's players, the currently selected players should be pre-checked in the dialog (implemented via lazy state initialization, needs testing/verification)
 
 **Phase 8: Statistics Dashboard - IN PROGRESS**
 - ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)
@@ -235,7 +234,7 @@ npm run build                       # Production build
 
 ## Known Issues
 
-### Test Coverage Gaps (Phase 7 UI Improvements)
+### Test Coverage (Phase 7 UI Improvements + Point Lifecycle Refactor)
 **What's tested ✅:**
 - LivePointTracker basic functionality (10 tests)
 - CallsList (13 tests)
@@ -254,7 +253,15 @@ npm run build                       # Production build
   - Conditional rendering based on data availability
   - Stat value formatting (count + percentage)
   - Navigation and routing
-- All 266 tests passing ✅
+- **ManagePlayersDialog (26 tests)** - Comprehensive coverage including:
+  - Pre-selection of players from point.players
+  - Gender tab switching (Men/Women)
+  - Player selection/deselection with state updates
+  - Validation (7 players required, valid gender ratios 4M+3W or 3M+4W)
+  - Line filtering dropdown
+  - Empty states (no men/women available)
+  - Dialog actions (save enabled/disabled, cancel)
+- All 292 tests passing ✅ (266 + 26 new)
 
 **What needs tests ⚠️:**
 - **PointHistoryItem enhancements** - New collapsible chronology section not tested
