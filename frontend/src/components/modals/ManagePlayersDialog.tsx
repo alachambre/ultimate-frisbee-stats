@@ -54,8 +54,9 @@ export default function ManagePlayersDialog({
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(() =>
     point.players?.map((p) => p.id) || []
   );
+  const [filterLineId, setFilterLineId] = useState<number | "">("");
 
-  // Fetch lines for quick selection
+  // Fetch lines for filtering
   const { data: lines = [] } = useQuery({
     queryKey: ["lines", teamId],
     queryFn: () => getLines(teamId),
@@ -148,22 +149,13 @@ export default function ManagePlayersDialog({
   const handleClose = () => {
     // Reset to point's current players for next time dialog opens
     setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
+    setFilterLineId("");
     updateMutation.reset();
     onClose();
   };
 
   const handleSubmit = () => {
     updateMutation.mutate();
-  };
-
-  const handleLineSelect = (lineId: number | "") => {
-    if (lineId === "") {
-      return; // Don't clear selection when choosing empty option
-    }
-    const line = lines.find((l: LineWithPlayers) => l.id === lineId);
-    if (line) {
-      setSelectedPlayerIds(line.players.map((p: Player) => p.id));
-    }
   };
 
   const togglePlayer = (playerId: number) => {
@@ -174,9 +166,22 @@ export default function ManagePlayersDialog({
     );
   };
 
-  // Group players by gender
-  const menPlayers = players.filter((p) => p.gender === "M");
-  const womenPlayers = players.filter((p) => p.gender === "W");
+  // Filter players by line if selected
+  const filteredPlayers = useMemo(() => {
+    if (filterLineId === "") {
+      return players;
+    }
+    const line = lines.find((l: LineWithPlayers) => l.id === filterLineId);
+    if (!line) {
+      return players;
+    }
+    const linePlayerIds = new Set(line.players.map((p: Player) => p.id));
+    return players.filter((p) => linePlayerIds.has(p.id));
+  }, [players, lines, filterLineId]);
+
+  // Group filtered players by gender
+  const menPlayers = filteredPlayers.filter((p) => p.gender === "M");
+  const womenPlayers = filteredPlayers.filter((p) => p.gender === "W");
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -233,19 +238,19 @@ export default function ManagePlayersDialog({
           </Box>
         </Box>
 
-        {/* Line quick select */}
+        {/* Line filter */}
         <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="line-select-label">
-            {t("points:dialog.managePlayers.quickSelectLine", "Quick select from line")}
+          <InputLabel id="line-filter-label">
+            {t("points:dialog.managePlayers.filterByLine", "Filter by line")}
           </InputLabel>
           <Select
-            labelId="line-select-label"
-            value=""
-            label={t("points:dialog.managePlayers.quickSelectLine", "Quick select from line")}
-            onChange={(e) => handleLineSelect(e.target.value as number | "")}
+            labelId="line-filter-label"
+            value={filterLineId}
+            label={t("points:dialog.managePlayers.filterByLine", "Filter by line")}
+            onChange={(e) => setFilterLineId(e.target.value as number | "")}
           >
             <MenuItem value="">
-              <em>{t("points:dialog.managePlayers.noLine", "Select manually")}</em>
+              <em>{t("points:dialog.managePlayers.allPlayers", "All players")}</em>
             </MenuItem>
             {lines.map((line: LineWithPlayers) => (
               <MenuItem key={line.id} value={line.id}>
