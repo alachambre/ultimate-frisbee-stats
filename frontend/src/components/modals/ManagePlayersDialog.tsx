@@ -189,6 +189,11 @@ export default function ManagePlayersDialog({
   const menPlayers = filteredPlayers.filter((p) => p.gender === "M");
   const womenPlayers = filteredPlayers.filter((p) => p.gender === "W");
 
+  // Get selected players for display
+  const selectedPlayers = useMemo(() => {
+    return players.filter((p) => selectedPlayerIds.includes(p.id));
+  }, [players, selectedPlayerIds]);
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t("points:dialog.managePlayers.title", "Select Players")}</DialogTitle>
@@ -284,12 +289,51 @@ export default function ManagePlayersDialog({
           </Alert>
         )}
 
+        {/* Selected Players Display */}
+        {selectedPlayers.length > 0 && (
+          <Box sx={{ mb: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {t("points:dialog.managePlayers.selectedPlayers", "Selected players")}:
+            </Typography>
+            <Box display="flex" flexWrap="wrap" gap={0.5}>
+              {selectedPlayers.map((player) => (
+                <Chip
+                  key={player.id}
+                  icon={player.gender === "M" ? <MaleIcon /> : <FemaleIcon />}
+                  label={player.name}
+                  size="small"
+                  onDelete={() => togglePlayer(player.id)}
+                  sx={{
+                    backgroundColor: player.gender === "M" ? theme.palette.primary.main : theme.palette.secondary.main,
+                    color: "white",
+                    "& .MuiChip-icon": {
+                      color: "white",
+                    },
+                    "& .MuiChip-deleteIcon": {
+                      color: "white",
+                      "&:hover": {
+                        color: "rgba(255, 255, 255, 0.7)",
+                      },
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
         {/* Gender Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Box sx={{ borderBottom: 2, borderColor: "divider" }}>
           <Tabs
             value={activeTab}
             onChange={(_, newValue) => setActiveTab(newValue)}
             variant="fullWidth"
+            TabIndicatorProps={{
+              sx: {
+                height: 3,
+                backgroundColor: activeTab === 0 ? theme.colors.men.main : theme.colors.women.main,
+              },
+            }}
           >
             <Tab
               icon={<MaleIcon />}
@@ -297,8 +341,11 @@ export default function ManagePlayersDialog({
               iconPosition="start"
               sx={{
                 color: theme.colors.men.main,
+                fontWeight: "medium",
                 "&.Mui-selected": {
                   color: theme.colors.men.main,
+                  fontWeight: "bold",
+                  backgroundColor: "rgba(30, 58, 138, 0.08)",
                 },
               }}
             />
@@ -308,8 +355,11 @@ export default function ManagePlayersDialog({
               iconPosition="start"
               sx={{
                 color: theme.colors.women.main,
+                fontWeight: "medium",
                 "&.Mui-selected": {
                   color: theme.colors.women.main,
+                  fontWeight: "bold",
+                  backgroundColor: "rgba(56, 189, 248, 0.08)",
                 },
               }}
             />
