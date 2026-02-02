@@ -129,6 +129,48 @@ export default function LivePointTracker({
     },
   });
 
+  // Check if point has valid player composition (exactly 7 players + correct ABBA gender)
+  const hasValidPlayerComposition = useMemo(() => {
+    if (!currentPoint || currentPoint.players.length !== 7) {
+      return false;
+    }
+
+    // Count by gender
+    const men = currentPoint.players.filter((p) => p.gender === "M").length;
+    const women = currentPoint.players.filter((p) => p.gender === "W").length;
+
+    // Get completed points to determine ABBA pattern
+    const completedPoints = game.points
+      .filter((p: PointWithPlayers) => p.status === "completed")
+      .sort((a: PointWithPlayers, b: PointWithPlayers) => a.point_number - b.point_number);
+
+    if (completedPoints.length === 0) {
+      // First point: accept either 4M+3W or 3M+4W
+      return (men === 4 && women === 3) || (men === 3 && women === 4);
+    }
+
+    // ABBA pattern: A-B-B-A-A-B-B-A...
+    const position = currentPoint.point_number - 1; // Convert to 0-indexed
+    const positionInCycle = position % 4;
+    const isPatternA = positionInCycle === 0 || positionInCycle === 3;
+
+    // Determine what "A" ratio is based on the first completed point
+    const firstPoint = completedPoints[0];
+    const firstPointMen = firstPoint.players.filter((p: Player) => p.gender === "M").length;
+    const patternAIsFourMen = firstPointMen === 4;
+
+    // Check if current point matches required ratio
+    if (isPatternA) {
+      return patternAIsFourMen
+        ? men === 4 && women === 3
+        : men === 3 && women === 4;
+    } else {
+      return patternAIsFourMen
+        ? men === 3 && women === 4
+        : men === 4 && women === 3;
+    }
+  }, [currentPoint, game.points]);
+
   // Mutation to restart a scored point (cancel the score)
   const restartPointMutation = useMutation({
     mutationFn: () => {
@@ -335,6 +377,22 @@ export default function LivePointTracker({
                     </ListItemText>
                   </MenuItem>
                 ),
+                hasValidPlayerComposition && (currentPoint.status === "ready" || currentPoint.status === "running") && (
+                  <MenuItem
+                    key="manage-players"
+                    onClick={() => {
+                      setIsManagePlayersDialogOpen(true);
+                      setMoreActionsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <GroupIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>
+                      {t("points:tracker.managePlayers", "Manage Players")}
+                    </ListItemText>
+                  </MenuItem>
+                ),
                 <MenuItem
                   key="comment"
                   onClick={() => {
@@ -357,7 +415,7 @@ export default function LivePointTracker({
             {/* Action Buttons */}
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
               {currentPoint.status === "ready" ? (
-                // Ready status - show Launch Pull and Select Players buttons
+                // Ready status - show Launch Pull and conditionally Select Players
                 <>
                   <Button
                     variant="contained"
@@ -380,26 +438,28 @@ export default function LivePointTracker({
                       ? t("points:tracker.launching", "Launching...")
                       : t("points:tracker.launchPull", "Launch Pull")}
                   </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<GroupIcon />}
-                    onClick={() => setIsManagePlayersDialogOpen(true)}
-                    sx={{
-                      borderColor: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      '&:hover': {
+                  {!hasValidPlayerComposition && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<GroupIcon />}
+                      onClick={() => setIsManagePlayersDialogOpen(true)}
+                      sx={{
                         borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.dark
-                          : theme.colors.defense.dark,
-                      }
-                    }}
-                  >
-                    {t("points:tracker.selectPlayers", "Select Players")} ({currentPoint.players.length}/7)
-                  </Button>
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        color: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.main
+                          : theme.colors.defense.main,
+                        '&:hover': {
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.dark
+                            : theme.colors.defense.dark,
+                        }
+                      }}
+                    >
+                      {t("points:tracker.selectPlayers", "Select Players")}
+                    </Button>
+                  )}
                   <Button
                     variant="outlined"
                     onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
@@ -436,6 +496,28 @@ export default function LivePointTracker({
                     >
                       <PlayArrowIcon />
                     </Button>
+                    {!hasValidPlayerComposition && (
+                      <Button
+                        variant="outlined"
+                        startIcon={<GroupIcon />}
+                        onClick={() => setIsManagePlayersDialogOpen(true)}
+                        sx={{
+                          borderColor: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          '&:hover': {
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                          }
+                        }}
+                      >
+                        {t("points:tracker.selectPlayers", "Select Players")}
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
@@ -515,26 +597,28 @@ export default function LivePointTracker({
                     >
                       <SwapHorizIcon />
                     </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<GroupIcon />}
-                      onClick={() => setIsManagePlayersDialogOpen(true)}
-                      sx={{
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        color: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        '&:hover': {
+                    {!hasValidPlayerComposition && (
+                      <Button
+                        variant="outlined"
+                        startIcon={<GroupIcon />}
+                        onClick={() => setIsManagePlayersDialogOpen(true)}
+                        sx={{
                           borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.dark
-                            : theme.colors.defense.dark,
-                        }
-                      }}
-                    >
-                      {currentPoint.players.length}/7
-                    </Button>
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          color: (theme) => currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                          '&:hover': {
+                            borderColor: (theme) => currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                          }
+                        }}
+                      >
+                        {t("points:tracker.selectPlayers", "Select Players")}
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       onClick={(e) => setMoreActionsAnchor(e.currentTarget)}

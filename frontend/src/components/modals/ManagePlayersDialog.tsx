@@ -93,10 +93,11 @@ export default function ManagePlayersDialog({
     players.some((p) => p.id === id && p.gender === "W")
   ).length;
 
-  // Check if current selection matches required ratio (when 7 players selected)
-  const meetsGenderRequirement = useMemo(() => {
+  // Check if current selection is valid
+  const isValidSelection = useMemo(() => {
+    // Must have exactly 7 players
     if (selectedPlayerIds.length !== 7) {
-      return true; // No validation for non-7-player selections
+      return false;
     }
 
     if (!requiredGenderRatio) {
@@ -139,44 +140,9 @@ export default function ManagePlayersDialog({
     updateMutation.mutate();
   };
 
-  // Show warning if 7 players selected but doesn't meet ABBA requirement
-  const showGenderWarning = selectedPlayerIds.length === 7 && !meetsGenderRequirement;
-
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1 }}>
-        <span>{t("points:dialog.managePlayers.title", "Select Players")}</span>
-        {/* Mixity indicator */}
-        {requiredGenderRatio && selectedPlayerIds.length === 7 && (
-          <Chip
-            icon={requiredGenderRatio.men === 4 ? <MaleIcon /> : <FemaleIcon />}
-            label={
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Typography variant="caption" fontWeight={500}>
-                  {t("points:dialog.start.mixity")}:
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {requiredGenderRatio.men === 4
-                    ? t("points:dialog.start.men")
-                    : t("points:dialog.start.women")}
-                </Typography>
-              </Box>
-            }
-            size="small"
-            sx={{
-              backgroundColor: showGenderWarning
-                ? "error.main"
-                : requiredGenderRatio.men === 4
-                ? "primary.main"
-                : "secondary.main",
-              color: "white",
-              "& .MuiChip-icon": {
-                color: "white",
-              },
-            }}
-          />
-        )}
-      </DialogTitle>
+      <DialogTitle>{t("points:dialog.managePlayers.title", "Select Players")}</DialogTitle>
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -185,15 +151,50 @@ export default function ManagePlayersDialog({
           </Alert>
         )}
 
-        {showGenderWarning && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            {t("points:dialog.managePlayers.genderWarning", "Selected players don't match the required ABBA gender ratio.")}
+        {/* Expected gender composition */}
+        <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            {t("points:dialog.managePlayers.expectedComposition", "Required Composition")}:
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+            <Chip
+              icon={<MaleIcon />}
+              label={`${requiredGenderRatio?.men || "?"} ${t("points:dialog.start.men", "Men")}`}
+              size="medium"
+              sx={{
+                bgcolor: (theme) => theme.colors.men,
+                color: "white",
+                "& .MuiChip-icon": { color: "white" },
+              }}
+            />
+            <Typography variant="h6">+</Typography>
+            <Chip
+              icon={<FemaleIcon />}
+              label={`${requiredGenderRatio?.women || "?"} ${t("points:dialog.start.women", "Women")}`}
+              size="medium"
+              sx={{
+                bgcolor: (theme) => theme.colors.women,
+                color: "white",
+                "& .MuiChip-icon": { color: "white" },
+              }}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+            {t("points:dialog.managePlayers.currentSelection", "Currently selected")}: {selectedMen} {t("points:dialog.start.men", "Men")} + {selectedWomen} {t("points:dialog.start.women", "Women")} ({selectedPlayerIds.length}/7)
+          </Typography>
+        </Box>
+
+        {/* Validation error */}
+        {selectedPlayerIds.length === 7 && !isValidSelection && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {t("points:dialog.managePlayers.genderError", "Selected players don't match the required gender composition.")}
           </Alert>
         )}
-
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {t("points:dialog.managePlayers.info", "Select 0-7 players. Exactly 7 players required to complete the point.")}
-        </Alert>
+        {selectedPlayerIds.length !== 7 && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {t("points:dialog.managePlayers.countError", "You must select exactly 7 players.")}
+          </Alert>
+        )}
 
         <PointPlayerSelection
           teamId={teamId}
@@ -218,7 +219,7 @@ export default function ManagePlayersDialog({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={updateMutation.isPending}
+          disabled={updateMutation.isPending || !isValidSelection}
         >
           {updateMutation.isPending
             ? t("common:action.saving", "Saving...")
