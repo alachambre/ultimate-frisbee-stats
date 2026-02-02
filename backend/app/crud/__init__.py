@@ -51,6 +51,7 @@ from app.crud.points import (
     delete_point,
     finish_point,
     get_running_point_for_game,
+    get_active_point_for_game,
     cancel_point,
 )
 
@@ -133,6 +134,7 @@ __all__ = [
     "delete_point",
     "finish_point",
     "get_running_point_for_game",
+    "get_active_point_for_game",
     "cancel_point",
     # Lines
     "create_line",
