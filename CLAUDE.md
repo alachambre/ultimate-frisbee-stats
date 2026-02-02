@@ -173,6 +173,7 @@ ready → running → scored → completed
 **TODO - Player Selection UI:**
 - ⚠️ **Tests needed** for `ManagePlayersDialog` and updated workflows
 - 🔄 **Reuse player selection UI**: The new `ManagePlayersDialog` should be reused in other places where we select players (e.g., line management, game roster selection)
+- ⚠️ **Verify pre-selection**: When editing a point's players, the currently selected players should be pre-checked in the dialog (implemented via lazy state initialization, needs testing/verification)
 
 **Phase 8: Statistics Dashboard - IN PROGRESS**
 - ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)
