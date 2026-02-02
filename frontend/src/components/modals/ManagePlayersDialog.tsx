@@ -189,9 +189,18 @@ export default function ManagePlayersDialog({
   const menPlayers = filteredPlayers.filter((p) => p.gender === "M");
   const womenPlayers = filteredPlayers.filter((p) => p.gender === "W");
 
-  // Get selected players for display
+  // Get selected players for display, sorted by gender (Men first) then name
   const selectedPlayers = useMemo(() => {
-    return players.filter((p) => selectedPlayerIds.includes(p.id));
+    return players
+      .filter((p) => selectedPlayerIds.includes(p.id))
+      .sort((a, b) => {
+        // Sort by gender first (M before W)
+        if (a.gender !== b.gender) {
+          return a.gender === "M" ? -1 : 1;
+        }
+        // Then sort by name
+        return a.name.localeCompare(b.name);
+      });
   }, [players, selectedPlayerIds]);
 
   return (
