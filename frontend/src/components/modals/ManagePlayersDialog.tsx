@@ -9,15 +9,26 @@ import {
   Box,
   Chip,
   Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Checkbox,
 } from "@mui/material";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import { getGame } from "../../services/games";
-import PointPlayerSelection from "../points/PointPlayerSelection";
-import type { Player, PointWithPlayers } from "../../types";
+import { getLines } from "../../services/lines";
+import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
 
 interface ManagePlayersDialogProps {
   open: boolean;
@@ -37,13 +48,19 @@ export default function ManagePlayersDialog({
   onSuccess,
 }: ManagePlayersDialogProps) {
   const { t } = useTranslation(["points", "common"]);
+  const queryClient = useQueryClient();
 
   // Lazy state initialization from point.players
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(() =>
     point.players?.map((p) => p.id) || []
   );
-  const [selectedLineId, setSelectedLineId] = useState<number | "">("");
-  const queryClient = useQueryClient();
+
+  // Fetch lines for quick selection
+  const { data: lines = [] } = useQuery({
+    queryKey: ["lines", teamId],
+    queryFn: () => getLines(teamId),
+    enabled: open,
+  });
 
   // Fetch game data to get existing points for ABBA pattern
   const { data: game } = useQuery({
@@ -131,7 +148,6 @@ export default function ManagePlayersDialog({
   const handleClose = () => {
     // Reset to point's current players for next time dialog opens
     setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
-    setSelectedLineId("");
     updateMutation.reset();
     onClose();
   };
@@ -139,6 +155,28 @@ export default function ManagePlayersDialog({
   const handleSubmit = () => {
     updateMutation.mutate();
   };
+
+  const handleLineSelect = (lineId: number | "") => {
+    if (lineId === "") {
+      return; // Don't clear selection when choosing empty option
+    }
+    const line = lines.find((l: LineWithPlayers) => l.id === lineId);
+    if (line) {
+      setSelectedPlayerIds(line.players.map((p: Player) => p.id));
+    }
+  };
+
+  const togglePlayer = (playerId: number) => {
+    setSelectedPlayerIds((prev) =>
+      prev.includes(playerId)
+        ? prev.filter((id) => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
+  // Group players by gender
+  const menPlayers = players.filter((p) => p.gender === "M");
+  const womenPlayers = players.filter((p) => p.gender === "W");
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -151,38 +189,71 @@ export default function ManagePlayersDialog({
           </Alert>
         )}
 
-        {/* Expected gender composition */}
+        {/* Expected composition - simplified */}
         <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {t("points:dialog.managePlayers.expectedComposition", "Required Composition")}:
-          </Typography>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <Chip
-              icon={<MaleIcon />}
-              label={`${requiredGenderRatio?.men || "?"} ${t("points:dialog.start.men", "Men")}`}
-              size="medium"
-              sx={{
-                bgcolor: (theme) => theme.colors.men,
-                color: "white",
-                "& .MuiChip-icon": { color: "white" },
-              }}
-            />
-            <Typography variant="h6">+</Typography>
-            <Chip
-              icon={<FemaleIcon />}
-              label={`${requiredGenderRatio?.women || "?"} ${t("points:dialog.start.women", "Women")}`}
-              size="medium"
-              sx={{
-                bgcolor: (theme) => theme.colors.women,
-                color: "white",
-                "& .MuiChip-icon": { color: "white" },
-              }}
-            />
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                {t("points:dialog.managePlayers.expected", "Expected")}:
+              </Typography>
+              <Chip
+                icon={requiredGenderRatio?.men === 4 ? <MaleIcon /> : <FemaleIcon />}
+                label={
+                  requiredGenderRatio?.men === 4
+                    ? t("points:dialog.start.men", "Men")
+                    : t("points:dialog.start.women", "Women")
+                }
+                size="small"
+                sx={{
+                  mt: 0.5,
+                  bgcolor: (theme) =>
+                    requiredGenderRatio?.men === 4 ? theme.colors.men : theme.colors.women,
+                  color: "white",
+                  "& .MuiChip-icon": { color: "white" },
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                {requiredGenderRatio?.men || "?"} men, {requiredGenderRatio?.women || "?"} women
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: "right" }}>
+              <Typography variant="body2" color="text.secondary">
+                {t("points:dialog.managePlayers.selected", "Selected")}:
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
+                <Typography variant="h6" fontWeight="bold">
+                  {selectedMen}M + {selectedWomen}W
+                </Typography>
+                {isValidSelection && <CheckCircleIcon color="success" />}
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                ({selectedPlayerIds.length}/7)
+              </Typography>
+            </Box>
           </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-            {t("points:dialog.managePlayers.currentSelection", "Currently selected")}: {selectedMen} {t("points:dialog.start.men", "Men")} + {selectedWomen} {t("points:dialog.start.women", "Women")} ({selectedPlayerIds.length}/7)
-          </Typography>
         </Box>
+
+        {/* Line quick select */}
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel id="line-select-label">
+            {t("points:dialog.managePlayers.quickSelectLine", "Quick select from line")}
+          </InputLabel>
+          <Select
+            labelId="line-select-label"
+            value=""
+            label={t("points:dialog.managePlayers.quickSelectLine", "Quick select from line")}
+            onChange={(e) => handleLineSelect(e.target.value as number | "")}
+          >
+            <MenuItem value="">
+              <em>{t("points:dialog.managePlayers.noLine", "Select manually")}</em>
+            </MenuItem>
+            {lines.map((line: LineWithPlayers) => (
+              <MenuItem key={line.id} value={line.id}>
+                {line.name} ({line.players.length} players)
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         {/* Validation error */}
         {selectedPlayerIds.length === 7 && !isValidSelection && (
@@ -190,27 +261,72 @@ export default function ManagePlayersDialog({
             {t("points:dialog.managePlayers.genderError", "Selected players don't match the required gender composition.")}
           </Alert>
         )}
-        {selectedPlayerIds.length !== 7 && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            {t("points:dialog.managePlayers.countError", "You must select exactly 7 players.")}
-          </Alert>
-        )}
 
-        <PointPlayerSelection
-          teamId={teamId}
-          players={players}
-          selectedPlayerIds={selectedPlayerIds}
-          onSelectedPlayerIdsChange={setSelectedPlayerIds}
-          startingOnOffense={point.starting_on_offense}
-          onStartingOnOffenseChange={() => {}} // Read-only
-          selectedLineId={selectedLineId}
-          onSelectedLineIdChange={setSelectedLineId}
-          open={open}
-          clearPlayersOnLineChange={false}
-          showGenderValidation={false} // We handle validation ourselves
-          requiredGenderRatio={null} // Don't show strict requirement in component
-          hideStartingPosition={true} // Don't show offense/defense toggle
-        />
+        {/* Men list */}
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
+          {t("points:dialog.start.men", "Men")}
+        </Typography>
+        <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mb: 2 }}>
+          {menPlayers.map((player) => (
+            <ListItem key={player.id} disablePadding>
+              <ListItemButton onClick={() => togglePlayer(player.id)} dense>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={selectedPlayerIds.includes(player.id)}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                </ListItemIcon>
+                <ListItemText
+                  primary={player.name}
+                  secondary={player.number ? `#${player.number}` : null}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+          {menPlayers.length === 0 && (
+            <ListItem>
+              <ListItemText
+                primary={t("points:dialog.managePlayers.noMen", "No men available")}
+                secondary={null}
+              />
+            </ListItem>
+          )}
+        </List>
+
+        {/* Women list */}
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
+          {t("points:dialog.start.women", "Women")}
+        </Typography>
+        <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
+          {womenPlayers.map((player) => (
+            <ListItem key={player.id} disablePadding>
+              <ListItemButton onClick={() => togglePlayer(player.id)} dense>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={selectedPlayerIds.includes(player.id)}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                </ListItemIcon>
+                <ListItemText
+                  primary={player.name}
+                  secondary={player.number ? `#${player.number}` : null}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+          {womenPlayers.length === 0 && (
+            <ListItem>
+              <ListItemText
+                primary={t("points:dialog.managePlayers.noWomen", "No women available")}
+                secondary={null}
+              />
+            </ListItem>
+          )}
+        </List>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>
