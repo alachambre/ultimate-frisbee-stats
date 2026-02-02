@@ -38,9 +38,11 @@ export default function AddCommentDialog({
       return updatePoint(point.id, { comments: comments || null });
     },
     onSuccess: () => {
+      // Close dialog first before triggering query invalidations
+      // to prevent race conditions with re-renders
+      handleClose();
       queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
-      handleClose();
       onSuccess?.();
     },
   });
