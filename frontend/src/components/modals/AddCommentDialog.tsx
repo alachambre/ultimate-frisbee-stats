@@ -45,7 +45,7 @@ export default function AddCommentDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
-      queryClient.invalidateQueries({ queryKey: ["runningPoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
       handleClose();
       onSuccess?.();
     },

@@ -653,7 +653,24 @@ export const handlers = [
     return HttpResponse.json(point);
   }),
 
-  // GET /points/games/:gameId/running - Get running point for a game
+  // GET /points/games/:gameId/active - Get active point (ready or running) for a game
+  http.get(`${BASE_URL}/points/games/:gameId/active`, ({ params }) => {
+    const gameId = Number(params.gameId);
+    const activePoint = points.find(
+      (p) => p.game_id === gameId && (p.status === "ready" || p.status === "running")
+    );
+
+    if (!activePoint) {
+      return HttpResponse.json(
+        { detail: "No active point found for this game" },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json(activePoint);
+  }),
+
+  // GET /points/games/:gameId/running - Get running point for a game (deprecated, use /active)
   http.get(`${BASE_URL}/points/games/:gameId/running`, ({ params }) => {
     const gameId = Number(params.gameId);
     const runningPoint = points.find(

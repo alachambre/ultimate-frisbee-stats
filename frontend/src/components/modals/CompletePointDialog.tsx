@@ -41,7 +41,7 @@ export default function CompletePointDialog({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(scoredPoint.game_id)] });
-      queryClient.invalidateQueries({ queryKey: ["runningPoint", scoredPoint.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["activePoint", scoredPoint.game_id] });
       onClose();
       onSuccess?.();
     },

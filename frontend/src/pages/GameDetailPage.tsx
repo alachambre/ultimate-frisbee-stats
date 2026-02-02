@@ -32,7 +32,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
-import { getRunningPoint, deletePoint } from "../services/points";
+import { getActivePoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
@@ -71,10 +71,10 @@ export default function GameDetailPage() {
     enabled: !!gameId,
   });
 
-  // Poll for running point every 5 seconds while game is started
-  const { data: runningPoint } = useQuery({
-    queryKey: ["runningPoint", gameId],
-    queryFn: () => getRunningPoint(Number(gameId)),
+  // Poll for active point (ready or running) every 5 seconds while game is started
+  const { data: activePoint } = useQuery({
+    queryKey: ["activePoint", gameId],
+    queryFn: () => getActivePoint(Number(gameId)),
     enabled: !!gameId && game?.status === "started",
     refetchInterval: game?.status === "started" ? 5000 : false,
   });
@@ -123,7 +123,7 @@ export default function GameDetailPage() {
     mutationFn: (pointId: number) => deletePoint(pointId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-      queryClient.invalidateQueries({ queryKey: ["runningPoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
       setDeletingPoint(null);
     },
   });
@@ -211,7 +211,7 @@ export default function GameDetailPage() {
 
   const handlePointUpdated = () => {
     queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-    queryClient.invalidateQueries({ queryKey: ["runningPoint", gameId] });
+    queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
   };
 
   const handleEditPoint = (point: PointWithPlayers) => {
@@ -586,7 +586,7 @@ export default function GameDetailPage() {
       {competition && (
         <LivePointTracker
           game={game}
-          activePoint={runningPoint || null}
+          activePoint={activePoint || null}
           players={game.players}
           teamId={competition.team_id}
           onPointUpdated={handlePointUpdated}

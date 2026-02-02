@@ -111,7 +111,7 @@ export default function LivePointTracker({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
-      queryClient.invalidateQueries({ queryKey: ["runningPoint", game.id] });
+      queryClient.invalidateQueries({ queryKey: ["activePoint", game.id] });
       onPointUpdated?.();
     },
   });
@@ -124,7 +124,7 @@ export default function LivePointTracker({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
-      queryClient.invalidateQueries({ queryKey: ["runningPoint", game.id] });
+      queryClient.invalidateQueries({ queryKey: ["activePoint", game.id] });
       onPointUpdated?.();
     },
   });
@@ -142,10 +142,10 @@ export default function LivePointTracker({
     onSuccess: async (updatedPoint) => {
       // Optimistically update both caches immediately to avoid UI flicker
 
-      // 1. Update runningPoint cache
-      queryClient.setQueryData(["runningPoint", game.id], updatedPoint);
+      // 1. Update activePoint cache
+      queryClient.setQueryData(["activePoint", game.id], updatedPoint);
 
-      // 2. Update game cache - replace the scored point with the running point
+      // 2. Update game cache - replace the scored point with the updated point
       queryClient.setQueryData(["game", String(game.id)], (oldData: unknown) => {
         if (!oldData || typeof oldData !== 'object') return oldData;
         const gameData = oldData as { points: PointWithPlayers[] };
