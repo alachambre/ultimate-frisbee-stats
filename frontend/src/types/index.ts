@@ -16,9 +16,9 @@ export interface TeamBase {
   name: string;
 }
 
-export interface TeamCreate extends TeamBase {}
+export type TeamCreate = TeamBase;
 
-export interface TeamUpdate extends TeamBase {}
+export type TeamUpdate = TeamBase;
 
 export interface Team extends TeamBase {
   id: number;
@@ -137,7 +137,7 @@ export interface StrategyBase {
   category: StrategyCategory;
 }
 
-export interface StrategyCreate extends StrategyBase {}
+export type StrategyCreate = StrategyBase;
 
 export interface StrategyUpdate {
   name?: string;
@@ -200,7 +200,7 @@ export interface PointBase {
 
 export interface PointCreate extends PointBase {
   game_id: number;
-  player_ids: number[];
+  player_ids?: number[]; // Optional - can select players after creating point
   strategy_id?: number | null;
   start_datetime?: string | null; // Defaults to now if null
 }

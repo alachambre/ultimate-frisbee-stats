@@ -119,73 +119,51 @@ backend/app/
 
 ## Next Steps
 
-**Point Lifecycle Refactor - IN PROGRESS**
-Improving the point creation and player selection workflow to better match real-world usage.
+**Point Lifecycle Refactor - COMPLETE ✅**
+Backend implementation complete. Frontend implementation pending.
 
-**Current Workflow Issues:**
-- Points start immediately in "running" state (timer starts)
-- Player selection happens during point creation (before pull is launched)
-- Timer starts before the pull, which doesn't match real game flow
-
-**New Workflow (using existing `ready` status):**
+**New Workflow:**
+Points now support flexible player selection and timer start, matching real-world game flow:
 ```
 ready → running → scored → completed
 ```
 
 1. **Create Point** (status = `ready`)
-   - Select: Offense/Defense
-   - Select: Strategy (optional)
-   - NO player selection yet
-   - Timer NOT started
+   - Select: Offense/Defense, Strategy (optional)
+   - Player selection optional (can be done later)
+   - Timer NOT started (start_datetime = NULL)
    - Point number assigned
 
 2. **While `ready`** (before launching pull)
-   - Available actions:
-     - **"Select Players"** (new) - Select/change 7 players anytime
-     - **"Launch Pull"** (new main action) - Start the point
-     - Strategy selection (existing)
-     - Comments (existing)
+   - Select/change players (0-7 allowed)
+   - Update strategy, comments, field metadata
 
 3. **Launch Pull** (ready → running transition)
-   - Click "Launch Pull" button
-   - Sets `status = running`
-   - Sets `start_datetime = now()` (timer starts)
-   - **If Defense**: Immediately show pull question (inbounds/out of bounds)
-   - **If Offense**: Pull already out, timer already running
+   - Update status to `running` via PUT /points/{id}
+   - Backend auto-sets `start_datetime = now()` (timer starts)
 
 4. **While `running`**
-   - Timer running, all existing actions available
-   - **"Manage Players"** action - can still modify players
+   - Timer running, can still modify players
+   - Record calls, turnovers, etc.
 
-5. **Complete Point** (scored → completed validation)
-   - **NEW Validation**: Must have exactly 7 players assigned
-   - Returns error if player count ≠ 7
+5. **Complete Point** (scored → completed)
+   - Backend validation: Requires exactly 7 players
+   - Returns 400 error if player count ≠ 7
 
-**Implementation Changes:**
+**Backend Changes (Non-breaking - Complete ✅):**
+- ✅ `PointCreate.player_ids` now optional (defaults to None)
+- ✅ Points created with `status='ready'`, `start_datetime=None`
+- ✅ Auto-set `start_datetime` on ready→running transition
+- ✅ Validate 7 players only on completion (not creation)
+- ✅ New endpoint: `GET /points/games/{game_id}/active` (finds ready OR running point)
+- ✅ 357 backend tests passing (35 CRUD + 31 API tests updated)
 
-Backend (Non-breaking - no DB schema changes):
-- `PointCreate` schema: Make `player_ids` optional (defaults to empty list)
-- Point creation: Default `status = 'ready'` (not 'running')
-- `start_datetime` remains NULL until "Launch Pull" clicked
-- Add validation in complete endpoint: require 7 players
-- Update tests to reflect new workflow
-
-Frontend:
-- `StartPointDialog`: Remove player selection UI (keep offense/defense, strategy)
-- `LivePointTracker`:
-  - Add "Launch Pull" button (when status='ready')
-  - Add "Select/Manage Players" action button
-  - Pull question appears AFTER "Launch Pull" (for defense)
-- New `ManagePlayersDialog`: Player selection (7 players with ABBA validation)
-- `CompletePointDialog`: Add validation error if players missing
-- Update all tests
-
-**Benefits:**
-- ✅ Timer starts when pull is launched (matches real game)
-- ✅ Flexible player selection (can be done before or during point)
-- ✅ Better mobile UX (simpler point creation flow)
-- ✅ No breaking changes (uses existing 'ready' status)
-- ✅ Existing data unaffected (old points stay as-is)
+**Frontend Changes (Pending):**
+- Modify `StartPointDialog`: Remove player selection UI
+- Add "Launch Pull" button in `LivePointTracker` (when status='ready')
+- Create `ManagePlayersDialog` component for player selection
+- Update `CompletePointDialog`: Show validation error if < 7 players
+- Update all frontend tests
 
 **Phase 8: Statistics Dashboard - IN PROGRESS**
 - ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)

@@ -37,11 +37,14 @@ import SelectStrategyDialog from "../modals/SelectStrategyDialog";
 import { RecordCallDialog } from "../modals/RecordCallDialog";
 import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
 import { ResumeFromCallDialog } from "../modals/ResumeFromCallDialog";
+import ManagePlayersDialog from "../modals/ManagePlayersDialog";
 import { PointEventsHistory } from "./PointEventsHistory";
 import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Call } from "../../types";
 import { useQuery } from "@tanstack/react-query";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import { getCallsByPoint } from "../../services/calls";
+import GroupIcon from "@mui/icons-material/Group";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 
 interface LivePointTrackerProps {
   game: GameDetail;
@@ -68,6 +71,7 @@ export default function LivePointTracker({
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
   const [isTurnoverDialogOpen, setIsTurnoverDialogOpen] = useState(false);
   const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
+  const [isManagePlayersDialogOpen, setIsManagePlayersDialogOpen] = useState(false);
   const [moreActionsAnchor, setMoreActionsAnchor] = useState<null | HTMLElement>(null);
   const queryClient = useQueryClient();
 
@@ -104,6 +108,19 @@ export default function LivePointTracker({
     mutationFn: (pull: boolean) => {
       if (!activePoint) throw new Error("No active point");
       return updatePoint(activePoint.id, { pull });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
+      queryClient.invalidateQueries({ queryKey: ["runningPoint", game.id] });
+      onPointUpdated?.();
+    },
+  });
+
+  // Mutation to launch pull (transition ready → running)
+  const launchPullMutation = useMutation({
+    mutationFn: () => {
+      if (!activePoint) throw new Error("No active point");
+      return updatePoint(activePoint.id, { status: "running" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
@@ -191,7 +208,9 @@ export default function LivePointTracker({
               <Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   {t("points:history.point")} #{currentPoint.point_number} -{" "}
-                  {currentPoint.status === "running"
+                  {currentPoint.status === "ready"
+                    ? t("points:status.ready", "Ready")
+                    : currentPoint.status === "running"
                     ? t("points:status.running")
                     : t("points:status.scored")}
                 </Typography>
@@ -223,22 +242,22 @@ export default function LivePointTracker({
                   )}
                 </Box>
               </Box>
-              <Box textAlign="center">
-                <Typography
-                  variant="body2"
-                  gutterBottom
-                  sx={{
-                    color: (theme) => currentPoint.starting_on_offense
-                      ? theme.colors.offense.main
-                      : theme.colors.defense.main,
-                    fontWeight: 'medium'
-                  }}
-                >
-                  {currentPoint.status === "running"
-                    ? t("points:tracker.elapsedTime", "Elapsed Time")
-                    : t("points:tracker.duration", "Duration")}
-                </Typography>
-                {currentPoint.start_datetime && (
+              {currentPoint.start_datetime && (
+                <Box textAlign="center">
+                  <Typography
+                    variant="body2"
+                    gutterBottom
+                    sx={{
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main,
+                      fontWeight: 'medium'
+                    }}
+                  >
+                    {currentPoint.status === "running"
+                      ? t("points:tracker.elapsedTime", "Elapsed Time")
+                      : t("points:tracker.duration", "Duration")}
+                  </Typography>
                   <PointTimer
                     key={`${currentPoint.id}-${currentPoint.status}`}
                     startDatetime={currentPoint.start_datetime}
@@ -247,8 +266,8 @@ export default function LivePointTracker({
                       ? theme.colors.offense.main
                       : theme.colors.defense.main}
                   />
-                )}
-              </Box>
+                </Box>
+              )}
             </Box>
 
             {/* Pull tracking - only for running defensive points */}
@@ -337,7 +356,74 @@ export default function LivePointTracker({
 
             {/* Action Buttons */}
             <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
-              {currentPoint.status === "running" ? (
+              {currentPoint.status === "ready" ? (
+                // Ready status - show Launch Pull and Select Players buttons
+                <>
+                  <Button
+                    variant="contained"
+                    startIcon={<RocketLaunchIcon />}
+                    onClick={() => launchPullMutation.mutate()}
+                    disabled={launchPullMutation.isPending}
+                    size="large"
+                    sx={{
+                      bgcolor: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main,
+                      '&:hover': {
+                        bgcolor: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.dark
+                          : theme.colors.defense.dark,
+                      }
+                    }}
+                  >
+                    {launchPullMutation.isPending
+                      ? t("points:tracker.launching", "Launching...")
+                      : t("points:tracker.launchPull", "Launch Pull")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<GroupIcon />}
+                    onClick={() => setIsManagePlayersDialogOpen(true)}
+                    sx={{
+                      borderColor: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main,
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main,
+                      '&:hover': {
+                        borderColor: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.dark
+                          : theme.colors.defense.dark,
+                      }
+                    }}
+                  >
+                    {t("points:tracker.selectPlayers", "Select Players")} ({currentPoint.players.length}/7)
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
+                    aria-label={t("common:action.moreActions", "More Actions")}
+                    sx={{
+                      minWidth: 'auto',
+                      px: 2,
+                      borderColor: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main,
+                      color: (theme) => currentPoint.starting_on_offense
+                        ? theme.colors.offense.main
+                        : theme.colors.defense.main,
+                      '&:hover': {
+                        borderColor: (theme) => currentPoint.starting_on_offense
+                          ? theme.colors.offense.dark
+                          : theme.colors.defense.dark,
+                      }
+                    }}
+                  >
+                    <MoreVertIcon />
+                  </Button>
+                </>
+              ) : currentPoint.status === "running" ? (
                 hasPendingCall ? (
                   // When there's a pending call, show Resume + More Actions buttons
                   <>
@@ -607,10 +693,19 @@ export default function LivePointTracker({
         open={isStartDialogOpen}
         onClose={() => setIsStartDialogOpen(false)}
         gameId={game.id}
-        teamId={teamId}
-        players={players}
         onSuccess={onPointUpdated}
       />
+
+      {activePoint && (
+        <ManagePlayersDialog
+          open={isManagePlayersDialogOpen}
+          onClose={() => setIsManagePlayersDialogOpen(false)}
+          point={activePoint}
+          teamId={teamId}
+          players={players}
+          onSuccess={onPointUpdated}
+        />
+      )}
 
       {activePoint && (
         <FinishPointDialog

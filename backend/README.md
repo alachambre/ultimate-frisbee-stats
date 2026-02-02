@@ -323,26 +323,50 @@ pytest tests/ -v --tb=short
 - Unique constraint on strategy name
 
 ### Points (Phase 3: Live Point Tracking, Phase 6: Enhanced)
-- `POST /points` - Start a new point (requires exactly 7 player IDs, optional: field_side, pull, strategy_id, comments)
+- `POST /points` - Create a new point (player_ids optional, optional: field_side, pull, strategy_id, comments)
 - `GET /points/{point_id}` - Get point with player details and strategy
 - `PUT /points/{point_id}` - Update point (players, timestamps, field_side, pull, strategy_id, comments, status)
 - `POST /points/{point_id}/finish` - Finish point (set won/lost outcome, optional: comments)
 - `DELETE /points/{point_id}/cancel` - Cancel point (ready or running status)
 - `DELETE /points/{point_id}` - Delete point
 - `GET /points/games/{game_id}/running` - Get running point for game (404 if none)
-- `GET /points/games/{game_id}/active` - Deprecated alias for /running (backward compatibility)
+- `GET /points/games/{game_id}/active` - Get active (ready or running) point for game (404 if none)
 
-**Point Tracking Features (Phase 6):**
-- 4-status lifecycle: ready → running → scored → completed
-- Timestamp tracking: `start_datetime`, `end_datetime` with timezone awareness
-- Duration calculation for playing time stats (via @computed_field)
-- Only one running point per game allowed
-- Real-time point tracking during live games
+**Point Lifecycle (4-status workflow):**
+```
+ready → running → scored → completed
+```
+
+1. **Create Point** (`POST /points`)
+   - Created with `status='ready'`, `start_datetime=None`
+   - Player selection is **optional** (0-7 players allowed)
+   - Only one active point (ready or running) per game at a time
+
+2. **Ready Status** (before launching pull)
+   - Timer NOT started (`start_datetime=None`)
+   - Players can be added/changed via `PUT /points/{id}` (any count 0-7)
+   - Update strategy, comments, field metadata as needed
+
+3. **Launch Pull** (`PUT /points/{id}` with `status='running'`)
+   - Backend automatically sets `start_datetime=now()` on ready→running transition
+   - Timer starts when pull is launched (matches real-world game flow)
+   - Players can still be modified while running
+
+4. **Complete Point** (`POST /points/{id}/finish` OR `PUT /points/{id}` with `status='completed'`)
+   - **Validation**: Must have exactly 7 players assigned
+   - Returns 400 error if player count ≠ 7
+   - Sets `end_datetime`, `won` outcome, and `status='completed'`
+
+**Key Features:**
+- Flexible player selection: Can be done during point creation, after creation, or while running
+- Validation deferred to completion: Only enforce 7 players when finishing point
+- Enum conversion handled automatically: Schema `PointStatus` ↔ Model `PointStatusEnum`
+- Timestamp tracking: `start_datetime`, `end_datetime` with timezone awareness (UTC + 'Z' suffix)
+- Duration calculation: Available via `@computed_field` for playing time stats
+- Only one active point per game: Creation blocked if ready/running point exists
 - Strategy assignment for tactical analysis
 - Additional tracking: field_side, pull (boolean), comments
-- Proper ISO8601 datetime serialization with 'Z' suffix for UTC times
 - Points ordered descending by point_number (most recent first)
-- finish_point() transitions point to completed status
 
 ### Calls (Phase 7)
 - `POST /calls` - Create a call (requires point_id, call_timestamp, optional: resume_timestamp, comments)

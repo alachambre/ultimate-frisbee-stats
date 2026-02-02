@@ -30,6 +30,10 @@ export default function CompletePointDialog({
   const { t } = useTranslation(["points", "common"]);
   const queryClient = useQueryClient();
 
+  // Check if point has exactly 7 players
+  const playerCount = scoredPoint.players.length;
+  const isValid = playerCount === 7;
+
   const completeMutation = useMutation({
     mutationFn: () =>
       updatePoint(scoredPoint.id, {
@@ -44,7 +48,9 @@ export default function CompletePointDialog({
   });
 
   const handleSubmit = () => {
-    completeMutation.mutate();
+    if (isValid) {
+      completeMutation.mutate();
+    }
   };
 
   return (
@@ -53,8 +59,17 @@ export default function CompletePointDialog({
       <DialogContent>
         {completeMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(completeMutation.error as any)?.response?.data?.detail ||
+            {(completeMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
               t("common:error.generic")}
+          </Alert>
+        )}
+
+        {!isValid && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {t("points:dialog.complete.playerCountError", {
+              count: playerCount,
+              defaultValue: "Cannot complete point: must have exactly 7 players (currently has {{count}})."
+            })}
           </Alert>
         )}
 
@@ -106,7 +121,7 @@ export default function CompletePointDialog({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={completeMutation.isPending}
+          disabled={!isValid || completeMutation.isPending}
         >
           {completeMutation.isPending
             ? t("points:dialog.complete.completing", "Completing...")

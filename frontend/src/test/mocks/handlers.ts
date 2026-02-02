@@ -588,15 +588,11 @@ export const handlers = [
     const gamePoints = points.filter((p) => p.game_id === body.game_id);
     const pointNumber = gamePoints.length + 1;
 
-    // Get player objects
-    const pointPlayers = players.filter((p) => body.player_ids.includes(p.id));
-    // Allow 0 or 7 players (0 for tests, 7 for real usage)
-    if (pointPlayers.length !== 0 && pointPlayers.length !== 7) {
-      return HttpResponse.json(
-        { detail: "Expected 7 players" },
-        { status: 400 }
-      );
-    }
+    // Get player objects (player_ids is now optional)
+    const pointPlayers = body.player_ids
+      ? players.filter((p) => body.player_ids!.includes(p.id))
+      : [];
+    // Allow any number of players during creation (validation happens at completion)
 
     // Get strategy if provided
     let strategy: Strategy | null = null;
@@ -1123,7 +1119,11 @@ export const handlers = [
     const playerId = Number(params.playerId);
     const playerTurnovers = turnovers
       .filter((t) => t.player_id === playerId)
-      .map(({ player, ...rest }) => rest); // Remove player field for this endpoint
+      .map((t) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { player, ...rest } = t;
+        return rest; // Remove player field for this endpoint
+      });
     return HttpResponse.json(playerTurnovers);
   }),
 

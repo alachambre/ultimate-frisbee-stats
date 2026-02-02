@@ -27,6 +27,7 @@ interface PointPlayerSelectionProps {
   clearPlayersOnLineChange?: boolean;
   showGenderValidation?: boolean;
   requiredGenderRatio?: { men: number; women: number } | null;
+  hideStartingPosition?: boolean;
 }
 
 export default function PointPlayerSelection({
@@ -42,6 +43,7 @@ export default function PointPlayerSelection({
   clearPlayersOnLineChange = false,
   showGenderValidation = false,
   requiredGenderRatio = null,
+  hideStartingPosition = false,
 }: PointPlayerSelectionProps) {
   const { t } = useTranslation(['points', 'common']);
 
@@ -116,57 +118,59 @@ export default function PointPlayerSelection({
   return (
     <>
       {/* Starting Position */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {t('points:dialog.start.pull')}
-        </Typography>
-        <ToggleButtonGroup
-          value={startingOnOffense ? "offense" : "defense"}
-          exclusive
-          onChange={(_, newValue) => {
-            if (newValue !== null) {
-              onStartingOnOffenseChange(newValue === "offense");
-            }
-          }}
-          fullWidth
-          aria-label="starting on offense or defense"
-          sx={(theme) => ({
-            "& .MuiToggleButton-root": {
-              py: 1.5,
-              textTransform: "none",
-              fontWeight: 500,
-              "&.Mui-selected": {
-                fontWeight: "bold",
-                color: "white",
-                "&:hover": {
-                  opacity: 0.9,
+      {!hideStartingPosition && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            {t('points:dialog.start.pull')}
+          </Typography>
+          <ToggleButtonGroup
+            value={startingOnOffense ? "offense" : "defense"}
+            exclusive
+            onChange={(_, newValue) => {
+              if (newValue !== null) {
+                onStartingOnOffenseChange(newValue === "offense");
+              }
+            }}
+            fullWidth
+            aria-label="starting on offense or defense"
+            sx={(theme) => ({
+              "& .MuiToggleButton-root": {
+                py: 1.5,
+                textTransform: "none",
+                fontWeight: 500,
+                "&.Mui-selected": {
+                  fontWeight: "bold",
+                  color: "white",
+                  "&:hover": {
+                    opacity: 0.9,
+                  },
+                },
+                "&.Mui-selected[value='offense']": {
+                  backgroundColor: theme.colors.offense.main,
+                  "&:hover": {
+                    backgroundColor: theme.colors.offense.dark,
+                  },
+                },
+                "&.Mui-selected[value='defense']": {
+                  backgroundColor: theme.colors.defense.main,
+                  "&:hover": {
+                    backgroundColor: theme.colors.defense.dark,
+                  },
                 },
               },
-              "&.Mui-selected[value='offense']": {
-                backgroundColor: theme.colors.offense.main,
-                "&:hover": {
-                  backgroundColor: theme.colors.offense.dark,
-                },
-              },
-              "&.Mui-selected[value='defense']": {
-                backgroundColor: theme.colors.defense.main,
-                "&:hover": {
-                  backgroundColor: theme.colors.defense.dark,
-                },
-              },
-            },
-          })}
-        >
-          <ToggleButton value="offense" aria-label="on offense">
-            <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
-            {t('points:tracker.offense')}
-          </ToggleButton>
-          <ToggleButton value="defense" aria-label="on defense">
-            <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
-            {t('points:tracker.defense')}
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+            })}
+          >
+            <ToggleButton value="offense" aria-label="on offense">
+              <FlashOnIcon sx={{ mr: 1, fontSize: 20 }} />
+              {t('points:tracker.offense')}
+            </ToggleButton>
+            <ToggleButton value="defense" aria-label="on defense">
+              <ShieldIcon sx={{ mr: 1, fontSize: 20 }} />
+              {t('points:tracker.defense')}
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+      )}
 
       {/* Line filter */}
       {lines && lines.length > 0 && (
