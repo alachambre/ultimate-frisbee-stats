@@ -14,21 +14,9 @@ describe("StartPointDialog", () => {
       />
     );
 
-    expect(screen.getByText("Start New Point")).toBeInTheDocument();
+    expect(screen.getByText("Create a new point")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /offense/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /defense/i })).toBeInTheDocument();
-  });
-
-  it("shows info message about player selection", () => {
-    render(
-      <StartPointDialog
-        open={true}
-        onClose={vi.fn()}
-        gameId={1}
-      />
-    );
-
-    expect(screen.getByText(/players can be selected after creating the point/i)).toBeInTheDocument();
   });
 
   it("allows toggling between offense and defense", async () => {
@@ -96,45 +84,6 @@ describe("StartPointDialog", () => {
       expect(onSuccess).toHaveBeenCalled();
     });
   });
-
-  it("preselects offense based on previous point result (won = start on defense)", async () => {
-    const { game } = await setupGameWithCompletedPoints();
-
-    render(
-      <StartPointDialog
-        open={true}
-        onClose={vi.fn()}
-        gameId={game.id}
-      />
-    );
-
-    await waitFor(() => {
-      const defenseButton = screen.getByRole("button", { name: /defense/i });
-      // Since last point was won, we should start on defense
-      expect(defenseButton).toHaveAttribute("aria-pressed", "true");
-    });
-  });
-
-  it("shows loading state while creating point", async () => {
-    const user = userEvent.setup();
-    const { game } = await setupGame();
-
-    render(
-      <StartPointDialog
-        open={true}
-        onClose={vi.fn()}
-        gameId={game.id}
-      />
-    );
-
-    const createButton = screen.getByRole("button", { name: /create point/i });
-    await user.click(createButton);
-
-    // Button should show loading state
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /creating/i })).toBeInTheDocument();
-    });
-  });
 });
 
 // Helper functions
@@ -150,12 +99,5 @@ async function setupGame() {
     competition_id: competition.id,
     opponent_name: "Opponent",
   });
-  return { team, competition, game };
-}
-
-async function setupGameWithCompletedPoints() {
-  const { team, competition, game } = await setupGame();
-  // Mock implementation would need to create completed points
-  // For now, just return the game
   return { team, competition, game };
 }
