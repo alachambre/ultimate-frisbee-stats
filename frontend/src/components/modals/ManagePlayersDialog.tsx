@@ -189,20 +189,6 @@ export default function ManagePlayersDialog({
   const menPlayers = filteredPlayers.filter((p) => p.gender === "M");
   const womenPlayers = filteredPlayers.filter((p) => p.gender === "W");
 
-  // Get selected players for display, sorted by gender (Men first) then name
-  const selectedPlayers = useMemo(() => {
-    return players
-      .filter((p) => selectedPlayerIds.includes(p.id))
-      .sort((a, b) => {
-        // Sort by gender first (M before W)
-        if (a.gender !== b.gender) {
-          return a.gender === "M" ? -1 : 1;
-        }
-        // Then sort by name
-        return a.name.localeCompare(b.name);
-      });
-  }, [players, selectedPlayerIds]);
-
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t("points:dialog.managePlayers.title")}</DialogTitle>
@@ -296,39 +282,6 @@ export default function ManagePlayersDialog({
           <Alert severity="error" sx={{ mb: 2 }}>
             {t("points:dialog.managePlayers.genderError")}
           </Alert>
-        )}
-
-        {/* Selected Players Display */}
-        {selectedPlayers.length > 0 && (
-          <Box sx={{ mb: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {t("points:dialog.managePlayers.selectedPlayers")}:
-            </Typography>
-            <Box display="flex" flexWrap="wrap" gap={0.5}>
-              {selectedPlayers.map((player) => (
-                <Chip
-                  key={player.id}
-                  icon={player.gender === "M" ? <MaleIcon /> : <FemaleIcon />}
-                  label={player.name}
-                  size="small"
-                  onDelete={() => togglePlayer(player.id)}
-                  sx={{
-                    backgroundColor: player.gender === "M" ? theme.palette.primary.main : theme.palette.secondary.main,
-                    color: "white",
-                    "& .MuiChip-icon": {
-                      color: "white",
-                    },
-                    "& .MuiChip-deleteIcon": {
-                      color: "white",
-                      "&:hover": {
-                        color: "rgba(255, 255, 255, 0.7)",
-                      },
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-          </Box>
         )}
 
         {/* Gender Tabs */}
