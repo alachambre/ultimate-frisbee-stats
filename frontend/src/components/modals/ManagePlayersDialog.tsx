@@ -209,13 +209,12 @@ export default function ManagePlayersDialog({
                     : t("points:dialog.start.women", "Women")
                 }
                 size="small"
-                sx={{
+                sx={(theme) => ({
                   mt: 0.5,
-                  bgcolor: (theme) =>
-                    requiredGenderRatio?.men === 4 ? theme.colors.men : theme.colors.women,
+                  bgcolor: requiredGenderRatio?.men === 4 ? theme.colors.men : theme.colors.women,
                   color: "white",
                   "& .MuiChip-icon": { color: "white" },
-                }}
+                })}
               />
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 {requiredGenderRatio?.men || "?"} men, {requiredGenderRatio?.women || "?"} women
@@ -226,8 +225,20 @@ export default function ManagePlayersDialog({
                 {t("points:dialog.managePlayers.selected", "Selected")}:
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  {selectedMen}M + {selectedWomen}W
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  sx={(theme) => ({
+                    color: isValidSelection ? theme.palette.success.main : theme.palette.text.primary
+                  })}
+                >
+                  <Box component="span" sx={(theme) => ({ color: theme.colors.men })}>
+                    {selectedMen}M
+                  </Box>
+                  {" + "}
+                  <Box component="span" sx={(theme) => ({ color: theme.colors.women })}>
+                    {selectedWomen}W
+                  </Box>
                 </Typography>
                 {isValidSelection && <CheckCircleIcon color="success" />}
               </Box>
@@ -268,9 +279,12 @@ export default function ManagePlayersDialog({
         )}
 
         {/* Men list */}
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
-          {t("points:dialog.start.men", "Men")}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <MaleIcon sx={(theme) => ({ color: theme.colors.men })} />
+          <Typography variant="subtitle2" sx={(theme) => ({ fontWeight: "bold", color: theme.colors.men })}>
+            {t("points:dialog.start.men", "Men")}
+          </Typography>
+        </Box>
         <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mb: 2 }}>
           {menPlayers.map((player) => (
             <ListItem key={player.id} disablePadding>
@@ -301,9 +315,12 @@ export default function ManagePlayersDialog({
         </List>
 
         {/* Women list */}
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
-          {t("points:dialog.start.women", "Women")}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <FemaleIcon sx={(theme) => ({ color: theme.colors.women })} />
+          <Typography variant="subtitle2" sx={(theme) => ({ fontWeight: "bold", color: theme.colors.women })}>
+            {t("points:dialog.start.women", "Women")}
+          </Typography>
+        </Box>
         <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
           {womenPlayers.map((player) => (
             <ListItem key={player.id} disablePadding>
