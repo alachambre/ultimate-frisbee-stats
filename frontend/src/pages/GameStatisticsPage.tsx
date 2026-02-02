@@ -656,7 +656,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.defense.break_rate}
                   count={teamStats.defense.points_won}
                   total={teamStats.defense.points_started}
-                  color={(theme) => theme.colors.defense.light}
+                  color={(theme) => theme.colors.defense.dark}
                   tooltip={t("statistics:tooltips.breakRate")}
                 />
               </Grid>
@@ -666,7 +666,7 @@ export default function GameStatisticsPage() {
                   percentage={teamStats.defense.clean_break_rate}
                   count={teamStats.defense.points_won_no_turnover}
                   total={teamStats.defense.points_won}
-                  color={(theme) => theme.colors.defense.dark}
+                  color={(theme) => theme.colors.defense.light}
                   tooltip={t("statistics:tooltips.cleanBreakRate")}
                 />
               </Grid>

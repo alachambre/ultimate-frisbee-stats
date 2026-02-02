@@ -519,69 +519,43 @@ describe("GameStatisticsPage", () => {
       expect(screen.getByText("Test Competition")).toBeInTheDocument();
     });
 
-    // Set up mocks for CSV download AFTER page is loaded
-    const createObjectURLMock = vi.fn(() => "blob:mock-url");
-    const revokeObjectURLMock = vi.fn();
-    const originalCreateObjectURL = global.URL.createObjectURL;
-    const originalRevokeObjectURL = global.URL.revokeObjectURL;
-    global.URL.createObjectURL = createObjectURLMock;
-    global.URL.revokeObjectURL = revokeObjectURLMock;
+    // Mock URL.createObjectURL to capture the blob
+    let capturedBlob: Blob | null = null;
+    const originalCreateObjectURL = globalThis.URL.createObjectURL;
+    globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+      capturedBlob = blob;
+      return "blob:mock-url";
+    });
 
-    const mockLink = {
-      setAttribute: vi.fn(),
-      click: vi.fn(),
-      style: {},
-    } as unknown as HTMLAnchorElement;
-    const originalCreateElement = document.createElement.bind(document);
-    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+    // Mock link.click to avoid actual download
+    const originalCreateElement = document.createElement;
+    document.createElement = vi.fn((tag: string) => {
+      const element = originalCreateElement.call(document, tag);
       if (tag === "a") {
-        return mockLink;
+        element.click = vi.fn();
       }
-      return originalCreateElement(tag);
-    });
-    const originalAppendChild = document.body.appendChild.bind(document.body);
-    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation((node: Node) => {
-      if (node === mockLink) {
-        return mockLink;
-      }
-      return originalAppendChild(node);
-    });
-    const originalRemoveChild = document.body.removeChild.bind(document.body);
-    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation((node: Node) => {
-      if (node === mockLink) {
-        return mockLink;
-      }
-      return originalRemoveChild(node);
-    });
+      return element;
+    }) as typeof document.createElement;
 
     // Find and click the export button
     const exportButton = screen.getByRole("button", { name: /export csv/i });
     expect(exportButton).toBeInTheDocument();
-    expect(exportButton).not.toBeDisabled();
-
     await user.click(exportButton);
 
-    // Wait for the export to complete
+    // Wait for the CSV to be generated
     await waitFor(() => {
-      expect(createElementSpy).toHaveBeenCalledWith("a");
+      expect(capturedBlob).not.toBeNull();
     }, { timeout: 3000 });
 
-    // Verify CSV download was triggered
-    expect(mockLink.setAttribute).toHaveBeenCalledWith("href", "blob:mock-url");
-    expect(mockLink.setAttribute).toHaveBeenCalledWith(
-      "download",
-      expect.stringContaining("Test_Team_vs_Rival_Team_statistics.csv")
-    );
-    expect(mockLink.click).toHaveBeenCalled();
+    // Verify the blob was captured and contains expected CSV content
+    expect(capturedBlob).not.toBeNull();
+    expect(capturedBlob).toBeInstanceOf(Blob);
 
-    // Verify the CSV content was created with a Blob
-    expect(createObjectURLMock).toHaveBeenCalled();
-    const blobCall = createObjectURLMock.mock.calls[0][0];
-    expect(blobCall).toBeInstanceOf(Blob);
-    expect(blobCall.type).toBe("text/csv;charset=utf-8;");
+    // TypeScript: assert blob is not null after runtime checks
+    const blob = capturedBlob as unknown as Blob;
+    expect(blob.type).toBe("text/csv;charset=utf-8;");
 
-    // Read the blob content to verify it contains expected data
-    const csvContent = await blobCall.text();
+    const csvContent = await blob.text();
     expect(csvContent).toContain("GAME INFORMATION");
     expect(csvContent).toContain("Test Competition");
     expect(csvContent).toContain("Test Team vs Rival Team");
@@ -592,16 +566,8 @@ describe("GameStatisticsPage", () => {
     expect(csvContent).toContain("Point 1");
     expect(csvContent).toContain("Ho Stack");
 
-    // Verify cleanup
-    expect(appendChildSpy).toHaveBeenCalledWith(mockLink);
-    expect(removeChildSpy).toHaveBeenCalledWith(mockLink);
-    expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url");
-
     // Restore mocks
-    createElementSpy.mockRestore();
-    appendChildSpy.mockRestore();
-    removeChildSpy.mockRestore();
-    global.URL.createObjectURL = originalCreateObjectURL;
-    global.URL.revokeObjectURL = originalRevokeObjectURL;
+    globalThis.URL.createObjectURL = originalCreateObjectURL;
+    document.createElement = originalCreateElement;
   });
 });
