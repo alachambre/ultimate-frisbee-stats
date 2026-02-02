@@ -93,7 +93,7 @@ export default function StartPointDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t("points:dialog.start.title", "Create a new point")}</DialogTitle>
+      <DialogTitle>{t("points:dialog.start.title")}</DialogTitle>
       <DialogContent>
         {startMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
