@@ -19,6 +19,7 @@ import {
   ListItemIcon,
   ListItemText,
   Checkbox,
+  useTheme,
 } from "@mui/material";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
@@ -48,6 +49,7 @@ export default function ManagePlayersDialog({
   onSuccess,
 }: ManagePlayersDialogProps) {
   const { t } = useTranslation(["points", "common"]);
+  const theme = useTheme();
   const queryClient = useQueryClient();
 
   // Lazy state initialization from point.players
@@ -209,12 +211,12 @@ export default function ManagePlayersDialog({
                     : t("points:dialog.start.women", "Women")
                 }
                 size="small"
-                sx={(theme) => ({
+                sx={{
                   mt: 0.5,
                   bgcolor: requiredGenderRatio?.men === 4 ? theme.colors.men : theme.colors.women,
                   color: "white",
                   "& .MuiChip-icon": { color: "white" },
-                })}
+                }}
               />
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 {requiredGenderRatio?.men || "?"} men, {requiredGenderRatio?.women || "?"} women
@@ -228,15 +230,15 @@ export default function ManagePlayersDialog({
                 <Typography
                   variant="h6"
                   fontWeight="bold"
-                  sx={(theme) => ({
+                  sx={{
                     color: isValidSelection ? theme.palette.success.main : theme.palette.text.primary
-                  })}
+                  }}
                 >
-                  <Box component="span" sx={(theme) => ({ color: theme.colors.men })}>
+                  <Box component="span" sx={{ color: theme.colors.men }}>
                     {selectedMen}M
                   </Box>
                   {" + "}
-                  <Box component="span" sx={(theme) => ({ color: theme.colors.women })}>
+                  <Box component="span" sx={{ color: theme.colors.women }}>
                     {selectedWomen}W
                   </Box>
                 </Typography>
@@ -280,8 +282,8 @@ export default function ManagePlayersDialog({
 
         {/* Men list */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <MaleIcon sx={(theme) => ({ color: theme.colors.men })} />
-          <Typography variant="subtitle2" sx={(theme) => ({ fontWeight: "bold", color: theme.colors.men })}>
+          <MaleIcon sx={{ color: theme.colors.men }} />
+          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.men }}>
             {t("points:dialog.start.men", "Men")}
           </Typography>
         </Box>
@@ -316,8 +318,8 @@ export default function ManagePlayersDialog({
 
         {/* Women list */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-          <FemaleIcon sx={(theme) => ({ color: theme.colors.women })} />
-          <Typography variant="subtitle2" sx={(theme) => ({ fontWeight: "bold", color: theme.colors.women })}>
+          <FemaleIcon sx={{ color: theme.colors.women }} />
+          <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: theme.colors.women }}>
             {t("points:dialog.start.women", "Women")}
           </Typography>
         </Box>
