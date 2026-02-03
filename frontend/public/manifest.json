@@ -1,0 +1,17 @@
+{
+  "name": "Monkey Statistics",
+  "short_name": "Monkey Stats",
+  "description": "Ultimate Frisbee statistics tracking app for Monkey team",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "/monkey-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
