@@ -265,21 +265,6 @@ describe("ManagePlayersDialog", () => {
       // Men should not be visible
       expect(screen.queryByText("Bob")).not.toBeInTheDocument();
     });
-
-    it("displays player numbers when available", () => {
-      render(
-        <ManagePlayersDialog
-          open={true}
-          onClose={vi.fn()}
-          point={mockPoint}
-          teamId={1}
-          players={mockPlayers}
-        />
-      );
-
-      expect(screen.getByText("#2")).toBeInTheDocument(); // Bob's number
-      expect(screen.getByText("#3")).toBeInTheDocument(); // Charlie's number
-    });
   });
 
   describe("Player Selection", () => {

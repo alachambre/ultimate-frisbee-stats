@@ -354,10 +354,7 @@ export default function ManagePlayersDialog({
                       disableRipple
                     />
                   </ListItemIcon>
-                  <ListItemText
-                    primary={player.name}
-                    secondary={player.number ? `#${player.number}` : null}
-                  />
+                  <ListItemText primary={player.name} />
                 </ListItemButton>
               </ListItem>
             ))}
@@ -386,10 +383,7 @@ export default function ManagePlayersDialog({
                       disableRipple
                     />
                   </ListItemIcon>
-                  <ListItemText
-                    primary={player.name}
-                    secondary={player.number ? `#${player.number}` : null}
-                  />
+                  <ListItemText primary={player.name} />
                 </ListItemButton>
               </ListItem>
             ))}
