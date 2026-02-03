@@ -416,18 +416,28 @@ export default function ManagePlayersDialog({
                       />
                     </ListItemIcon>
                     <ListItemText
-                      primary={player.name}
-                      secondary={playTime}
-                      secondaryTypographyProps={{
-                        sx: {
-                          color: highlight === "high"
-                            ? theme.palette.success.main
-                            : highlight === "low"
-                            ? theme.palette.warning.main
-                            : "text.secondary",
-                          fontWeight: highlight ? 500 : 400,
-                        },
-                      }}
+                      primary={
+                        <>
+                          {player.name}
+                          {playTime && (
+                            <Box
+                              component="span"
+                              sx={{
+                                ml: 1,
+                                fontStyle: "italic",
+                                color: highlight === "high"
+                                  ? theme.palette.success.main
+                                  : highlight === "low"
+                                  ? theme.palette.warning.main
+                                  : "text.secondary",
+                                fontWeight: highlight ? 500 : 400,
+                              }}
+                            >
+                              ({playTime})
+                            </Box>
+                          )}
+                        </>
+                      }
                     />
                   </ListItemButton>
                 </ListItem>
@@ -470,18 +480,28 @@ export default function ManagePlayersDialog({
                       />
                     </ListItemIcon>
                     <ListItemText
-                      primary={player.name}
-                      secondary={playTime}
-                      secondaryTypographyProps={{
-                        sx: {
-                          color: highlight === "high"
-                            ? theme.palette.success.main
-                            : highlight === "low"
-                            ? theme.palette.warning.main
-                            : "text.secondary",
-                          fontWeight: highlight ? 500 : 400,
-                        },
-                      }}
+                      primary={
+                        <>
+                          {player.name}
+                          {playTime && (
+                            <Box
+                              component="span"
+                              sx={{
+                                ml: 1,
+                                fontStyle: "italic",
+                                color: highlight === "high"
+                                  ? theme.palette.success.main
+                                  : highlight === "low"
+                                  ? theme.palette.warning.main
+                                  : "text.secondary",
+                                fontWeight: highlight ? 500 : 400,
+                              }}
+                            >
+                              ({playTime})
+                            </Box>
+                          )}
+                        </>
+                      }
                     />
                   </ListItemButton>
                 </ListItem>
