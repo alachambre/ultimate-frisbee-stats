@@ -21,6 +21,7 @@ import LoadingState from "../components/shared/LoadingState";
 import GameTimer from "../components/games/GameTimer";
 import { exportGameStatisticsToCSV } from "../utils/csvExport";
 import TeamStatistics from "../components/statistics/TeamStatistics";
+import StrategyStatistics from "../components/statistics/StrategyStatistics";
 import PlayerStatistics from "../components/statistics/PlayerStatistics";
 
 export default function GameStatisticsPage() {
@@ -180,6 +181,9 @@ export default function GameStatisticsPage() {
 
       {/* Team Statistics Section */}
       {teamStats && <TeamStatistics teamStats={teamStats} />}
+
+      {/* Strategy Statistics Section */}
+      {strategyStats && <StrategyStatistics strategyStats={strategyStats} />}
 
       {/* Player Statistics Section */}
       {playerStats && <PlayerStatistics playerStats={playerStats} />}
