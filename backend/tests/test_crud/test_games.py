@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime
 from app.crud import games, points
 from app.schemas import GameCreate, GameUpdate, PointCreate, GameStatus, PointUpdate, PointStatus, PointFinish
+from tests.builders import GameBuilder
 
 
 def test_create_game(db_session, sample_competition):
@@ -46,16 +47,15 @@ def test_get_game_not_found(db_session):
 
 def test_get_games_by_team(db_session, sample_team, sample_competition):
     """Test listing all games for a team across competitions"""
-    # Create multiple games in the same competition
+    from datetime import timedelta
+
+    # Create multiple games in the same competition with different dates
+    base_date = datetime.now()
     for i in range(3):
-        games.create_game(
-            db_session,
-            GameCreate(
-                competition_id=sample_competition.id,
-                opponent_name=f"Opponent {i+1}",
-                date=datetime.now()
-            )
-        )
+        GameBuilder(db_session, sample_competition) \
+            .with_opponent(f"Opponent {i+1}") \
+            .with_date(base_date + timedelta(days=i)) \
+            .build()
 
     team_games = games.get_games_by_team(db_session, sample_team.id)
 

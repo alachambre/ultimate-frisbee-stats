@@ -4,6 +4,7 @@ Tests for Line CRUD operations
 import pytest
 from app import crud, schemas, models
 from app.schemas import Gender
+from tests.builders import TeamBuilder, LineBuilder
 
 
 def test_create_line_basic(db_session, sample_team):
@@ -72,7 +73,7 @@ def test_create_line_duplicate_name_per_team(db_session, sample_team):
 
 def test_create_line_duplicate_name_across_teams(db_session, sample_team):
     """Test that duplicate line names across different teams is allowed"""
-    team2 = crud.create_team(db_session, schemas.TeamCreate(name="Team 2"))
+    team2 = TeamBuilder(db_session).with_name("Team 2").build()
 
     line1_data = schemas.LineCreate(team_id=sample_team.id, name="O-Line")
     line2_data = schemas.LineCreate(team_id=team2.id, name="O-Line")
@@ -125,13 +126,7 @@ def test_get_lines_all(db_session, sample_team):
     """Test retrieving all lines"""
     # Create multiple lines
     for i in range(3):
-        crud.create_line(
-            db_session,
-            schemas.LineCreate(
-                team_id=sample_team.id,
-                name=f"Line {i}",
-            ),
-        )
+        LineBuilder(db_session, sample_team).with_name(f"Line {i}").build()
 
     lines = crud.get_lines(db_session)
     assert len(lines) >= 3
@@ -139,17 +134,11 @@ def test_get_lines_all(db_session, sample_team):
 
 def test_get_lines_by_team_filter(db_session, sample_team):
     """Test filtering lines by team"""
-    team2 = crud.create_team(db_session, schemas.TeamCreate(name="Team 2"))
+    team2 = TeamBuilder(db_session).with_name("Team 2").build()
 
     # Create lines for both teams
-    crud.create_line(
-        db_session,
-        schemas.LineCreate(team_id=sample_team.id, name="Team 1 O-Line"),
-    )
-    crud.create_line(
-        db_session,
-        schemas.LineCreate(team_id=team2.id, name="Team 2 O-Line"),
-    )
+    LineBuilder(db_session, sample_team).with_name("Team 1 O-Line").build()
+    LineBuilder(db_session, team2).with_name("Team 2 O-Line").build()
 
     team1_lines = crud.get_lines(db_session, team_id=sample_team.id)
     assert all(line.team_id == sample_team.id for line in team1_lines)
@@ -166,10 +155,7 @@ def test_get_lines_pagination(db_session, sample_team):
     """Test pagination with skip and limit"""
     # Create 10 lines
     for i in range(10):
-        crud.create_line(
-            db_session,
-            schemas.LineCreate(team_id=sample_team.id, name=f"Line {i}"),
-        )
+        LineBuilder(db_session, sample_team).with_name(f"Line {i}").build()
 
     # Get first 5
     first_page = crud.get_lines(db_session, skip=0, limit=5)
@@ -323,16 +309,14 @@ def test_add_players_to_line_duplicates_ignored(db_session, sample_team, sample_
 
 def test_add_players_to_line_team_validation(db_session, sample_team, sample_players):
     """Test that only players from same team can be added"""
-    team2 = crud.create_team(db_session, schemas.TeamCreate(name="Team 2"))
-    team2_player = crud.create_player(
-        db_session,
-        schemas.PlayerCreate(
-            team_id=team2.id,
-            name="Team 2 Player",
-            jersey_number=99,
-            gender=Gender.M,
-        ),
-    )
+    from tests.builders import PlayerBuilder
+
+    team2 = TeamBuilder(db_session).with_name("Team 2").build()
+    team2_player = PlayerBuilder(db_session, team2) \
+        .with_name("Team 2 Player") \
+        .with_number(99) \
+        .male() \
+        .build()
 
     line_data = schemas.LineCreate(team_id=sample_team.id, name="O-Line")
     line = crud.create_line(db_session, line_data)
@@ -448,10 +432,7 @@ def test_cascade_delete_team_deletes_lines(db_session, sample_team):
     """Test that deleting a team cascades to delete its lines"""
     # Create lines for the team
     for i in range(3):
-        crud.create_line(
-            db_session,
-            schemas.LineCreate(team_id=sample_team.id, name=f"Line {i}"),
-        )
+        LineBuilder(db_session, sample_team).with_name(f"Line {i}").build()
 
     team_id = sample_team.id
     lines_count = len(crud.get_lines(db_session, team_id=team_id))

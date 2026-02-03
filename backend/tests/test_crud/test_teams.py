@@ -1,12 +1,12 @@
 import pytest
 from app.crud import teams, points
 from app.schemas import TeamCreate, TeamUpdate, PointCreate, PointFinish, PointUpdate, PointStatus
+from tests.builders import TeamBuilder, GameScenarioBuilder
 
 
 def test_create_team(db_session):
     """Test creating a team and verify it's persisted in DB"""
-    team_data = TeamCreate(name="Flying Disc Club")
-    team = teams.create_team(db_session, team_data)
+    team = TeamBuilder(db_session).with_name("Flying Disc Club").build()
 
     # Verify returned object
     assert team.id is not None
@@ -38,9 +38,9 @@ def test_get_team_not_found(db_session):
 def test_get_teams(db_session):
     """Test listing all teams"""
     # Create multiple teams
-    teams.create_team(db_session, TeamCreate(name="Team 1"))
-    teams.create_team(db_session, TeamCreate(name="Team 2"))
-    teams.create_team(db_session, TeamCreate(name="Team 3"))
+    TeamBuilder(db_session).with_name("Team 1").build()
+    TeamBuilder(db_session).with_name("Team 2").build()
+    TeamBuilder(db_session).with_name("Team 3").build()
 
     all_teams = teams.get_teams(db_session)
 
@@ -54,7 +54,7 @@ def test_get_teams_with_pagination(db_session):
     """Test listing teams with pagination"""
     # Create 5 teams
     for i in range(1, 6):
-        teams.create_team(db_session, TeamCreate(name=f"Team {i}"))
+        TeamBuilder(db_session).with_name(f"Team {i}").build()
 
     # Get first 2
     page1 = teams.get_teams(db_session, skip=0, limit=2)
@@ -127,46 +127,31 @@ def test_delete_team_cascades_to_players(db_session, sample_team, sample_players
     assert len(players) == 0
 
 
-def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sample_players, sample_game):
+def test_delete_team_cascades_to_games_and_points(db_session):
     """Test that deleting a team cascades to delete games, points, and players"""
-    from app.crud import games, points, get_players_by_team
-    from app.schemas import PointCreate, PointFinish
+    from app.crud import games, get_players_by_team
 
-    team_id = sample_team.id
-    game_id = sample_game.id
+    # Create a complete scenario with team, game, players, and completed points
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team("Test Team") \
+        .with_competition() \
+        .with_game() \
+        .with_players(7) \
+        .with_completed_point(offense=True, won=True) \
+        .with_completed_point(offense=False, won=False) \
+        .build()
 
-    # Create some points for the game
-    player_ids = [p.id for p in sample_players]
-    point1 = points.create_point(
-        db_session,
-        PointCreate(
-            game_id=game_id,
-            starting_on_offense=True,
-            player_ids=player_ids
-        )
-    )
-    # Finish first point before creating the second
-    points.update_point(db_session, point1.id, PointUpdate(status=PointStatus.running))
-    points.finish_point(db_session, point1.id, PointFinish(won=True))
-
-    point2 = points.create_point(
-        db_session,
-        PointCreate(
-            game_id=game_id,
-            starting_on_offense=False,
-            player_ids=player_ids
-        )
-    )
-    # Finish second point
-    points.update_point(db_session, point2.id, PointUpdate(status=PointStatus.running))
-    points.finish_point(db_session, point2.id, PointFinish(won=False))
+    team_id = scenario.team.id
+    game_id = scenario.game.id
+    point1_id = scenario.points[0].id
+    point2_id = scenario.points[1].id
 
     # Verify everything exists before deletion
     assert teams.get_team(db_session, team_id) is not None
     assert len(get_players_by_team(db_session, team_id)) == 7
     assert games.get_game(db_session, game_id) is not None
-    assert points.get_point(db_session, point1.id) is not None
-    assert points.get_point(db_session, point2.id) is not None
+    assert points.get_point(db_session, point1_id) is not None
+    assert points.get_point(db_session, point2_id) is not None
 
     # Delete team
     success = teams.delete_team(db_session, team_id)
@@ -183,5 +168,5 @@ def test_delete_team_cascades_to_games_and_points(db_session, sample_team, sampl
     assert games.get_game(db_session, game_id) is None
 
     # Points should be deleted (cascade from game)
-    assert points.get_point(db_session, point1.id) is None
-    assert points.get_point(db_session, point2.id) is None
+    assert points.get_point(db_session, point1_id) is None
+    assert points.get_point(db_session, point2_id) is None
