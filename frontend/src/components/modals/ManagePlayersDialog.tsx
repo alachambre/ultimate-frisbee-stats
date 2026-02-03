@@ -199,6 +199,7 @@ export default function ManagePlayersDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(point.game_id)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["liveStats", point.game_id] });
       handleClose();
       onSuccess?.();
     },

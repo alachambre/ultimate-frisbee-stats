@@ -84,6 +84,7 @@ export default function FinishPointDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(activePoint.game_id)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", activePoint.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["liveStats", activePoint.game_id] });
       handleClose();
       onSuccess?.();
     },
