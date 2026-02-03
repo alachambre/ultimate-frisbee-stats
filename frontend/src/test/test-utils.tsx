@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { type ReactElement } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -49,6 +50,9 @@ const theme = createTheme({
     },
     women: {
       main: "#38bdf8",
+    },
+    pull: {
+      main: "#2d7a3e",
     },
   },
 });

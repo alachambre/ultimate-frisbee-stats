@@ -95,6 +95,12 @@ describe("GameStatisticsPage", () => {
             clean_break_rate: 0.5,
             points_lost_no_turnover: 1,
             hold_rate: 0.4,
+            pull_stats: {
+              total_pulls: 5,
+              inbound_pulls: 3,
+              out_of_bounds_pulls: 2,
+              inbound_rate: 0.6,
+            },
           },
         });
       })
@@ -115,6 +121,10 @@ describe("GameStatisticsPage", () => {
     expect(screen.getAllByText("75%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("40%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("50%").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("60%").length).toBeGreaterThan(0);
+
+    // Check for pull statistics
+    expect(screen.getByText("Pull inbound")).toBeInTheDocument();
   });
 
   it("displays player statistics table", async () => {
@@ -355,6 +365,57 @@ describe("GameStatisticsPage", () => {
 
     // Check for player count
     expect(screen.getByText(/2 player\(s\)/)).toBeInTheDocument();
+  });
+
+  it("displays pull statistics in defense section", async () => {
+    // Override the team stats endpoint to return data with pull stats
+    server.use(
+      http.get(`${BASE_URL}/statistics/games/:gameId/team`, () => {
+        return HttpResponse.json({
+          game_id: 1,
+          total_completed_points: 10,
+          offense: {
+            points_started: 5,
+            points_won: 4,
+            points_lost: 1,
+            hold_rate: 0.8,
+            points_won_no_turnover: 3,
+            clean_hold_rate: 0.75,
+            broken_rate: 0.2,
+          },
+          defense: {
+            points_started: 5,
+            points_won: 2,
+            points_lost: 3,
+            break_rate: 0.4,
+            points_with_turnover: 4,
+            turnover_rate: 0.8,
+            points_won_no_turnover: 1,
+            clean_break_rate: 0.5,
+            points_lost_no_turnover: 1,
+            hold_rate: 0.4,
+            pull_stats: {
+              total_pulls: 5,
+              inbound_pulls: 4,
+              out_of_bounds_pulls: 1,
+              inbound_rate: 0.8,
+            },
+          },
+        });
+      })
+    );
+
+    render(<GameStatisticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Team Statistics")).toBeInTheDocument();
+    });
+
+    // Check that pull inbound label is displayed
+    expect(screen.getByText("Pull inbound")).toBeInTheDocument();
+
+    // Check that pull rate is displayed correctly (80%)
+    expect(screen.getAllByText("80%").length).toBeGreaterThan(0);
   });
 
   it("displays stat values in correct format", async () => {

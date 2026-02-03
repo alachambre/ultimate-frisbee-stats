@@ -1279,6 +1279,12 @@ export const handlers = [
         clean_break_rate: 0.0,
         points_lost_no_turnover: 0,
         hold_rate: 0.0,
+        pull_stats: {
+          total_pulls: 0,
+          inbound_pulls: 0,
+          out_of_bounds_pulls: 0,
+          inbound_rate: 0.0,
+        },
       },
     });
   }),

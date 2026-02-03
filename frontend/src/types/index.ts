@@ -357,6 +357,13 @@ export interface OffenseStats {
   broken_rate: number;
 }
 
+export interface PullStats {
+  total_pulls: number;
+  inbound_pulls: number;
+  out_of_bounds_pulls: number;
+  inbound_rate: number;
+}
+
 export interface DefenseStats {
   points_started: number;
   points_won: number;
@@ -368,6 +375,7 @@ export interface DefenseStats {
   clean_break_rate: number;
   points_lost_no_turnover: number;
   hold_rate: number;
+  pull_stats: PullStats;
 }
 
 export interface GameTeamStats {

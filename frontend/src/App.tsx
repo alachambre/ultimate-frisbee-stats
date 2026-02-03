@@ -57,6 +57,9 @@ const theme = createTheme({
     women: {
       main: "#38bdf8",
     },
+    pull: {
+      main: "#2d7a3e",
+    },
   },
 });
 

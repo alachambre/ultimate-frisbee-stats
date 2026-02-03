@@ -26,6 +26,9 @@ declare module "@mui/material/styles" {
       women: {
         main: string;
       };
+      pull: {
+        main: string;
+      };
     };
   }
   interface ThemeOptions {
@@ -50,6 +53,9 @@ declare module "@mui/material/styles" {
         main?: string;
       };
       women?: {
+        main?: string;
+      };
+      pull?: {
         main?: string;
       };
     };
@@ -80,6 +86,9 @@ declare module "@mui/system" {
         main: string;
       };
       women: {
+        main: string;
+      };
+      pull: {
         main: string;
       };
     };

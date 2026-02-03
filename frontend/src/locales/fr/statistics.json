@@ -27,7 +27,8 @@
     "cleanHold": "Clean Hold",
     "break": "Break",
     "turnover": "Turnover",
-    "cleanBreak": "Clean Break"
+    "cleanBreak": "Clean Break",
+    "pullInbound": "Pull dans le terrain"
   },
   "playerStats": {
     "title": "Statistiques des Joueurs",
@@ -61,6 +62,7 @@
     "holdRate": "Pourcentage de points offensifs gagnés (holds)",
     "forcedTurnovers": "Points où on a forcé l'adversaire à faire un turnover",
     "offensePoints": "Nombre de points offensifs complétés joués",
-    "defensePoints": "Nombre de points défensifs complétés joués"
+    "defensePoints": "Nombre de points défensifs complétés joués",
+    "pullRate": "Pourcentage de pulls restés dans le terrain"
   }
 }

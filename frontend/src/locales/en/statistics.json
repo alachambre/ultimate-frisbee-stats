@@ -27,7 +27,8 @@
     "cleanHold": "Clean Hold",
     "break": "Break",
     "turnover": "Turnover",
-    "cleanBreak": "Clean Break"
+    "cleanBreak": "Clean Break",
+    "pullInbound": "Pull inbound"
   },
   "playerStats": {
     "title": "Player Statistics",
@@ -61,6 +62,7 @@
     "holdRate": "Percentage of offensive points won (holds)",
     "forcedTurnovers": "Points where we forced the opponent to turn it over",
     "offensePoints": "Number of completed offensive points played",
-    "defensePoints": "Number of completed defensive points played"
+    "defensePoints": "Number of completed defensive points played",
+    "pullRate": "Percentage of pulls that stayed inbound"
   }
 }
