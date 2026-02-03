@@ -46,7 +46,12 @@
     "sortBy": "Sort by",
     "sortByPoints": "Points (most first)",
     "sortByTime": "Time (most first)",
-    "sortByName": "Name (A-Z)"
+    "sortByName": "Name (A-Z)",
+    "sortByHold": "Hold (highest first)",
+    "sortByCleanHold": "Clean Hold (highest first)",
+    "sortByTurnover": "Turnover (highest first)",
+    "sortByBreak": "Break (highest first)",
+    "sortByCleanBreak": "Clean Break (highest first)"
   },
   "tooltips": {
     "cleanPointRate": "Percentage of won points that had no turnovers",

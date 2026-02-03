@@ -17,6 +17,10 @@ import {
   Grid,
   useMediaQuery,
   useTheme,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
@@ -179,6 +183,44 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
           }}
         />
       </Tabs>
+
+      {/* Mobile Sort Dropdown */}
+      {isMobile && (
+        <Box sx={{ mb: 2 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="sort-select-label">{t("playerStats.sortBy")}</InputLabel>
+            <Select
+              labelId="sort-select-label"
+              label={t("playerStats.sortBy")}
+              value={`${sortColumn}-${sortDirection}`}
+              onChange={(e) => {
+                const [column, direction] = e.target.value.split("-") as [
+                  SortColumn,
+                  SortDirection
+                ];
+                setSortColumn(column);
+                setSortDirection(direction);
+              }}
+            >
+              <MenuItem value="name-asc">{t("playerStats.sortByName")}</MenuItem>
+              <MenuItem value="time-desc">{t("playerStats.sortByTime")}</MenuItem>
+              <MenuItem value="points-desc">{t("playerStats.sortByPoints")}</MenuItem>
+              {activeTab === "offense" ? (
+                <>
+                  <MenuItem value="winRate-desc">{t("playerStats.sortByHold")}</MenuItem>
+                  <MenuItem value="cleanPoints-desc">{t("playerStats.sortByCleanHold")}</MenuItem>
+                </>
+              ) : (
+                <>
+                  <MenuItem value="forcedTurnovers-desc">{t("playerStats.sortByTurnover")}</MenuItem>
+                  <MenuItem value="winRate-desc">{t("playerStats.sortByBreak")}</MenuItem>
+                  <MenuItem value="cleanPoints-desc">{t("playerStats.sortByCleanBreak")}</MenuItem>
+                </>
+              )}
+            </Select>
+          </FormControl>
+        </Box>
+      )}
 
       {/* Offense View */}
       {activeTab === "offense" && (

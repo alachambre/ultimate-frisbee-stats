@@ -46,7 +46,12 @@
     "sortBy": "Trier par",
     "sortByPoints": "Points (+ d'abord)",
     "sortByTime": "Temps (+ d'abord)",
-    "sortByName": "Nom (A-Z)"
+    "sortByName": "Nom (A-Z)",
+    "sortByHold": "Hold (+ élevé d'abord)",
+    "sortByCleanHold": "Clean Hold (+ élevé d'abord)",
+    "sortByTurnover": "Turnover (+ élevé d'abord)",
+    "sortByBreak": "Break (+ élevé d'abord)",
+    "sortByCleanBreak": "Clean Break (+ élevé d'abord)"
   },
   "tooltips": {
     "cleanPointRate": "Pourcentage de points gagnés sans turnover",
