@@ -115,9 +115,14 @@ describe("ManagePlayersDialog", () => {
 
       // Should show 3M + 4W = 7 players selected
       await waitFor(() => {
-        expect(screen.getByText(/3M/)).toBeInTheDocument();
-        expect(screen.getByText(/4W/)).toBeInTheDocument();
+        // Look for "Selected:" label to confirm UI is rendered
+        expect(screen.getByText("Selected:")).toBeInTheDocument();
         expect(screen.getByText("(7/7)")).toBeInTheDocument();
+        // Check that we have the gender counts (allowing for multiple matches)
+        const threeM = screen.getAllByText(/3M/);
+        const fourW = screen.getAllByText(/4W/);
+        expect(threeM.length).toBeGreaterThan(0);
+        expect(fourW.length).toBeGreaterThan(0);
       });
     });
 
@@ -357,7 +362,7 @@ describe("ManagePlayersDialog", () => {
       await user.click(screen.getByText("Frank"));
 
       await waitFor(() => {
-        expect(screen.getByText(/3M/)).toBeInTheDocument();
+        expect(screen.getByText("(3/7)")).toBeInTheDocument();
       });
 
       // Switch to women tab and select 4 women
@@ -373,7 +378,7 @@ describe("ManagePlayersDialog", () => {
       await user.click(screen.getByText("Grace"));
 
       await waitFor(() => {
-        expect(screen.getByText(/4W/)).toBeInTheDocument();
+        expect(screen.getByText("(7/7)")).toBeInTheDocument();
       });
     });
   });

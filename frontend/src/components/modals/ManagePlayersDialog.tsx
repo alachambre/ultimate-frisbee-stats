@@ -207,24 +207,32 @@ export default function ManagePlayersDialog({
               <Typography variant="body2" color="text.secondary">
                 {t("points:dialog.managePlayers.expected")}:
               </Typography>
-              <Chip
-                icon={requiredGenderRatio?.men === 4 ? <MaleIcon /> : <FemaleIcon />}
-                label={
-                  requiredGenderRatio?.men === 4
-                    ? t("points:dialog.start.men")
-                    : t("points:dialog.start.women")
-                }
-                size="small"
-                sx={{
-                  mt: 0.5,
-                  bgcolor: requiredGenderRatio?.men === 4 ? theme.colors.men.main : theme.colors.women.main,
-                  color: "white",
-                  "& .MuiChip-icon": { color: "white" },
-                }}
-              />
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                {requiredGenderRatio?.men || "?"} {t("common:labels.men").toLowerCase()}, {requiredGenderRatio?.women || "?"} {t("common:labels.women").toLowerCase()}
-              </Typography>
+              {requiredGenderRatio ? (
+                <>
+                  <Chip
+                    icon={requiredGenderRatio.men === 4 ? <MaleIcon /> : <FemaleIcon />}
+                    label={
+                      requiredGenderRatio.men === 4
+                        ? t("points:dialog.start.men")
+                        : t("points:dialog.start.women")
+                    }
+                    size="small"
+                    sx={{
+                      mt: 0.5,
+                      bgcolor: requiredGenderRatio.men === 4 ? theme.colors.men.main : theme.colors.women.main,
+                      color: "white",
+                      "& .MuiChip-icon": { color: "white" },
+                    }}
+                  />
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                    {requiredGenderRatio.men} {t("common:labels.men").toLowerCase()}, {requiredGenderRatio.women} {t("common:labels.women").toLowerCase()}
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  4M+3W or 3M+4W
+                </Typography>
+              )}
             </Box>
             <Box sx={{ textAlign: "right" }}>
               <Typography variant="body2" color="text.secondary">
