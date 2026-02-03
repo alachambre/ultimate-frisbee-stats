@@ -31,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import { getGame } from "../../services/games";
 import { getLines } from "../../services/lines";
+import { getLiveGameStatistics } from "../../services/statistics";
 import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
 
 interface ManagePlayersDialogProps {
@@ -73,6 +74,13 @@ export default function ManagePlayersDialog({
     queryKey: ["game", String(point.game_id)],
     queryFn: () => getGame(point.game_id),
     enabled: open,
+  });
+
+  // Fetch live statistics for player highlighting
+  const { data: liveStats = [] } = useQuery({
+    queryKey: ["liveStats", point.game_id],
+    queryFn: () => getLiveGameStatistics(point.game_id),
+    enabled: open && game?.status === "started",
   });
 
   // Calculate required gender ratio based on ABBA pattern
@@ -136,6 +144,37 @@ export default function ManagePlayersDialog({
       selectedWomen === requiredGenderRatio.women
     );
   }, [requiredGenderRatio, selectedMen, selectedWomen, selectedPlayerIds.length]);
+
+  // Helper function to determine highlight based on playing time
+  const getHighlight = (playerId: number): "high" | "low" | null => {
+    if (!liveStats || liveStats.length < 5) return null;
+
+    const playerStats = liveStats.find((s) => s.player_id === playerId);
+    if (!playerStats) return null;
+
+    // Sort ALL players by time (descending)
+    const sortedByTime = [...liveStats].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
+
+    // Calculate top/bottom 20% (quintiles)
+    const quintileSize = Math.max(1, Math.floor(sortedByTime.length / 5));
+
+    const topThreshold = sortedByTime[quintileSize - 1]?.effective_time_seconds || 0;
+    const bottomThreshold = sortedByTime[sortedByTime.length - quintileSize]?.effective_time_seconds || 0;
+
+    // Highlight top 20% players (most playing time)
+    if (playerStats.effective_time_seconds > 0 &&
+        playerStats.effective_time_seconds >= topThreshold &&
+        playerStats.effective_time_seconds > bottomThreshold) {
+      return "high";
+    }
+
+    // Highlight bottom 20% players (least playing time, including 0)
+    if (playerStats.effective_time_seconds <= bottomThreshold) {
+      return "low";
+    }
+
+    return null;
+  };
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -343,21 +382,32 @@ export default function ManagePlayersDialog({
         {/* Men Tab Panel */}
         {activeTab === 0 && (
           <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
-            {menPlayers.map((player) => (
-              <ListItem key={player.id} disablePadding>
-                <ListItemButton onClick={() => togglePlayer(player.id)} dense>
-                  <ListItemIcon>
-                    <Checkbox
-                      edge="start"
-                      checked={selectedPlayerIds.includes(player.id)}
-                      tabIndex={-1}
-                      disableRipple
-                    />
-                  </ListItemIcon>
-                  <ListItemText primary={player.name} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {menPlayers.map((player) => {
+              const highlight = getHighlight(player.id);
+              return (
+                <ListItem key={player.id} disablePadding>
+                  <ListItemButton
+                    onClick={() => togglePlayer(player.id)}
+                    dense
+                    sx={{
+                      borderLeft: highlight
+                        ? `3px solid ${highlight === "high" ? theme.palette.success.main : theme.palette.warning.main}`
+                        : "3px solid transparent",
+                    }}
+                  >
+                    <ListItemIcon>
+                      <Checkbox
+                        edge="start"
+                        checked={selectedPlayerIds.includes(player.id)}
+                        tabIndex={-1}
+                        disableRipple
+                      />
+                    </ListItemIcon>
+                    <ListItemText primary={player.name} />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
             {menPlayers.length === 0 && (
               <ListItem>
                 <ListItemText
@@ -372,21 +422,32 @@ export default function ManagePlayersDialog({
         {/* Women Tab Panel */}
         {activeTab === 1 && (
           <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
-            {womenPlayers.map((player) => (
-              <ListItem key={player.id} disablePadding>
-                <ListItemButton onClick={() => togglePlayer(player.id)} dense>
-                  <ListItemIcon>
-                    <Checkbox
-                      edge="start"
-                      checked={selectedPlayerIds.includes(player.id)}
-                      tabIndex={-1}
-                      disableRipple
-                    />
-                  </ListItemIcon>
-                  <ListItemText primary={player.name} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {womenPlayers.map((player) => {
+              const highlight = getHighlight(player.id);
+              return (
+                <ListItem key={player.id} disablePadding>
+                  <ListItemButton
+                    onClick={() => togglePlayer(player.id)}
+                    dense
+                    sx={{
+                      borderLeft: highlight
+                        ? `3px solid ${highlight === "high" ? theme.palette.success.main : theme.palette.warning.main}`
+                        : "3px solid transparent",
+                    }}
+                  >
+                    <ListItemIcon>
+                      <Checkbox
+                        edge="start"
+                        checked={selectedPlayerIds.includes(player.id)}
+                        tabIndex={-1}
+                        disableRipple
+                      />
+                    </ListItemIcon>
+                    <ListItemText primary={player.name} />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
             {womenPlayers.length === 0 && (
               <ListItem>
                 <ListItemText
