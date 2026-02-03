@@ -2,6 +2,8 @@
 
 FastAPI-based REST API for tracking ultimate frisbee team statistics, game scores, and point-by-point gameplay.
 
+**Latest Update**: Phase 8 complete with comprehensive statistics endpoints including strategy performance tracking and pull statistics.
+
 ## Architecture
 
 ### Project Structure
