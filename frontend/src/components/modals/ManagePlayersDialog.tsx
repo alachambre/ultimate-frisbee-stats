@@ -176,6 +176,17 @@ export default function ManagePlayersDialog({
     return null;
   };
 
+  // Helper function to get player's playing time formatted as MM:SS
+  const getPlayerTime = (playerId: number): string | null => {
+    if (!liveStats) return null;
+    const playerStats = liveStats.find((s) => s.player_id === playerId);
+    if (!playerStats) return null;
+
+    const minutes = Math.floor(playerStats.effective_time_seconds / 60);
+    const seconds = playerStats.effective_time_seconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  };
+
   const updateMutation = useMutation({
     mutationFn: async () => {
       return await updatePoint(point.id, {
@@ -384,6 +395,7 @@ export default function ManagePlayersDialog({
           <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
             {menPlayers.map((player) => {
               const highlight = getHighlight(player.id);
+              const playTime = getPlayerTime(player.id);
               return (
                 <ListItem key={player.id} disablePadding>
                   <ListItemButton
@@ -403,7 +415,20 @@ export default function ManagePlayersDialog({
                         disableRipple
                       />
                     </ListItemIcon>
-                    <ListItemText primary={player.name} />
+                    <ListItemText
+                      primary={player.name}
+                      secondary={playTime}
+                      secondaryTypographyProps={{
+                        sx: {
+                          color: highlight === "high"
+                            ? theme.palette.success.main
+                            : highlight === "low"
+                            ? theme.palette.warning.main
+                            : "text.secondary",
+                          fontWeight: highlight ? 500 : 400,
+                        },
+                      }}
+                    />
                   </ListItemButton>
                 </ListItem>
               );
@@ -424,6 +449,7 @@ export default function ManagePlayersDialog({
           <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
             {womenPlayers.map((player) => {
               const highlight = getHighlight(player.id);
+              const playTime = getPlayerTime(player.id);
               return (
                 <ListItem key={player.id} disablePadding>
                   <ListItemButton
@@ -443,7 +469,20 @@ export default function ManagePlayersDialog({
                         disableRipple
                       />
                     </ListItemIcon>
-                    <ListItemText primary={player.name} />
+                    <ListItemText
+                      primary={player.name}
+                      secondary={playTime}
+                      secondaryTypographyProps={{
+                        sx: {
+                          color: highlight === "high"
+                            ? theme.palette.success.main
+                            : highlight === "low"
+                            ? theme.palette.warning.main
+                            : "text.secondary",
+                          fontWeight: highlight ? 500 : 400,
+                        },
+                      }}
+                    />
                   </ListItemButton>
                 </ListItem>
               );
