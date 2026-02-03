@@ -1288,4 +1288,21 @@ export const handlers = [
       },
     });
   }),
+
+  // GET /statistics/games/:gameId/strategies - Get strategy statistics
+  http.get(`${BASE_URL}/statistics/games/:gameId/strategies`, ({ params }) => {
+    const gameId = Number(params.gameId);
+    const game = games.find((g) => g.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    // Return empty strategy stats
+    return HttpResponse.json({
+      game_id: gameId,
+      offense_strategies: [],
+      defense_strategies: [],
+    });
+  }),
 ];

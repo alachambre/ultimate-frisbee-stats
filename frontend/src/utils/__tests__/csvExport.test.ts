@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { exportGameStatisticsToCSV } from "../csvExport";
-import type { GameDetail, GameTeamStats, PlayerGameStats } from "../../types";
+import type { GameDetail, GameTeamStats, PlayerGameStats, GameStrategyStats } from "../../types";
 import { server } from "../../test/setup";
 import { http, HttpResponse } from "msw";
 
@@ -121,6 +121,36 @@ describe("exportGameStatisticsToCSV", () => {
       },
     ];
 
+    const strategyStats: GameStrategyStats = {
+      game_id: 1,
+      offense_strategies: [
+        {
+          strategy_id: 1,
+          strategy_name: "Ho Stack",
+          points_played: 5,
+          points_won: 4,
+          points_lost: 1,
+          hold_rate: 0.8,
+          clean_holds: 3,
+          clean_hold_rate: 0.75,
+          quick_scores: 2,
+          quick_score_rate: 0.5,
+        },
+      ],
+      defense_strategies: [
+        {
+          strategy_id: 2,
+          strategy_name: "Zone",
+          points_played: 3,
+          points_won: 2,
+          points_lost: 1,
+          break_rate: 0.667,
+          points_with_turnover: 3,
+          turnover_rate: 1.0,
+        },
+      ],
+    };
+
     // Mock URL.createObjectURL to capture the blob
     let capturedBlob: Blob | null = null;
     const originalCreateObjectURL = globalThis.URL.createObjectURL;
@@ -140,7 +170,7 @@ describe("exportGameStatisticsToCSV", () => {
     }) as typeof document.createElement;
 
     // Call the export function
-    await exportGameStatisticsToCSV(game, teamStats, playerStats);
+    await exportGameStatisticsToCSV(game, teamStats, playerStats, strategyStats);
 
     // Verify the blob was created
     expect(capturedBlob).not.toBeNull();
@@ -156,11 +186,16 @@ describe("exportGameStatisticsToCSV", () => {
     expect(csvContent).toContain("Test Competition");
     expect(csvContent).toContain("Test Team vs Rival Team");
     expect(csvContent).toContain("TEAM STATISTICS");
+    expect(csvContent).toContain("Pull Inbound Rate");
     expect(csvContent).toContain("PLAYER STATISTICS");
     expect(csvContent).toContain("John Doe");
+    expect(csvContent).toContain("STRATEGY STATISTICS");
+    expect(csvContent).toContain("Offense Strategies");
+    expect(csvContent).toContain("Defense Strategies");
+    expect(csvContent).toContain("Ho Stack");
+    expect(csvContent).toContain("Zone");
     expect(csvContent).toContain("POINTS DETAIL");
     expect(csvContent).toContain("Point 1");
-    expect(csvContent).toContain("Ho Stack");
 
     // Restore mocks
     globalThis.URL.createObjectURL = originalCreateObjectURL;

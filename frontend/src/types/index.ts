@@ -384,3 +384,33 @@ export interface GameTeamStats {
   offense: OffenseStats;
   defense: DefenseStats;
 }
+
+export interface OffenseStrategyStats {
+  strategy_id: number;
+  strategy_name: string;
+  points_played: number;
+  points_won: number;
+  points_lost: number;
+  hold_rate: number;
+  clean_holds: number;
+  clean_hold_rate: number;
+  quick_scores: number;
+  quick_score_rate: number;
+}
+
+export interface DefenseStrategyStats {
+  strategy_id: number;
+  strategy_name: string;
+  points_played: number;
+  points_won: number;
+  points_lost: number;
+  break_rate: number;
+  points_with_turnover: number;
+  turnover_rate: number;
+}
+
+export interface GameStrategyStats {
+  game_id: number;
+  offense_strategies: OffenseStrategyStats[];
+  defense_strategies: DefenseStrategyStats[];
+}

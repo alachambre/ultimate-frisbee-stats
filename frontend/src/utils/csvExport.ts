@@ -1,4 +1,4 @@
-import type { GameDetail, GameTeamStats, PlayerGameStats } from "../types";
+import type { GameDetail, GameTeamStats, PlayerGameStats, GameStrategyStats } from "../types";
 import { getCallsByPoint } from "../services/calls";
 import { getTurnoversByPoint } from "../services/turnovers";
 
@@ -33,7 +33,8 @@ function downloadCSV(data: string, filename: string) {
 export async function exportGameStatisticsToCSV(
   game: GameDetail,
   teamStats: GameTeamStats,
-  playerStats: PlayerGameStats[]
+  playerStats: PlayerGameStats[],
+  strategyStats?: GameStrategyStats
 ): Promise<void> {
   const csvLines: string[] = [];
 
@@ -78,6 +79,9 @@ export async function exportGameStatisticsToCSV(
     );
     csvLines.push(
       `Clean Break Rate,${teamStats.defense.points_won_no_turnover},${teamStats.defense.points_won},${formatPercent(teamStats.defense.clean_break_rate)}`
+    );
+    csvLines.push(
+      `Pull Inbound Rate,${teamStats.defense.pull_stats.inbound_pulls},${teamStats.defense.pull_stats.total_pulls},${formatPercent(teamStats.defense.pull_stats.inbound_rate)}`
     );
     csvLines.push("");
   }
@@ -134,6 +138,75 @@ export async function exportGameStatisticsToCSV(
         ].join(",")
       );
     });
+    csvLines.push("");
+  }
+
+  // Strategy Statistics Section
+  if (strategyStats) {
+    csvLines.push("STRATEGY STATISTICS");
+    csvLines.push("");
+
+    // Offense Strategies
+    if (strategyStats.offense_strategies.length > 0) {
+      csvLines.push("Offense Strategies");
+      csvLines.push(
+        [
+          "Strategy Name",
+          "Points Played",
+          "Points Won",
+          "Hold Rate",
+          "Clean Holds",
+          "Clean Hold Rate",
+          "Quick Scores",
+          "Quick Score Rate",
+        ].join(",")
+      );
+
+      strategyStats.offense_strategies.forEach((strategy) => {
+        csvLines.push(
+          [
+            `"${strategy.strategy_name}"`,
+            strategy.points_played,
+            strategy.points_won,
+            formatPercent(strategy.hold_rate),
+            strategy.clean_holds,
+            formatPercent(strategy.clean_hold_rate),
+            strategy.quick_scores,
+            formatPercent(strategy.quick_score_rate),
+          ].join(",")
+        );
+      });
+      csvLines.push("");
+    }
+
+    // Defense Strategies
+    if (strategyStats.defense_strategies.length > 0) {
+      csvLines.push("Defense Strategies");
+      csvLines.push(
+        [
+          "Strategy Name",
+          "Points Played",
+          "Points Won",
+          "Break Rate",
+          "Points With Turnover",
+          "Turnover Rate",
+        ].join(",")
+      );
+
+      strategyStats.defense_strategies.forEach((strategy) => {
+        csvLines.push(
+          [
+            `"${strategy.strategy_name}"`,
+            strategy.points_played,
+            strategy.points_won,
+            formatPercent(strategy.break_rate),
+            strategy.points_with_turnover,
+            formatPercent(strategy.turnover_rate),
+          ].join(",")
+        );
+      });
+      csvLines.push("");
+    }
   }
 
   // Points Detail Section

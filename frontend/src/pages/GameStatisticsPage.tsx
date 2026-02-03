@@ -15,7 +15,7 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useTranslation } from "react-i18next";
 import { getGame } from "../services/games";
-import { getLiveGameStatistics, getGameTeamStatistics } from "../services/statistics";
+import { getLiveGameStatistics, getGameTeamStatistics, getGameStrategyStatistics } from "../services/statistics";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import GameTimer from "../components/games/GameTimer";
@@ -62,7 +62,17 @@ export default function GameStatisticsPage() {
     enabled: !!gameId,
   });
 
-  if (isLoadingGame || isLoadingTeamStats || isLoadingPlayerStats) {
+  // Fetch strategy statistics
+  const {
+    data: strategyStats,
+    isLoading: isLoadingStrategyStats,
+  } = useQuery({
+    queryKey: ["gameStrategyStatistics", gameId],
+    queryFn: () => getGameStrategyStatistics(Number(gameId)),
+    enabled: !!gameId,
+  });
+
+  if (isLoadingGame || isLoadingTeamStats || isLoadingPlayerStats || isLoadingStrategyStats) {
     return <LoadingState message={t("common:loading")} />;
   }
 
@@ -85,7 +95,7 @@ export default function GameStatisticsPage() {
 
     setIsExporting(true);
     try {
-      await exportGameStatisticsToCSV(game, teamStats, playerStats);
+      await exportGameStatisticsToCSV(game, teamStats, playerStats, strategyStats);
     } catch (error) {
       console.error("Error exporting CSV:", error);
       // Could add error notification here
