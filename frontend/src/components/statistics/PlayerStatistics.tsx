@@ -140,7 +140,14 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
       {/* Tabs for Offense/Defense */}
       <Tabs
         value={activeTab}
-        onChange={(_, newValue) => setActiveTab(newValue)}
+        onChange={(_, newValue) => {
+          setActiveTab(newValue);
+          // Reset sort if switching to offense with defense-only sort
+          if (newValue === "offense" && sortColumn === "forcedTurnovers") {
+            setSortColumn("name");
+            setSortDirection("asc");
+          }
+        }}
         sx={{
           mb: 2,
           borderBottom: 1,
@@ -205,18 +212,15 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
               <MenuItem value="name-asc">{t("playerStats.sortByName")}</MenuItem>
               <MenuItem value="time-desc">{t("playerStats.sortByTime")}</MenuItem>
               <MenuItem value="points-desc">{t("playerStats.sortByPoints")}</MenuItem>
-              {activeTab === "offense" ? (
-                <>
-                  <MenuItem value="winRate-desc">{t("playerStats.sortByHold")}</MenuItem>
-                  <MenuItem value="cleanPoints-desc">{t("playerStats.sortByCleanHold")}</MenuItem>
-                </>
-              ) : (
-                <>
-                  <MenuItem value="forcedTurnovers-desc">{t("playerStats.sortByTurnover")}</MenuItem>
-                  <MenuItem value="winRate-desc">{t("playerStats.sortByBreak")}</MenuItem>
-                  <MenuItem value="cleanPoints-desc">{t("playerStats.sortByCleanBreak")}</MenuItem>
-                </>
-              )}
+              {activeTab === "offense" && [
+                <MenuItem key="hold" value="winRate-desc">{t("playerStats.sortByHold")}</MenuItem>,
+                <MenuItem key="cleanHold" value="cleanPoints-desc">{t("playerStats.sortByCleanHold")}</MenuItem>,
+              ]}
+              {activeTab === "defense" && [
+                <MenuItem key="turnover" value="forcedTurnovers-desc">{t("playerStats.sortByTurnover")}</MenuItem>,
+                <MenuItem key="break" value="winRate-desc">{t("playerStats.sortByBreak")}</MenuItem>,
+                <MenuItem key="cleanBreak" value="cleanPoints-desc">{t("playerStats.sortByCleanBreak")}</MenuItem>,
+              ]}
             </Select>
           </FormControl>
         </Box>
