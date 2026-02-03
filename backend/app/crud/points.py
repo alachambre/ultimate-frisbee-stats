@@ -133,7 +133,21 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
     db_point = get_point(db, point_id)
     if db_point:
         try:
-            # Update fields if provided
+            # Update player_ids FIRST (before status validation)
+            if point_update.player_ids is not None:
+                if len(point_update.player_ids) == 0:
+                    # Allow clearing players
+                    db_point.players = []
+                else:
+                    players = db.query(models.Player).filter(models.Player.id.in_(point_update.player_ids)).all()
+                    if len(players) != len(point_update.player_ids):
+                        db.rollback()
+                        raise ValueError(f"Some player IDs not found: {point_update.player_ids}")
+                    # Allow any number of players during update
+                    # Validation for exactly 7 happens when transitioning to 'completed' status
+                    db_point.players = players
+
+            # Update other fields
             if point_update.starting_on_offense is not None:
                 db_point.starting_on_offense = point_update.starting_on_offense
             if point_update.won is not None:
@@ -181,19 +195,6 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                 if start_aware and end_aware and end_aware <= start_aware:
                     db.rollback()
                     raise ValueError("end_datetime must be after start_datetime")
-
-            if point_update.player_ids is not None:
-                if len(point_update.player_ids) == 0:
-                    # Allow clearing players
-                    db_point.players = []
-                else:
-                    players = db.query(models.Player).filter(models.Player.id.in_(point_update.player_ids)).all()
-                    if len(players) != len(point_update.player_ids):
-                        db.rollback()
-                        raise ValueError(f"Some player IDs not found: {point_update.player_ids}")
-                    # Allow any number of players during update
-                    # Validation for exactly 7 happens when transitioning to 'completed' status
-                    db_point.players = players
 
             db.commit()
             db.refresh(db_point)

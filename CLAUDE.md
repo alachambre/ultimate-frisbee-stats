@@ -47,10 +47,17 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
   - Backend API: GET /statistics/games/{game_id}/live
   - 5-second polling for started games, one-time fetch for ended games
   - Visual highlighting: Top 20% (green) and bottom 20% (orange) based on playing time
-- **Team Statistics**: Game-level offense/defense efficiency metrics ✅
+- **Team Statistics**: Game-level offense/defense efficiency metrics including pull statistics ✅
   - Backend API: GET /statistics/games/{game_id}/team
   - Turnover attribution logic with possession tracking
-  - 40 comprehensive backend tests (380 total passing)
+  - **Pull Statistics**: Inbound rate tracking (total_pulls, inbound_pulls, out_of_bounds_pulls, inbound_rate) - integrated into defense stats
+  - 38 comprehensive backend tests (370 total passing)
+- **Strategy Statistics**: Per-strategy performance tracking ✅
+  - Backend API: GET /statistics/games/{game_id}/strategies
+  - **Offense Strategy Stats**: Hold rate, clean holds (0 turnovers), quick scores (<90s), per strategy
+  - **Defense Strategy Stats**: Break rate, turnover rate (forced turnovers), per strategy
+  - 7 CRUD tests + 4 API tests = 11 comprehensive tests
+  - Only counts completed points with assigned strategies
 - **Code Refactoring**:
   - GameStatisticsPage reduced from 726 → 178 lines (75% reduction)
   - Extracted 3 reusable components + CSV utility
@@ -79,7 +86,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - **Call tracking**: Record calls with start/resume timestamps, display call duration, prevent finishing point with pending calls
 - **Turnover tracking**: Record turnovers with player assignment, automatic possession calculation, display turnover history
 - **Live player statistics**: Real-time player stats (points played, effective playing time) with visual highlighting for rotation management
-- **Team statistics**: Game-level offense/defense efficiency metrics (win rates, clean point rates, break rates, turnover rates)
+- **Team statistics**: Game-level offense/defense efficiency metrics (win rates, clean point rates, break rates, turnover rates, pull success rates)
+- **Strategy statistics**: Per-strategy performance tracking (hold/break rates, clean points, quick scores, turnover generation)
 - **Mobile-optimized UI**: Clean game detail page with centered layout, roster in dialog, minimal clutter
 - French/English language switching with localStorage persistence
 
@@ -126,7 +134,7 @@ backend/app/
 - **i18n**: react-i18next with 10 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (380 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (371 tests - 100% passing)
 - **Frontend**: Vitest + MSW + React Testing Library (291 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
@@ -171,7 +179,7 @@ ready → running → scored → completed
 - ✅ Auto-set `start_datetime` on ready→running transition
 - ✅ Validate 7 players only on completion (not creation)
 - ✅ New endpoint: `GET /points/games/{game_id}/active` (finds ready OR running point)
-- ✅ 380 backend tests passing
+- ✅ 371 backend tests passing
 
 **Frontend Changes (Complete ✅):**
 - ✅ `StartPointDialog`: No player selection, offense/defense pre-selected based on previous point
@@ -209,7 +217,7 @@ ready → running → scored → completed
 ```bash
 cd backend
 source venv/bin/activate
-pytest tests/ -v                    # Run all 380 tests (100% passing ✅)
+pytest tests/ -v                    # Run all 371 tests (100% passing ✅)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -311,6 +319,10 @@ npm run build                       # Production build
 - Frequent commits with clear messages
 - **Wants to be challenged** - Push back, verify assumptions, think critically
 - **Testing philosophy**: Write meaningful tests for core functionality and edge cases, not chasing coverage metrics
+- **Test builders**: ALWAYS use test builders from `tests/builders/` for new tests. Existing tests can be refactored to use builders over time as we work on them.
+  - Simple entity builders: `TeamBuilder`, `CompetitionBuilder`, `GameBuilder`, `PlayerBuilder`, `StrategyBuilder`, `LineBuilder`
+  - Complex scenario builders: `GameScenarioBuilder` (complete game scenarios), `PointBuilder` (fine-grained point control)
+  - See refactored files for examples: `test_strategy_statistics.py`, `test_teams.py`, `test_players.py`
 - **Documentation**: Proactively update CLAUDE.md when making significant changes
 
 ## Deployment

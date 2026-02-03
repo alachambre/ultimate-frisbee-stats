@@ -58,7 +58,8 @@ backend/
 │   └── main.py            # FastAPI application setup
 ├── tests/
 │   ├── conftest.py        # Test fixtures and configuration
-│   ├── test_crud/         # Unit tests for database operations
+│   ├── builders/          # Test data builders for clean test setup
+│   ├── test_crud/         # Unit tests for database operations (CRUD + statistics)
 │   └── test_api/          # Integration tests for API endpoints
 └── requirements.txt       # Python dependencies
 ```
@@ -67,8 +68,40 @@ backend/
 
 - **Clean separation of concerns**: Routers handle HTTP, CRUD handles database, Models define schema
 - **Domain-driven organization**: Code organized by business domain (teams, players, games, points)
-- **Comprehensive testing**: Comprehensive test coverage at both unit and integration levels
+- **Comprehensive testing**: Comprehensive test coverage at both unit and integration levels (371 tests)
 - **V2-ready architecture**: Designed to easily add event tracking (goals, assists, turnovers) later
+
+### Testing Architecture
+
+**Test Builders** (`tests/builders/`): Clean, reusable test data builders to minimize boilerplate:
+- **Simple entity builders**: `TeamBuilder`, `CompetitionBuilder`, `GameBuilder`, `PlayerBuilder`, `StrategyBuilder`, `LineBuilder`
+- **Complex scenario builders**:
+  - `GameScenarioBuilder`: Create complete game scenarios with team, competition, game, players, and completed points
+  - `PointBuilder`: Fine-grained control over point creation with strategies, turnovers, and timestamps
+- **Usage principle**: Keep fixtures for simple cases, use builders for loops and complex scenarios
+- **Examples**:
+  ```python
+  # Simple entity creation
+  team = TeamBuilder(db_session).with_name("Flying Disc").build()
+
+  # Complex game scenario with strategies and statistics
+  scenario = GameScenarioBuilder(db_session) \
+      .with_team() \
+      .with_competition() \
+      .with_game() \
+      .with_players(7) \
+      .with_offense_strategy("Vertical Stack") \
+      .with_defense_strategy("Zone") \
+      .with_completed_point(offense=True, won=True, strategy=vert, duration_seconds=30) \
+      .with_completed_point(offense=False, won=True, strategy=zone, pull=True, with_turnover=True) \
+      .build()
+  ```
+
+**Test Coverage**:
+- **371 comprehensive tests** (100% passing)
+- **CRUD tests**: Unit tests for all database operations
+- **API tests**: Integration tests for all endpoints
+- **Statistics tests**: Dedicated tests for strategy statistics (9 CRUD + 5 API tests)
 
 ### Data Model
 
@@ -405,6 +438,7 @@ ready → running → scored → completed
 ### Statistics (Phase 8)
 - `GET /statistics/games/{game_id}/live` - Get live player statistics for a game
 - `GET /statistics/games/{game_id}/team` - Get team statistics for a game (offense/defense efficiency)
+- `GET /statistics/games/{game_id}/strategies` - Get strategy and pull statistics for a game
 
 **Live Player Statistics:**
 - Real-time playing time tracking for all players in game roster
@@ -427,8 +461,13 @@ ready → running → scored → completed
   - Defensive pressure: See how often each player forces turnovers on defense
 
 **Team Statistics:**
-- Offensive and defensive efficiency metrics
-- Returns: total_completed_points, offense stats (points_started, points_won, win_rate, clean_point_rate, break_rate), defense stats (points_started, points_won, win_rate, turnover_rate, clean_break_rate, hold_rate)
+- Offensive and defensive efficiency metrics, including pull statistics
+- Returns: total_completed_points, offense stats, defense stats (includes pull_stats)
+- **Pull Statistics** (in defense section):
+  - total_pulls: Number of defense points where pull was tracked
+  - inbound_pulls: Count of successful inbound pulls (pull = True)
+  - out_of_bounds_pulls: Count of OOB pulls (pull = False)
+  - inbound_rate: Percentage of successful pulls
 - Turnover attribution: Possession tracking based on starting_on_offense + turnover sequence
 - Only completed points are counted
 - Use cases:
@@ -436,6 +475,30 @@ ready → running → scored → completed
   - Strategy evaluation: Measure clean point rates and break rates
   - Turnover impact: Track how turnovers affect point outcomes
   - Performance trends: Compare offense vs defense effectiveness
+  - Pull analysis: Track pulling success for defense improvement
+
+**Strategy Statistics:**
+- Per-strategy performance metrics
+- Returns: offense_strategies[], defense_strategies[]
+- **Offense Strategy Stats** (per strategy):
+  - points_played, points_won (holds), points_lost
+  - hold_rate: % of points won on offense
+  - clean_holds: Holds with 0 turnovers (using possession logic)
+  - clean_hold_rate: % of holds that were clean
+  - quick_scores: Holds completed in < 90 seconds
+  - quick_score_rate: % of quick scores
+- **Defense Strategy Stats** (per strategy):
+  - points_played, points_won (breaks), points_lost
+  - break_rate: % of points won on defense
+  - points_with_turnover: Points where at least 1 turnover occurred
+  - turnover_rate: % of defense points with turnovers
+- Only completed points with assigned strategies are included
+- Points without strategies are excluded from calculations
+- Use cases:
+  - Strategy effectiveness: Measure success rates per strategy
+  - Tactical planning: Identify which strategies work best
+  - Quick scoring: Identify fast-paced offensive strategies
+  - Turnover generation: Evaluate defensive pressure by strategy
 
 **Full API documentation**: Visit http://localhost:8000/docs after starting the server.
 
