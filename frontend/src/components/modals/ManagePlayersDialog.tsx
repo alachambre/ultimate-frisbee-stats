@@ -185,9 +185,13 @@ export default function ManagePlayersDialog({
     return players.filter((p) => linePlayerIds.has(p.id));
   }, [players, lines, filterLineId]);
 
-  // Group filtered players by gender
-  const menPlayers = filteredPlayers.filter((p) => p.gender === "M");
-  const womenPlayers = filteredPlayers.filter((p) => p.gender === "W");
+  // Group filtered players by gender and sort by name
+  const menPlayers = filteredPlayers
+    .filter((p) => p.gender === "M")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const womenPlayers = filteredPlayers
+    .filter((p) => p.gender === "W")
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
