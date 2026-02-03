@@ -45,6 +45,7 @@ import GamePlayerStatsCard from "../components/players/GamePlayerStatsCard";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player, PlayerGameStats } from "../types";
+import { getPlayerHighlight } from "../utils/playerHighlighting";
 
 export default function GameDetailPage() {
   const { t } = useTranslation(["games", "players", "common"]);
@@ -144,34 +145,6 @@ export default function GameDetailPage() {
     },
   });
 
-  // Helper function to determine highlight based on playing time
-  const getHighlight = (stats: PlayerGameStats, allStats: PlayerGameStats[]): "high" | "low" | null => {
-    // Need at least 5 players total to create meaningful quintiles
-    if (allStats.length < 5) return null;
-
-    // Sort ALL players by time (descending) - includes players with 0 time
-    const sortedByTime = [...allStats].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
-
-    // Calculate top/bottom 20% (quintiles)
-    // With ~20 players, this means ~4 players on each end will be highlighted
-    const quintileSize = Math.max(1, Math.floor(sortedByTime.length / 5));
-
-    const topThreshold = sortedByTime[quintileSize - 1]?.effective_time_seconds || 0;
-    const bottomThreshold = sortedByTime[sortedByTime.length - quintileSize]?.effective_time_seconds || 0;
-
-    // Highlight top 20% players (most playing time)
-    // Must have actual playing time to be in top tier
-    if (stats.effective_time_seconds > 0 && stats.effective_time_seconds >= topThreshold && stats.effective_time_seconds > bottomThreshold) {
-      return "high";
-    }
-
-    // Highlight bottom 20% players (least playing time, including 0)
-    if (stats.effective_time_seconds <= bottomThreshold) {
-      return "low";
-    }
-
-    return null;
-  };
 
   // Helper function to sort stats
   const sortStats = useCallback((stats: PlayerGameStats[]): PlayerGameStats[] => {
@@ -520,7 +493,7 @@ export default function GameDetailPage() {
                         <Grid size={{ xs: 6 }} key={stats.player_id}>
                           <GamePlayerStatsCard
                             stats={stats}
-                            highlight={liveStats ? getHighlight(stats, liveStats) : null}
+                            highlight={liveStats ? getPlayerHighlight(stats, liveStats) : null}
                           />
                         </Grid>
                       ))}
@@ -569,7 +542,7 @@ export default function GameDetailPage() {
                         <Grid size={{ xs: 6 }} key={stats.player_id}>
                           <GamePlayerStatsCard
                             stats={stats}
-                            highlight={liveStats ? getHighlight(stats, liveStats) : null}
+                            highlight={liveStats ? getPlayerHighlight(stats, liveStats) : null}
                           />
                         </Grid>
                       ))}

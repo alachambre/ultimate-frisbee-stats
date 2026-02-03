@@ -356,3 +356,10 @@ See `DEPLOYMENT.md` for setup guide and `DEPLOYMENT_STATUS.md` for current statu
   - **Why**: The `key` prop forces component remount when the entity changes, naturally resetting all state
   - **Examples**: AddCommentDialog, SelectStrategyDialog, EditPointDialog - all use `key={point.id}`
   - **Rule**: This pattern applies to ALL form dialogs editing a single entity
+- **Code Sharing Principle**: Extract shared logic into utilities to avoid duplication
+  - ✅ **Correct**: Create shared utility functions when the same logic appears in multiple places
+  - ✅ **Example**: `getPlayerHighlight()` in `utils/playerHighlighting.ts` used by both GameDetailPage and ManagePlayersDialog
+  - ❌ **Wrong**: Duplicating identical or nearly-identical logic across components
+  - **When to share**: Business logic, calculations, data transformations, validation rules, formatting functions
+  - **When to duplicate**: Component-specific rendering logic, one-off operations, or when abstraction adds unnecessary complexity
+  - **Benefits**: Single source of truth, easier maintenance, consistent behavior, reduced bugs

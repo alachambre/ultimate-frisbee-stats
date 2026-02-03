@@ -33,6 +33,7 @@ import { getGame } from "../../services/games";
 import { getLines } from "../../services/lines";
 import { getLiveGameStatistics } from "../../services/statistics";
 import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
+import { getPlayerHighlight } from "../../utils/playerHighlighting";
 
 interface ManagePlayersDialogProps {
   open: boolean;
@@ -152,28 +153,7 @@ export default function ManagePlayersDialog({
     const playerStats = liveStats.find((s) => s.player_id === playerId);
     if (!playerStats) return null;
 
-    // Sort ALL players by time (descending)
-    const sortedByTime = [...liveStats].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
-
-    // Calculate top/bottom 20% (quintiles)
-    const quintileSize = Math.max(1, Math.floor(sortedByTime.length / 5));
-
-    const topThreshold = sortedByTime[quintileSize - 1]?.effective_time_seconds || 0;
-    const bottomThreshold = sortedByTime[sortedByTime.length - quintileSize]?.effective_time_seconds || 0;
-
-    // Highlight top 20% players (most playing time)
-    if (playerStats.effective_time_seconds > 0 &&
-        playerStats.effective_time_seconds >= topThreshold &&
-        playerStats.effective_time_seconds > bottomThreshold) {
-      return "high";
-    }
-
-    // Highlight bottom 20% players (least playing time, including 0)
-    if (playerStats.effective_time_seconds <= bottomThreshold) {
-      return "low";
-    }
-
-    return null;
+    return getPlayerHighlight(playerStats, liveStats);
   };
 
   // Helper function to get player's stats formatted as "X points - MM:SS"
