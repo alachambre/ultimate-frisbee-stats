@@ -228,7 +228,7 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
     - game_id: int
     - total_completed_points: int
     - offense: OffenseStats dict
-    - defense: DefenseStats dict
+    - defense: DefenseStats dict (includes pull_stats)
 
     Returns None if game not found.
     """
@@ -323,6 +323,13 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
     defense_clean_break_rate = defense_won_no_turnover / defense_won if defense_won > 0 else 0.0
     defense_hold_rate = defense_break_rate  # Same as break_rate (kept for backward compatibility)
 
+    # Calculate pull statistics (defense points only, where pull is tracked)
+    defense_points_with_pull = [p for p in completed_points if not p.starting_on_offense and p.pull is not None]
+    total_pulls = len(defense_points_with_pull)
+    inbound_pulls = len([p for p in defense_points_with_pull if p.pull is True])
+    out_of_bounds_pulls = len([p for p in defense_points_with_pull if p.pull is False])
+    inbound_rate = inbound_pulls / total_pulls if total_pulls > 0 else 0.0
+
     return {
         "game_id": game_id,
         "total_completed_points": len(completed_points),
@@ -345,6 +352,157 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
             "points_won_no_turnover": defense_won_no_turnover,
             "clean_break_rate": defense_clean_break_rate,
             "points_lost_no_turnover": defense_lost_no_turnover,
-            "hold_rate": defense_hold_rate
+            "hold_rate": defense_hold_rate,
+            "pull_stats": {
+                "total_pulls": total_pulls,
+                "inbound_pulls": inbound_pulls,
+                "out_of_bounds_pulls": out_of_bounds_pulls,
+                "inbound_rate": inbound_rate
+            }
         }
+    }
+
+
+def get_game_strategy_stats(db: Session, game_id: int) -> Optional[Dict]:
+    """
+    Get strategy statistics for a game.
+    Only considers completed points with assigned strategies.
+
+    Returns dict with:
+    - game_id: int
+    - offense_strategies: list of dicts (strategy stats for offense)
+    - defense_strategies: list of dicts (strategy stats for defense)
+
+    Returns None if game not found.
+    """
+    from app.models.strategy import Strategy
+
+    # Get the game to verify it exists
+    game = db.query(Game).filter(Game.id == game_id).first()
+    if not game:
+        return None
+
+    # Get all completed points for this game with valid timestamps
+    completed_points = db.query(Point).filter(
+        Point.game_id == game_id,
+        Point.status == PointStatusEnum.completed,
+        Point.start_datetime.isnot(None),
+        Point.end_datetime.isnot(None)
+    ).all()
+
+    # Group points by strategy for offense and defense
+    offense_strategy_points: Dict[int, List[Point]] = {}
+    defense_strategy_points: Dict[int, List[Point]] = {}
+
+    for point in completed_points:
+        # Skip points without strategy
+        if not point.strategy_id:
+            continue
+
+        if point.starting_on_offense:
+            if point.strategy_id not in offense_strategy_points:
+                offense_strategy_points[point.strategy_id] = []
+            offense_strategy_points[point.strategy_id].append(point)
+        else:
+            if point.strategy_id not in defense_strategy_points:
+                defense_strategy_points[point.strategy_id] = []
+            defense_strategy_points[point.strategy_id].append(point)
+
+    # Calculate offense strategy stats
+    offense_strategies = []
+    for strategy_id, points in offense_strategy_points.items():
+        strategy = db.query(Strategy).filter(Strategy.id == strategy_id).first()
+        if not strategy:
+            continue
+
+        points_played = len(points)
+        points_won = len([p for p in points if p.won])
+        points_lost = points_played - points_won
+        hold_rate = points_won / points_played if points_played > 0 else 0.0
+
+        # Calculate clean holds (holds with 0 OUR turnovers)
+        clean_holds = 0
+        for point in points:
+            if not point.won:
+                continue
+
+            # Get turnovers and calculate OUR turnovers
+            turnovers = db.query(Turnover).filter(Turnover.point_id == point.id).order_by(Turnover.timestamp).all()
+            our_turnovers = 0
+            for idx, turnover in enumerate(turnovers):
+                turnover_number = idx + 1
+                # On offense, odd turnovers are ours
+                if turnover_number % 2 == 1:
+                    our_turnovers += 1
+
+            if our_turnovers == 0:
+                clean_holds += 1
+
+        clean_hold_rate = clean_holds / points_played if points_played > 0 else 0.0
+
+        # Calculate quick scores (< 90 seconds)
+        quick_scores = 0
+        for point in points:
+            if not point.won:
+                continue
+
+            point_duration = int((point.end_datetime - point.start_datetime).total_seconds())
+            if point_duration < 90:
+                quick_scores += 1
+
+        quick_score_rate = quick_scores / points_played if points_played > 0 else 0.0
+
+        offense_strategies.append({
+            "strategy_id": strategy_id,
+            "strategy_name": strategy.name,
+            "points_played": points_played,
+            "points_won": points_won,
+            "points_lost": points_lost,
+            "hold_rate": hold_rate,
+            "clean_holds": clean_holds,
+            "clean_hold_rate": clean_hold_rate,
+            "quick_scores": quick_scores,
+            "quick_score_rate": quick_score_rate
+        })
+
+    # Calculate defense strategy stats
+    defense_strategies = []
+    for strategy_id, points in defense_strategy_points.items():
+        strategy = db.query(Strategy).filter(Strategy.id == strategy_id).first()
+        if not strategy:
+            continue
+
+        points_played = len(points)
+        points_won = len([p for p in points if p.won])  # Breaks
+        points_lost = points_played - points_won
+        break_rate = points_won / points_played if points_played > 0 else 0.0
+
+        # Calculate points with at least 1 turnover (any turnover)
+        points_with_turnover = 0
+        for point in points:
+            turnovers = db.query(Turnover).filter(Turnover.point_id == point.id).all()
+            if len(turnovers) > 0:
+                points_with_turnover += 1
+
+        turnover_rate = points_with_turnover / points_played if points_played > 0 else 0.0
+
+        defense_strategies.append({
+            "strategy_id": strategy_id,
+            "strategy_name": strategy.name,
+            "points_played": points_played,
+            "points_won": points_won,
+            "points_lost": points_lost,
+            "break_rate": break_rate,
+            "points_with_turnover": points_with_turnover,
+            "turnover_rate": turnover_rate
+        })
+
+    # Sort strategies by name
+    offense_strategies.sort(key=lambda x: x["strategy_name"])
+    defense_strategies.sort(key=lambda x: x["strategy_name"])
+
+    return {
+        "game_id": game_id,
+        "offense_strategies": offense_strategies,
+        "defense_strategies": defense_strategies
     }

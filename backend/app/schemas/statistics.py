@@ -62,6 +62,17 @@ class OffenseStats(BaseModel):
         from_attributes = True
 
 
+class PullStats(BaseModel):
+    """Pull statistics for a game (defense points only)"""
+    total_pulls: int  # Points where pull was tracked
+    inbound_pulls: int
+    out_of_bounds_pulls: int
+    inbound_rate: float
+
+    class Config:
+        from_attributes = True
+
+
 class DefenseStats(BaseModel):
     """Defensive statistics for a game"""
     points_started: int
@@ -74,6 +85,7 @@ class DefenseStats(BaseModel):
     clean_break_rate: float
     points_lost_no_turnover: int  # opponent scored without turnover
     hold_rate: float  # opponent didn't score on defense (inverse of break_rate)
+    pull_stats: PullStats
 
     class Config:
         from_attributes = True
@@ -85,6 +97,48 @@ class GameTeamStats(BaseModel):
     total_completed_points: int
     offense: OffenseStats
     defense: DefenseStats
+
+    class Config:
+        from_attributes = True
+
+
+class OffenseStrategyStats(BaseModel):
+    """Statistics for an offensive strategy"""
+    strategy_id: int
+    strategy_name: str
+    points_played: int
+    points_won: int  # Holds
+    points_lost: int
+    hold_rate: float
+    clean_holds: int  # Holds with 0 turnovers
+    clean_hold_rate: float
+    quick_scores: int  # Holds in < 90 seconds
+    quick_score_rate: float
+
+    class Config:
+        from_attributes = True
+
+
+class DefenseStrategyStats(BaseModel):
+    """Statistics for a defensive strategy"""
+    strategy_id: int
+    strategy_name: str
+    points_played: int
+    points_won: int  # Breaks
+    points_lost: int
+    break_rate: float
+    points_with_turnover: int  # Points where we forced at least 1 turnover
+    turnover_rate: float
+
+    class Config:
+        from_attributes = True
+
+
+class GameStrategyStats(BaseModel):
+    """Strategy statistics for a game"""
+    game_id: int
+    offense_strategies: list[OffenseStrategyStats]
+    defense_strategies: list[DefenseStrategyStats]
 
     class Config:
         from_attributes = True

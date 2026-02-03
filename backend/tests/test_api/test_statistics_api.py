@@ -591,3 +591,177 @@ def test_get_game_team_statistics_ignores_non_completed(client: TestClient, samp
     # Only 1 completed point should be counted
     assert data["total_completed_points"] == 1
     assert data["offense"]["points_started"] == 1
+
+
+def test_get_game_team_statistics_pull_stats(client: TestClient, db_session: Session):
+    """Test pull statistics calculation in team stats"""
+    from tests.builders import GameScenarioBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team() \
+        .with_competition() \
+        .with_game() \
+        .with_players(7) \
+        .with_completed_point(offense=False, won=True, pull=True) \
+        .with_completed_point(offense=False, won=False, pull=False) \
+        .with_completed_point(offense=False, won=True, pull=True) \
+        .with_completed_point(offense=False, won=True, pull=None) \
+        .build()
+
+    response = client.get(f"/statistics/games/{scenario.game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Pull stats should be in defense section
+    pull_stats = data["defense"]["pull_stats"]
+    assert pull_stats["total_pulls"] == 3  # Only points with pull tracked
+    assert pull_stats["inbound_pulls"] == 2
+    assert pull_stats["out_of_bounds_pulls"] == 1
+    assert pull_stats["inbound_rate"] == pytest.approx(2/3, rel=1e-6)
+
+
+def test_get_game_team_statistics_pull_stats_defense_only(client: TestClient, db_session: Session):
+    """Test that pull stats only count defense points"""
+    from tests.builders import GameScenarioBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team() \
+        .with_competition() \
+        .with_game() \
+        .with_players(7) \
+        .with_completed_point(offense=True, won=True, pull=True) \
+        .with_completed_point(offense=False, won=True, pull=True) \
+        .build()
+
+    response = client.get(f"/statistics/games/{scenario.game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Only defense point should be counted
+    pull_stats = data["defense"]["pull_stats"]
+    assert pull_stats["total_pulls"] == 1
+    assert pull_stats["inbound_pulls"] == 1
+
+
+# Strategy Statistics API Tests
+
+def test_get_strategy_stats_success(client: TestClient, db_session: Session):
+    """Test successful retrieval of strategy statistics"""
+    from tests.builders import GameScenarioBuilder
+    
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team() \
+        .with_competition() \
+        .with_game() \
+        .with_players(7) \
+        .with_offense_strategy("Vertical Stack") \
+        .with_defense_strategy("Zone")
+    
+    # Create offense and defense points with strategies
+    vert = scenario.offense_strategies[0]
+    zone = scenario.defense_strategies[0]
+    scenario.with_completed_point(offense=True, won=True, strategy=vert, duration_seconds=30) \
+        .with_completed_point(offense=False, won=True, strategy=zone, pull=True, with_turnover=True) \
+        .build()
+    
+    response = client.get(f"/statistics/games/{scenario.game.id}/strategies")
+    
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["game_id"] == scenario.game.id
+
+    # Offense strategies
+    assert len(data["offense_strategies"]) == 1
+    assert data["offense_strategies"][0]["strategy_name"] == "Vertical Stack"
+    assert data["offense_strategies"][0]["points_played"] == 1
+    assert data["offense_strategies"][0]["hold_rate"] == 1.0
+    assert data["offense_strategies"][0]["quick_scores"] == 1
+    
+    # Defense strategies
+    assert len(data["defense_strategies"]) == 1
+    assert data["defense_strategies"][0]["strategy_name"] == "Zone"
+    assert data["defense_strategies"][0]["points_played"] == 1
+    assert data["defense_strategies"][0]["break_rate"] == 1.0
+    assert data["defense_strategies"][0]["turnover_rate"] == 1.0
+
+
+def test_get_strategy_stats_game_not_found(client: TestClient):
+    """Test strategy stats with non-existent game ID"""
+    response = client.get("/statistics/games/99999/strategies")
+    
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Game not found"
+
+
+def test_get_strategy_stats_no_completed_points(client: TestClient, db_session: Session):
+    """Test strategy stats with no completed points"""
+    from tests.builders import GameScenarioBuilder
+    
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team() \
+        .with_competition() \
+        .with_game() \
+        .build()
+    
+    response = client.get(f"/statistics/games/{scenario.game.id}/strategies")
+    
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["game_id"] == scenario.game.id
+    assert len(data["offense_strategies"]) == 0
+    assert len(data["defense_strategies"]) == 0
+
+
+def test_get_strategy_stats_multiple_strategies(client: TestClient, db_session: Session):
+    """Test strategy stats with multiple strategies per type"""
+    from tests.builders import GameScenarioBuilder
+    
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team() \
+        .with_competition() \
+        .with_game() \
+        .with_players(7) \
+        .with_offense_strategy("Vertical Stack") \
+        .with_offense_strategy("Horizontal Stack") \
+        .with_defense_strategy("Zone") \
+        .with_defense_strategy("Man-to-Man")
+    
+    # Vertical: 2 points (1 win, 1 loss)
+    vert = scenario.offense_strategies[0]
+    scenario.with_completed_point(offense=True, won=True, strategy=vert, duration_seconds=30) \
+        .with_completed_point(offense=True, won=False, strategy=vert, duration_seconds=120)
+    
+    # Horizontal: 1 point (win)
+    horiz = scenario.offense_strategies[1]
+    scenario.with_completed_point(offense=True, won=True, strategy=horiz, duration_seconds=100)
+    
+    # Zone: 2 points (1 break, 1 loss)
+    zone = scenario.defense_strategies[0]
+    scenario.with_completed_point(offense=False, won=True, strategy=zone, with_turnover=True) \
+        .with_completed_point(offense=False, won=False, strategy=zone, with_turnover=False)
+    
+    # Man: 1 point (loss with turnover)
+    man = scenario.defense_strategies[1]
+    scenario.with_completed_point(offense=False, won=False, strategy=man, with_turnover=True) \
+        .build()
+    
+    response = client.get(f"/statistics/games/{scenario.game.id}/strategies")
+    
+    assert response.status_code == 200
+    data = response.json()
+    
+    # Should have 2 offense and 2 defense strategies
+    assert len(data["offense_strategies"]) == 2
+    assert len(data["defense_strategies"]) == 2
+    
+    # Verify sorted by name
+    assert data["offense_strategies"][0]["strategy_name"] == "Horizontal Stack"
+    assert data["offense_strategies"][1]["strategy_name"] == "Vertical Stack"
+    assert data["defense_strategies"][0]["strategy_name"] == "Man-to-Man"
+    assert data["defense_strategies"][1]["strategy_name"] == "Zone"
+
+

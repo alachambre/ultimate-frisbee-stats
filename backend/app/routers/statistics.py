@@ -41,12 +41,40 @@ def get_game_team_statistics(
 ):
     """
     Get team statistics for a game.
-    Returns offense and defense efficiency metrics.
+    Returns offense and defense efficiency metrics, including pull statistics.
 
     Only completed points are included in the calculations.
     Turnovers are attributed based on possession alternation logic.
+    Pull statistics track inbound vs out-of-bounds pulls on defense points.
     """
     stats = crud.get_game_team_stats(db, game_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    return stats
+
+
+@router.get("/games/{game_id}/strategies", response_model=schemas.GameStrategyStats)
+def get_game_strategy_statistics(
+    game_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get strategy statistics for a game.
+    Returns success rates per strategy.
+
+    Only completed points with assigned strategies are included.
+
+    Offense metrics:
+    - Hold rate: % of points won on offense
+    - Clean hold rate: % of holds with 0 turnovers
+    - Quick score rate: % of holds in < 90 seconds
+
+    Defense metrics:
+    - Break rate: % of points won on defense
+    - Turnover rate: % of points where at least 1 turnover occurred
+    """
+    stats = crud.get_game_strategy_stats(db, game_id)
     if not stats:
         raise HTTPException(status_code=404, detail="Game not found")
 
