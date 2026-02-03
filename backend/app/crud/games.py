@@ -114,8 +114,10 @@ def get_game_score(db: Session, game_id: int) -> tuple[int, int]:
     """Calculate the score for a game (our_score, opponent_score)"""
     from app.crud.points import get_points_by_game
     points = get_points_by_game(db, game_id)
-    our_score = sum(1 for p in points if p.won)
-    opponent_score = len(points) - our_score
+    # Only count completed points for score calculation
+    completed_points = [p for p in points if p.status == models.PointStatusEnum.completed]
+    our_score = sum(1 for p in completed_points if p.won)
+    opponent_score = len(completed_points) - our_score
     return our_score, opponent_score
 
 
