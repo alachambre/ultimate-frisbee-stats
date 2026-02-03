@@ -176,7 +176,7 @@ export default function ManagePlayersDialog({
     return null;
   };
 
-  // Helper function to get player's playing time formatted as MM:SS
+  // Helper function to get player's stats formatted as "X points - MM:SS"
   const getPlayerTime = (playerId: number): string | null => {
     if (!liveStats) return null;
     const playerStats = liveStats.find((s) => s.player_id === playerId);
@@ -184,7 +184,10 @@ export default function ManagePlayersDialog({
 
     const minutes = Math.floor(playerStats.effective_time_seconds / 60);
     const seconds = playerStats.effective_time_seconds % 60;
-    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    const timeFormatted = `${minutes}:${String(seconds).padStart(2, "0")}`;
+    const pointsText = playerStats.points_played === 1 ? "point" : "points";
+
+    return `${playerStats.points_played} ${pointsText} - ${timeFormatted}`;
   };
 
   const updateMutation = useMutation({
