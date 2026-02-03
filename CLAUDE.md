@@ -3,6 +3,10 @@
 ## Project Overview
 A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the sidelines during games.
 
+**App Name:** Monkey Statistics
+**Branding:** Monkey team logo (red monkey with mountains) used as favicon, PWA icon, and iOS home screen icon
+**Theme:** Navy blue (#1e3a8a) matching offense color scheme
+
 **Tech Stack:**
 - Backend: FastAPI + SQLAlchemy + PostgreSQL (Supabase in production, SQLite locally)
 - Frontend: React + TypeScript + Material UI + TanStack Query
@@ -20,26 +24,37 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Current Status
 
-**Phase 8 (In Progress)** - Statistics implementation:
-- **Live Player Statistics**: Real-time player statistics with offense/defense breakdown ✅
+**Phase 8 (Complete ✅)** - Statistics implementation:
+- **Game Statistics Dashboard** at `/statistics/games/:id`: ✅
+  - **Team Statistics Component** with circular progress indicators:
+    - Offense: Hold rate, Clean Hold rate
+    - Defense: Turnover rate, Break rate, Clean Break rate
+    - Circular progress visualization with count/total display
+    - Info tooltips explaining each metric
+    - Conditional rendering (hidden when no completed points)
+  - **Player Statistics Component** with responsive design:
+    - Desktop: Sortable table with offense/defense tabs
+    - Mobile: Card layout using PlayerStatsCard component
+    - Mobile sort dropdown with context-aware options
+    - Tab switching with proper sort state management
+    - Modular architecture: CircularStat, TeamStatistics, PlayerStatistics
+  - **CSV Export Functionality**:
+    - Dedicated csvExport utility (~230 lines)
+    - Exports all game data: team stats, player stats, point details, calls, turnovers
+    - Sanitized filenames (TeamName_vs_OpponentName_statistics.csv)
+    - Fully tested with dedicated test file
+- **Live Player Statistics**: Real-time player statistics integrated into GameDetailPage ✅
   - Backend API: GET /statistics/games/{game_id}/live
-  - Returns: points_played, effective_time_seconds, offense breakdown, defense breakdown
-  - **Offense**: points_played, points_won, points_lost, win_rate, points_won_no_turnover, clean_point_rate
-    - clean_point_rate = percentage of won points without any turnovers
-  - **Defense**: points_played, points_won, points_lost, win_rate, points_with_turnover, turnover_rate, points_lost_no_turnover
-    - points_with_turnover = points where we forced opponent to turn it over (got a "D")
-    - turnover_rate = percentage of defensive points where we forced a turnover
-  - Frontend: Integrated into GameDetailPage player roster section
   - 5-second polling for started games, one-time fetch for ended games
-  - Sorting: by name/points/time with persistent selection
   - Visual highlighting: Top 20% (green) and bottom 20% (orange) based on playing time
-  - Mobile-first 2-column card layout
 - **Team Statistics**: Game-level offense/defense efficiency metrics ✅
   - Backend API: GET /statistics/games/{game_id}/team
-  - Returns: offense stats (win_rate, clean_point_rate, break_rate), defense stats (win_rate, turnover_rate, clean_break_rate, hold_rate)
-  - Turnover attribution logic: Possession tracking based on starting_on_offense + turnover sequence
-  - Only completed points counted
+  - Turnover attribution logic with possession tracking
   - 40 comprehensive backend tests (380 total passing)
+- **Code Refactoring**:
+  - GameStatisticsPage reduced from 726 → 178 lines (75% reduction)
+  - Extracted 3 reusable components + CSV utility
+  - Improved maintainability and component reusability
 
 **Phase 7 Complete** - Calls & Turnovers tracking fully integrated frontend + backend:
 - **Data Model**: Team → Competition → Game → Point hierarchy with 9 entities (teams, players, competitions, games, points, lines, strategies, calls, turnovers)
@@ -111,8 +126,8 @@ backend/app/
 - **i18n**: react-i18next with 10 namespaces, language selector with 🇬🇧/🇫🇷 flags
 
 ### Testing
-- **Backend**: Pytest with comprehensive CRUD and API coverage (357 tests - 100% passing)
-- **Frontend**: Vitest + MSW + React Testing Library (266 tests - 100% passing)
+- **Backend**: Pytest with comprehensive CRUD and API coverage (380 tests - 100% passing)
+- **Frontend**: Vitest + MSW + React Testing Library (291 tests - 100% passing)
 - **i18n Testing**: i18n mock in test-utils ensures tests use English translations
 - **Philosophy**: Test meaningful scenarios and edge cases, not chasing coverage metrics
 - **Organization**: Tests in `__tests__/` subdirectories
@@ -174,13 +189,19 @@ ready → running → scored → completed
 - ✅ **Tests complete** for `ManagePlayersDialog` - 26 comprehensive tests covering pre-selection, validation, gender tabs, player toggling
 - 🔄 **Reuse player selection UI**: The new `ManagePlayersDialog` should be reused in other places where we select players (e.g., line management, game roster selection)
 
-**Phase 8: Statistics Dashboard - IN PROGRESS**
+**Phase 8: Statistics Dashboard - COMPLETE ✅**
 - ✅ Game-level statistics backend (team + player stats with offense/defense breakdown)
 - ✅ Frontend dashboard at `/statistics/games/:gameId` with complete team and player statistics display
-- 🔄 Competition-level aggregations (team + player stats across all games in competition)
+- ✅ CSV export functionality with comprehensive data export
+- ✅ Mobile-responsive design with card view and sort dropdown
+- ✅ Component refactoring (GameStatisticsPage: 726 → 178 lines)
+- ✅ Reusable statistics components (CircularStat, TeamStatistics, PlayerStatistics)
+
+**Future Enhancements:**
+- Competition-level aggregations (team + player stats across all games in competition)
 - Team-level (all-time) aggregations
 - Advanced visualizations and charts
-- Export/sharing capabilities
+- Additional export formats
 
 ## Important Commands
 
@@ -196,7 +217,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 cd frontend
 npm run dev                         # Starts on http://localhost:5173/
-npm test                            # Run all 266 tests (100% passing ✅)
+npm test                            # Run all 291 tests (100% passing ✅)
 npm run test:coverage               # Run tests with coverage report
 npm run build                       # Production build
 ```
@@ -218,8 +239,16 @@ npm run build                       # Production build
 - `frontend/src/App.tsx` - Root with MUI theme (semantic colors, custom gradients), React Router, TanStack Query, I18nextProvider
 - `frontend/src/theme.d.ts` - TypeScript module augmentation for theme extensions (@mui/material/styles + @mui/system for sx prop support)
 - `frontend/src/pages/` - All page components with routes (including GameStatisticsPage)
-- `frontend/src/components/` - Organized by domain (teams/, players/, games/, modals/)
+- `frontend/src/pages/GameStatisticsPage.tsx` - Refactored statistics dashboard (178 lines, 75% reduction)
+- `frontend/src/components/` - Organized by domain (teams/, players/, games/, modals/, statistics/)
+- `frontend/src/components/statistics/` - Statistics components:
+  - `CircularStat.tsx` - Reusable circular progress indicator (~99 lines)
+  - `TeamStatistics.tsx` - Team offense/defense stats (~98 lines)
+  - `PlayerStatistics.tsx` - Player stats with mobile/desktop views (~430 lines)
+  - `PlayerStatsCard.tsx` - Mobile card layout for player stats
 - `frontend/src/components/Layout.tsx` - AppBar with language selector (🇬🇧/🇫🇷)
+- `frontend/src/utils/csvExport.ts` - CSV export utility (~230 lines)
+- `frontend/src/utils/__tests__/csvExport.test.ts` - CSV export tests
 - `frontend/src/services/` - API layer matching backend endpoints
 - `frontend/src/types/index.ts` - TypeScript types matching backend schemas
 - `frontend/src/types/i18n.d.ts` - TypeScript types for i18next (CustomTypeOptions with resources)
@@ -229,6 +258,9 @@ npm run build                       # Production build
   - `fr/` - 10 French translation files (same structure)
 - `frontend/src/test/mocks/handlers.ts` - MSW handlers for all endpoints
 - `frontend/src/test/test-utils.tsx` - Test utilities with i18n mock (English only, zero test changes needed)
+- `frontend/index.html` - App entry point with Monkey branding (title, favicon, manifest)
+- `frontend/public/monkey-logo.png` - Monkey team logo (1024x1024)
+- `frontend/public/manifest.json` - PWA manifest with Monkey branding
 - `frontend/README.md` - Comprehensive frontend documentation with theme system, i18n guide
 - `GLOSSARY.md` - Ultimate frisbee terms that stay in English (Pull, Turnover, Break, etc.)
 
@@ -261,7 +293,11 @@ npm run build                       # Production build
   - Line filtering dropdown
   - Empty states (no men/women available)
   - Dialog actions (save enabled/disabled, cancel)
-- All 292 tests passing ✅ (266 + 26 new)
+- **CSV Export (1 test)** - Comprehensive test covering:
+  - Export of all game data sections
+  - Blob creation and download handling
+  - CSV content validation
+- All 291 tests passing ✅
 
 **What needs tests ⚠️:**
 - **PointHistoryItem enhancements** - New collapsible chronology section not tested

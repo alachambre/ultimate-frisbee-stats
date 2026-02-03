@@ -68,12 +68,31 @@ A mobile-first application designed for use on the sidelines during ultimate fri
 
 **Statistics & Analytics:**
 - Comprehensive game statistics dashboard at `/statistics/games/:id`
-- Team statistics with offense/defense breakdown (Hold, Clean Hold, Break, Clean Break, Turnover rates)
-- Player statistics table with playing time, offense/defense win rates, clean points, forced turnovers
-- Info icon tooltips explaining each statistic
+- **Team statistics** with circular progress indicators:
+  - Offense: Hold rate, Clean Hold rate
+  - Defense: Turnover rate, Break rate, Clean Break rate
+  - Conditional rendering (hidden when no completed points)
+- **Player statistics** with responsive layouts:
+  - Desktop: Sortable table with all columns
+  - Mobile: Card view with sort dropdown
+  - Tabs for offense/defense views
+  - Sort options: Name, Time, Points, Hold/Break rates, Clean points
+  - Info tooltips explaining each statistic
+- **CSV Export**: Export all game data (team stats, player stats, point details, calls, turnovers)
 - Real-time statistics for ongoing games (integrated into GameDetailPage)
 - Visual highlighting of top/bottom performers by playing time
-- Sortable player roster by name, points played, or playing time
+- Modular component architecture (CircularStat, TeamStatistics, PlayerStatistics)
+
+## Branding
+
+**App Name:** Monkey Statistics
+
+**Logo:** The app features the Monkey team logo (red monkey with mountains) which appears in:
+- Browser tab favicon
+- iOS home screen icon (when installed)
+- PWA app icon (when installed on mobile/desktop)
+
+**Theme Color:** Navy blue (#1e3a8a) matching the app's offense color scheme
 
 ## Quick Start
 
