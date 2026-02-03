@@ -11,7 +11,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Backend: FastAPI + SQLAlchemy + PostgreSQL (Supabase in production, SQLite locally)
 - Frontend: React + TypeScript + Material UI + TanStack Query
 - Testing: Pytest (backend), Vitest + MSW + React Testing Library (frontend)
-- **Deployment**: Railway (backend) + Vercel (frontend) + Supabase (database)
+- **Deployment**: Render (backend) + Vercel (frontend) + Supabase (database)
 
 **Key Documentation:**
 - `requirements.md` - Full requirements for Phases 4-8
@@ -329,19 +329,24 @@ npm run build                       # Production build
 
 **Live URLs:**
 - Frontend: https://ultimate-frisbee-stats.vercel.app
-- Backend: https://ultimate-frisbee-stats-production.up.railway.app
+- Backend: https://ultimate-frisbee-stats-backend.onrender.com
 
 **Architecture:**
-- Railway auto-deploys backend on push to `main`
+- Render auto-deploys backend on push to `main` (free tier with cold starts after 15 min inactivity)
 - Vercel auto-deploys frontend on push to `main`
 - Supabase PostgreSQL with Transaction Pooler (port 6543)
+
+**Note on Render Free Tier:**
+- Backend spins down after 15 minutes of inactivity
+- First request after spin-down takes ~30 seconds (cold start)
+- Acceptable for team/personal use, but consider UX improvements (see Task #1)
 
 **Key deployment fixes applied:**
 - API services use shared `apiClient` with `VITE_API_BASE_URL`
 - `vercel.json` rewrites for SPA routing
 - `player_number` is `Optional[int]` in statistics schema for PostgreSQL compatibility
 
-See `DEPLOYMENT.md` for setup guide and `DEPLOYMENT_STATUS.md` for current status.
+See `DEPLOYMENT.md` for setup guide.
 
 ## Development Notes
 - Backend: Port 8000, SQLite locally (PostgreSQL in production via Supabase)
