@@ -178,15 +178,15 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     for player_id, stats in player_stats.items():
         # Offense rates
         hold_rate = stats["offense_won"] / stats["offense_played"] if stats["offense_played"] > 0 else 0.0
-        # Clean hold rate: of points won, how many had no turnovers
-        clean_hold_rate = stats["offense_won_no_turnover"] / stats["offense_won"] if stats["offense_won"] > 0 else 0.0
+        # Clean hold rate: of points played on offense, how many had no turnovers
+        clean_hold_rate = stats["offense_won_no_turnover"] / stats["offense_played"] if stats["offense_played"] > 0 else 0.0
 
         # Defense rates
         break_rate = stats["defense_won"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
         # Turnover rate: of points played on defense, how many had turnovers
         turnover_rate = stats["defense_with_turnover"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
-        # Clean break rate: of points won on defense, how many had no turnovers
-        clean_break_rate = stats["defense_won_no_turnover"] / stats["defense_won"] if stats["defense_won"] > 0 else 0.0
+        # Clean break rate: of points played on defense, how many had no turnovers
+        clean_break_rate = stats["defense_won_no_turnover"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
 
         result.append({
             "player_id": stats["player_id"],
@@ -314,13 +314,13 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
 
     # Calculate offense rates
     offense_hold_rate = offense_won / offense_started if offense_started > 0 else 0.0
-    offense_clean_hold_rate = offense_won_no_turnover / offense_won if offense_won > 0 else 0.0
+    offense_clean_hold_rate = offense_won_no_turnover / offense_started if offense_started > 0 else 0.0
     offense_broken_rate = offense_lost / offense_started if offense_started > 0 else 0.0
 
     # Calculate defense rates
     defense_break_rate = defense_won / defense_started if defense_started > 0 else 0.0
     defense_turnover_rate = defense_points_with_turnover / defense_started if defense_started > 0 else 0.0
-    defense_clean_break_rate = defense_won_no_turnover / defense_won if defense_won > 0 else 0.0
+    defense_clean_break_rate = defense_won_no_turnover / defense_started if defense_started > 0 else 0.0
     defense_hold_rate = defense_break_rate  # Same as break_rate (kept for backward compatibility)
 
     # Calculate pull statistics (defense points only, where pull is tracked)

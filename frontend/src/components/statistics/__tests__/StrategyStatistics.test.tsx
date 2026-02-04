@@ -86,9 +86,9 @@ describe("StrategyStatistics", () => {
           points_lost: 1,
           hold_rate: 0.8,
           clean_holds: 3,
-          clean_hold_rate: 0.75,
+          clean_hold_rate: 0.6, // 3/5 (relative to points_played)
           quick_scores: 2,
-          quick_score_rate: 0.5,
+          quick_score_rate: 0.4, // 2/5 (relative to points_played)
         },
       ],
       defense_strategies: [],
@@ -106,11 +106,11 @@ describe("StrategyStatistics", () => {
       await user.click(strategyCard);
     }
 
-    // Detailed stats should now be visible
+    // Detailed stats should now be visible (relative to points_played, not points_won)
     expect(screen.getByText("Clean Holds")).toBeVisible();
-    expect(screen.getByText("75% (3/4)")).toBeInTheDocument();
+    expect(screen.getByText("60% (3/5)")).toBeInTheDocument();
     expect(screen.getByText("Quick Scores (< 90s)")).toBeVisible();
-    expect(screen.getByText("50% (2/4)")).toBeInTheDocument();
+    expect(screen.getByText("40% (2/5)")).toBeInTheDocument();
   });
 
   it("expands defense strategy to show detailed stats", async () => {

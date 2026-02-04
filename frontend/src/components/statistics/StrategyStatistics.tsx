@@ -154,14 +154,14 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           label={t("strategyStats.cleanHolds")}
                           percentage={strategy.clean_hold_rate}
                           count={strategy.clean_holds}
-                          total={strategy.points_won}
+                          total={strategy.points_played}
                           color="#3b82f6"
                         />
                         <StrategyBar
                           label={t("strategyStats.quickScores")}
                           percentage={strategy.quick_score_rate}
                           count={strategy.quick_scores}
-                          total={strategy.points_won}
+                          total={strategy.points_played}
                           color="#60a5fa"
                         />
                       </Box>
