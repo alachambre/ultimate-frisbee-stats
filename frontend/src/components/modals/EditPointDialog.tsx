@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +18,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import PointPlayerSelection from "../points/PointPlayerSelection";
-import type { PointWithPlayers, Player } from "../../types";
+import type { PointWithPlayers, Player, PointUpdate } from "../../types";
 
 interface EditPointDialogProps {
   open: boolean;
@@ -38,25 +38,16 @@ export default function EditPointDialog({
   onSuccess,
 }: EditPointDialogProps) {
   const { t } = useTranslation(["points", "common"]);
-  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
-  const [startingOnOffense, setStartingOnOffense] = useState(true);
-  const [won, setWon] = useState<boolean | null>(null);
+  // Initialize state directly from point props (Dialog Form State Pattern)
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(point.players.map((p) => p.id));
+  const [startingOnOffense, setStartingOnOffense] = useState(point.starting_on_offense);
+  const [won, setWon] = useState<boolean | null>(point.won);
   const [selectedLineId, setSelectedLineId] = useState<number | "">("");
   const queryClient = useQueryClient();
 
-  // Initialize form values when point changes
-  useEffect(() => {
-    if (point) {
-      setSelectedPlayerIds(point.players.map((p) => p.id));
-      setStartingOnOffense(point.starting_on_offense);
-      setWon(point.won);
-      setSelectedLineId(""); // Reset line filter
-    }
-  }, [point]);
-
   const updateMutation = useMutation({
     mutationFn: () => {
-      const updateData: any = {
+      const updateData: PointUpdate = {
         starting_on_offense: startingOnOffense,
         player_ids: selectedPlayerIds,
       };
@@ -70,6 +61,9 @@ export default function EditPointDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(point.game_id)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["liveStats", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", point.game_id] });
       handleClose();
       onSuccess?.();
     },
@@ -94,8 +88,9 @@ export default function EditPointDialog({
       <DialogContent>
         {updateMutation.error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(updateMutation.error as any)?.response?.data?.detail ||
-              t("common:error.generic")}
+            {updateMutation.error instanceof Error && 'response' in updateMutation.error
+              ? (updateMutation.error.response as { data?: { detail?: string } })?.data?.detail || t("common:error.generic")
+              : t("common:error.generic")}
           </Alert>
         )}
 

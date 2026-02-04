@@ -113,6 +113,7 @@ export default function LivePointTracker({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", game.id] });
+      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", game.id] });
       onPointUpdated?.();
     },
   });
@@ -200,7 +201,10 @@ export default function LivePointTracker({
         };
       });
 
-      // 3. No need to invalidate - cache is already up to date
+      // 3. Invalidate stats queries since un-scoring a point affects statistics
+      queryClient.invalidateQueries({ queryKey: ["liveStats", game.id] });
+      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", game.id] });
+      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", game.id] });
       onPointUpdated?.();
     },
   });

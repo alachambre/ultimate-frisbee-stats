@@ -43,6 +43,8 @@ export default function CompletePointDialog({
       queryClient.invalidateQueries({ queryKey: ["game", String(scoredPoint.game_id)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", scoredPoint.game_id] });
       queryClient.invalidateQueries({ queryKey: ["liveStats", scoredPoint.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", scoredPoint.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", scoredPoint.game_id] });
       onClose();
       onSuccess?.();
     },

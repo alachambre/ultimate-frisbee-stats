@@ -58,6 +58,7 @@ export default function SelectStrategyDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", gameId] });
       handleClose();
       onSuccess?.();
     },

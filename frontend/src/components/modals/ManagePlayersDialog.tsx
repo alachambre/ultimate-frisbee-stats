@@ -180,6 +180,8 @@ export default function ManagePlayersDialog({
       queryClient.invalidateQueries({ queryKey: ["game", String(point.game_id)] });
       queryClient.invalidateQueries({ queryKey: ["activePoint", point.game_id] });
       queryClient.invalidateQueries({ queryKey: ["liveStats", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", point.game_id] });
       handleClose();
       onSuccess?.();
     },
