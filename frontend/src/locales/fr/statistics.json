@@ -37,7 +37,7 @@
     "pointsPlayed": "points joués",
     "holdRate": "Taux de Hold",
     "cleanHolds": "Clean Holds",
-    "quickScores": "Scores Rapides (< 90s)",
+    "quickScores": "Points marqués rapidement (< 90s)",
     "breakRate": "Taux de Break",
     "turnoverRate": "Taux de Turnover"
   },

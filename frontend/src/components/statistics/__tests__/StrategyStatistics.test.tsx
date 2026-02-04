@@ -69,7 +69,8 @@ describe("StrategyStatistics", () => {
     expect(screen.getByText("Defense Strategies")).toBeInTheDocument();
     expect(screen.getByText("Zone")).toBeInTheDocument();
     expect(screen.getByText("3 points played")).toBeInTheDocument();
-    expect(screen.getByText("33% (1/3)")).toBeInTheDocument();
+    // Turnover rate is now the main metric (67%)
+    expect(screen.getByText("67% (2/3)")).toBeInTheDocument();
   });
 
   it("expands offense strategy to show detailed stats", async () => {
@@ -133,8 +134,11 @@ describe("StrategyStatistics", () => {
 
     render(<StrategyStatistics strategyStats={stats} />);
 
-    // Initially, detailed stats should not be visible
-    expect(screen.queryByText("Turnover Rate")).not.toBeVisible();
+    // Turnover Rate is now the main metric (always visible)
+    expect(screen.getByText("Turnover Rate")).toBeVisible();
+
+    // Initially, detailed stats (Break Rate) should not be visible
+    expect(screen.queryByText("Break Rate")).not.toBeVisible();
 
     // Click to expand
     const strategyCard = screen.getByText("Zone").closest("div[role='button']") || screen.getByText("Zone").parentElement?.parentElement;
@@ -143,8 +147,8 @@ describe("StrategyStatistics", () => {
     }
 
     // Detailed stats should now be visible
-    expect(screen.getByText("Turnover Rate")).toBeVisible();
-    expect(screen.getByText("67% (2/3)")).toBeInTheDocument();
+    expect(screen.getByText("Break Rate")).toBeVisible();
+    expect(screen.getByText("33% (1/3)")).toBeInTheDocument();
   });
 
   it("renders both offense and defense strategies", () => {

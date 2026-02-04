@@ -4,6 +4,7 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { useTranslation } from "react-i18next";
 import type { GameStrategyStats } from "../../types";
 
 interface StrategyStatisticsProps {
@@ -51,6 +52,7 @@ function StrategyBar({ label, percentage, count, total, color }: StrategyBarProp
 }
 
 export default function StrategyStatistics({ strategyStats }: StrategyStatisticsProps) {
+  const { t } = useTranslation("statistics");
   const [expandedOffense, setExpandedOffense] = useState<Set<number>>(new Set());
   const [expandedDefense, setExpandedDefense] = useState<Set<number>>(new Set());
 
@@ -77,6 +79,14 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
   const hasOffenseStrategies = strategyStats.offense_strategies.length > 0;
   const hasDefenseStrategies = strategyStats.defense_strategies.length > 0;
 
+  // Sort strategies by their main metric (descending - best first)
+  const sortedOffenseStrategies = [...strategyStats.offense_strategies].sort(
+    (a, b) => b.hold_rate - a.hold_rate
+  );
+  const sortedDefenseStrategies = [...strategyStats.defense_strategies].sort(
+    (a, b) => b.turnover_rate - a.turnover_rate
+  );
+
   if (!hasOffenseStrategies && !hasDefenseStrategies) {
     return null;
   }
@@ -84,7 +94,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Strategy Statistics
+        {t("strategyStats.title")}
       </Typography>
 
       {/* Offense Strategies */}
@@ -92,11 +102,11 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
         <Box sx={{ mb: hasDefenseStrategies ? 4 : 0 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
             <FlashOnIcon sx={{ color: (theme) => theme.colors.offense.main }} />
-            <Typography variant="h6">Offense Strategies</Typography>
+            <Typography variant="h6">{t("strategyStats.offenseStrategies")}</Typography>
           </Box>
 
           <Grid container spacing={2}>
-            {strategyStats.offense_strategies.map((strategy) => {
+            {sortedOffenseStrategies.map((strategy) => {
               const isExpanded = expandedOffense.has(strategy.strategy_id);
               return (
                 <Grid size={{ xs: 12, md: 6 }} key={strategy.strategy_id}>
@@ -120,7 +130,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           {strategy.strategy_name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {strategy.points_played} points played
+                          {strategy.points_played} {t("strategyStats.pointsPlayed")}
                         </Typography>
                       </Box>
                       <IconButton size="small">
@@ -130,7 +140,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
 
                     {/* Main metric - always visible */}
                     <StrategyBar
-                      label="Hold Rate"
+                      label={t("strategyStats.holdRate")}
                       percentage={strategy.hold_rate}
                       count={strategy.points_won}
                       total={strategy.points_played}
@@ -141,14 +151,14 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                     <Collapse in={isExpanded}>
                       <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
                         <StrategyBar
-                          label="Clean Holds"
+                          label={t("strategyStats.cleanHolds")}
                           percentage={strategy.clean_hold_rate}
                           count={strategy.clean_holds}
                           total={strategy.points_won}
                           color="#3b82f6"
                         />
                         <StrategyBar
-                          label="Quick Scores (< 90s)"
+                          label={t("strategyStats.quickScores")}
                           percentage={strategy.quick_score_rate}
                           count={strategy.quick_scores}
                           total={strategy.points_won}
@@ -169,11 +179,11 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
         <Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
             <ShieldIcon sx={{ color: (theme) => theme.colors.defense.main }} />
-            <Typography variant="h6">Defense Strategies</Typography>
+            <Typography variant="h6">{t("strategyStats.defenseStrategies")}</Typography>
           </Box>
 
           <Grid container spacing={2}>
-            {strategyStats.defense_strategies.map((strategy) => {
+            {sortedDefenseStrategies.map((strategy) => {
               const isExpanded = expandedDefense.has(strategy.strategy_id);
               return (
                 <Grid size={{ xs: 12, md: 6 }} key={strategy.strategy_id}>
@@ -197,7 +207,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           {strategy.strategy_name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {strategy.points_played} points played
+                          {strategy.points_played} {t("strategyStats.pointsPlayed")}
                         </Typography>
                       </Box>
                       <IconButton size="small">
@@ -205,11 +215,11 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       </IconButton>
                     </Box>
 
-                    {/* Main metric - always visible */}
+                    {/* Main metric - always visible (Turnover Rate is the key defense metric) */}
                     <StrategyBar
-                      label="Break Rate"
-                      percentage={strategy.break_rate}
-                      count={strategy.points_won}
+                      label={t("strategyStats.turnoverRate")}
+                      percentage={strategy.turnover_rate}
+                      count={strategy.points_with_turnover}
                       total={strategy.points_played}
                       color="#0ea5e9"
                     />
@@ -218,9 +228,9 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                     <Collapse in={isExpanded}>
                       <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
                         <StrategyBar
-                          label="Turnover Rate"
-                          percentage={strategy.turnover_rate}
-                          count={strategy.points_with_turnover}
+                          label={t("strategyStats.breakRate")}
+                          percentage={strategy.break_rate}
+                          count={strategy.points_won}
                           total={strategy.points_played}
                           color="#38bdf8"
                         />

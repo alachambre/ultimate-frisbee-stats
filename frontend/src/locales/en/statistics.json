@@ -30,6 +30,17 @@
     "cleanBreak": "Clean Break",
     "pullInbound": "Pull inbound"
   },
+  "strategyStats": {
+    "title": "Strategy Statistics",
+    "offenseStrategies": "Offense Strategies",
+    "defenseStrategies": "Defense Strategies",
+    "pointsPlayed": "points played",
+    "holdRate": "Hold Rate",
+    "cleanHolds": "Clean Holds",
+    "quickScores": "Quick Scores (< 90s)",
+    "breakRate": "Break Rate",
+    "turnoverRate": "Turnover Rate"
+  },
   "playerStats": {
     "title": "Player Statistics",
     "noData": "No player statistics available yet. Complete some points to see statistics.",
