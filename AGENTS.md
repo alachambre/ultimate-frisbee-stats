@@ -1,0 +1,82 @@
+# Codex Agent Context - Ultimate Frisbee Stats App
+
+## Project Overview
+A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the sidelines during games.
+
+**App Name:** Monkey Statistics
+**Branding:** Monkey team logo (red monkey with mountains) used as favicon, PWA icon, and iOS home screen icon
+**Theme:** Navy blue (#1e3a8a) matching offense color scheme
+
+## Tech Stack
+- Backend: FastAPI + SQLAlchemy + PostgreSQL (Supabase in production, SQLite locally)
+- Frontend: React + TypeScript + Material UI + TanStack Query
+- Testing: Pytest (backend), Vitest + MSW + React Testing Library (frontend)
+- Deployment: Render (backend) + Vercel (frontend) + Supabase (database)
+
+## Key Documentation
+- `requirements.md` - Requirements for Phases 4-8
+- `data-model-design.md` - Data model (9 entities)
+- `backend/README.md` - Backend API documentation
+- `frontend/README.md` - Frontend architecture
+- `LOGGING.md` - Backend logging guide
+- `DEPLOYMENT.md` - Deployment guide
+- `DEPLOYMENT_STATUS.md` - Current deployment status and live URLs
+
+## Architecture (High Level)
+**Frontend**
+- `frontend/src/components/` domain-organized components + `shared/` + `modals/`
+- `frontend/src/pages/` route pages
+- `frontend/src/services/` API layer (per-entity)
+- `frontend/src/types/` TypeScript schemas
+- `frontend/src/test/` MSW + test utils
+
+**Backend**
+- `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)
+- `backend/app/tests/` Pytest (CRUD + API)
+
+## Design & UI System
+- Material UI v7, mobile-first
+- Semantic theme defined in `frontend/src/App.tsx` and `frontend/src/test/test-utils.tsx`
+- **Zero hardcoded colors** in components; use `theme.colors.*` / `theme.gradients.*`
+- i18n: react-i18next with 10 namespaces; sport terms stay in English (see `GLOSSARY.md`)
+
+## Core Workflows & Rules
+- **Point lifecycle**: `ready → running → scored → completed`
+- **Dialog Form State Pattern**: NEVER use `useEffect` to sync state from props
+  - ✅ Initialize state from props (`useState(point.comments || "")`)
+  - ✅ Use `key={point.id}` on dialogs to force remount
+- **Test Builders**: ALWAYS use builders from `tests/builders/` for new tests
+  - Simple: `TeamBuilder`, `CompetitionBuilder`, `GameBuilder`, `PlayerBuilder`, `StrategyBuilder`, `LineBuilder`
+  - Complex: `GameScenarioBuilder`, `PointBuilder`
+- **Code Sharing**: Extract shared logic into utilities when repeated
+  - Example: `utils/playerHighlighting.ts`
+
+## Important Commands
+**Backend**
+```bash
+cd backend
+source venv/bin/activate
+pytest tests/ -v
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Frontend**
+```bash
+cd frontend
+npm run dev
+npm test
+npm run test:coverage
+npm run build
+```
+
+## User Preferences
+- Clean, maintainable code with explanations of React/TypeScript concepts
+- Modern, polished UI (Material UI)
+- Frequent commits with clear messages
+- Wants to be challenged: push back, verify assumptions, think critically
+- Testing philosophy: meaningful tests for core functionality and edge cases
+- Proactively update `CLAUDE.md` when making significant changes
+
+## Deployment Notes
+- Render free tier cold start after ~15 minutes inactivity
+- Frontend/Backend URLs in `DEPLOYMENT_STATUS.md`

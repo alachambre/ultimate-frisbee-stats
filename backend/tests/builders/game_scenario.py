@@ -23,7 +23,7 @@ from app.schemas.competition import CompetitionCreate
 from app.schemas.game import GameCreate
 from app.schemas.player import PlayerCreate, Gender
 from app.schemas.strategy import StrategyCreate
-from app.schemas.point import PointCreate, PointUpdate
+from app.schemas.point import PointCreate, PointUpdate, PointFinish
 from app.schemas.turnover import TurnoverCreate
 from app.schemas.call import CallCreate, CallUpdate
 from app.models.team import Team
@@ -291,15 +291,26 @@ class GameScenarioBuilder:
 
         # Complete point with players
         player_ids = [p.id for p in self.players[:7]]
+        # Transition to running, set players/strategy/pull, and apply custom start time
         points_crud.update_point(
             self.db,
             point.id,
             PointUpdate(
-                status="completed",
+                status="running",
+                player_ids=player_ids,
+                strategy_id=strategy_id,
+                pull=pull,
+                start_datetime=start_time
+            )
+        )
+
+        # Finish the point with custom end time
+        points_crud.finish_point(
+            self.db,
+            point.id,
+            PointFinish(
                 won=won,
-                start_datetime=start_time,
-                end_datetime=end_time,
-                player_ids=player_ids
+                end_datetime=end_time
             )
         )
 

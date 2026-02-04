@@ -324,13 +324,16 @@ def test_finish_point_with_custom_end_datetime(db_session, sample_game, sample_p
         PointCreate(
             game_id=sample_game.id,
             starting_on_offense=True,
-            player_ids=player_ids,
-            start_datetime=start_time
+            player_ids=player_ids
         )
     )
 
     # Transition to running
-    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+    points.update_point(
+        db_session,
+        point.id,
+        PointUpdate(status=PointStatus.running, start_datetime=start_time)
+    )
 
     finished_point = points.finish_point(
         db_session,
@@ -354,13 +357,16 @@ def test_finish_point_invalid_end_datetime(db_session, sample_game, sample_playe
         PointCreate(
             game_id=sample_game.id,
             starting_on_offense=True,
-            player_ids=player_ids,
-            start_datetime=start_time
+            player_ids=player_ids
         )
     )
 
     # Transition to running
-    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+    points.update_point(
+        db_session,
+        point.id,
+        PointUpdate(status=PointStatus.running, start_datetime=start_time)
+    )
 
     with pytest.raises(ValueError, match="end_datetime must be after start_datetime"):
         points.finish_point(

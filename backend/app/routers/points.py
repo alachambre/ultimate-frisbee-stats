@@ -16,26 +16,6 @@ router = APIRouter(
 
 @router.post("", response_model=schemas.PointWithPlayers, status_code=201)
 def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
-    # Verify game exists and is in progress
-    game = crud.get_game(db, point.game_id)
-    if not game:
-        logger.warning(f"Failed to create point: game {point.game_id} not found")
-        raise HTTPException(status_code=404, detail="Game not found")
-    if game.status.value == "ended":
-        logger.warning(
-            f"Failed to create point: game {point.game_id} has ended"
-        )
-        raise HTTPException(status_code=400, detail="Cannot add points to an ended game")
-
-    # Verify strategy exists if provided
-    if point.strategy_id:
-        strategy = crud.get_strategy(db, point.strategy_id)
-        if not strategy:
-            logger.warning(
-                f"Failed to create point: strategy {point.strategy_id} not found"
-            )
-            raise HTTPException(status_code=404, detail="Strategy not found")
-
     try:
         created_point = crud.create_point(db, point)
         player_count = len(point.player_ids) if point.player_ids else 0
@@ -48,7 +28,10 @@ def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
         logger.warning(
             f"Failed to create point for game {point.game_id}: {str(e)}"
         )
-        raise HTTPException(status_code=400, detail=str(e))
+        # Map known not-found errors to 404
+        error_text = str(e).lower()
+        status_code = 404 if error_text in ["game not found", "strategy not found"] else 400
+        raise HTTPException(status_code=status_code, detail=str(e))
 
 
 @router.get("/{point_id}", response_model=schemas.PointWithPlayers)
@@ -139,4 +122,3 @@ def get_active_point(game_id: int, db: Session = Depends(get_db)):
     if not point:
         raise HTTPException(status_code=404, detail="No active point found for this game")
     return point
-

@@ -42,6 +42,14 @@ def get_active_point_for_game(db: Session, game_id: int) -> Optional[models.Poin
 
 def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
     try:
+        # Validate game exists and is not ended
+        from app.crud.games import get_game
+        game = get_game(db, point.game_id)
+        if not game:
+            raise ValueError("Game not found")
+        if game.status.value == "ended":
+            raise ValueError("Cannot add points to an ended game")
+
         # Check for existing ready or running point for this game
         active_point = db.query(models.Point).filter(
             models.Point.game_id == point.game_id,
@@ -55,7 +63,7 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
         if point.strategy_id:
             strategy = db.query(models.Strategy).filter(models.Strategy.id == point.strategy_id).first()
             if not strategy:
-                raise ValueError(f"Strategy with ID {point.strategy_id} not found")
+                raise ValueError("Strategy not found")
 
         # Get current max point number for this game
         max_point = db.query(models.Point).filter(
@@ -66,8 +74,6 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
 
         # If this is the first point, set (or reset) the game's start_datetime
         if next_point_number == 1:
-            from app.crud.games import get_game
-            game = get_game(db, point.game_id)
             if game:
                 game.start_datetime = datetime.now(timezone.utc)
                 db.flush()  # Save the game start time
@@ -83,7 +89,8 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
             comments=point.comments,
             won=None,  # Nullable while not completed
             status=models.PointStatusEnum.ready,
-            start_datetime=point.start_datetime  # Will be None initially, set when transitioning to 'running'
+            # start_datetime is set when transitioning to 'running'
+            start_datetime=None
         )
         db.add(db_point)
         db.flush()  # Get the ID without committing
@@ -133,6 +140,8 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
     db_point = get_point(db, point_id)
     if db_point:
         try:
+            new_status_enum = None
+
             # Update player_ids FIRST (before status validation)
             if point_update.player_ids is not None:
                 if len(point_update.player_ids) == 0:
@@ -163,6 +172,18 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                 new_status_value = point_update.status.value if hasattr(point_update.status, 'value') else point_update.status
                 new_status_enum = models.PointStatusEnum(new_status_value)
 
+                # Validate status transitions
+                current = db_point.status
+                if new_status_enum == models.PointStatusEnum.running and current != models.PointStatusEnum.ready:
+                    raise ValueError(f"Invalid status transition: {current.value} -> running")
+                if new_status_enum == models.PointStatusEnum.scored and current != models.PointStatusEnum.running:
+                    raise ValueError(f"Invalid status transition: {current.value} -> scored")
+                if new_status_enum == models.PointStatusEnum.completed and current not in [
+                    models.PointStatusEnum.running,
+                    models.PointStatusEnum.scored,
+                ]:
+                    raise ValueError(f"Invalid status transition: {current.value} -> completed")
+
                 # Set start_datetime when transitioning from 'ready' to 'running' (if not already set)
                 if (new_status_enum == models.PointStatusEnum.running and
                     db_point.status == models.PointStatusEnum.ready and
@@ -187,6 +208,13 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                 db_point.start_datetime = point_update.start_datetime
             if point_update.end_datetime is not None:
                 db_point.end_datetime = point_update.end_datetime
+
+            # Prevent setting won unless scored/completed
+            if point_update.won is not None:
+                target_status = new_status_enum if new_status_enum is not None else db_point.status
+                if target_status not in [models.PointStatusEnum.scored, models.PointStatusEnum.completed]:
+                    db.rollback()
+                    raise ValueError("Cannot set won unless point is scored or completed")
 
             # Validate end datetime is after start datetime
             if db_point.start_datetime and db_point.end_datetime:
