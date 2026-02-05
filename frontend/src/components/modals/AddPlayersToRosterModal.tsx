@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { addPlayersToRoster, getTeamPlayers } from "../../services";
 import AddPlayersModal from "./AddPlayersModal";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface AddPlayersToRosterModalProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ export default function AddPlayersToRosterModal({
       currentPlayerIds={currentRosterIds}
       fetchPlayers={() => getTeamPlayers(teamId)}
       addPlayers={(playerIds) => addPlayersToRoster(competitionId, playerIds)}
-      invalidateQueries={[["competition", String(competitionId)]]}
+      invalidateQueries={[queryKeys.competition(competitionId)]}
       loadingMessage={t('competitions:modal.addPlayers.loading')}
       emptyMessage={t('competitions:modal.addPlayers.allInRoster')}
     />

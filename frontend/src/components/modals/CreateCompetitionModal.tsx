@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { createCompetition, getTeams } from "../../services";
 import type { CompetitionCreate } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface CreateCompetitionModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export default function CreateCompetitionModal({
   const mutation = useMutation({
     mutationFn: (data: CompetitionCreate) => createCompetition(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["competitions"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.competitions });
       handleClose();
     },
   });

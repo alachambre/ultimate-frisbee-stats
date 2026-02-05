@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { updateCompetition } from "../../services";
 import type { Competition, CompetitionUpdate, CompetitionStatus } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface EditCompetitionModalProps {
   isOpen: boolean;
@@ -35,24 +36,12 @@ export default function EditCompetitionModal({
   });
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        name: competition.name,
-        description: competition.description || "",
-        start_date: competition.start_date,
-        end_date: competition.end_date,
-        status: competition.status as CompetitionStatus,
-      });
-    }
-  }, [isOpen, competition]);
-
   const mutation = useMutation({
     mutationFn: (data: CompetitionUpdate) =>
       updateCompetition(competition.id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["competition", String(competition.id)] });
-      queryClient.invalidateQueries({ queryKey: ["competitions"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.competition(competition.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.competitions });
       onClose();
     },
   });

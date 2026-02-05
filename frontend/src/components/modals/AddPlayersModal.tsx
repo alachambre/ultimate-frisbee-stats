@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -22,9 +22,9 @@ interface AddPlayersModalProps {
   // Function to fetch available players
   fetchPlayers: () => Promise<Player[]>;
   // Function to add players (receives selected player IDs)
-  addPlayers: (playerIds: number[]) => Promise<any>;
+  addPlayers: (playerIds: number[]) => Promise<unknown>;
   // Query keys to invalidate after successful add
-  invalidateQueries: string[][];
+  invalidateQueries: QueryKey[];
   // Optional: custom loading/empty messages
   loadingMessage?: string;
   emptyMessage?: string;
@@ -60,12 +60,6 @@ export default function AddPlayersModal({
       handleClose();
     },
   });
-
-  useEffect(() => {
-    if (!isOpen) {
-      setSelectedPlayerIds([]);
-    }
-  }, [isOpen]);
 
   const handleToggle = (playerId: number) => {
     setSelectedPlayerIds((prev) =>

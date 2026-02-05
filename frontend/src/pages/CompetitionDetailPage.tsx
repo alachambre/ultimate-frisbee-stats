@@ -43,10 +43,13 @@ import EditCompetitionModal from "../components/modals/EditCompetitionModal";
 import AddPlayersToRosterModal from "../components/modals/AddPlayersToRosterModal";
 import CreateGameModal from "../components/modals/CreateGameModal";
 import type { Player } from "../types";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function CompetitionDetailPage() {
   const { t, i18n } = useTranslation(["competitions", "players", "games", "common"]);
   const { competitionId } = useParams<{ competitionId: string }>();
+  const competitionIdNumber = Number(competitionId);
+  const competitionIdValid = Number.isFinite(competitionIdNumber);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -61,21 +64,21 @@ export default function CompetitionDetailPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["competition", competitionId],
-    queryFn: () => getCompetition(Number(competitionId)),
-    enabled: !!competitionId,
+    queryKey: queryKeys.competition(competitionIdValid ? competitionIdNumber : 0),
+    queryFn: () => getCompetition(competitionIdNumber),
+    enabled: competitionIdValid,
   });
 
   const { data: games } = useQuery({
-    queryKey: ["competition-games", competitionId],
-    queryFn: () => getCompetitionGames(Number(competitionId)),
-    enabled: !!competitionId,
+    queryKey: queryKeys.competitionGames(competitionIdValid ? competitionIdNumber : 0),
+    queryFn: () => getCompetitionGames(competitionIdNumber),
+    enabled: competitionIdValid,
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteCompetition(Number(competitionId)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["competitions"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.competitions });
       navigate("/competitions");
     },
   });
@@ -84,9 +87,11 @@ export default function CompetitionDetailPage() {
     mutationFn: (playerId: number) =>
       removePlayersFromRoster(Number(competitionId), [playerId]),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["competition", competitionId],
-      });
+      if (competitionIdValid) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.competition(competitionIdNumber),
+        });
+      }
       setPlayerToRemove(null);
     },
   });
@@ -406,6 +411,7 @@ export default function CompetitionDetailPage() {
 
       {/* Modals */}
       <EditCompetitionModal
+        key={competition.id}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         competition={competition}

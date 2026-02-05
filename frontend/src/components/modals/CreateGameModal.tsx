@@ -29,6 +29,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { createGame, getCompetitions, getCompetition } from "../../services";
 import type { Player } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface CreateGameModalProps {
   isOpen: boolean;
@@ -52,24 +53,29 @@ export default function CreateGameModal({
   const queryClient = useQueryClient();
 
   const { data: competitions } = useQuery({
-    queryKey: ["competitions"],
+    queryKey: queryKeys.competitions,
     queryFn: () => getCompetitions(),
     enabled: !competitionId, // Only fetch if no competitionId provided
   });
 
   const finalCompetitionId = competitionId || selectedCompetitionId;
+  const competitionIdNumber = finalCompetitionId ? Number(finalCompetitionId) : null;
 
   const { data: competition } = useQuery({
-    queryKey: ["competition", finalCompetitionId],
-    queryFn: () => getCompetition(Number(finalCompetitionId)),
-    enabled: !!finalCompetitionId,
+    queryKey: queryKeys.competition(competitionIdNumber ?? 0),
+    queryFn: () => getCompetition(competitionIdNumber as number),
+    enabled: competitionIdNumber !== null && !Number.isNaN(competitionIdNumber),
   });
 
   const mutation = useMutation({
     mutationFn: createGame,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["games"] });
-      queryClient.invalidateQueries({ queryKey: ["competition-games"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.games });
+      if (finalCompetitionId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.competitionGames(Number(finalCompetitionId)),
+        });
+      }
       setSelectedCompetitionId("");
       setOpponentName("");
       setDate("");
@@ -105,7 +111,7 @@ export default function CreateGameModal({
   };
 
   // Player selection logic
-  const availablePlayers = competition?.players || [];
+  const availablePlayers = useMemo(() => competition?.players || [], [competition?.players]);
 
   const filteredPlayers = useMemo(() => {
     if (!searchQuery.trim()) return availablePlayers;

@@ -46,6 +46,7 @@ import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player, PlayerGameStats } from "../types";
 import { getPlayerHighlight } from "../utils/playerHighlighting";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function GameDetailPage() {
   const { t } = useTranslation(["games", "players", "common"]);
@@ -96,10 +97,11 @@ export default function GameDetailPage() {
   });
 
   // Get competition data to access players for point tracking
+  const competitionId = game?.competition_id;
   const { data: competition } = useQuery({
-    queryKey: ["competition", game?.competition_id],
-    queryFn: () => getCompetition(game!.competition_id),
-    enabled: !!game?.competition_id,
+    queryKey: queryKeys.competition(competitionId ?? 0),
+    queryFn: () => getCompetition(competitionId as number),
+    enabled: !!competitionId,
   });
 
   const deleteMutation = useMutation({

@@ -9,6 +9,7 @@ import ErrorState from "../components/shared/ErrorState";
 import CompetitionsGrid from "../components/competitions/CompetitionsGrid";
 import EmptyCompetitionsState from "../components/competitions/EmptyCompetitionsState";
 import CreateCompetitionModal from "../components/modals/CreateCompetitionModal";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function CompetitionsPage() {
   const { t } = useTranslation(["competitions", "common"]);
@@ -20,7 +21,7 @@ export default function CompetitionsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["competitions"],
+    queryKey: queryKeys.competitions,
     queryFn: () => getCompetitions(),
   });
 

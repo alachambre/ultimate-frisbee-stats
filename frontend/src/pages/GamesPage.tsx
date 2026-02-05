@@ -9,6 +9,7 @@ import ErrorState from "../components/shared/ErrorState";
 import GamesGrid from "../components/games/GamesGrid";
 import EmptyGamesState from "../components/games/EmptyGamesState";
 import CreateGameModal from "../components/modals/CreateGameModal";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function GamesPage() {
   const { t } = useTranslation(["games", "common"]);
@@ -31,7 +32,7 @@ export default function GamesPage() {
   });
 
   const { data: competitions } = useQuery({
-    queryKey: ["competitions"],
+    queryKey: queryKeys.competitions,
     queryFn: () => getCompetitions(),
   });
 
