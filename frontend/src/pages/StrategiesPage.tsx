@@ -24,6 +24,7 @@ import EmptyStrategiesState from "../components/strategies/EmptyStrategiesState"
 import CreateStrategyModal from "../components/modals/CreateStrategyModal";
 import EditStrategyModal from "../components/modals/EditStrategyModal";
 import type { Strategy, StrategyCategory } from "../types";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function StrategiesPage() {
   const { t } = useTranslation(["strategies", "common"]);
@@ -38,14 +39,14 @@ export default function StrategiesPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["strategies"],
+    queryKey: queryKeys.strategies,
     queryFn: () => getStrategies(),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteStrategy(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["strategies"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.strategies });
       setDeletingStrategy(null);
     },
   });
@@ -101,7 +102,7 @@ export default function StrategiesPage() {
                 fontWeight: 500,
                 "&.Mui-selected": {
                   fontWeight: "bold",
-                  color: "white",
+                  color: theme.palette.common.white,
                   "&:hover": {
                     opacity: 0.9,
                   },
@@ -158,6 +159,7 @@ export default function StrategiesPage() {
       />
 
       <EditStrategyModal
+        key={editingStrategy?.id ?? "strategy"}
         isOpen={!!editingStrategy}
         onClose={() => setEditingStrategy(null)}
         strategy={editingStrategy}

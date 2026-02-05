@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { createLine } from "../../services/lines";
 import { getTeams } from "../../services/teams";
 import type { LineCreate } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface CreateLineModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ export default function CreateLineModal({
   const queryClient = useQueryClient();
 
   const { data: teams } = useQuery({
-    queryKey: ["teams"],
+    queryKey: queryKeys.teams,
     queryFn: getTeams,
     enabled: isOpen && !teamId,
   });
@@ -43,7 +44,7 @@ export default function CreateLineModal({
   const mutation = useMutation({
     mutationFn: (data: LineCreate) => createLine(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lines"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lines });
       handleClose();
     },
   });

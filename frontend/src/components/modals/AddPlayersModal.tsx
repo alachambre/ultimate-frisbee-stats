@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import PlayerSelectionUI from "../shared/PlayerSelectionUI";
 import type { Player } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface AddPlayersModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export default function AddPlayersModal({
   const queryClient = useQueryClient();
 
   const { data: players, isLoading } = useQuery({
-    queryKey: ["available-players", isOpen],
+    queryKey: queryKeys.availablePlayers(isOpen),
     queryFn: fetchPlayers,
     enabled: isOpen,
   });

@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { createStrategy } from "../../services/strategies";
 import StrategyForm from "../strategies/StrategyForm";
 import type { StrategyCreate, StrategyCategory } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface CreateStrategyModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export default function CreateStrategyModal({
   const mutation = useMutation({
     mutationFn: (data: StrategyCreate) => createStrategy(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["strategies"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.strategies });
       handleClose();
     },
   });

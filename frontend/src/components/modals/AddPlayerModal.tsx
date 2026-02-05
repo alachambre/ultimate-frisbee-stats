@@ -13,6 +13,7 @@ import {
 import { createPlayer } from "../../services";
 import PlayerForm from "../players/PlayerForm";
 import type { Gender } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface AddPlayerModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function AddPlayerModal({
   const mutation = useMutation({
     mutationFn: createPlayer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team", teamId.toString()] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.team(teamId) });
       setPlayerName("");
       setPlayerNumber("");
       setGender("M");

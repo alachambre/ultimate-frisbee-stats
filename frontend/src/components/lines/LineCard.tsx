@@ -6,6 +6,7 @@ import {
   Box,
   Chip,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { useTranslation } from "react-i18next";
 import type { LineWithPlayers } from "../../types";
@@ -32,12 +33,12 @@ export default function LineCard({ line }: LineCardProps) {
         height: "100%",
         border: "2px solid transparent",
         background: (theme) =>
-          `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+          `linear-gradient(${theme.palette.common.white}, ${theme.palette.common.white}) padding-box, ${theme.gradients.primary} border-box`,
         transition: "transform 0.2s, box-shadow 0.2s",
         cursor: "pointer",
         "&:hover": {
           transform: "translateY(-4px)",
-          boxShadow: (theme) => `0 8px 24px ${theme.palette.primary.main}4D`,
+          boxShadow: (theme) => `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
         },
       }}
     >

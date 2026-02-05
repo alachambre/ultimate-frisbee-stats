@@ -6,6 +6,7 @@ import {
   Box,
   CardActionArea,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import GroupIcon from "@mui/icons-material/Group";
 import { useTranslation } from "react-i18next";
@@ -27,12 +28,12 @@ export default function TeamCard({ team }: TeamCardProps) {
         height: "100%",
         border: "2px solid transparent",
         background: (theme) =>
-          `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+          `linear-gradient(${theme.palette.common.white}, ${theme.palette.common.white}) padding-box, ${theme.gradients.primary} border-box`,
         transition: "transform 0.2s, box-shadow 0.2s",
         "&:hover": {
           transform: "translateY(-4px)",
           boxShadow: (theme) =>
-            `0 8px 24px ${theme.palette.primary.main}4D`,
+            `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
         },
       }}
     >

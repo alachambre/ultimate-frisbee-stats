@@ -62,15 +62,17 @@ export default function GameDetailPage() {
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "points" | "time">("name");
   const [isRosterDialogOpen, setIsRosterDialogOpen] = useState(false);
+  const gameIdNumber = Number(gameId);
+  const gameIdValid = Number.isFinite(gameIdNumber);
 
   const {
     data: game,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["game", gameId],
-    queryFn: () => getGame(Number(gameId)),
-    enabled: !!gameId,
+    queryKey: queryKeys.game(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getGame(gameIdNumber),
+    enabled: gameIdValid,
   });
 
   // Check if there's a scored point (no active point to poll for)
@@ -81,18 +83,18 @@ export default function GameDetailPage() {
   // Poll for active point (ready or running) every 5 seconds while game is started
   // Disable if there's a scored point (backend will return 404)
   const { data: activePoint } = useQuery({
-    queryKey: ["activePoint", gameId],
-    queryFn: () => getActivePoint(Number(gameId)),
-    enabled: !!gameId && game?.status === "started" && !hasScoredPoint,
+    queryKey: queryKeys.activePoint(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getActivePoint(gameIdNumber),
+    enabled: gameIdValid && game?.status === "started" && !hasScoredPoint,
     refetchInterval: game?.status === "started" && !hasScoredPoint ? 5000 : false,
     retry: false, // Don't retry on 404 (no active point)
   });
 
   // Fetch game statistics - poll every 5s for started games, fetch once for ended games
   const { data: liveStats } = useQuery({
-    queryKey: ["liveGameStats", gameId],
-    queryFn: () => getLiveGameStatistics(Number(gameId)),
-    enabled: !!gameId && (game?.status === "started" || game?.status === "ended"),
+    queryKey: queryKeys.liveStats(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getLiveGameStatistics(gameIdNumber),
+    enabled: gameIdValid && (game?.status === "started" || game?.status === "ended"),
     refetchInterval: game?.status === "started" ? 5000 : false, // Only poll for started games
   });
 
@@ -107,7 +109,7 @@ export default function GameDetailPage() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteGame(Number(gameId)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.games });
       navigate("/games");
     },
   });
@@ -115,16 +117,16 @@ export default function GameDetailPage() {
   const startMutation = useMutation({
     mutationFn: () => updateGame(Number(gameId), { status: "started" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.games });
     },
   });
 
   const finishMutation = useMutation({
     mutationFn: () => finishGame(Number(gameId)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.games });
       setIsFinishConfirmOpen(false);
     },
   });
@@ -132,8 +134,8 @@ export default function GameDetailPage() {
   const deletePointMutation = useMutation({
     mutationFn: (pointId: number) => deletePoint(pointId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
       setDeletingPoint(null);
     },
   });
@@ -142,7 +144,7 @@ export default function GameDetailPage() {
     mutationFn: (playerId: number) =>
       removePlayersFromGame(Number(gameId), [playerId]),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
       setPlayerToRemove(null);
     },
   });
@@ -192,8 +194,8 @@ export default function GameDetailPage() {
   };
 
   const handlePointUpdated = () => {
-    queryClient.invalidateQueries({ queryKey: ["game", gameId] });
-    queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
   };
 
   const handleEditPoint = (point: PointWithPlayers) => {
@@ -667,6 +669,7 @@ export default function GameDetailPage() {
       {/* Edit Game Modal */}
       {isEditModalOpen && (
         <EditGameModal
+          key={game.id}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           game={game}

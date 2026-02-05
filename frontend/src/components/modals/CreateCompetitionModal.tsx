@@ -35,7 +35,7 @@ export default function CreateCompetitionModal({
   const queryClient = useQueryClient();
 
   const { data: teams } = useQuery({
-    queryKey: ["teams"],
+    queryKey: queryKeys.teams,
     queryFn: getTeams,
     enabled: isOpen,
   });

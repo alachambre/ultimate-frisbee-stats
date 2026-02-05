@@ -15,7 +15,6 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Key Documentation
 - `requirements.md` - Requirements for Phases 4-8
-- `data-model-design.md` - Data model (9 entities)
 - `backend/README.md` - Backend API documentation
 - `frontend/README.md` - Frontend architecture
 - `LOGGING.md` - Backend logging guide
@@ -70,12 +69,13 @@ npm run build
 ```
 
 ## User Preferences
-- Clean, maintainable code with explanations of React/TypeScript concepts
+- Clean, maintainable code, following good practices (SOLID)
 - Modern, polished UI (Material UI)
 - Frequent commits with clear messages
 - Wants to be challenged: push back, verify assumptions, think critically
 - Testing philosophy: meaningful tests for core functionality and edge cases
-- Proactively update `CLAUDE.md` when making significant changes
+- Proactively update `AGENTS.md` when making significant changes
+- Proactively suggest improvements: when working on some part of the code that could be improved, that are not very maintainable, that could lead to issues...
 
 ## Deployment Notes
 - Render free tier cold start after ~15 minutes inactivity

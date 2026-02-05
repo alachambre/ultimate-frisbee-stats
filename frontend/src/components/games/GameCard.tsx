@@ -7,6 +7,7 @@ import {
   CardActionArea,
   Chip,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ScoreboardIcon from "@mui/icons-material/Scoreboard";
@@ -26,12 +27,12 @@ export default function GameCard({ game }: GameCardProps) {
         height: "100%",
         border: "2px solid transparent",
         background: (theme) =>
-          `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+          `linear-gradient(${theme.palette.common.white}, ${theme.palette.common.white}) padding-box, ${theme.gradients.primary} border-box`,
         transition: "transform 0.2s, box-shadow 0.2s",
         "&:hover": {
           transform: "translateY(-4px)",
           boxShadow: (theme) =>
-            `0 8px 24px ${theme.palette.primary.main}4D`,
+            `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
         },
       }}
     >

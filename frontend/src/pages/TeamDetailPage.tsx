@@ -36,6 +36,7 @@ import AddPlayerModal from "../components/modals/AddPlayerModal";
 import EditPlayerModal from "../components/modals/EditPlayerModal";
 import CreateLineModal from "../components/modals/CreateLineModal";
 import EditLineModal from "../components/modals/EditLineModal";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function TeamDetailPage() {
   const { t } = useTranslation(["teams", "players", "lines", "common"]);
@@ -49,27 +50,29 @@ export default function TeamDetailPage() {
   const [editingLine, setEditingLine] = useState<LineWithPlayers | null>(null);
   const [deletingLine, setDeletingLine] = useState<LineWithPlayers | null>(null);
   const [showPlayers, setShowPlayers] = useState(false);
+  const teamIdNumber = Number(teamId);
+  const teamIdValid = Number.isFinite(teamIdNumber);
 
   const {
     data: team,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["team", teamId],
-    queryFn: () => getTeam(Number(teamId)),
-    enabled: !!teamId,
+    queryKey: queryKeys.team(teamIdValid ? teamIdNumber : 0),
+    queryFn: () => getTeam(teamIdNumber),
+    enabled: teamIdValid,
   });
 
   const { data: lines } = useQuery({
-    queryKey: ["lines", "team", teamId],
-    queryFn: () => getLines(Number(teamId)),
-    enabled: !!teamId,
+    queryKey: queryKeys.teamLines(teamIdValid ? teamIdNumber : 0),
+    queryFn: () => getLines(teamIdNumber),
+    enabled: teamIdValid,
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteTeam(Number(teamId)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teams });
       navigate("/teams");
     },
   });
@@ -77,7 +80,7 @@ export default function TeamDetailPage() {
   const deleteLineMutation = useMutation({
     mutationFn: (lineId: number) => deleteLine(lineId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lines", "team", teamId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teamLines(teamIdNumber) });
       setDeletingLine(null);
     },
   });
@@ -320,6 +323,7 @@ export default function TeamDetailPage() {
 
       {editingPlayer && (
         <EditPlayerModal
+          key={editingPlayer.id}
           isOpen={!!editingPlayer}
           onClose={() => setEditingPlayer(null)}
           player={editingPlayer}
@@ -336,6 +340,7 @@ export default function TeamDetailPage() {
 
       {editingLine && (
         <EditLineModal
+          key={editingLine.id}
           isOpen={!!editingLine}
           onClose={() => setEditingLine(null)}
           line={editingLine}

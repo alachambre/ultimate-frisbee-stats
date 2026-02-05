@@ -53,7 +53,7 @@ export default function StrategyForm({
               fontWeight: 500,
               "&.Mui-selected": {
                 fontWeight: "bold",
-                color: "white",
+                color: theme.palette.common.white,
                 "&:hover": {
                   opacity: 0.9,
                 },

@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { updateLine } from "../../services/lines";
 import type { LineWithPlayers, LineUpdate } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface EditLineModalProps {
   isOpen: boolean;
@@ -25,27 +26,18 @@ export default function EditLineModal({
   line,
 }: EditLineModalProps) {
   const { t } = useTranslation(["lines", "common"]);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
+  const [formData, setFormData] = useState(() => ({
+    name: line?.name ?? "",
+    description: line?.description || "",
+  }));
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (line) {
-      setFormData({
-        name: line.name,
-        description: line.description || "",
-      });
-    }
-  }, [line]);
 
   const mutation = useMutation({
     mutationFn: ({ lineId, data }: { lineId: number; data: LineUpdate }) =>
       updateLine(lineId, data),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["lines"] });
-      queryClient.invalidateQueries({ queryKey: ["line", String(variables.lineId)] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lines });
+      queryClient.invalidateQueries({ queryKey: queryKeys.line(variables.lineId) });
       handleClose();
     },
   });
@@ -64,6 +56,10 @@ export default function EditLineModal({
   };
 
   const handleClose = () => {
+    setFormData({
+      name: line?.name ?? "",
+      description: line?.description || "",
+    });
     mutation.reset();
     onClose();
   };

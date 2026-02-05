@@ -169,7 +169,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
             textTransform: "none",
             "&.Mui-selected": {
               backgroundColor: (theme) => theme.colors.offense.main,
-              color: "white",
+              color: (theme) => theme.palette.common.white,
             },
           }}
         />
@@ -185,7 +185,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
             textTransform: "none",
             "&.Mui-selected": {
               backgroundColor: (theme) => theme.colors.defense.main,
-              color: "white",
+              color: (theme) => theme.palette.common.white,
             },
           }}
         />

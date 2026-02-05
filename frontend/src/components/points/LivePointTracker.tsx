@@ -46,6 +46,7 @@ import { getTurnoversByPoint } from "../../services/turnovers";
 import { getCallsByPoint } from "../../services/calls";
 import GroupIcon from "@mui/icons-material/Group";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface LivePointTrackerProps {
   game: GameDetail;
@@ -78,14 +79,14 @@ export default function LivePointTracker({
 
   // Fetch turnovers for active point (needed for possession logic)
   const { data: existingTurnovers = [] } = useQuery<TurnoverWithPlayer[]>({
-    queryKey: ['turnovers', activePoint?.id],
+    queryKey: queryKeys.turnovers(activePoint?.id ?? 0),
     queryFn: () => getTurnoversByPoint(activePoint!.id),
     enabled: !!activePoint,
   });
 
   // Fetch calls for active point (needed to check for pending calls)
   const { data: calls = [] } = useQuery<Call[]>({
-    queryKey: ['calls', activePoint?.id],
+    queryKey: queryKeys.calls(activePoint?.id ?? 0),
     queryFn: () => getCallsByPoint(activePoint!.id),
     enabled: !!activePoint,
   });
@@ -111,9 +112,9 @@ export default function LivePointTracker({
       return updatePoint(activePoint.id, { pull });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", game.id] });
-      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", game.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(game.id) });
       onPointUpdated?.();
     },
   });
@@ -125,8 +126,8 @@ export default function LivePointTracker({
       return updatePoint(activePoint.id, { status: "running" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(game.id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", game.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(game.id) });
       onPointUpdated?.();
     },
   });
@@ -187,10 +188,10 @@ export default function LivePointTracker({
       // Optimistically update both caches immediately to avoid UI flicker
 
       // 1. Update activePoint cache
-      queryClient.setQueryData(["activePoint", game.id], updatedPoint);
+      queryClient.setQueryData(queryKeys.activePoint(game.id), updatedPoint);
 
       // 2. Update game cache - replace the scored point with the updated point
-      queryClient.setQueryData(["game", String(game.id)], (oldData: unknown) => {
+      queryClient.setQueryData(queryKeys.game(game.id), (oldData: unknown) => {
         if (!oldData || typeof oldData !== 'object') return oldData;
         const gameData = oldData as { points: PointWithPlayers[] };
         return {
@@ -202,9 +203,9 @@ export default function LivePointTracker({
       });
 
       // 3. Invalidate stats queries since un-scoring a point affects statistics
-      queryClient.invalidateQueries({ queryKey: ["liveStats", game.id] });
-      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", game.id] });
-      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", game.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(game.id) });
       onPointUpdated?.();
     },
   });
@@ -269,11 +270,11 @@ export default function LivePointTracker({
                         : t("points:tracker.defense")
                     }
                     size="small"
-                    sx={currentPoint.starting_on_offense ? {} : {
-                      bgcolor: (theme) => theme.colors.defense.main,
-                      color: 'white',
+                    sx={(theme) => currentPoint.starting_on_offense ? {} : {
+                      bgcolor: theme.colors.defense.main,
+                      color: theme.palette.common.white,
                       '& .MuiChip-label': {
-                        color: 'white'
+                        color: theme.palette.common.white
                       }
                     }}
                     color={currentPoint.starting_on_offense ? "primary" : undefined}

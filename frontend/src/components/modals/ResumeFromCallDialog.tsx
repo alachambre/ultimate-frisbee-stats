@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { updateCall } from '../../services/calls';
 import type { Call, CallUpdate } from '../../types';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface ResumeFromCallDialogProps {
   open: boolean;
@@ -27,7 +28,7 @@ export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDial
   const mutation = useMutation({
     mutationFn: (callUpdate: CallUpdate) => updateCall(call.id, callUpdate),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['calls', call.point_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calls(call.point_id) });
       onClose();
     },
   });

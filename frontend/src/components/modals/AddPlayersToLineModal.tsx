@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { addPlayersToLine } from "../../services/lines";
 import { getTeam } from "../../services";
 import AddPlayersModal from "./AddPlayersModal";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface AddPlayersToLineModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export default function AddPlayersToLineModal({
         return team.players;
       }}
       addPlayers={(playerIds) => addPlayersToLine(lineId, playerIds)}
-      invalidateQueries={[["line", String(lineId)]]}
+      invalidateQueries={[queryKeys.line(lineId)]}
       loadingMessage={t('lines:modal.addPlayers.loading')}
       emptyMessage={t('lines:modal.addPlayers.empty')}
     />

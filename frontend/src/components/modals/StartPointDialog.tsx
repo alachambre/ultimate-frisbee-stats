@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { startPoint } from "../../services/points";
 import { getGame } from "../../services/games";
 import type { PointWithPlayers } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface StartPointDialogProps {
   open: boolean;
@@ -37,7 +38,7 @@ export default function StartPointDialog({
 
   // Fetch game data to get existing points
   const { data: game } = useQuery({
-    queryKey: ["game", String(gameId)],
+    queryKey: queryKeys.game(gameId),
     queryFn: () => getGame(gameId),
     enabled: open,
   });
@@ -80,8 +81,8 @@ export default function StartPointDialog({
       return point;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
       handleClose();
       onSuccess?.();
     },
@@ -137,7 +138,7 @@ export default function StartPointDialog({
                 fontWeight: 500,
                 "&.Mui-selected": {
                   fontWeight: "bold",
-                  color: "white",
+                  color: theme.palette.common.white,
                   "&:hover": {
                     opacity: 0.9,
                   },

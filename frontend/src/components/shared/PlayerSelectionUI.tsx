@@ -152,15 +152,15 @@ export default function PlayerSelectionUI({
             size="small"
             variant="outlined"
             onClick={onSelectAllMen}
-            sx={{
-              borderColor: "primary.main",
-              color: "primary.main",
+            sx={(theme) => ({
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
               "&:hover": {
-                backgroundColor: "primary.main",
-                color: "white",
-                borderColor: "primary.main",
+                backgroundColor: theme.palette.primary.main,
+                color: theme.palette.common.white,
+                borderColor: theme.palette.primary.main,
               },
-            }}
+            })}
           >
             {t("common:labels.allMen")}
           </Button>
@@ -170,15 +170,15 @@ export default function PlayerSelectionUI({
             size="small"
             variant="outlined"
             onClick={onSelectAllWomen}
-            sx={{
-              borderColor: "secondary.main",
-              color: "secondary.main",
+            sx={(theme) => ({
+              borderColor: theme.palette.secondary.main,
+              color: theme.palette.secondary.main,
               "&:hover": {
-                backgroundColor: "secondary.main",
-                color: "white",
-                borderColor: "secondary.main",
+                backgroundColor: theme.palette.secondary.main,
+                color: theme.palette.common.white,
+                borderColor: theme.palette.secondary.main,
               },
-            }}
+            })}
           >
             {t("common:labels.allWomen")}
           </Button>

@@ -1,4 +1,4 @@
-import { useState, type FormEvent, useEffect } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { updateGame } from "../../services";
 import type { Game } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface EditGameModalProps {
   isOpen: boolean;
@@ -33,18 +34,12 @@ export default function EditGameModal({
   const [comments, setComments] = useState(game.comments || "");
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setOpponentName(game.opponent_name);
-    setDate(game.date ? new Date(game.date).toISOString().split("T")[0] : "");
-    setComments(game.comments || "");
-  }, [game]);
-
   const mutation = useMutation({
     mutationFn: (data: { opponent_name: string; comments: string | null }) =>
       updateGame(game.id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", game.id.toString()] });
-      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.games });
       onClose();
     },
   });

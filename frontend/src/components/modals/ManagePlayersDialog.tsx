@@ -23,6 +23,7 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -34,6 +35,7 @@ import { getLines } from "../../services/lines";
 import { getLiveGameStatistics } from "../../services/statistics";
 import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
 import { getPlayerHighlight } from "../../utils/playerHighlighting";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface ManagePlayersDialogProps {
   open: boolean;
@@ -65,21 +67,21 @@ export default function ManagePlayersDialog({
 
   // Fetch lines for filtering
   const { data: lines = [] } = useQuery({
-    queryKey: ["lines", teamId],
+    queryKey: queryKeys.teamLines(teamId),
     queryFn: () => getLines(teamId),
     enabled: open,
   });
 
   // Fetch game data to get existing points for ABBA pattern
   const { data: game } = useQuery({
-    queryKey: ["game", String(point.game_id)],
+    queryKey: queryKeys.game(point.game_id),
     queryFn: () => getGame(point.game_id),
     enabled: open,
   });
 
   // Fetch live statistics for player highlighting
   const { data: liveStats = [] } = useQuery({
-    queryKey: ["liveStats", point.game_id],
+    queryKey: queryKeys.liveStats(point.game_id),
     queryFn: () => getLiveGameStatistics(point.game_id),
     enabled: open && game?.status === "started",
   });
@@ -177,11 +179,11 @@ export default function ManagePlayersDialog({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(point.game_id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", point.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["liveStats", point.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", point.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(point.game_id) });
       handleClose();
       onSuccess?.();
     },
@@ -260,8 +262,8 @@ export default function ManagePlayersDialog({
                     sx={{
                       mt: 0.5,
                       bgcolor: requiredGenderRatio.men === 4 ? theme.colors.men.main : theme.colors.women.main,
-                      color: "white",
-                      "& .MuiChip-icon": { color: "white" },
+                      color: theme.palette.common.white,
+                      "& .MuiChip-icon": { color: theme.palette.common.white },
                     }}
                   />
                   <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
@@ -355,7 +357,7 @@ export default function ManagePlayersDialog({
                 "&.Mui-selected": {
                   color: theme.colors.men.main,
                   fontWeight: "bold",
-                  backgroundColor: "rgba(30, 58, 138, 0.08)",
+                  backgroundColor: alpha(theme.colors.men.main, 0.08),
                 },
               }}
             />
@@ -369,7 +371,7 @@ export default function ManagePlayersDialog({
                 "&.Mui-selected": {
                   color: theme.colors.women.main,
                   fontWeight: "bold",
-                  backgroundColor: "rgba(56, 189, 248, 0.08)",
+                  backgroundColor: alpha(theme.colors.women.main, 0.08),
                 },
               }}
             />

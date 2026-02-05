@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { updateStrategy } from "../../services/strategies";
 import StrategyForm from "../strategies/StrategyForm";
 import type { Strategy, StrategyUpdate, StrategyCategory } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface EditStrategyModalProps {
   isOpen: boolean;
@@ -25,28 +26,18 @@ export default function EditStrategyModal({
   strategy,
 }: EditStrategyModalProps) {
   const { t } = useTranslation(['strategies', 'common']);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    category: "" as StrategyCategory | "",
-  });
+  const [formData, setFormData] = useState(() => ({
+    name: strategy?.name ?? "",
+    description: strategy?.description || "",
+    category: (strategy?.category ?? "") as StrategyCategory | "",
+  }));
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (strategy && isOpen) {
-      setFormData({
-        name: strategy.name,
-        description: strategy.description || "",
-        category: strategy.category,
-      });
-    }
-  }, [strategy, isOpen]);
 
   const mutation = useMutation({
     mutationFn: (data: StrategyUpdate) =>
       updateStrategy(strategy!.id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["strategies"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.strategies });
       handleClose();
     },
   });
@@ -64,9 +55,9 @@ export default function EditStrategyModal({
 
   const handleClose = () => {
     setFormData({
-      name: "",
-      description: "",
-      category: "",
+      name: strategy?.name ?? "",
+      description: strategy?.description || "",
+      category: (strategy?.category ?? "") as StrategyCategory | "",
     });
     mutation.reset();
     onClose();

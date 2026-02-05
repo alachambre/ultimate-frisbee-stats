@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { getLines } from "../../services/lines";
 import PlayerSelector from "./PlayerSelector";
 import type { Player, Line } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface PointPlayerSelectionProps {
   teamId: number;
@@ -49,7 +50,7 @@ export default function PointPlayerSelection({
 
   // Fetch lines for the team
   const { data: lines } = useQuery({
-    queryKey: ["lines", teamId],
+    queryKey: queryKeys.teamLines(teamId),
     queryFn: () => getLines(teamId),
     enabled: open,
   });
@@ -140,7 +141,7 @@ export default function PointPlayerSelection({
                 fontWeight: 500,
                 "&.Mui-selected": {
                   fontWeight: "bold",
-                  color: "white",
+                  color: theme.palette.common.white,
                   "&:hover": {
                     opacity: 0.9,
                   },

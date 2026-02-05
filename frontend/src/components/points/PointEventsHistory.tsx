@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { getCallsByPoint } from '../../services/calls';
 import { getTurnoversByPoint } from '../../services/turnovers';
 import type { Call, TurnoverWithPlayer } from '../../types';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface PointEventsHistoryProps {
   pointId: number;
@@ -55,12 +56,12 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
   const { t } = useTranslation('points');
 
   const { data: calls = [], isLoading: callsLoading, error: callsError } = useQuery({
-    queryKey: ['calls', pointId],
+    queryKey: queryKeys.calls(pointId),
     queryFn: () => getCallsByPoint(pointId),
   });
 
   const { data: turnovers = [], isLoading: turnoversLoading, error: turnoversError } = useQuery({
-    queryKey: ['turnovers', pointId],
+    queryKey: queryKeys.turnovers(pointId),
     queryFn: () => getTurnoversByPoint(pointId),
   });
 

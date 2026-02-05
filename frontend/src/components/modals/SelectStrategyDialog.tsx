@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import { getStrategies } from "../../services/strategies";
 import type { PointWithPlayers, StrategyCategory } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface SelectStrategyDialogProps {
   open: boolean;
@@ -44,7 +45,7 @@ export default function SelectStrategyDialog({
 
   // Fetch strategies filtered by category
   const { data: strategies } = useQuery({
-    queryKey: ["strategies", category],
+    queryKey: queryKeys.strategiesByCategory(category),
     queryFn: () => getStrategies(category),
     enabled: open,
   });
@@ -56,9 +57,9 @@ export default function SelectStrategyDialog({
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
-      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", gameId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(gameId) });
       handleClose();
       onSuccess?.();
     },

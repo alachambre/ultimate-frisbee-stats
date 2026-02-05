@@ -23,12 +23,15 @@ import { exportGameStatisticsToCSV } from "../utils/csvExport";
 import TeamStatistics from "../components/statistics/TeamStatistics";
 import StrategyStatistics from "../components/statistics/StrategyStatistics";
 import PlayerStatistics from "../components/statistics/PlayerStatistics";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function GameStatisticsPage() {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation(["statistics", "games", "common"]);
   const [isExporting, setIsExporting] = useState(false);
+  const gameIdNumber = Number(gameId);
+  const gameIdValid = Number.isFinite(gameIdNumber);
 
   // Fetch game details
   const {
@@ -36,9 +39,9 @@ export default function GameStatisticsPage() {
     isLoading: isLoadingGame,
     error: gameError,
   } = useQuery({
-    queryKey: ["game", gameId],
-    queryFn: () => getGame(Number(gameId)),
-    enabled: !!gameId,
+    queryKey: queryKeys.game(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getGame(gameIdNumber),
+    enabled: gameIdValid,
   });
 
   // Fetch team statistics
@@ -47,9 +50,9 @@ export default function GameStatisticsPage() {
     isLoading: isLoadingTeamStats,
     error: teamStatsError,
   } = useQuery({
-    queryKey: ["gameTeamStatistics", gameId],
-    queryFn: () => getGameTeamStatistics(Number(gameId)),
-    enabled: !!gameId,
+    queryKey: queryKeys.gameTeamStatistics(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getGameTeamStatistics(gameIdNumber),
+    enabled: gameIdValid,
   });
 
   // Fetch player statistics
@@ -58,9 +61,9 @@ export default function GameStatisticsPage() {
     isLoading: isLoadingPlayerStats,
     error: playerStatsError,
   } = useQuery({
-    queryKey: ["gamePlayerStatistics", gameId],
-    queryFn: () => getLiveGameStatistics(Number(gameId)),
-    enabled: !!gameId,
+    queryKey: queryKeys.liveStats(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getLiveGameStatistics(gameIdNumber),
+    enabled: gameIdValid,
   });
 
   // Fetch strategy statistics
@@ -68,9 +71,9 @@ export default function GameStatisticsPage() {
     data: strategyStats,
     isLoading: isLoadingStrategyStats,
   } = useQuery({
-    queryKey: ["gameStrategyStatistics", gameId],
-    queryFn: () => getGameStrategyStatistics(Number(gameId)),
-    enabled: !!gameId,
+    queryKey: queryKeys.gameStrategyStatistics(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getGameStrategyStatistics(gameIdNumber),
+    enabled: gameIdValid,
   });
 
   if (isLoadingGame || isLoadingTeamStats || isLoadingPlayerStats || isLoadingStrategyStats) {

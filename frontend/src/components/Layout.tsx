@@ -18,6 +18,7 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import LanguageIcon from "@mui/icons-material/Language";
 import { useTranslation } from "react-i18next";
+import { alpha } from "@mui/material/styles";
 
 export default function Layout() {
   const location = useLocation();
@@ -64,7 +65,7 @@ export default function Layout() {
         elevation={0}
         sx={{
           background: (theme) => theme.gradients.primary,
-          borderBottom: "3px solid rgba(255, 255, 255, 0.2)",
+          borderBottom: (theme) => `3px solid ${alpha(theme.palette.common.white, 0.2)}`,
         }}
       >
         <Toolbar>
@@ -75,7 +76,7 @@ export default function Layout() {
             sx={{
               flexGrow: 1,
               textDecoration: "none",
-              color: "white",
+              color: (theme) => theme.palette.common.white,
               fontWeight: "bold",
               fontSize: { xs: "1.1rem", sm: "1.25rem" },
               letterSpacing: "0.5px",
@@ -87,10 +88,10 @@ export default function Layout() {
           {/* Language Selector */}
           <IconButton
             onClick={handleLanguageMenuOpen}
-            sx={{
-              color: "white",
+            sx={(theme) => ({
+              color: theme.palette.common.white,
               mr: { xs: 1, md: 2 },
-            }}
+            })}
             aria-label="select language"
           >
             <LanguageIcon />
@@ -119,10 +120,10 @@ export default function Layout() {
             edge="end"
             aria-label="menu"
             onClick={() => setMobileMenuOpen(true)}
-            sx={{
+            sx={(theme) => ({
               display: { xs: "flex", md: "none" },
-              color: "white",
-            }}
+              color: theme.palette.common.white,
+            })}
           >
             <MenuIcon />
           </IconButton>
@@ -134,18 +135,18 @@ export default function Layout() {
                 key={item.path}
                 component={Link}
                 to={item.path}
-                sx={{
-                  color: "white",
+                sx={(theme) => ({
+                  color: theme.palette.common.white,
                   fontWeight: location.pathname.startsWith(item.path) ? "bold" : "normal",
                   backgroundColor: location.pathname.startsWith(item.path)
-                    ? "rgba(255, 255, 255, 0.2)"
+                    ? alpha(theme.palette.common.white, 0.2)
                     : "transparent",
                   "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    backgroundColor: alpha(theme.palette.common.white, 0.15),
                   },
                   borderRadius: 2,
                   px: 2,
-                }}
+                })}
               >
                 {item.label}
               </Button>
@@ -163,7 +164,7 @@ export default function Layout() {
         PaperProps={{
           sx: {
             background: (theme) => theme.gradients.primaryReverse,
-            color: "white",
+            color: (theme) => theme.palette.common.white,
           },
         }}
       >
@@ -174,7 +175,7 @@ export default function Layout() {
               px: 2,
               pb: 2,
               fontWeight: "bold",
-              borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+              borderBottom: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
             }}
           >
             {t('navigation:drawer.title')}
@@ -187,19 +188,19 @@ export default function Layout() {
                   to={item.path}
                   onClick={handleDrawerClose}
                   selected={location.pathname.startsWith(item.path)}
-                  sx={{
-                    color: "white",
+                  sx={(theme) => ({
+                    color: theme.palette.common.white,
                     "&.Mui-selected": {
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                      backgroundColor: alpha(theme.palette.common.white, 0.2),
                       fontWeight: "bold",
                       "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.25)",
+                        backgroundColor: alpha(theme.palette.common.white, 0.25),
                       },
                     },
                     "&:hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      backgroundColor: alpha(theme.palette.common.white, 0.1),
                     },
-                  }}
+                  })}
                 >
                   <ListItemText
                     primary={item.label}

@@ -2,10 +2,6 @@
 
 Remove items from this list as they are addressed.
 
-## Hardcoded colors in components (Medium)
-Issue: Multiple components use hardcoded color values like `"white"` and `rgba(...)` instead of theme tokens, which violates the “zero hardcoded colors” rule and makes theming harder.
-Suggested solution: Replace hardcoded colors with theme tokens such as `theme.palette.common.white`, `alpha(theme.palette.common.white, 0.2)`, or add semantic tokens in the theme if needed.
-
 ## Duplicated player selection and gender validation logic (Medium)
 Issue: Player selection UI and gender validation logic appear in multiple places (`ManagePlayersDialog`, `PlayerSelectionUI`, `PointPlayerSelection`, `PlayerSelector`), which increases maintenance cost and risk of divergence.
 Suggested solution: Extract shared logic into a hook (e.g., `usePlayerSelection`) and utilities for ABBA/gender validation, and reuse a single selection component where possible.

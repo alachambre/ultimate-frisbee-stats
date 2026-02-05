@@ -22,6 +22,7 @@ import { updatePoint } from "../../services/points";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import PointTimer from "../points/PointTimer";
 import type { PointWithPlayers, TurnoverWithPlayer } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface FinishPointDialogProps {
   open: boolean;
@@ -45,7 +46,7 @@ export default function FinishPointDialog({
 
   // Fetch turnovers for the active point
   const { data: turnovers = [] } = useQuery<TurnoverWithPlayer[]>({
-    queryKey: ['turnovers', activePoint.id],
+    queryKey: queryKeys.turnovers(activePoint.id),
     queryFn: () => getTurnoversByPoint(activePoint.id),
     enabled: open && !!activePoint.id,
   });
@@ -82,11 +83,11 @@ export default function FinishPointDialog({
         status: "scored",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(activePoint.game_id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", activePoint.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["liveStats", activePoint.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", activePoint.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", activePoint.game_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(activePoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(activePoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(activePoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(activePoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(activePoint.game_id) });
       handleClose();
       onSuccess?.();
     },
@@ -170,7 +171,7 @@ export default function FinishPointDialog({
             }}
             fullWidth
             aria-label={t("common:ariaLabel.pointOutcome")}
-            sx={{
+            sx={(theme) => ({
               "& .MuiToggleButton-root": {
                 py: 1.5,
                 textTransform: "none",
@@ -182,21 +183,21 @@ export default function FinishPointDialog({
                   },
                 },
                 "&.Mui-selected[value='won']": {
-                  backgroundColor: "success.main",
-                  color: "white",
+                  backgroundColor: theme.palette.success.main,
+                  color: theme.palette.common.white,
                   "&:hover": {
-                    backgroundColor: "success.dark",
+                    backgroundColor: theme.palette.success.dark,
                   },
                 },
                 "&.Mui-selected[value='lost']": {
-                  backgroundColor: "error.main",
-                  color: "white",
+                  backgroundColor: theme.palette.error.main,
+                  color: theme.palette.common.white,
                   "&:hover": {
-                    backgroundColor: "error.dark",
+                    backgroundColor: theme.palette.error.dark,
                   },
                 },
               },
-            }}
+            })}
           >
             <ToggleButton value="won" aria-label={t("common:ariaLabel.wonPoint")}>
               <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} />

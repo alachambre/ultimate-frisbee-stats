@@ -133,17 +133,17 @@ export default function PointHistoryItem({
             <Chip
               label={t("points:status.running")}
               size="small"
-              sx={point.starting_on_offense ? {
-                bgcolor: (theme) => theme.colors.offense.main,
-                color: 'white',
+              sx={(theme) => point.starting_on_offense ? {
+                bgcolor: theme.colors.offense.main,
+                color: theme.palette.common.white,
                 '& .MuiChip-label': {
-                  color: 'white'
+                  color: theme.palette.common.white
                 }
               } : {
-                bgcolor: (theme) => theme.colors.defense.main,
-                color: 'white',
+                bgcolor: theme.colors.defense.main,
+                color: theme.palette.common.white,
                 '& .MuiChip-label': {
-                  color: 'white'
+                  color: theme.palette.common.white
                 }
               }}
             />
@@ -294,13 +294,13 @@ export default function PointHistoryItem({
                   icon={player.gender === "M" ? <MaleIcon /> : <FemaleIcon />}
                   label={player.name}
                   size="small"
-                  sx={{
-                    backgroundColor: player.gender === "M" ? "primary.main" : "secondary.main",
-                    color: "white",
+                  sx={(theme) => ({
+                    backgroundColor: player.gender === "M" ? theme.palette.primary.main : theme.palette.secondary.main,
+                    color: theme.palette.common.white,
                     "& .MuiChip-icon": {
-                      color: "white",
+                      color: theme.palette.common.white,
                     },
-                  }}
+                  })}
                 />
               ))}
             </Box>

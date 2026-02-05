@@ -9,6 +9,7 @@ import ErrorState from "../components/shared/ErrorState";
 import TeamsGrid from "../components/teams/TeamsGrid";
 import EmptyTeamsState from "../components/teams/EmptyTeamsState";
 import CreateTeamModal from "../components/modals/CreateTeamModal";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function TeamsPage() {
   const { t } = useTranslation(['teams', 'common']);
@@ -19,7 +20,7 @@ export default function TeamsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["teams"],
+    queryKey: queryKeys.teams,
     queryFn: getTeams,
   });
 

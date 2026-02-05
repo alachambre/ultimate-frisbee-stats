@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Container, Typography, Grid, Card, CardActionArea, CardContent, Box } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import GroupIcon from "@mui/icons-material/Group";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ScoreboardIcon from "@mui/icons-material/Scoreboard";
@@ -37,12 +38,12 @@ export default function HomePage() {
               height: "100%",
               border: "2px solid transparent",
               background: (theme) =>
-                `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+                `linear-gradient(${theme.palette.common.white}, ${theme.palette.common.white}) padding-box, ${theme.gradients.primary} border-box`,
               transition: "transform 0.2s, box-shadow 0.2s",
               "&:hover": {
                 transform: "translateY(-4px)",
                 boxShadow: (theme) =>
-                  `0 8px 24px ${theme.palette.primary.main}4D`,
+                  `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
               },
             }}
           >
@@ -67,12 +68,12 @@ export default function HomePage() {
               height: "100%",
               border: "2px solid transparent",
               background: (theme) =>
-                `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+                `linear-gradient(${theme.palette.common.white}, ${theme.palette.common.white}) padding-box, ${theme.gradients.primary} border-box`,
               transition: "transform 0.2s, box-shadow 0.2s",
               "&:hover": {
                 transform: "translateY(-4px)",
                 boxShadow: (theme) =>
-                  `0 8px 24px ${theme.palette.primary.main}4D`,
+                  `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
               },
             }}
           >
@@ -97,12 +98,12 @@ export default function HomePage() {
               height: "100%",
               border: "2px solid transparent",
               background: (theme) =>
-                `linear-gradient(white, white) padding-box, ${theme.gradients.primary} border-box`,
+                `linear-gradient(${theme.palette.common.white}, ${theme.palette.common.white}) padding-box, ${theme.gradients.primary} border-box`,
               transition: "transform 0.2s, box-shadow 0.2s",
               "&:hover": {
                 transform: "translateY(-4px)",
                 boxShadow: (theme) =>
-                  `0 8px 24px ${theme.palette.primary.main}4D`,
+                  `0 8px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
               },
             }}
           >

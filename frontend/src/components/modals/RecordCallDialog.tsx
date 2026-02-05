@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createCall } from '../../services/calls';
 import type { PointWithPlayers, CallCreate } from '../../types';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface RecordCallDialogProps {
   open: boolean;
@@ -29,7 +30,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
   const mutation = useMutation({
     mutationFn: (newCall: CallCreate) => createCall(newCall),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['calls', point.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calls(point.id) });
       setComments('');
       onClose();
     },

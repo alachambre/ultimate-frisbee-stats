@@ -26,7 +26,7 @@ export default function CompetitionsPage() {
   });
 
   const { data: teams } = useQuery({
-    queryKey: ["teams"],
+    queryKey: queryKeys.teams,
     queryFn: () => getTeams(),
   });
 

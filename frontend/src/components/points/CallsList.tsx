@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { getCallsByPoint } from '../../services/calls';
 import type { Call } from '../../types';
 import { ResumeFromCallDialog } from '../modals/ResumeFromCallDialog';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface CallsListProps {
   pointId: number;
@@ -40,7 +41,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
   const { data: calls = [], isLoading, error } = useQuery({
-    queryKey: ['calls', pointId],
+    queryKey: queryKeys.calls(pointId),
     queryFn: () => getCallsByPoint(pointId),
   });
 

@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createTurnover } from '../../services/turnovers';
 import type { PointWithPlayers, TurnoverWithPlayer, TurnoverCreate } from '../../types';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface RecordTurnoverDialogProps {
   open: boolean;
@@ -32,14 +33,14 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
   // Calculate current possession
   // Start with starting_on_offense, then toggle with each turnover
   const weHavePossession = existingTurnovers.reduce(
-    (possession, _) => !possession,
+    (possession) => !possession,
     point.starting_on_offense
   );
 
   const mutation = useMutation({
     mutationFn: (newTurnover: TurnoverCreate) => createTurnover(newTurnover),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['turnovers', point.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.turnovers(point.id) });
       setComments('');
       onClose();
     },

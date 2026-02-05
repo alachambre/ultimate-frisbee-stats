@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import type { PointWithPlayers } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface CompletePointDialogProps {
   open: boolean;
@@ -40,11 +41,11 @@ export default function CompletePointDialog({
         status: "completed",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(scoredPoint.game_id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", scoredPoint.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["liveStats", scoredPoint.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", scoredPoint.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", scoredPoint.game_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(scoredPoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(scoredPoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(scoredPoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(scoredPoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(scoredPoint.game_id) });
       onClose();
       onSuccess?.();
     },

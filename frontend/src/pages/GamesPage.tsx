@@ -22,12 +22,12 @@ export default function GamesPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["games"],
+    queryKey: queryKeys.games,
     queryFn: getAllGames,
   });
 
   const { data: teams } = useQuery({
-    queryKey: ["teams"],
+    queryKey: queryKeys.teams,
     queryFn: () => getTeams(),
   });
 

@@ -11,6 +11,7 @@ import { SwapHoriz as SwapHorizIcon, ArrowForward as ArrowForwardIcon } from '@m
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getTurnoversByPoint } from '../../services/turnovers';
+import { queryKeys } from '../../utils/queryKeys';
 
 interface TurnoversListProps {
   pointId: number;
@@ -35,7 +36,7 @@ export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: Tu
   const { t } = useTranslation('points');
 
   const { data: turnovers = [], isLoading, error } = useQuery({
-    queryKey: ['turnovers', pointId],
+    queryKey: queryKeys.turnovers(pointId),
     queryFn: () => getTurnoversByPoint(pointId),
   });
 

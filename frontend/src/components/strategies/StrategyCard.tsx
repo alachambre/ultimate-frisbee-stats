@@ -11,6 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { useTranslation } from "react-i18next";
+import { alpha } from "@mui/material/styles";
 import type { Strategy } from "../../types";
 
 interface StrategyCardProps {
@@ -39,15 +40,15 @@ export default function StrategyCard({ strategy, onEdit, onDelete }: StrategyCar
           borderRadius: 1,
           padding: "2px",
           background: theme.gradients.primary,
-          WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMask: `linear-gradient(${theme.palette.common.white} 0 0) content-box, linear-gradient(${theme.palette.common.white} 0 0)`,
           WebkitMaskComposite: "xor",
           maskComposite: "exclude",
         },
         "&:hover": {
           transform: "translateY(-4px)",
           boxShadow: isOffense
-            ? "0 8px 24px rgba(30, 58, 138, 0.3)"
-            : "0 8px 24px rgba(14, 165, 233, 0.3)",
+            ? `0 8px 24px ${alpha(theme.colors.offense.main, 0.3)}`
+            : `0 8px 24px ${alpha(theme.colors.defense.main, 0.3)}`,
         },
       })}
     >

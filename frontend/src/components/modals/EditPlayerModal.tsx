@@ -1,4 +1,4 @@
-import { useState, type FormEvent, useEffect } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
 import { updatePlayer, deletePlayer } from "../../services";
 import PlayerForm from "../players/PlayerForm";
 import type { Player, Gender } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface EditPlayerModalProps {
   isOpen: boolean;
@@ -36,17 +37,11 @@ export default function EditPlayerModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setPlayerName(player.name);
-    setPlayerNumber(player.number?.toString() || "");
-    setGender(player.gender);
-  }, [player]);
-
   const updateMutation = useMutation({
     mutationFn: (data: { name: string; number?: number | null; gender?: Gender }) =>
       updatePlayer(player.id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team", teamId.toString()] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.team(teamId) });
       onClose();
     },
   });
@@ -54,7 +49,7 @@ export default function EditPlayerModal({
   const deleteMutation = useMutation({
     mutationFn: () => deletePlayer(player.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team", teamId.toString()] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.team(teamId) });
       onClose();
     },
   });

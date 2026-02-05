@@ -11,6 +11,7 @@ import {
   Alert,
 } from "@mui/material";
 import { createTeam } from "../../services";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface CreateTeamModalProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export default function CreateTeamModal({
   const mutation = useMutation({
     mutationFn: createTeam,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teams });
       setTeamName("");
       onClose();
     },

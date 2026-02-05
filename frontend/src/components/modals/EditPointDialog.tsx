@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import PointPlayerSelection from "../points/PointPlayerSelection";
 import type { PointWithPlayers, Player, PointUpdate } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface EditPointDialogProps {
   open: boolean;
@@ -59,11 +60,11 @@ export default function EditPointDialog({
       return updatePoint(point.id, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["game", String(point.game_id)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", point.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["liveStats", point.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameTeamStatistics", point.game_id] });
-      queryClient.invalidateQueries({ queryKey: ["gameStrategyStatistics", point.game_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(point.game_id) });
       handleClose();
       onSuccess?.();
     },
@@ -110,7 +111,7 @@ export default function EditPointDialog({
               }}
               fullWidth
               aria-label="point outcome"
-              sx={{
+              sx={(theme) => ({
                 "& .MuiToggleButton-root": {
                   py: 1.5,
                   textTransform: "none",
@@ -122,21 +123,21 @@ export default function EditPointDialog({
                     },
                   },
                   "&.Mui-selected[value='won']": {
-                    backgroundColor: "success.main",
-                    color: "white",
+                    backgroundColor: theme.palette.success.main,
+                    color: theme.palette.common.white,
                     "&:hover": {
-                      backgroundColor: "success.dark",
+                      backgroundColor: theme.palette.success.dark,
                     },
                   },
                   "&.Mui-selected[value='lost']": {
-                    backgroundColor: "error.main",
-                    color: "white",
+                    backgroundColor: theme.palette.error.main,
+                    color: theme.palette.common.white,
                     "&:hover": {
-                      backgroundColor: "error.dark",
+                      backgroundColor: theme.palette.error.dark,
                     },
                   },
                 },
-              }}
+              })}
             >
               <ToggleButton value="won" aria-label="won the point">
                 <CheckCircleIcon sx={{ mr: 1, fontSize: 20 }} />

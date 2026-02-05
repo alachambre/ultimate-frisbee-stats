@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Paper, Typography, Box, Grid, Collapse, IconButton, LinearProgress } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -24,6 +25,7 @@ interface StrategyBarProps {
 }
 
 function StrategyBar({ label, percentage, count, total, color }: StrategyBarProps) {
+  const theme = useTheme();
   return (
     <Box sx={{ mb: 1.5 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
@@ -40,7 +42,7 @@ function StrategyBar({ label, percentage, count, total, color }: StrategyBarProp
         sx={{
           height: 8,
           borderRadius: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.08)",
+          backgroundColor: alpha(theme.palette.common.black, 0.08),
           "& .MuiLinearProgress-bar": {
             backgroundColor: color,
             borderRadius: 1,
@@ -53,6 +55,7 @@ function StrategyBar({ label, percentage, count, total, color }: StrategyBarProp
 
 export default function StrategyStatistics({ strategyStats }: StrategyStatisticsProps) {
   const { t } = useTranslation("statistics");
+  const theme = useTheme();
   const [expandedOffense, setExpandedOffense] = useState<Set<number>>(new Set());
   const [expandedDefense, setExpandedDefense] = useState<Set<number>>(new Set());
 
@@ -144,7 +147,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       percentage={strategy.hold_rate}
                       count={strategy.points_won}
                       total={strategy.points_played}
-                      color="#1e3a8a"
+                      color={theme.colors.offense.main}
                     />
 
                     {/* Expanded details */}
@@ -155,14 +158,14 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           percentage={strategy.clean_hold_rate}
                           count={strategy.clean_holds}
                           total={strategy.points_played}
-                          color="#3b82f6"
+                          color={theme.colors.offense.light}
                         />
                         <StrategyBar
                           label={t("strategyStats.quickScores")}
                           percentage={strategy.quick_score_rate}
                           count={strategy.quick_scores}
                           total={strategy.points_played}
-                          color="#60a5fa"
+                          color={theme.colors.offense.dark}
                         />
                       </Box>
                     </Collapse>
@@ -221,7 +224,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       percentage={strategy.turnover_rate}
                       count={strategy.points_with_turnover}
                       total={strategy.points_played}
-                      color="#0ea5e9"
+                      color={theme.colors.defense.main}
                     />
 
                     {/* Expanded details */}
@@ -232,7 +235,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           percentage={strategy.break_rate}
                           count={strategy.points_won}
                           total={strategy.points_played}
-                          color="#38bdf8"
+                          color={theme.colors.defense.light}
                         />
                       </Box>
                     </Collapse>

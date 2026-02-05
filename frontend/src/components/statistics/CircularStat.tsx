@@ -1,5 +1,5 @@
 import { Box, Typography, CircularProgress, Tooltip, IconButton } from "@mui/material";
-import type { Theme } from "@mui/material/styles";
+import { alpha, type Theme } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface CircularStatProps {
@@ -37,7 +37,7 @@ export default function CircularStat({
           size={140}
           thickness={4}
           sx={{
-            color: "rgba(0, 0, 0, 0.1)",
+            color: (theme) => alpha(theme.palette.common.black, 0.1),
             position: "absolute",
           }}
         />

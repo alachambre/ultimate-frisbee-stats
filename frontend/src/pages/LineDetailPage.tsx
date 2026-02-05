@@ -34,6 +34,7 @@ import EmptyPlayersState from "../components/players/EmptyPlayersState";
 import EditLineModal from "../components/modals/EditLineModal";
 import AddPlayersToLineModal from "../components/modals/AddPlayersToLineModal";
 import type { Player } from "../types";
+import { queryKeys } from "../utils/queryKeys";
 
 export default function LineDetailPage() {
   const { t } = useTranslation(["lines", "common"]);
@@ -44,19 +45,21 @@ export default function LineDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
+  const lineIdNumber = Number(lineId);
+  const lineIdValid = Number.isFinite(lineIdNumber);
 
   const {
     data: line,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["line", lineId],
-    queryFn: () => getLine(Number(lineId)),
-    enabled: !!lineId,
+    queryKey: queryKeys.line(lineIdValid ? lineIdNumber : 0),
+    queryFn: () => getLine(lineIdNumber),
+    enabled: lineIdValid,
   });
 
   const { data: team } = useQuery({
-    queryKey: ["team", line?.team_id],
+    queryKey: queryKeys.team(line?.team_id ?? 0),
     queryFn: () => getTeam(line!.team_id),
     enabled: !!line?.team_id,
   });
@@ -64,7 +67,7 @@ export default function LineDetailPage() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteLine(Number(lineId)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lines"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lines });
       if (line?.team_id) {
         navigate(`/teams/${line.team_id}`);
       }
@@ -76,7 +79,7 @@ export default function LineDetailPage() {
       removePlayersFromLine(Number(lineId), [playerId]),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["line", lineId],
+        queryKey: queryKeys.line(lineIdNumber),
       });
       setPlayerToRemove(null);
     },
@@ -356,6 +359,7 @@ export default function LineDetailPage() {
 
       {/* Modals */}
       <EditLineModal
+        key={line.id}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         line={line}

@@ -47,32 +47,32 @@ export default function PlayerForm({
           }}
           fullWidth
           aria-label="player gender"
-          sx={{
+          sx={(theme) => ({
             "& .MuiToggleButton-root": {
               py: 1.5,
               textTransform: "none",
               fontWeight: 500,
               "&.Mui-selected": {
                 fontWeight: "bold",
-                color: "white",
+                color: theme.palette.common.white,
                 "&:hover": {
                   opacity: 0.9,
                 },
               },
               "&.Mui-selected[value='M']": {
-                backgroundColor: "primary.main",
+                backgroundColor: theme.palette.primary.main,
                 "&:hover": {
-                  backgroundColor: "primary.dark",
+                  backgroundColor: theme.palette.primary.dark,
                 },
               },
               "&.Mui-selected[value='W']": {
-                backgroundColor: "secondary.main",
+                backgroundColor: theme.palette.secondary.main,
                 "&:hover": {
-                  backgroundColor: "secondary.dark",
+                  backgroundColor: theme.palette.secondary.dark,
                 },
               },
             },
-          }}
+          })}
         >
           <ToggleButton value="M" aria-label="man">
             <MaleIcon sx={{ mr: 1, fontSize: 20 }} />

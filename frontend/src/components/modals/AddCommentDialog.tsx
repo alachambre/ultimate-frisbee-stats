@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import type { PointWithPlayers } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface AddCommentDialogProps {
   open: boolean;
@@ -41,8 +42,8 @@ export default function AddCommentDialog({
       // Close dialog first before triggering query invalidations
       // to prevent race conditions with re-renders
       handleClose();
-      queryClient.invalidateQueries({ queryKey: ["game", String(gameId)] });
-      queryClient.invalidateQueries({ queryKey: ["activePoint", gameId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
       onSuccess?.();
     },
   });

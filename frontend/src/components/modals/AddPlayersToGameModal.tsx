@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { addPlayersToGame } from "../../services/games";
 import { getCompetition } from "../../services/competitions";
 import AddPlayersModal from "./AddPlayersModal";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface AddPlayersToGameModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export default function AddPlayersToGameModal({
         return competition.players;
       }}
       addPlayers={(playerIds) => addPlayersToGame(gameId, playerIds)}
-      invalidateQueries={[["game", String(gameId)]]}
+      invalidateQueries={[queryKeys.game(gameId)]}
       loadingMessage={t('games:modal.addPlayers.loading')}
       emptyMessage={t('games:modal.addPlayers.empty')}
     />
