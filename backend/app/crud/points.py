@@ -159,7 +159,7 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
             # Update other fields
             if point_update.starting_on_offense is not None:
                 db_point.starting_on_offense = point_update.starting_on_offense
-            if point_update.won is not None:
+            if "won" in point_update.model_fields_set:
                 db_point.won = point_update.won
             if point_update.field_side is not None:
                 db_point.field_side = point_update.field_side
@@ -174,7 +174,10 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
 
                 # Validate status transitions
                 current = db_point.status
-                if new_status_enum == models.PointStatusEnum.running and current != models.PointStatusEnum.ready:
+                if new_status_enum == models.PointStatusEnum.running and current not in [
+                    models.PointStatusEnum.ready,
+                    models.PointStatusEnum.scored,
+                ]:
                     raise ValueError(f"Invalid status transition: {current.value} -> running")
                 if new_status_enum == models.PointStatusEnum.scored and current != models.PointStatusEnum.running:
                     raise ValueError(f"Invalid status transition: {current.value} -> scored")
@@ -204,13 +207,13 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                     db.rollback()
                     raise ValueError(f"Strategy with ID {point_update.strategy_id} not found")
                 db_point.strategy_id = point_update.strategy_id
-            if point_update.start_datetime is not None:
+            if "start_datetime" in point_update.model_fields_set:
                 db_point.start_datetime = point_update.start_datetime
-            if point_update.end_datetime is not None:
+            if "end_datetime" in point_update.model_fields_set:
                 db_point.end_datetime = point_update.end_datetime
 
             # Prevent setting won unless scored/completed
-            if point_update.won is not None:
+            if "won" in point_update.model_fields_set and point_update.won is not None:
                 target_status = new_status_enum if new_status_enum is not None else db_point.status
                 if target_status not in [models.PointStatusEnum.scored, models.PointStatusEnum.completed]:
                     db.rollback()

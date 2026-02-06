@@ -762,6 +762,48 @@ def test_point_status_transitions(db_session, sample_game, sample_players):
     assert point.status == models.PointStatusEnum.completed
 
 
+def test_resume_scored_point_allows_running(db_session, sample_game, sample_players):
+    """Scored points can resume to running (clears won/end_datetime)."""
+    player_ids = [p.id for p in sample_players]
+
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=player_ids
+        )
+    )
+
+    point = points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+    point = points.update_point(
+        db_session,
+        point.id,
+        PointUpdate(
+            status=PointStatus.scored,
+            won=True,
+            end_datetime=datetime.now(tz.utc),
+        )
+    )
+    assert point.status == models.PointStatusEnum.scored
+    assert point.won is True
+    assert point.end_datetime is not None
+
+    resumed = points.update_point(
+        db_session,
+        point.id,
+        PointUpdate(
+            status=PointStatus.running,
+            won=None,
+            end_datetime=None,
+        )
+    )
+
+    assert resumed.status == models.PointStatusEnum.running
+    assert resumed.won is None
+    assert resumed.end_datetime is None
+
+
 def test_strategy_deletion_sets_null(db_session, sample_game, sample_players, sample_strategy):
     """Test that deleting a strategy sets strategy_id to NULL on points"""
     from app.crud import delete_strategy
