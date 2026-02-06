@@ -45,6 +45,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import { getCallsByPoint } from "../../services/calls";
 import GroupIcon from "@mui/icons-material/Group";
+import { hasValidPointPlayerComposition } from "../../utils/playerComposition";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import { queryKeys } from "../../utils/queryKeys";
 
@@ -133,46 +134,10 @@ export default function LivePointTracker({
   });
 
   // Check if point has valid player composition (exactly 7 players + correct ABBA gender)
-  const hasValidPlayerComposition = useMemo(() => {
-    if (!currentPoint || currentPoint.players.length !== 7) {
-      return false;
-    }
-
-    // Count by gender
-    const men = currentPoint.players.filter((p) => p.gender === "M").length;
-    const women = currentPoint.players.filter((p) => p.gender === "W").length;
-
-    // Get completed points to determine ABBA pattern
-    const completedPoints = game.points
-      .filter((p: PointWithPlayers) => p.status === "completed")
-      .sort((a: PointWithPlayers, b: PointWithPlayers) => a.point_number - b.point_number);
-
-    if (completedPoints.length === 0) {
-      // First point: accept either 4M+3W or 3M+4W
-      return (men === 4 && women === 3) || (men === 3 && women === 4);
-    }
-
-    // ABBA pattern: A-B-B-A-A-B-B-A...
-    const position = currentPoint.point_number - 1; // Convert to 0-indexed
-    const positionInCycle = position % 4;
-    const isPatternA = positionInCycle === 0 || positionInCycle === 3;
-
-    // Determine what "A" ratio is based on the first completed point
-    const firstPoint = completedPoints[0];
-    const firstPointMen = firstPoint.players.filter((p: Player) => p.gender === "M").length;
-    const patternAIsFourMen = firstPointMen === 4;
-
-    // Check if current point matches required ratio
-    if (isPatternA) {
-      return patternAIsFourMen
-        ? men === 4 && women === 3
-        : men === 3 && women === 4;
-    } else {
-      return patternAIsFourMen
-        ? men === 3 && women === 4
-        : men === 4 && women === 3;
-    }
-  }, [currentPoint, game.points]);
+  const hasValidPlayerComposition = useMemo(
+    () => hasValidPointPlayerComposition(currentPoint, game.points),
+    [currentPoint, game.points]
+  );
 
   // Mutation to restart a scored point (cancel the score)
   const restartPointMutation = useMutation({

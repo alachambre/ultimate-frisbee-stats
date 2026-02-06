@@ -26,6 +26,11 @@ import { getLines } from "../../services/lines";
 import { getLiveGameStatistics } from "../../services/statistics";
 import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
 import { getPlayerHighlight } from "../../utils/playerHighlighting";
+import {
+  countSelectedPlayersByGender,
+  getRequiredGenderRatioForPoint,
+  hasValidPointSelection,
+} from "../../utils/playerComposition";
 import { queryKeys } from "../../utils/queryKeys";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 
@@ -79,66 +84,24 @@ export default function ManagePlayersDialog({
   });
 
   // Calculate required gender ratio based on ABBA pattern
-  const requiredGenderRatio = useMemo(() => {
-    if (!game?.points || game.points.length === 0) {
-      return null;
-    }
-
-    // Get completed points sorted by point_number
-    const completedPoints = game.points
-      .filter((p: PointWithPlayers) => p.status === "completed")
-      .sort((a: PointWithPlayers, b: PointWithPlayers) => a.point_number - b.point_number);
-
-    if (completedPoints.length === 0) {
-      return null;
-    }
-
-    // ABBA pattern: A-B-B-A-A-B-B-A...
-    const position = point.point_number - 1; // Convert to 0-indexed
-    const positionInCycle = position % 4;
-    const isPatternA = positionInCycle === 0 || positionInCycle === 3;
-
-    // Determine what "A" ratio is based on the first completed point
-    const firstPoint = completedPoints[0];
-    const firstPointMen = firstPoint.players.filter((p: Player) => p.gender === "M").length;
-    const patternAIsFourMen = firstPointMen === 4;
-
-    // Determine required ratio for this point
-    if (isPatternA) {
-      return patternAIsFourMen ? { men: 4, women: 3 } : { men: 3, women: 4 };
-    } else {
-      return patternAIsFourMen ? { men: 3, women: 4 } : { men: 4, women: 3 };
-    }
-  }, [game, point.point_number]);
+  const requiredGenderRatio = useMemo(
+    () => getRequiredGenderRatioForPoint(point.point_number, game?.points || []),
+    [point.point_number, game?.points]
+  );
 
   // Count selected by gender
-  const selectedMen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "M")
-  ).length;
-  const selectedWomen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "W")
-  ).length;
+  const selectedCounts = useMemo(
+    () => countSelectedPlayersByGender(selectedPlayerIds, players),
+    [selectedPlayerIds, players]
+  );
+  const selectedMen = selectedCounts.men;
+  const selectedWomen = selectedCounts.women;
 
   // Check if current selection is valid
-  const isValidSelection = useMemo(() => {
-    // Must have exactly 7 players
-    if (selectedPlayerIds.length !== 7) {
-      return false;
-    }
-
-    if (!requiredGenderRatio) {
-      // No requirement yet, but still need valid mixity (4M+3W or 3M+4W)
-      return (
-        (selectedMen === 4 && selectedWomen === 3) ||
-        (selectedMen === 3 && selectedWomen === 4)
-      );
-    }
-
-    return (
-      selectedMen === requiredGenderRatio.men &&
-      selectedWomen === requiredGenderRatio.women
-    );
-  }, [requiredGenderRatio, selectedMen, selectedWomen, selectedPlayerIds.length]);
+  const isValidSelection = useMemo(
+    () => hasValidPointSelection(selectedPlayerIds, players, requiredGenderRatio),
+    [selectedPlayerIds, players, requiredGenderRatio]
+  );
 
   // Helper function to determine highlight based on playing time
   const getHighlight = (playerId: number): "high" | "low" | null => {

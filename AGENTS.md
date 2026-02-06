@@ -49,6 +49,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
   - Complex: `GameScenarioBuilder`, `PointBuilder`
 - **Code Sharing**: Extract shared logic into utilities when repeated
   - Example: `utils/playerHighlighting.ts`
+  - Player composition and ABBA validation helpers: `utils/playerComposition.ts`
 
 ## Important Commands
 **Backend**

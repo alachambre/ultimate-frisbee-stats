@@ -13,6 +13,10 @@ import { useTranslation } from "react-i18next";
 import { getLines } from "../../services/lines";
 import PlayerSelector from "./PlayerSelector";
 import type { Player, Line } from "../../types";
+import {
+  countSelectedPlayersByGender,
+  hasValidPointSelection,
+} from "../../utils/playerComposition";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface PointPlayerSelectionProps {
@@ -71,38 +75,24 @@ export default function PointPlayerSelection({
   }, [players, selectedLineId, lines]);
 
   // Count selected by gender
-  const selectedMen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "M")
-  ).length;
-  const selectedWomen = selectedPlayerIds.filter((id) =>
-    players.some((p) => p.id === id && p.gender === "W")
-  ).length;
+  const selectedCounts = useMemo(
+    () => countSelectedPlayersByGender(selectedPlayerIds, players),
+    [selectedPlayerIds, players]
+  );
+  const selectedMen = selectedCounts.men;
+  const selectedWomen = selectedCounts.women;
 
   // Check if current selection meets gender requirement
   const meetsGenderRequirement = useMemo(() => {
     if (!showGenderValidation) {
       return true;
     }
-
-    if (!requiredGenderRatio) {
-      // No specific requirement, but still need valid mixity (4M+3W or 3M+4W)
-      return (
-        selectedPlayerIds.length === 7 &&
-        ((selectedMen === 4 && selectedWomen === 3) ||
-          (selectedMen === 3 && selectedWomen === 4))
-      );
-    }
-
-    return (
-      selectedMen === requiredGenderRatio.men &&
-      selectedWomen === requiredGenderRatio.women
-    );
+    return hasValidPointSelection(selectedPlayerIds, players, requiredGenderRatio);
   }, [
     showGenderValidation,
     requiredGenderRatio,
-    selectedMen,
-    selectedWomen,
-    selectedPlayerIds.length,
+    selectedPlayerIds,
+    players,
   ]);
 
   const handleLineChange = (lineId: number | "") => {
@@ -112,9 +102,7 @@ export default function PointPlayerSelection({
     }
   };
 
-  const isValid = showGenderValidation
-    ? selectedPlayerIds.length === 7 && meetsGenderRequirement
-    : selectedPlayerIds.length === 7;
+  const isValid = showGenderValidation ? meetsGenderRequirement : selectedPlayerIds.length === 7;
 
   return (
     <>
