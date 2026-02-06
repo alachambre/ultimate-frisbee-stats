@@ -1,6 +1,7 @@
 """
 Pure calculation helpers for statistics.
 """
+from dataclasses import dataclass
 from typing import List, Tuple, Dict, Optional
 
 from app.models.call import Call
@@ -8,6 +9,16 @@ from app.models.point import Point
 from app.models.player import Player
 from app.models.strategy import Strategy
 from app.models.turnover import Turnover
+
+
+@dataclass(frozen=True)
+class PointFacts:
+    point_id: int
+    starting_on_offense: bool
+    won: bool
+    pull: Optional[bool]
+    our_turnovers: int
+    their_turnovers: int
 
 
 def calculate_point_duration_seconds(point: Point) -> int:
@@ -50,6 +61,32 @@ def count_turnovers_by_possession(
             else:
                 our_turnovers += 1
     return our_turnovers, their_turnovers
+
+
+def build_point_facts(
+    completed_points: List[Point],
+    turnovers_by_point: Dict[int, List[Turnover]],
+) -> List[PointFacts]:
+    point_facts: List[PointFacts] = []
+
+    for point in completed_points:
+        turnovers = turnovers_by_point.get(point.id, [])
+        our_turnovers, their_turnovers = count_turnovers_by_possession(
+            point.starting_on_offense,
+            turnovers,
+        )
+        point_facts.append(
+            PointFacts(
+                point_id=point.id,
+                starting_on_offense=point.starting_on_offense,
+                won=point.won is True,
+                pull=point.pull,
+                our_turnovers=our_turnovers,
+                their_turnovers=their_turnovers,
+            )
+        )
+
+    return point_facts
 
 
 def build_live_player_stats(
@@ -199,11 +236,7 @@ def build_live_player_stats(
     return sorted(result, key=lambda x: (x["player_number"] is None, x["player_number"] or 0))
 
 
-def build_game_team_stats(
-    game_id: int,
-    completed_points: List[Point],
-    turnovers_by_point: Dict[int, List[Turnover]],
-) -> Dict:
+def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
     offense_started = 0
     offense_won = 0
     offense_lost = 0
@@ -216,33 +249,29 @@ def build_game_team_stats(
     defense_won_no_turnover = 0
     defense_lost_no_turnover = 0
 
-    for point in completed_points:
-        turnovers = turnovers_by_point.get(point.id, [])
-        our_turnovers, _their_turnovers = count_turnovers_by_possession(
-            point.starting_on_offense,
-            turnovers,
-        )
+    for facts in point_facts:
+        total_turnovers = facts.our_turnovers + facts.their_turnovers
 
-        if point.starting_on_offense:
+        if facts.starting_on_offense:
             offense_started += 1
-            if point.won:
+            if facts.won:
                 offense_won += 1
-                if our_turnovers == 0:
+                if facts.our_turnovers == 0:
                     offense_won_no_turnover += 1
             else:
                 offense_lost += 1
         else:
             defense_started += 1
-            if point.won:
+            if facts.won:
                 defense_won += 1
-                if our_turnovers == 0:
+                if facts.our_turnovers == 0:
                     defense_won_no_turnover += 1
             else:
                 defense_lost += 1
-                if len(turnovers) == 0:
+                if total_turnovers == 0:
                     defense_lost_no_turnover += 1
 
-            if len(turnovers) > 0:
+            if total_turnovers > 0:
                 defense_points_with_turnover += 1
 
     offense_hold_rate = offense_won / offense_started if offense_started > 0 else 0.0
@@ -255,16 +284,15 @@ def build_game_team_stats(
     defense_hold_rate = defense_break_rate
 
     defense_points_with_pull = [
-        p for p in completed_points if not p.starting_on_offense and p.pull is not None
+        point for point in point_facts if (not point.starting_on_offense and point.pull is not None)
     ]
     total_pulls = len(defense_points_with_pull)
-    inbound_pulls = len([p for p in defense_points_with_pull if p.pull is True])
-    out_of_bounds_pulls = len([p for p in defense_points_with_pull if p.pull is False])
+    inbound_pulls = len([point for point in defense_points_with_pull if point.pull is True])
+    out_of_bounds_pulls = len([point for point in defense_points_with_pull if point.pull is False])
     inbound_rate = inbound_pulls / total_pulls if total_pulls > 0 else 0.0
 
     return {
-        "game_id": game_id,
-        "total_completed_points": len(completed_points),
+        "total_completed_points": len(point_facts),
         "offense": {
             "points_started": offense_started,
             "points_won": offense_won,
@@ -293,6 +321,48 @@ def build_game_team_stats(
             },
         },
     }
+
+
+def build_scoped_team_stats(
+    scope_key: str,
+    scope_id: int,
+    completed_points: List[Point],
+    turnovers_by_point: Dict[int, List[Turnover]],
+) -> Dict:
+    point_facts = build_point_facts(completed_points, turnovers_by_point)
+    return {
+        scope_key: scope_id,
+        **build_team_stats_from_point_facts(point_facts),
+    }
+
+
+def build_game_team_stats(
+    game_id: int,
+    completed_points: List[Point],
+    turnovers_by_point: Dict[int, List[Turnover]],
+) -> Dict:
+    return build_scoped_team_stats("game_id", game_id, completed_points, turnovers_by_point)
+
+
+def build_competition_team_stats(
+    competition_id: int,
+    completed_points: List[Point],
+    turnovers_by_point: Dict[int, List[Turnover]],
+) -> Dict:
+    return build_scoped_team_stats(
+        "competition_id",
+        competition_id,
+        completed_points,
+        turnovers_by_point,
+    )
+
+
+def build_team_team_stats(
+    team_id: int,
+    completed_points: List[Point],
+    turnovers_by_point: Dict[int, List[Turnover]],
+) -> Dict:
+    return build_scoped_team_stats("team_id", team_id, completed_points, turnovers_by_point)
 
 
 def build_game_strategy_stats(

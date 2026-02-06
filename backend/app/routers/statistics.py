@@ -54,6 +54,38 @@ def get_game_team_statistics(
     return stats
 
 
+@router.get("/competitions/{competition_id}/team", response_model=schemas.CompetitionTeamStats)
+def get_competition_team_statistics(
+    competition_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get aggregated team statistics for all completed points in a competition.
+    Returns offense and defense efficiency metrics, including pull statistics.
+    """
+    stats = crud.get_competition_team_stats(db, competition_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Competition not found")
+
+    return stats
+
+
+@router.get("/teams/{team_id}/team", response_model=schemas.TeamTeamStats)
+def get_team_team_statistics(
+    team_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get aggregated team statistics across all competitions for a team.
+    Returns offense and defense efficiency metrics, including pull statistics.
+    """
+    stats = crud.get_team_team_stats(db, team_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    return stats
+
+
 @router.get("/games/{game_id}/strategies", response_model=schemas.GameStrategyStats)
 def get_game_strategy_statistics(
     game_id: int,

@@ -6,15 +6,21 @@ from typing import List, Dict, Optional
 
 from app.crud.statistics_queries import (
     get_game,
+    get_competition,
+    get_team,
     get_completed_points,
+    get_completed_points_for_competition,
+    get_completed_points_for_team,
     get_game_players,
-    get_calls_for_point,
-    get_turnovers_for_point,
-    get_strategy,
+    get_calls_for_points,
+    get_turnovers_for_points,
+    get_strategies_by_ids,
 )
 from app.crud.statistics_calculations import (
     build_live_player_stats,
     build_game_team_stats,
+    build_competition_team_stats,
+    build_team_team_stats,
     build_game_strategy_stats,
 )
 
@@ -43,14 +49,9 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
 
     # Get all players in the game
     all_game_players = get_game_players(db, game_id)
-    calls_by_point = {
-        point.id: get_calls_for_point(db, point.id)
-        for point in completed_points
-    }
-    turnovers_by_point = {
-        point.id: get_turnovers_for_point(db, point.id)
-        for point in completed_points
-    }
+    point_ids = [point.id for point in completed_points]
+    calls_by_point = get_calls_for_points(db, point_ids)
+    turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     return build_live_player_stats(
         completed_points,
@@ -80,13 +81,61 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
 
     # Get all completed points for this game
     completed_points = get_completed_points(db, game_id)
-    turnovers_by_point = {
-        point.id: get_turnovers_for_point(db, point.id)
-        for point in completed_points
-    }
+    turnovers_by_point = get_turnovers_for_points(
+        db,
+        [point.id for point in completed_points],
+    )
 
     return build_game_team_stats(
         game_id,
+        completed_points,
+        turnovers_by_point,
+    )
+
+
+def get_competition_team_stats(db: Session, competition_id: int) -> Optional[Dict]:
+    """
+    Get aggregated team statistics for an entire competition.
+    Only considers completed points from all games in the competition.
+
+    Returns None if competition not found.
+    """
+    competition = get_competition(db, competition_id)
+    if not competition:
+        return None
+
+    completed_points = get_completed_points_for_competition(db, competition_id)
+    turnovers_by_point = get_turnovers_for_points(
+        db,
+        [point.id for point in completed_points],
+    )
+
+    return build_competition_team_stats(
+        competition_id,
+        completed_points,
+        turnovers_by_point,
+    )
+
+
+def get_team_team_stats(db: Session, team_id: int) -> Optional[Dict]:
+    """
+    Get aggregated team statistics across all competitions for a team.
+    Only considers completed points from all games tied to the team.
+
+    Returns None if team not found.
+    """
+    team = get_team(db, team_id)
+    if not team:
+        return None
+
+    completed_points = get_completed_points_for_team(db, team_id)
+    turnovers_by_point = get_turnovers_for_points(
+        db,
+        [point.id for point in completed_points],
+    )
+
+    return build_team_team_stats(
+        team_id,
         completed_points,
         turnovers_by_point,
     )
@@ -112,14 +161,12 @@ def get_game_strategy_stats(db: Session, game_id: int) -> Optional[Dict]:
     # Get all completed points for this game with valid timestamps
     completed_points = get_completed_points(db, game_id, require_timestamps=True)
 
-    strategies_by_id = {
-        strategy_id: get_strategy(db, strategy_id)
-        for strategy_id in {p.strategy_id for p in completed_points if p.strategy_id}
-    }
-    turnovers_by_point = {
-        point.id: get_turnovers_for_point(db, point.id)
-        for point in completed_points
-    }
+    strategy_ids = [point.strategy_id for point in completed_points if point.strategy_id]
+    strategies_by_id = get_strategies_by_ids(db, strategy_ids)
+    turnovers_by_point = get_turnovers_for_points(
+        db,
+        [point.id for point in completed_points],
+    )
 
     strategy_stats = build_game_strategy_stats(
         completed_points,

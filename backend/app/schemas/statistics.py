@@ -91,15 +91,29 @@ class DefenseStats(BaseModel):
         from_attributes = True
 
 
-class GameTeamStats(BaseModel):
-    """Team statistics for a game"""
-    game_id: int
+class TeamStatsBase(BaseModel):
+    """Common offense/defense statistics payload shared across scopes"""
     total_completed_points: int
     offense: OffenseStats
     defense: DefenseStats
 
     class Config:
         from_attributes = True
+
+
+class GameTeamStats(TeamStatsBase):
+    """Team statistics for a game"""
+    game_id: int
+
+
+class CompetitionTeamStats(TeamStatsBase):
+    """Team statistics aggregated over a competition"""
+    competition_id: int
+
+
+class TeamTeamStats(TeamStatsBase):
+    """Team statistics aggregated over all competitions for a team"""
+    team_id: int
 
 
 class OffenseStrategyStats(BaseModel):

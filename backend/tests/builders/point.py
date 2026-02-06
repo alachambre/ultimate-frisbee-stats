@@ -101,6 +101,17 @@ class PointBuilder:
             )
         )
 
+        # Move point to running first (required lifecycle transition)
+        points_crud.update_point(
+            self.db,
+            point.id,
+            PointUpdate(
+                status="running",
+                start_datetime=self._start_time,
+                player_ids=self.player_ids
+            )
+        )
+
         # Add turnovers
         for offset in self._turnovers:
             turnovers_crud.create_turnover(
@@ -136,9 +147,8 @@ class PointBuilder:
             PointUpdate(
                 status="completed",
                 won=self._won,
-                start_datetime=self._start_time,
                 end_datetime=end_time,
-                player_ids=self.player_ids
+                player_ids=self.player_ids,
             )
         )
 

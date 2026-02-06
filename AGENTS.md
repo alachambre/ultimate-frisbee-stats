@@ -32,6 +32,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 **Backend**
 - `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)
 - `backend/app/tests/` Pytest (CRUD + API)
+- Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)
 
 ## Design & UI System
 - Material UI v7, mobile-first
