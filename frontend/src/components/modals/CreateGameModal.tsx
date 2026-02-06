@@ -16,20 +16,12 @@ import {
   Box,
   Typography,
   Chip,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Checkbox,
   Stack,
-  InputAdornment,
-  Tabs,
-  Tab,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import { createGame, getCompetitions, getCompetition } from "../../services";
-import type { Player } from "../../types";
+import { getCompetitionPlayers } from "../../services/competitions";
 import { queryKeys } from "../../utils/queryKeys";
+import PlayerSelectionList from "../shared/PlayerSelectionList";
 
 interface CreateGameModalProps {
   isOpen: boolean;
@@ -48,8 +40,6 @@ export default function CreateGameModal({
   const [date, setDate] = useState("");
   const [comments, setComments] = useState("");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"men" | "women">("men");
   const queryClient = useQueryClient();
 
   const { data: competitions } = useQuery({
@@ -67,6 +57,12 @@ export default function CreateGameModal({
     enabled: competitionIdNumber !== null && !Number.isNaN(competitionIdNumber),
   });
 
+  const { data: competitionPlayers = [] } = useQuery({
+    queryKey: queryKeys.competitionPlayers(competitionIdNumber ?? 0),
+    queryFn: () => getCompetitionPlayers(competitionIdNumber as number),
+    enabled: competitionIdNumber !== null && !Number.isNaN(competitionIdNumber),
+  });
+
   const mutation = useMutation({
     mutationFn: createGame,
     onSuccess: () => {
@@ -81,7 +77,6 @@ export default function CreateGameModal({
       setDate("");
       setComments("");
       setSelectedPlayerIds([]);
-      setSearchQuery("");
       onClose();
     },
   });
@@ -105,36 +100,21 @@ export default function CreateGameModal({
     setDate("");
     setComments("");
     setSelectedPlayerIds([]);
-    setSearchQuery("");
     mutation.reset();
     onClose();
   };
 
   // Player selection logic
-  const availablePlayers = useMemo(() => competition?.players || [], [competition?.players]);
-
-  const filteredPlayers = useMemo(() => {
-    if (!searchQuery.trim()) return availablePlayers;
-    const query = searchQuery.toLowerCase();
-    return availablePlayers.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query) ||
-        (p.number && p.number.toString().includes(query))
-    );
-  }, [availablePlayers, searchQuery]);
-
-  const menPlayers = filteredPlayers
-    .filter((p) => p.gender === "M")
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const womenPlayers = filteredPlayers
-    .filter((p) => p.gender === "W")
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const availablePlayers = useMemo(
+    () => competitionPlayers || [],
+    [competitionPlayers]
+  );
 
   const selectedMen = selectedPlayerIds.filter((id) =>
-    menPlayers.some((p) => p.id === id)
+    availablePlayers.some((p) => p.id === id && p.gender === "M")
   ).length;
   const selectedWomen = selectedPlayerIds.filter((id) =>
-    womenPlayers.some((p) => p.id === id)
+    availablePlayers.some((p) => p.id === id && p.gender === "W")
   ).length;
 
   const handleTogglePlayer = (playerId: number) => {
@@ -146,79 +126,11 @@ export default function CreateGameModal({
   };
 
   const handleSelectAll = () => {
-    setSelectedPlayerIds(filteredPlayers.map((p) => p.id));
+    setSelectedPlayerIds(availablePlayers.map((player) => player.id));
   };
 
   const handleClearAll = () => {
     setSelectedPlayerIds([]);
-  };
-
-  const handleSelectAllMen = () => {
-    const menIds = menPlayers.map((p) => p.id);
-    setSelectedPlayerIds((prev) => [...new Set([...prev, ...menIds])]);
-  };
-
-  const handleSelectAllWomen = () => {
-    const womenIds = womenPlayers.map((p) => p.id);
-    setSelectedPlayerIds((prev) => [...new Set([...prev, ...womenIds])]);
-  };
-
-  const renderPlayerList = (players: Player[], title: string) => {
-    if (players.length === 0) return null;
-
-    return (
-      <Box mb={2}>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, px: 2 }}>
-          {title} ({players.length})
-        </Typography>
-        <List disablePadding>
-          {players.map((player) => (
-            <ListItem key={player.id} disablePadding>
-              <ListItemButton
-                role={undefined}
-                onClick={() => handleTogglePlayer(player.id)}
-                dense
-              >
-                <Checkbox
-                  edge="start"
-                  checked={selectedPlayerIds.includes(player.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      {player.name}
-                      <Chip
-                        label={player.gender === "M" ? "M" : "W"}
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: "0.7rem",
-                          backgroundColor: (theme) =>
-                            player.gender === "M"
-                              ? `${theme.colors.men.main}20`
-                              : `${theme.colors.women.main}20`,
-                          color: (theme) =>
-                            player.gender === "M"
-                              ? theme.colors.men.main
-                              : theme.colors.women.main,
-                        }}
-                      />
-                    </Box>
-                  }
-                  secondary={
-                    player.number !== null && player.number !== undefined
-                      ? `#${player.number}`
-                      : "No number"
-                  }
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-    );
   };
 
   return (
@@ -320,33 +232,14 @@ export default function CreateGameModal({
                 )}
               </Box>
 
-              {/* Tabs */}
-              <Tabs
-                value={activeTab}
-                onChange={(_, newValue) => setActiveTab(newValue)}
-                sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}
-              >
-                <Tab
-                  label={`${t("common:labels.male")} (${menPlayers.length})`}
-                  value="men"
-                  sx={{ textTransform: "none" }}
-                />
-                <Tab
-                  label={`${t("common:labels.female")} (${womenPlayers.length})`}
-                  value="women"
-                  sx={{ textTransform: "none" }}
-                />
-              </Tabs>
-
-              {/* Quick Actions */}
               <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
                   variant="outlined"
                   onClick={handleSelectAll}
-                  disabled={filteredPlayers.length === 0}
+                  disabled={availablePlayers.length === 0}
                 >
-                  {t("common:action.select")} All
+                  {t("common:action.select")} {t("common:allPlayers")}
                 </Button>
                 <Button
                   size="small"
@@ -354,94 +247,24 @@ export default function CreateGameModal({
                   onClick={handleClearAll}
                   disabled={selectedPlayerIds.length === 0}
                 >
-                  {t("common:action.clear")} All
+                  {t("common:labels.clearAll")}
                 </Button>
-                {activeTab === "men" && menPlayers.length > 0 && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={handleSelectAllMen}
-                    sx={{
-                      borderColor: (theme) => theme.colors.men.main,
-                      color: (theme) => theme.colors.men.main,
-                      "&:hover": {
-                        borderColor: (theme) => theme.colors.men.main,
-                        backgroundColor: (theme) => `${theme.colors.men.main}10`,
-                      },
-                    }}
-                  >
-                    All {t("common:labels.male")}
-                  </Button>
-                )}
-                {activeTab === "women" && womenPlayers.length > 0 && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={handleSelectAllWomen}
-                    sx={{
-                      borderColor: (theme) => theme.colors.women.main,
-                      color: (theme) => theme.colors.women.main,
-                      "&:hover": {
-                        borderColor: (theme) => theme.colors.women.main,
-                        backgroundColor: (theme) => `${theme.colors.women.main}10`,
-                      },
-                    }}
-                  >
-                    All {t("common:labels.female")}
-                  </Button>
-                )}
               </Stack>
 
-              {/* Search */}
-              <TextField
-                fullWidth
-                size="small"
-                placeholder={`${t("common:action.search")}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ mb: 2 }}
+              <PlayerSelectionList
+                players={availablePlayers}
+                selectedIds={selectedPlayerIds}
+                onToggle={handleTogglePlayer}
+                menLabel={t("common:labels.men")}
+                womenLabel={t("common:labels.women")}
+                emptyMenLabel={t("players:empty.noPlayers")}
+                emptyWomenLabel={t("players:empty.noPlayers")}
+                renderSecondary={(player) =>
+                  player.number !== null && player.number !== undefined
+                    ? `#${player.number}`
+                    : "No number"
+                }
               />
-
-              {/* Player List for Active Tab */}
-              <Box sx={{ maxHeight: 300, overflow: "auto" }}>
-                {activeTab === "men" && (
-                  <>
-                    {menPlayers.length === 0 ? (
-                      <Box py={4} textAlign="center">
-                        <Typography color="text.secondary">
-                          {searchQuery
-                            ? `${t("players:empty.noPlayers")}`
-                            : t("players:empty.noPlayers")}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      renderPlayerList(menPlayers, t("common:labels.male"))
-                    )}
-                  </>
-                )}
-                {activeTab === "women" && (
-                  <>
-                    {womenPlayers.length === 0 ? (
-                      <Box py={4} textAlign="center">
-                        <Typography color="text.secondary">
-                          {searchQuery
-                            ? `${t("players:empty.noPlayers")}`
-                            : t("players:empty.noPlayers")}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      renderPlayerList(womenPlayers, t("common:labels.female"))
-                    )}
-                  </>
-                )}
-              </Box>
             </Box>
           )}
 

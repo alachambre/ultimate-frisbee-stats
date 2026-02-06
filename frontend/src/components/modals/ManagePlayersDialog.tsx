@@ -13,17 +13,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Checkbox,
   useTheme,
-  Tabs,
-  Tab,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -36,6 +27,7 @@ import { getLiveGameStatistics } from "../../services/statistics";
 import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
 import { getPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
+import PlayerSelectionList from "../shared/PlayerSelectionList";
 
 interface ManagePlayersDialogProps {
   open: boolean;
@@ -63,7 +55,7 @@ export default function ManagePlayersDialog({
     point.players?.map((p) => p.id) || []
   );
   const [filterLineId, setFilterLineId] = useState<number | "">("");
-  const [activeTab, setActiveTab] = useState<number>(0); // 0 = Men, 1 = Women
+  const [onlySelected, setOnlySelected] = useState(false);
 
   // Fetch lines for filtering
   const { data: lines = [] } = useQuery({
@@ -193,7 +185,7 @@ export default function ManagePlayersDialog({
     // Reset to point's current players for next time dialog opens
     setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
     setFilterLineId("");
-    setActiveTab(0);
+    setOnlySelected(false);
     updateMutation.reset();
     onClose();
   };
@@ -223,13 +215,32 @@ export default function ManagePlayersDialog({
     return players.filter((p) => linePlayerIds.has(p.id));
   }, [players, lines, filterLineId]);
 
-  // Group filtered players by gender and sort by name
-  const menPlayers = filteredPlayers
-    .filter((p) => p.gender === "M")
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const womenPlayers = filteredPlayers
-    .filter((p) => p.gender === "W")
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const renderPrimary = (player: Player) => {
+    const highlight = getHighlight(player.id);
+    const playTime = getPlayerTime(player.id);
+    return (
+      <>
+        {player.name}
+        {playTime && (
+          <Box
+            component="span"
+            sx={{
+              ml: 1,
+              fontStyle: "italic",
+              color: highlight === "high"
+                ? theme.palette.success.main
+                : highlight === "low"
+                ? theme.palette.warning.main
+                : "text.secondary",
+              fontWeight: highlight ? 500 : 400,
+            }}
+          >
+            ({playTime})
+          </Box>
+        )}
+      </>
+    );
+  };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -334,177 +345,20 @@ export default function ManagePlayersDialog({
           </Alert>
         )}
 
-        {/* Gender Tabs */}
-        <Box sx={{ borderBottom: 2, borderColor: "divider" }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, newValue) => setActiveTab(newValue)}
-            variant="fullWidth"
-            TabIndicatorProps={{
-              sx: {
-                height: 3,
-                backgroundColor: activeTab === 0 ? theme.colors.men.main : theme.colors.women.main,
-              },
-            }}
-          >
-            <Tab
-              icon={<MaleIcon />}
-              label={t("points:dialog.start.men")}
-              iconPosition="start"
-              sx={{
-                color: theme.colors.men.main,
-                fontWeight: "medium",
-                "&.Mui-selected": {
-                  color: theme.colors.men.main,
-                  fontWeight: "bold",
-                  backgroundColor: alpha(theme.colors.men.main, 0.08),
-                },
-              }}
-            />
-            <Tab
-              icon={<FemaleIcon />}
-              label={t("points:dialog.start.women")}
-              iconPosition="start"
-              sx={{
-                color: theme.colors.women.main,
-                fontWeight: "medium",
-                "&.Mui-selected": {
-                  color: theme.colors.women.main,
-                  fontWeight: "bold",
-                  backgroundColor: alpha(theme.colors.women.main, 0.08),
-                },
-              }}
-            />
-          </Tabs>
-        </Box>
-
-        {/* Men Tab Panel */}
-        {activeTab === 0 && (
-          <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
-            {menPlayers.map((player) => {
-              const highlight = getHighlight(player.id);
-              const playTime = getPlayerTime(player.id);
-              return (
-                <ListItem key={player.id} disablePadding>
-                  <ListItemButton
-                    onClick={() => togglePlayer(player.id)}
-                    dense
-                    sx={{
-                      borderLeft: highlight
-                        ? `3px solid ${highlight === "high" ? theme.palette.success.main : theme.palette.warning.main}`
-                        : "3px solid transparent",
-                    }}
-                  >
-                    <ListItemIcon>
-                      <Checkbox
-                        edge="start"
-                        checked={selectedPlayerIds.includes(player.id)}
-                        tabIndex={-1}
-                        disableRipple
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <>
-                          {player.name}
-                          {playTime && (
-                            <Box
-                              component="span"
-                              sx={{
-                                ml: 1,
-                                fontStyle: "italic",
-                                color: highlight === "high"
-                                  ? theme.palette.success.main
-                                  : highlight === "low"
-                                  ? theme.palette.warning.main
-                                  : "text.secondary",
-                                fontWeight: highlight ? 500 : 400,
-                              }}
-                            >
-                              ({playTime})
-                            </Box>
-                          )}
-                        </>
-                      }
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-            {menPlayers.length === 0 && (
-              <ListItem>
-                <ListItemText
-                  primary={t("points:dialog.managePlayers.noMen")}
-                  secondary={null}
-                />
-              </ListItem>
-            )}
-          </List>
-        )}
-
-        {/* Women Tab Panel */}
-        {activeTab === 1 && (
-          <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
-            {womenPlayers.map((player) => {
-              const highlight = getHighlight(player.id);
-              const playTime = getPlayerTime(player.id);
-              return (
-                <ListItem key={player.id} disablePadding>
-                  <ListItemButton
-                    onClick={() => togglePlayer(player.id)}
-                    dense
-                    sx={{
-                      borderLeft: highlight
-                        ? `3px solid ${highlight === "high" ? theme.palette.success.main : theme.palette.warning.main}`
-                        : "3px solid transparent",
-                    }}
-                  >
-                    <ListItemIcon>
-                      <Checkbox
-                        edge="start"
-                        checked={selectedPlayerIds.includes(player.id)}
-                        tabIndex={-1}
-                        disableRipple
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <>
-                          {player.name}
-                          {playTime && (
-                            <Box
-                              component="span"
-                              sx={{
-                                ml: 1,
-                                fontStyle: "italic",
-                                color: highlight === "high"
-                                  ? theme.palette.success.main
-                                  : highlight === "low"
-                                  ? theme.palette.warning.main
-                                  : "text.secondary",
-                                fontWeight: highlight ? 500 : 400,
-                              }}
-                            >
-                              ({playTime})
-                            </Box>
-                          )}
-                        </>
-                      }
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-            {womenPlayers.length === 0 && (
-              <ListItem>
-                <ListItemText
-                  primary={t("points:dialog.managePlayers.noWomen")}
-                  secondary={null}
-                />
-              </ListItem>
-            )}
-          </List>
-        )}
+        <PlayerSelectionList
+          players={filteredPlayers}
+          selectedIds={selectedPlayerIds}
+          onToggle={togglePlayer}
+          menLabel={t("points:dialog.start.men")}
+          womenLabel={t("points:dialog.start.women")}
+          emptyMenLabel={t("points:dialog.managePlayers.noMen")}
+          emptyWomenLabel={t("points:dialog.managePlayers.noWomen")}
+          getHighlight={getHighlight}
+          renderPrimary={renderPrimary}
+          showOnlySelectedToggle
+          onlySelected={onlySelected}
+          onOnlySelectedChange={setOnlySelected}
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>

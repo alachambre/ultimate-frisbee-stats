@@ -5,6 +5,8 @@ import { createTeam, createCompetition, createGame, createPlayer, finishGame } f
 import { addPlayersToRoster } from "../../services/competitions";
 import { addPlayersToGame } from "../../services/games";
 import GameDetailPage from "../GameDetailPage";
+import type { Player } from "../../types";
+import type { NavigateFunction } from "react-router-dom";
 
 // Mock useParams and useNavigate
 const mockUseParams = vi.fn();
@@ -154,7 +156,8 @@ describe("GameDetailPage", () => {
 
     // Update the mock to use our mockNavigate
     // @ts-expect-error - Mocking useNavigate for test purposes
-    vi.mocked(await import("react-router-dom")).useNavigate = () => mockNavigate as any;
+    vi.mocked(await import("react-router-dom")).useNavigate = () =>
+      mockNavigate as NavigateFunction;
 
     render(<GameDetailPage />);
 
@@ -225,8 +228,21 @@ describe("GameDetailPage", () => {
       body: JSON.stringify({ name: "New Player", gender: "M", number: 99 }),
     });
 
-    const players = await (await fetch(`http://localhost:8000/teams/${team.id}/players`)).json();
-    const newPlayer = players.find((p: any) => p.name === "New Player");
+    await fetch(`http://localhost:8000/teams/${team.id}/players`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Bench Player", gender: "W", number: 12 }),
+    });
+
+    const players = (await (
+      await fetch(`http://localhost:8000/teams/${team.id}/players`)
+    ).json()) as Player[];
+    const newPlayer = players.find((p) => p.name === "New Player");
+    const benchPlayer = players.find((p) => p.name === "Bench Player");
+
+    if (!newPlayer || !benchPlayer) {
+      throw new Error("Expected test players to be created");
+    }
 
     // Add player to competition roster
     await fetch(`http://localhost:8000/competitions/${competition.id}/players`, {
@@ -264,6 +280,8 @@ describe("GameDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByText("New Player")).toBeInTheDocument();
     }, { timeout: 3000 });
+    expect(benchPlayer).toBeDefined();
+    expect(screen.queryByText("Bench Player")).not.toBeInTheDocument();
 
     // Select the player by clicking on the name
     const playerItem = screen.getByText("New Player");

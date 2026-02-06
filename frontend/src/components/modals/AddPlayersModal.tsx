@@ -10,8 +10,9 @@ import {
   Alert,
   Typography,
   Box,
+  Stack,
 } from "@mui/material";
-import PlayerSelectionUI from "../shared/PlayerSelectionUI";
+import PlayerSelectionList from "../shared/PlayerSelectionList";
 import type { Player } from "../../types";
 import { queryKeys } from "../../utils/queryKeys";
 
@@ -86,14 +87,8 @@ export default function AddPlayersModal({
   const availablePlayers =
     players?.filter((p) => !currentPlayerIds.includes(p.id)) || [];
 
-  const handleSelectAllMen = () => {
-    const menIds = availablePlayers.filter((p) => p.gender === "M").map((p) => p.id);
-    setSelectedPlayerIds((prev) => [...new Set([...prev, ...menIds])]);
-  };
-
-  const handleSelectAllWomen = () => {
-    const womenIds = availablePlayers.filter((p) => p.gender === "W").map((p) => p.id);
-    setSelectedPlayerIds((prev) => [...new Set([...prev, ...womenIds])]);
+  const handleSelectAll = () => {
+    setSelectedPlayerIds(availablePlayers.map((player) => player.id));
   };
 
   const handleClearAll = () => {
@@ -111,14 +106,36 @@ export default function AddPlayersModal({
             <Typography color="text.secondary">{emptyMessage || t("common:messages.noData")}</Typography>
           </Box>
         ) : (
-          <PlayerSelectionUI
-            players={availablePlayers}
-            selectedIds={selectedPlayerIds}
-            onToggle={handleToggle}
-            onSelectAllMen={handleSelectAllMen}
-            onSelectAllWomen={handleSelectAllWomen}
-            onClearAll={handleClearAll}
-          />
+          <>
+            <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleSelectAll}
+                disabled={availablePlayers.length === 0}
+              >
+                {t("common:action.select")} {t("common:allPlayers")}
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handleClearAll}
+                disabled={selectedPlayerIds.length === 0}
+              >
+                {t("common:labels.clearAll")}
+              </Button>
+            </Stack>
+            <PlayerSelectionList
+              players={availablePlayers}
+              selectedIds={selectedPlayerIds}
+              onToggle={handleToggle}
+              renderSecondary={(player) =>
+                player.number !== null && player.number !== undefined
+                  ? `#${player.number}`
+                  : "No number"
+              }
+            />
+          </>
         )}
 
         {mutation.isError && (

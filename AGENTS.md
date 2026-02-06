@@ -74,6 +74,7 @@ npm run build
 - Frequent commits with clear messages
 - Wants to be challenged: push back, verify assumptions, think critically
 - Testing philosophy: meaningful tests for core functionality and edge cases
+- When working on the UI, run frontend tests (`frontend`: `npm test`) before reporting.
 - Proactively update `AGENTS.md` when making significant changes
 - Proactively suggest improvements: when working on some part of the code that could be improved, that are not very maintainable, that could lead to issues...
 

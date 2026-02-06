@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { addPlayersToGame } from "../../services/games";
-import { getCompetition } from "../../services/competitions";
+import { getCompetitionPlayers } from "../../services/competitions";
 import AddPlayersModal from "./AddPlayersModal";
 import { queryKeys } from "../../utils/queryKeys";
 
@@ -27,10 +27,7 @@ export default function AddPlayersToGameModal({
       onClose={onClose}
       title={t('games:modal.addPlayers.title')}
       currentPlayerIds={currentPlayerIds}
-      fetchPlayers={async () => {
-        const competition = await getCompetition(competitionId);
-        return competition.players;
-      }}
+      fetchPlayers={() => getCompetitionPlayers(competitionId)}
       addPlayers={(playerIds) => addPlayersToGame(gameId, playerIds)}
       invalidateQueries={[queryKeys.game(gameId)]}
       loadingMessage={t('games:modal.addPlayers.loading')}

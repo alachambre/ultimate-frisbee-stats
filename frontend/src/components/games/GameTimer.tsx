@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Typography } from "@mui/material";
 
 interface GameTimerProps {
@@ -7,28 +7,31 @@ interface GameTimerProps {
 }
 
 export default function GameTimer({ startDatetime, endDatetime }: GameTimerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const calculateElapsed = useCallback(() => {
+    const start = new Date(startDatetime).getTime();
+    const end = endDatetime ? new Date(endDatetime).getTime() : Date.now();
+    const diffMs = end - start;
+    return Math.max(0, Math.floor(diffMs / 1000));
+  }, [startDatetime, endDatetime]);
+
+  const [tickSeconds, setTickSeconds] = useState(calculateElapsed);
 
   useEffect(() => {
-    const calculateElapsed = () => {
-      const start = new Date(startDatetime).getTime();
-      const end = endDatetime ? new Date(endDatetime).getTime() : Date.now();
-      const diffMs = end - start;
-      return Math.max(0, Math.floor(diffMs / 1000));
-    };
+    if (endDatetime) return;
 
-    // Set initial value
-    setElapsedSeconds(calculateElapsed());
+    const interval = setInterval(() => {
+      setTickSeconds(calculateElapsed());
+    }, 1000);
 
-    // Only update if game hasn't ended
-    if (!endDatetime) {
-      const interval = setInterval(() => {
-        setElapsedSeconds(calculateElapsed());
-      }, 1000);
+    return () => clearInterval(interval);
+  }, [calculateElapsed, endDatetime]);
 
-      return () => clearInterval(interval);
+  const elapsedSeconds = useMemo(() => {
+    if (endDatetime) {
+      return calculateElapsed();
     }
-  }, [startDatetime, endDatetime]);
+    return tickSeconds;
+  }, [calculateElapsed, endDatetime, tickSeconds]);
 
   const formatTime = (totalSeconds: number): string => {
     const hours = Math.floor(totalSeconds / 3600);

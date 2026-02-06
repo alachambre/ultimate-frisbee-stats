@@ -67,6 +67,7 @@
     "allMen": "All Men",
     "allWomen": "All Women",
     "clearAll": "Clear All",
+    "onlySelected": "Only selected",
     "required": "Required",
     "optional": "Optional"
   },

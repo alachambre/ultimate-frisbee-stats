@@ -1,5 +1,5 @@
 import { Box, FormHelperText } from "@mui/material";
-import PlayerSelectionUI from "../shared/PlayerSelectionUI";
+import PlayerSelectionList from "../shared/PlayerSelectionList";
 import type { Player } from "../../types";
 
 interface PlayerSelectorProps {
@@ -29,35 +29,17 @@ export default function PlayerSelector({
     onChange(newSelected);
   };
 
-  const handleSelectAllMen = () => {
-    const menIds = players.filter((p) => p.gender === "M").map((p) => p.id);
-    const womenIds = selectedIds.filter((id) =>
-      players.some((p) => p.id === id && p.gender === "W")
-    );
-    onChange([...new Set([...womenIds, ...menIds])]);
-  };
-
-  const handleSelectAllWomen = () => {
-    const womenIds = players.filter((p) => p.gender === "W").map((p) => p.id);
-    const menIds = selectedIds.filter((id) =>
-      players.some((p) => p.id === id && p.gender === "M")
-    );
-    onChange([...new Set([...menIds, ...womenIds])]);
-  };
-
-  const handleClearAll = () => {
-    onChange([]);
-  };
-
   return (
     <Box>
-      <PlayerSelectionUI
+      <PlayerSelectionList
         players={players}
         selectedIds={selectedIds}
         onToggle={handleToggle}
-        onSelectAllMen={handleSelectAllMen}
-        onSelectAllWomen={handleSelectAllWomen}
-        onClearAll={handleClearAll}
+        renderSecondary={(player) =>
+          player.number !== null && player.number !== undefined
+            ? `#${player.number}`
+            : "No number"
+        }
       />
 
       {(error || helperText) && (

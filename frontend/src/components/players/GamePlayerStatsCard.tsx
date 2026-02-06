@@ -1,4 +1,5 @@
 import { Card, CardContent, Typography, Box, alpha } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { PlayerGameStats } from "../../types";
 
 interface GamePlayerStatsCardProps {
@@ -19,14 +20,14 @@ export default function GamePlayerStatsCard({ stats, highlight }: GamePlayerStat
   const getSxStyles = () => {
     if (highlight === "high") {
       return {
-        backgroundColor: (theme: any) => alpha(theme.palette.success.main, 0.08),
-        borderColor: (theme: any) => alpha(theme.palette.success.main, 0.3),
+        backgroundColor: (theme: Theme) => alpha(theme.palette.success.main, 0.08),
+        borderColor: (theme: Theme) => alpha(theme.palette.success.main, 0.3),
       };
     }
     if (highlight === "low") {
       return {
-        backgroundColor: (theme: any) => alpha(theme.palette.warning.main, 0.08),
-        borderColor: (theme: any) => alpha(theme.palette.warning.main, 0.3),
+        backgroundColor: (theme: Theme) => alpha(theme.palette.warning.main, 0.08),
+        borderColor: (theme: Theme) => alpha(theme.palette.warning.main, 0.3),
       };
     }
     return {};

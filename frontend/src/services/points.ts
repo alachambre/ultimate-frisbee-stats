@@ -1,4 +1,5 @@
 import { apiClient } from "./api";
+import type { AxiosError } from "axios";
 import type { PointCreate, PointFinish, PointUpdate, PointWithPlayers } from "../types";
 
 // Start a new point (creates an active point)
@@ -26,8 +27,9 @@ export const getActivePoint = async (gameId: number): Promise<PointWithPlayers |
   try {
     const response = await apiClient.get<PointWithPlayers>(`/points/games/${gameId}/active`);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.status === 404) {
       return null;
     }
     throw error;
@@ -40,8 +42,9 @@ export const getRunningPoint = async (gameId: number): Promise<PointWithPlayers 
   try {
     const response = await apiClient.get<PointWithPlayers>(`/points/games/${gameId}/running`);
     return response.data;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.status === 404) {
       return null;
     }
     throw error;

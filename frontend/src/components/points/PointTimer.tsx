@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Typography } from "@mui/material";
 
 interface PointTimerProps {
@@ -8,37 +8,32 @@ interface PointTimerProps {
 }
 
 export default function PointTimer({ startDatetime, endDatetime, color }: PointTimerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const calculateElapsed = useCallback(() => {
+    const start = new Date(startDatetime).getTime();
+    const end = endDatetime ? new Date(endDatetime).getTime() : Date.now();
+    const diffMs = end - start;
+    return Math.max(0, Math.floor(diffMs / 1000));
+  }, [startDatetime, endDatetime]);
+
+  const [tickSeconds, setTickSeconds] = useState(calculateElapsed);
 
   useEffect(() => {
-    // If endDatetime is provided, calculate static duration
-    if (endDatetime) {
-      const start = new Date(startDatetime).getTime();
-      const end = new Date(endDatetime).getTime();
-      const diffMs = end - start;
-      setElapsedSeconds(Math.max(0, Math.floor(diffMs / 1000)));
-      return; // No need for interval
-    }
-
-    // Otherwise, calculate live elapsed time
-    const calculateElapsed = () => {
-      const start = new Date(startDatetime).getTime();
-      const now = Date.now();
-      const diffMs = now - start;
-      return Math.max(0, Math.floor(diffMs / 1000));
-    };
-
-    // Set initial value immediately
-    const elapsed = calculateElapsed();
-    setElapsedSeconds(elapsed);
+    if (endDatetime) return;
 
     // Update every second
     const interval = setInterval(() => {
-      setElapsedSeconds(calculateElapsed());
+      setTickSeconds(calculateElapsed());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startDatetime, endDatetime]);
+  }, [calculateElapsed, endDatetime]);
+
+  const elapsedSeconds = useMemo(() => {
+    if (endDatetime) {
+      return calculateElapsed();
+    }
+    return tickSeconds;
+  }, [calculateElapsed, endDatetime, tickSeconds]);
 
   const formatTime = (totalSeconds: number): string => {
     const hours = Math.floor(totalSeconds / 3600);
