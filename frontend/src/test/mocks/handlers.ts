@@ -105,7 +105,6 @@ function buildEmptyTeamStats(
       points_won_no_turnover: 0,
       clean_break_rate: 0.0,
       points_lost_no_turnover: 0,
-      hold_rate: 0.0,
       pull_stats: {
         total_pulls: 0,
         inbound_pulls: 0,
@@ -452,6 +451,18 @@ export const handlers = [
     };
     players.push(newPlayer);
     return HttpResponse.json(newPlayer, { status: 201 });
+  }),
+
+  // GET /players/:id - Get player by ID
+  http.get(`${BASE_URL}/players/:id`, ({ params }) => {
+    const playerId = Number(params.id);
+    const player = players.find((p) => p.id === playerId);
+
+    if (!player) {
+      return HttpResponse.json({ detail: "Player not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(player);
   }),
 
   // PUT /players/:id - Update player

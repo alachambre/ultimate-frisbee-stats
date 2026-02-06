@@ -192,7 +192,16 @@ export default function GameStatisticsPage() {
       {strategyStats && <StrategyStatistics strategyStats={strategyStats} />}
 
       {/* Player Statistics Section */}
-      {playerStats && <PlayerStatistics playerStats={playerStats} />}
+      {playerStats && (
+        <PlayerStatistics
+          playerStats={playerStats}
+          onPlayerClick={(playerId) =>
+            navigate(
+              `/statistics/players/${playerId}?scope=game&gameId=${gameIdNumber}`
+            )
+          }
+        />
+      )}
     </Container>
   );
 }

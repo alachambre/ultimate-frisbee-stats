@@ -1,11 +1,16 @@
 {
   "page": {
     "title": "Statistiques du Match",
+    "playerTitle": "Statistiques du Joueur",
     "backToGame": "Retour au Match",
     "teamTitle": "Statistiques de l'Équipe",
     "competitionTitle": "Statistiques de la Compétition",
     "backToTeam": "Retour à l'Équipe",
     "backToCompetition": "Retour à la Compétition",
+    "backToTeamStats": "Retour aux statistiques d'équipe",
+    "backToCompetitionStats": "Retour aux statistiques de compétition",
+    "backToGameStats": "Retour aux statistiques du match",
+    "viewPlayerStatsAria": "Voir les statistiques de {{playerName}}",
     "exportCSV": "Exporter CSV",
     "exportCsvSummary": "CSV résumé",
     "exportCsvFull": "CSV détaillé"
@@ -50,6 +55,7 @@
   "playerStats": {
     "title": "Statistiques des Joueurs",
     "noData": "Aucune statistique disponible. Complétez des points pour voir les statistiques.",
+    "noDataForScope": "Aucune statistique disponible pour ce joueur dans le scope sélectionné.",
     "playersCount": "joueur(s)",
     "playerName": "Joueur",
     "pointsPlayed": "Points",
@@ -71,13 +77,21 @@
     "sortByBreak": "Break (+ élevé d'abord)",
     "sortByCleanBreak": "Clean Break (+ élevé d'abord)"
   },
+  "playerScope": {
+    "label": "Périmètre",
+    "scope": "Périmètre",
+    "context": "Contexte",
+    "team": "Équipe",
+    "competition": "Compétition",
+    "game": "Match"
+  },
   "tooltips": {
-    "cleanPointRate": "Pourcentage de points gagnés sans turnover",
+    "cleanPointRate": "Pourcentage de points offensifs gagnés sans nos turnovers (sur tous les points offensifs joués)",
     "breakRate": "Pourcentage de points défensifs gagnés (breaks)",
-    "turnoverRate": "Pourcentage de points défensifs où on a forcé au moins un turnover",
-    "cleanBreakRate": "Pourcentage de breaks sans turnover",
+    "turnoverRate": "Pourcentage de points défensifs où au moins un turnover a eu lieu",
+    "cleanBreakRate": "Pourcentage de points défensifs gagnés sans nos turnovers (sur tous les points défensifs joués)",
     "holdRate": "Pourcentage de points offensifs gagnés (holds)",
-    "forcedTurnovers": "Points où on a forcé l'adversaire à faire un turnover",
+    "forcedTurnovers": "Points défensifs où au moins un turnover a eu lieu",
     "offensePoints": "Nombre de points offensifs complétés joués",
     "defensePoints": "Nombre de points défensifs complétés joués",
     "pullRate": "Pourcentage de pulls restés dans le terrain"

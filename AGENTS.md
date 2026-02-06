@@ -29,6 +29,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
 - Statistics UI routes: game + competition + team scopes should stay aligned with backend statistics endpoints
+- Player-focused statistics route is `statistics/players/:playerId` with query scope context (`scope=team|competition|game` + related ids) and reuses existing scoped stats endpoints client-side
 - Statistics export UI should expose CSV mode selection (`summary` vs `full`) and pass it to backend `detail` query param
 
 **Backend**
@@ -37,6 +38,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)
 - CSV statistics exports are backend-owned via `/exports/*/csv` endpoints; frontend should only trigger download
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable
+- Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
 
 ## Design & UI System

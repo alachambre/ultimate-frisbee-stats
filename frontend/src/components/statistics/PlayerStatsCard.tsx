@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Box, Chip } from "@mui/material";
+import { Card, CardActionArea, CardContent, Typography, Box, Chip } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import type { PlayerGameStats } from "../../types";
@@ -6,6 +6,7 @@ import type { PlayerGameStats } from "../../types";
 interface PlayerStatsCardProps {
   stats: PlayerGameStats;
   view: "offense" | "defense";
+  onClick?: () => void;
 }
 
 /**
@@ -24,19 +25,18 @@ function formatPercent(value: number): string {
   return `${(value * 100).toFixed(0)}%`;
 }
 
-export default function PlayerStatsCard({ stats, view }: PlayerStatsCardProps) {
+export default function PlayerStatsCard({ stats, view, onClick }: PlayerStatsCardProps) {
   const isOffense = view === "offense";
   const relevantStats = isOffense ? stats.offense : stats.defense;
   const pointsPlayed = relevantStats.points_played;
-
-  return (
-    <Card variant="outlined">
-      <CardContent>
+  const playerNumberLabel = stats.player_number != null ? `#${stats.player_number}` : "—";
+  const content = (
+    <CardContent>
         {/* Player Name and Number */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
           <Box display="flex" alignItems="center" gap={1}>
             <Chip
-              label={`#${stats.player_number}`}
+              label={playerNumberLabel}
               size="small"
               sx={{ width: 45, fontWeight: "bold" }}
             />
@@ -132,6 +132,17 @@ export default function PlayerStatsCard({ stats, view }: PlayerStatsCardProps) {
           </Box>
         )}
       </CardContent>
+  );
+
+  return (
+    <Card variant="outlined">
+      {onClick ? (
+        <CardActionArea onClick={onClick} aria-label={`View statistics for ${stats.player_name}`}>
+          {content}
+        </CardActionArea>
+      ) : (
+        content
+      )}
     </Card>
   );
 }

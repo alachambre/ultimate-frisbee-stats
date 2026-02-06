@@ -22,6 +22,7 @@ vi.mock("react-router-dom", async () => {
 
 describe("CompetitionStatisticsPage", () => {
   beforeEach(async () => {
+    mockUseNavigate.mockClear();
     mockUseParams.mockReturnValue({ competitionId: "1" });
 
     const team = await createTeam({ name: "Monkey" });
@@ -48,6 +49,7 @@ describe("CompetitionStatisticsPage", () => {
   });
 
   it("renders team, strategy and player stats sections", async () => {
+    const user = userEvent.setup();
     server.use(
       http.get(`${BASE_URL}/statistics/competitions/:competitionId/team`, () => {
         return HttpResponse.json({
@@ -156,5 +158,14 @@ describe("CompetitionStatisticsPage", () => {
     expect(screen.getAllByText("Jane Smith").length).toBeGreaterThan(0);
     expect(screen.getByText("Horizontal Stack")).toBeInTheDocument();
     expect(screen.getByText("Person Defense")).toBeInTheDocument();
+
+    const playerStatsButton = screen.getByRole("button", {
+      name: /view statistics for jane smith/i,
+    });
+    await user.click(playerStatsButton);
+
+    expect(mockUseNavigate).toHaveBeenCalledWith(
+      "/statistics/players/1?scope=competition&competitionId=1"
+    );
   });
 });

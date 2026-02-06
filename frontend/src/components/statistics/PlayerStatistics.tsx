@@ -21,6 +21,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  ButtonBase,
 } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
@@ -34,6 +35,7 @@ type TabValue = "offense" | "defense";
 
 interface PlayerStatisticsProps {
   playerStats: PlayerGameStats[];
+  onPlayerClick?: (playerId: number) => void;
 }
 
 // Helper function to format time (seconds to MM:SS)
@@ -48,7 +50,7 @@ function formatPercent(value: number): string {
   return `${(value * 100).toFixed(0)}%`;
 }
 
-export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps) {
+export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerStatisticsProps) {
   const { t } = useTranslation("statistics");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -112,6 +114,30 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
       setSortColumn(column);
       setSortDirection("asc");
     }
+  };
+
+  const renderPlayerIdentity = (stat: PlayerGameStats) => {
+    const numberLabel = stat.player_number != null ? `#${stat.player_number}` : "—";
+    const content = (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Chip label={numberLabel} size="small" sx={{ width: 45 }} />
+        <Typography variant="body2">{stat.player_name}</Typography>
+      </Box>
+    );
+
+    if (!onPlayerClick) {
+      return content;
+    }
+
+    return (
+      <ButtonBase
+        onClick={() => onPlayerClick(stat.player_id)}
+        sx={{ borderRadius: 1, px: 0.5, py: 0.25 }}
+        aria-label={t("page.viewPlayerStatsAria", { playerName: stat.player_name })}
+      >
+        {content}
+      </ButtonBase>
+    );
   };
 
   if (!playerStats || playerStats.length === 0) {
@@ -233,7 +259,11 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
             <Grid container spacing={2}>
               {sortedPlayerStats.map((stat) => (
                 <Grid key={stat.player_id} size={{ xs: 12 }}>
-                  <PlayerStatsCard stats={stat} view="offense" />
+                  <PlayerStatsCard
+                    stats={stat}
+                    view="offense"
+                    onClick={onPlayerClick ? () => onPlayerClick(stat.player_id) : undefined}
+                  />
                 </Grid>
               ))}
             </Grid>
@@ -259,7 +289,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
                         onClick={() => handleSort("time")}
                         hideSortIcon={sortColumn !== "time"}
                       >
-                        Game time
+                        {t("playerStats.playingTime")}
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">
@@ -269,7 +299,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
                         onClick={() => handleSort("points")}
                         hideSortIcon={sortColumn !== "points"}
                       >
-                        Offense points
+                        {t("playerStats.offensePoints")}
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">
@@ -301,12 +331,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
                 <TableBody>
                   {sortedPlayerStats.map((stat) => (
                     <TableRow key={stat.player_id} hover>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Chip label={`#${stat.player_number}`} size="small" sx={{ width: 45 }} />
-                          <Typography variant="body2">{stat.player_name}</Typography>
-                        </Box>
-                      </TableCell>
+                      <TableCell>{renderPlayerIdentity(stat)}</TableCell>
                       <TableCell align="center">{formatTime(stat.effective_time_seconds)}</TableCell>
                       <TableCell align="center">{stat.offense.points_played}</TableCell>
                       <TableCell align="center">
@@ -335,7 +360,11 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
             <Grid container spacing={2}>
               {sortedPlayerStats.map((stat) => (
                 <Grid key={stat.player_id} size={{ xs: 12 }}>
-                  <PlayerStatsCard stats={stat} view="defense" />
+                  <PlayerStatsCard
+                    stats={stat}
+                    view="defense"
+                    onClick={onPlayerClick ? () => onPlayerClick(stat.player_id) : undefined}
+                  />
                 </Grid>
               ))}
             </Grid>
@@ -361,7 +390,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
                         onClick={() => handleSort("time")}
                         hideSortIcon={sortColumn !== "time"}
                       >
-                        Game time
+                        {t("playerStats.playingTime")}
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">
@@ -371,7 +400,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
                         onClick={() => handleSort("points")}
                         hideSortIcon={sortColumn !== "points"}
                       >
-                        Defense points
+                        {t("playerStats.defensePoints")}
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center">
@@ -415,12 +444,7 @@ export default function PlayerStatistics({ playerStats }: PlayerStatisticsProps)
                 <TableBody>
                   {sortedPlayerStats.map((stat) => (
                     <TableRow key={stat.player_id} hover>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Chip label={`#${stat.player_number}`} size="small" sx={{ width: 45 }} />
-                          <Typography variant="body2">{stat.player_name}</Typography>
-                        </Box>
-                      </TableCell>
+                      <TableCell>{renderPlayerIdentity(stat)}</TableCell>
                       <TableCell align="center">{formatTime(stat.effective_time_seconds)}</TableCell>
                       <TableCell align="center">{stat.defense.points_played}</TableCell>
                       <TableCell align="center">

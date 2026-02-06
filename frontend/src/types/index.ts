@@ -340,7 +340,7 @@ export interface PlayerDefenseStats {
 export interface PlayerGameStats {
   player_id: number;
   player_name: string;
-  player_number: number;
+  player_number: number | null;
   points_played: number;
   effective_time_seconds: number;
   offense: PlayerOffenseStats;
@@ -374,7 +374,6 @@ export interface DefenseStats {
   points_won_no_turnover: number;
   clean_break_rate: number;
   points_lost_no_turnover: number;
-  hold_rate: number;
   pull_stats: PullStats;
 }
 

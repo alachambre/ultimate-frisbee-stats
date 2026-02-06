@@ -22,6 +22,7 @@ vi.mock("react-router-dom", async () => {
 
 describe("TeamStatisticsPage", () => {
   beforeEach(async () => {
+    mockUseNavigate.mockClear();
     mockUseParams.mockReturnValue({ teamId: "1" });
 
     const team = await createTeam({ name: "Monkey" });
@@ -48,6 +49,7 @@ describe("TeamStatisticsPage", () => {
   });
 
   it("renders team, strategy and player stats sections", async () => {
+    const user = userEvent.setup();
     server.use(
       http.get(`${BASE_URL}/statistics/teams/:teamId/team`, () => {
         return HttpResponse.json({
@@ -156,5 +158,14 @@ describe("TeamStatisticsPage", () => {
     expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
     expect(screen.getByText("Vertical Stack")).toBeInTheDocument();
     expect(screen.getByText("Zone")).toBeInTheDocument();
+
+    const playerStatsButton = screen.getByRole("button", {
+      name: /view statistics for john doe/i,
+    });
+    await user.click(playerStatsButton);
+
+    expect(mockUseNavigate).toHaveBeenCalledWith(
+      "/statistics/players/1?scope=team&teamId=1"
+    );
   });
 });

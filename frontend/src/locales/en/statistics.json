@@ -1,11 +1,16 @@
 {
   "page": {
     "title": "Game Statistics",
+    "playerTitle": "Player Statistics",
     "backToGame": "Back to Game",
     "teamTitle": "Team Statistics",
     "competitionTitle": "Competition Statistics",
     "backToTeam": "Back to Team",
     "backToCompetition": "Back to Competition",
+    "backToTeamStats": "Back to Team Statistics",
+    "backToCompetitionStats": "Back to Competition Statistics",
+    "backToGameStats": "Back to Game Statistics",
+    "viewPlayerStatsAria": "View statistics for {{playerName}}",
     "exportCSV": "Export CSV",
     "exportCsvSummary": "Summary CSV",
     "exportCsvFull": "Full CSV"
@@ -50,6 +55,7 @@
   "playerStats": {
     "title": "Player Statistics",
     "noData": "No player statistics available yet. Complete some points to see statistics.",
+    "noDataForScope": "No statistics available for this player in the selected scope yet.",
     "playersCount": "player(s)",
     "playerName": "Player",
     "pointsPlayed": "Points",
@@ -71,13 +77,21 @@
     "sortByBreak": "Break (highest first)",
     "sortByCleanBreak": "Clean Break (highest first)"
   },
+  "playerScope": {
+    "label": "Scope",
+    "scope": "Scope",
+    "context": "Context",
+    "team": "Team",
+    "competition": "Competition",
+    "game": "Game"
+  },
   "tooltips": {
-    "cleanPointRate": "Percentage of won points that had no turnovers",
+    "cleanPointRate": "Percentage of offensive points won without our turnovers (over all offensive points played)",
     "breakRate": "Percentage of defensive points won (breaks)",
-    "turnoverRate": "Percentage of defensive points where we forced at least one turnover",
-    "cleanBreakRate": "Percentage of breaks that had no turnovers",
+    "turnoverRate": "Percentage of defensive points where at least one turnover occurred",
+    "cleanBreakRate": "Percentage of defensive points won without our turnovers (over all defensive points played)",
     "holdRate": "Percentage of offensive points won (holds)",
-    "forcedTurnovers": "Points where we forced the opponent to turn it over",
+    "forcedTurnovers": "Defensive points where at least one turnover occurred",
     "offensePoints": "Number of completed offensive points played",
     "defensePoints": "Number of completed defensive points played",
     "pullRate": "Percentage of pulls that stayed inbound"

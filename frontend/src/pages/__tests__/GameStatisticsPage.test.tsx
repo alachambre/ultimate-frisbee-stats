@@ -280,8 +280,8 @@ describe("GameStatisticsPage", () => {
 
     // Verify header cells exist (using partial matches for the tab-specific column names)
     expect(screen.getByText("Player")).toBeInTheDocument();
-    expect(screen.getByText("Game time")).toBeInTheDocument();
-    expect(screen.getByText("Offense points")).toBeInTheDocument(); // In offense tab by default
+    expect(screen.getByText("Time")).toBeInTheDocument();
+    expect(screen.getByText("O Points")).toBeInTheDocument(); // In offense tab by default
   });
 
   it("hides team statistics when no completed points", async () => {

@@ -22,6 +22,7 @@ export const queryKeys = {
   teamStrategyStatistics: (teamId: number) => ["teamStrategyStatistics", teamId] as const,
   teams: ["teams"] as const,
   team: (teamId: number) => ["team", teamId] as const,
+  player: (playerId: number) => ["player", playerId] as const,
   teamLines: (teamId: number) => ["lines", "team", teamId] as const,
   lines: ["lines"] as const,
   line: (lineId: number) => ["line", lineId] as const,

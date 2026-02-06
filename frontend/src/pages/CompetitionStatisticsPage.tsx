@@ -127,7 +127,16 @@ export default function CompetitionStatisticsPage() {
 
       {teamStats && <TeamStatistics teamStats={teamStats} />}
       {strategyStats && <StrategyStatistics strategyStats={strategyStats} />}
-      {playerStats && <PlayerStatistics playerStats={playerStats} />}
+      {playerStats && (
+        <PlayerStatistics
+          playerStats={playerStats}
+          onPlayerClick={(playerId) =>
+            navigate(
+              `/statistics/players/${playerId}?scope=competition&competitionId=${competitionIdNumber}`
+            )
+          }
+        />
+      )}
     </Container>
   );
 }
