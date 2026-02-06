@@ -244,4 +244,24 @@ describe("EditPlayerModal", () => {
     const numberInput = screen.getByLabelText(/jersey number/i) as HTMLInputElement;
     expect(numberInput.value).toBe("");
   });
+
+  it("calls onViewStatistics when clicking view statistics button", async () => {
+    const user = userEvent.setup();
+    const onViewStatistics = vi.fn();
+
+    renderWithQueryClient(
+      <EditPlayerModal
+        isOpen={true}
+        onClose={vi.fn()}
+        player={mockPlayer}
+        teamId={1}
+        onViewStatistics={onViewStatistics}
+      />
+    );
+
+    const viewStatsButton = screen.getByRole("button", { name: /view statistics/i });
+    await user.click(viewStatsButton);
+
+    expect(onViewStatistics).toHaveBeenCalledWith(mockPlayer);
+  });
 });

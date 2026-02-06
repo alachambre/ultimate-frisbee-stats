@@ -6,7 +6,8 @@
     },
     "edit": {
       "title": "Modifier le joueur",
-      "delete": "Supprimer le joueur"
+      "delete": "Supprimer le joueur",
+      "viewStatistics": "Voir les statistiques"
     },
     "addMultiple": {
       "title": "Ajouter des joueurs",
@@ -24,7 +25,10 @@
   },
   "card": {
     "male": "H",
-    "female": "F"
+    "female": "F",
+    "openPlayer": "Ouvrir {{playerName}}",
+    "editPlayer": "Modifier le joueur",
+    "removePlayer": "Retirer le joueur"
   },
   "empty": {
     "noPlayers": "Aucun joueur pour le moment",

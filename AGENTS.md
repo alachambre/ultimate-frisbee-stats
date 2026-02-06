@@ -28,8 +28,10 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/services/` API layer (per-entity)
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
+- Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
 - Statistics UI routes: game + competition + team scopes should stay aligned with backend statistics endpoints
 - Player-focused statistics route is `statistics/players/:playerId` with query scope context (`scope=team|competition|game` + related ids) and reuses existing scoped stats endpoints client-side
+- Team roster cards on `TeamDetailPage` are click-to-edit; player statistics access is available from `EditPlayerModal` (team scope)
 - Statistics export UI should expose CSV mode selection (`summary` vs `full`) and pass it to backend `detail` query param
 
 **Backend**

@@ -10,6 +10,7 @@ import {
   Alert,
   Box,
 } from "@mui/material";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import { updatePlayer, deletePlayer } from "../../services";
 import PlayerForm from "../players/PlayerForm";
 import type { Player, Gender } from "../../types";
@@ -20,6 +21,7 @@ interface EditPlayerModalProps {
   onClose: () => void;
   player: Player;
   teamId: number;
+  onViewStatistics?: (player: Player) => void;
 }
 
 export default function EditPlayerModal({
@@ -27,6 +29,7 @@ export default function EditPlayerModal({
   onClose,
   player,
   teamId,
+  onViewStatistics,
 }: EditPlayerModalProps) {
   const { t } = useTranslation(["players", "common"]);
   const [playerName, setPlayerName] = useState(player.name);
@@ -77,6 +80,12 @@ export default function EditPlayerModal({
     updateMutation.reset();
     deleteMutation.reset();
     onClose();
+  };
+
+  const handleViewStatistics = () => {
+    if (!onViewStatistics) return;
+    onViewStatistics(player);
+    handleClose();
   };
 
   if (showDeleteConfirm) {
@@ -149,19 +158,33 @@ export default function EditPlayerModal({
             color="error"
             disabled={updateMutation.isPending}
             sx={{
-              order: { xs: 3, sm: 1 },
+              order: { xs: 4, sm: 1 },
               width: { xs: "100%", sm: "auto" },
             }}
           >
             {t("common:action.delete")} Player
           </Button>
+          {onViewStatistics && (
+            <Button
+              onClick={handleViewStatistics}
+              startIcon={<BarChartIcon />}
+              color="primary"
+              disabled={updateMutation.isPending}
+              sx={{
+                order: { xs: 3, sm: 2 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
+              {t("players:modal.edit.viewStatistics")}
+            </Button>
+          )}
           <Box
             sx={{
               display: "flex",
               flexDirection: { xs: "column", sm: "row" },
               gap: 1,
               width: { xs: "100%", sm: "auto" },
-              order: { xs: 1, sm: 2 },
+              order: { xs: 1, sm: 3 },
             }}
           >
             <Button

@@ -6,7 +6,8 @@
     },
     "edit": {
       "title": "Edit Player",
-      "delete": "Delete Player"
+      "delete": "Delete Player",
+      "viewStatistics": "View Statistics"
     },
     "addMultiple": {
       "title": "Add Players",
@@ -24,7 +25,10 @@
   },
   "card": {
     "male": "M",
-    "female": "W"
+    "female": "W",
+    "openPlayer": "Open {{playerName}}",
+    "editPlayer": "Edit player",
+    "removePlayer": "Remove player"
   },
   "empty": {
     "noPlayers": "No players yet",

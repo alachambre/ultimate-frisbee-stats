@@ -38,7 +38,7 @@ describe("PlayerCard", () => {
   it("does not display number when player has none", () => {
     render(<PlayerCard player={mockPlayerWithoutNumber} onEdit={vi.fn()} />);
 
-    expect(screen.queryByText(/#\d+/)).not.toBeInTheDocument();
+    expect(screen.getByText("_")).toBeInTheDocument();
   });
 
   it("calls onEdit when edit button is clicked", async () => {
@@ -57,5 +57,16 @@ describe("PlayerCard", () => {
 
     const editButton = screen.getByRole("button", { name: /edit player/i });
     expect(editButton).toBeInTheDocument();
+  });
+
+  it("calls onCardClick when card is clicked", async () => {
+    const user = userEvent.setup();
+    const onCardClick = vi.fn();
+    render(<PlayerCard player={mockMalePlayer} onCardClick={onCardClick} />);
+
+    const playerButton = screen.getByRole("button", { name: /open john doe/i });
+    await user.click(playerButton);
+
+    expect(onCardClick).toHaveBeenCalledTimes(1);
   });
 });

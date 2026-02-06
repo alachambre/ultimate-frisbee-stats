@@ -15,7 +15,6 @@ import {
   Alert,
   Divider,
   Grid,
-  alpha,
   IconButton,
   Select,
   MenuItem,
@@ -41,6 +40,8 @@ import LivePointTracker from "../components/points/LivePointTracker";
 import PointHistoryList from "../components/points/PointHistoryList";
 import EditPointDialog from "../components/modals/EditPointDialog";
 import PlayersGrid from "../components/players/PlayersGrid";
+import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
+import RosterGenderPanel from "../components/players/RosterGenderPanel";
 import GamePlayerStatsCard from "../components/players/GamePlayerStatsCard";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
@@ -176,6 +177,21 @@ export default function GameDetailPage() {
     const womenIds = game?.players.filter((p) => p.gender === "W").map((p) => p.id) || [];
     return sortStats(liveStats.filter((s) => womenIds.includes(s.player_id)));
   }, [liveStats, game?.players, sortStats]);
+
+  const menPlayers = useMemo(
+    () =>
+      (game?.players ?? [])
+        .filter((player) => player.gender === "M")
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [game?.players]
+  );
+  const womenPlayers = useMemo(
+    () =>
+      (game?.players ?? [])
+        .filter((player) => player.gender === "W")
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [game?.players]
+  );
 
   if (isLoading) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -423,6 +439,15 @@ export default function GameDetailPage() {
             </Box>
           </DialogTitle>
           <DialogContent>
+            <RosterSummaryHeader
+              title={t("games:detail.roster")}
+              subtitle={t("games:detail.rosterSection", { count: game.players.length })}
+              totalLabel={t("games:detail.totalPlayers", { count: game.players.length })}
+              menLabel={t("games:detail.menCount", { count: menPlayers.length })}
+              womenLabel={t("games:detail.womenCount", { count: womenPlayers.length })}
+              showBorder
+            />
+
             {/* Controls Row - Sorting + Add Players Button */}
             <Box mt={2} mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
               {/* Sorting Controls - show when we have stats to display */}
@@ -466,32 +491,14 @@ export default function GameDetailPage() {
             <Grid container spacing={3}>
               {/* Men Column */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    borderColor: "primary.main",
-                    borderWidth: 2,
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.primary.main, 0.02),
-                  }}
+                <RosterGenderPanel
+                  label={t("games:detail.men")}
+                  countLabel={t("games:detail.playerGroupCount", { count: menPlayers.length })}
+                  accent="men"
+                  emptyLabel={t("players:empty.noPlayers")}
+                  hasContent={menPlayers.length > 0}
                 >
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    sx={{
-                      color: "primary.main",
-                      fontWeight: "bold",
-                      mb: 2,
-                    }}
-                  >
-                    {t("games:detail.men")} ({game.players.filter((p) => p.gender === "M").length})
-                  </Typography>
-                  {game.players.filter((p) => p.gender === "M").length === 0 ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      {t("players:empty.noPlayers")}
-                    </Typography>
-                  ) : (game.status === "started" || game.status === "ended") && sortedMenStats.length > 0 ? (
+                  {(game.status === "started" || game.status === "ended") && sortedMenStats.length > 0 ? (
                     <Grid container spacing={2}>
                       {sortedMenStats.map((stats) => (
                         <Grid size={{ xs: 6 }} key={stats.player_id}>
@@ -514,43 +521,23 @@ export default function GameDetailPage() {
                     </Grid>
                   ) : (
                     <PlayersGrid
-                      players={game.players
-                        .filter((p) => p.gender === "M")
-                        .sort((a, b) => a.name.localeCompare(b.name))}
+                      players={menPlayers}
                       onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
                     />
                   )}
-                </Paper>
+                </RosterGenderPanel>
               </Grid>
 
               {/* Women Column */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    borderColor: "secondary.main",
-                    borderWidth: 2,
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.secondary.main, 0.02),
-                  }}
+                <RosterGenderPanel
+                  label={t("games:detail.women")}
+                  countLabel={t("games:detail.playerGroupCount", { count: womenPlayers.length })}
+                  accent="women"
+                  emptyLabel={t("players:empty.noPlayers")}
+                  hasContent={womenPlayers.length > 0}
                 >
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    sx={{
-                      color: "secondary.main",
-                      fontWeight: "bold",
-                      mb: 2,
-                    }}
-                  >
-                    {t("games:detail.women")} ({game.players.filter((p) => p.gender === "W").length})
-                  </Typography>
-                  {game.players.filter((p) => p.gender === "W").length === 0 ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      {t("players:empty.noPlayers")}
-                    </Typography>
-                  ) : (game.status === "started" || game.status === "ended") && sortedWomenStats.length > 0 ? (
+                  {(game.status === "started" || game.status === "ended") && sortedWomenStats.length > 0 ? (
                     <Grid container spacing={2}>
                       {sortedWomenStats.map((stats) => (
                         <Grid size={{ xs: 6 }} key={stats.player_id}>
@@ -573,13 +560,11 @@ export default function GameDetailPage() {
                     </Grid>
                   ) : (
                     <PlayersGrid
-                      players={game.players
-                        .filter((p) => p.gender === "W")
-                        .sort((a, b) => a.name.localeCompare(b.name))}
+                      players={womenPlayers}
                       onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
                     />
                   )}
-                </Paper>
+                </RosterGenderPanel>
               </Grid>
             </Grid>
           </DialogContent>

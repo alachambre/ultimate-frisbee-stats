@@ -15,9 +15,7 @@ import {
   Alert,
   Chip,
   Collapse,
-  IconButton,
   Grid,
-  alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -26,8 +24,6 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EventIcon from "@mui/icons-material/Event";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import {
   getCompetition,
   deleteCompetition,
@@ -37,6 +33,8 @@ import {
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
 import PlayersGrid from "../components/players/PlayersGrid";
+import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
+import RosterGenderPanel from "../components/players/RosterGenderPanel";
 import EmptyPlayersState from "../components/players/EmptyPlayersState";
 import GamesGrid from "../components/games/GamesGrid";
 import EmptyGamesState from "../components/games/EmptyGamesState";
@@ -128,6 +126,13 @@ export default function CompetitionDetailPage() {
     return `${start.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })} - ${end.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })}`;
   };
 
+  const menPlayers = competition.players
+    .filter((player) => player.gender === "M")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const womenPlayers = competition.players
+    .filter((player) => player.gender === "W")
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
@@ -204,36 +209,41 @@ export default function CompetitionDetailPage() {
 
       {/* Roster Section */}
       <Paper sx={{ mb: 3 }}>
-        <Box
-          p={3}
-          borderBottom={showRoster ? "1px solid" : "none"}
-          borderColor="divider"
-        >
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="h6">
-                {t("competitions:detail.rosterCount", { count: competition.players.length })}
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => setShowRoster(!showRoster)}
-                aria-label={showRoster ? t("competitions:detail.hideRoster") : t("competitions:detail.showRoster")}
-              >
-                {showRoster ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<PersonAddIcon />}
-              onClick={() => setIsAddPlayersModalOpen(true)}
-            >
-              {t("competitions:detail.addPlayers")}
-            </Button>
-          </Box>
-        </Box>
+        <RosterSummaryHeader
+          title={t("competitions:detail.roster")}
+          subtitle={t("competitions:detail.rosterSummary", { count: competition.players.length })}
+          totalLabel={t("competitions:detail.totalPlayers", { count: competition.players.length })}
+          menLabel={t("competitions:detail.menCount", { count: menPlayers.length })}
+          womenLabel={t("competitions:detail.womenCount", { count: womenPlayers.length })}
+          isCollapsible
+          isExpanded={showRoster}
+          onToggle={() => setShowRoster(!showRoster)}
+          toggleAriaLabel={showRoster ? t("competitions:detail.hideRoster") : t("competitions:detail.showRoster")}
+          showBorder={showRoster}
+        />
 
         <Collapse in={showRoster}>
           <Box p={3}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems={{ xs: "stretch", sm: "center" }}
+              gap={1.5}
+              mb={2}
+              flexDirection={{ xs: "column", sm: "row" }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                {t("competitions:detail.rosterManageHint")}
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<PersonAddIcon />}
+                onClick={() => setIsAddPlayersModalOpen(true)}
+                sx={{ alignSelf: { xs: "flex-start", sm: "auto" } }}
+              >
+                {t("competitions:detail.addPlayers")}
+              </Button>
+            </Box>
             {competition.players.length === 0 ? (
               <EmptyPlayersState
                 onAddClick={() => setIsAddPlayersModalOpen(true)}
@@ -242,74 +252,34 @@ export default function CompetitionDetailPage() {
               <Grid container spacing={3}>
                 {/* Men Column */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      borderColor: "primary.main",
-                      borderWidth: 2,
-                      backgroundColor: (theme) =>
-                        alpha(theme.palette.primary.main, 0.02),
-                    }}
+                  <RosterGenderPanel
+                    label={t("competitions:detail.men")}
+                    countLabel={t("competitions:detail.playerGroupCount", { count: menPlayers.length })}
+                    accent="men"
+                    emptyLabel={t("competitions:detail.noMalePlayers")}
+                    hasContent={menPlayers.length > 0}
                   >
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        color: "primary.main",
-                        fontWeight: "bold",
-                        mb: 2
-                      }}
-                    >
-                      {t("competitions:detail.men")} ({competition.players.filter(p => p.gender === "M").length})
-                    </Typography>
-                    {competition.players.filter(p => p.gender === "M").length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        {t("competitions:detail.noMalePlayers")}
-                      </Typography>
-                    ) : (
-                      <PlayersGrid
-                        players={competition.players.filter(p => p.gender === "M").sort((a, b) => a.name.localeCompare(b.name))}
-                        onDeletePlayer={handleRemovePlayer}
-                      />
-                    )}
-                  </Paper>
+                    <PlayersGrid
+                      players={menPlayers}
+                      onDeletePlayer={handleRemovePlayer}
+                    />
+                  </RosterGenderPanel>
                 </Grid>
 
                 {/* Women Column */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      borderColor: "secondary.main",
-                      borderWidth: 2,
-                      backgroundColor: (theme) =>
-                        alpha(theme.palette.secondary.main, 0.02),
-                    }}
+                  <RosterGenderPanel
+                    label={t("competitions:detail.women")}
+                    countLabel={t("competitions:detail.playerGroupCount", { count: womenPlayers.length })}
+                    accent="women"
+                    emptyLabel={t("competitions:detail.noFemalePlayers")}
+                    hasContent={womenPlayers.length > 0}
                   >
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{
-                        color: "secondary.main",
-                        fontWeight: "bold",
-                        mb: 2
-                      }}
-                    >
-                      {t("competitions:detail.women")} ({competition.players.filter(p => p.gender === "W").length})
-                    </Typography>
-                    {competition.players.filter(p => p.gender === "W").length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        {t("competitions:detail.noFemalePlayers")}
-                      </Typography>
-                    ) : (
-                      <PlayersGrid
-                        players={competition.players.filter(p => p.gender === "W").sort((a, b) => a.name.localeCompare(b.name))}
-                        onDeletePlayer={handleRemovePlayer}
-                      />
-                    )}
-                  </Paper>
+                    <PlayersGrid
+                      players={womenPlayers}
+                      onDeletePlayer={handleRemovePlayer}
+                    />
+                  </RosterGenderPanel>
                 </Grid>
               </Grid>
             )}

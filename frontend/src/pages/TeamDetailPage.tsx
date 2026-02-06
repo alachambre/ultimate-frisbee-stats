@@ -14,22 +14,20 @@ import {
   DialogActions,
   Alert,
   Grid,
-  alpha,
   Collapse,
-  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { getTeam, deleteTeam } from "../services";
 import { getLines, deleteLine } from "../services/lines";
 import type { Player, LineWithPlayers } from "../types";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
 import PlayersGrid from "../components/players/PlayersGrid";
+import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
+import RosterGenderPanel from "../components/players/RosterGenderPanel";
 import EmptyPlayersState from "../components/players/EmptyPlayersState";
 import LinesGrid from "../components/lines/LinesGrid";
 import EmptyLinesState from "../components/lines/EmptyLinesState";
@@ -104,6 +102,17 @@ export default function TeamDetailPage() {
     }
   };
 
+  const menPlayers = team.players
+    .filter((player) => player.gender === "M")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const womenPlayers = team.players
+    .filter((player) => player.gender === "W")
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const handleViewPlayerStats = (player: Player) => {
+    navigate(`/statistics/players/${player.id}?scope=team&teamId=${team.id}`);
+  };
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Header */}
@@ -146,37 +155,42 @@ export default function TeamDetailPage() {
       </Box>
 
       {/* Players Section */}
-      <Paper>
-        <Box
-          p={3}
-          borderBottom={showPlayers ? "1px solid" : "none"}
-          borderColor="divider"
-        >
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="h6">
-                {t("teams:detail.roster")} ({team.players.length})
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => setShowPlayers(!showPlayers)}
-                aria-label={showPlayers ? "Hide players" : "Show players"}
-              >
-                {showPlayers ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
+      <Paper sx={{ overflow: "hidden" }}>
+        <RosterSummaryHeader
+          title={t("teams:detail.roster")}
+          subtitle={t("teams:detail.rosterSummary", { count: team.players.length })}
+          totalLabel={t("teams:detail.totalPlayers", { count: team.players.length })}
+          menLabel={t("teams:detail.menCount", { count: menPlayers.length })}
+          womenLabel={t("teams:detail.womenCount", { count: womenPlayers.length })}
+          isCollapsible
+          isExpanded={showPlayers}
+          onToggle={() => setShowPlayers(!showPlayers)}
+          toggleAriaLabel={showPlayers ? t("teams:detail.hidePlayers") : t("teams:detail.showPlayers")}
+          showBorder={showPlayers}
+        />
+
+        <Collapse in={showPlayers}>
+          <Box p={3}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems={{ xs: "stretch", sm: "center" }}
+            gap={1.5}
+            mb={2}
+            flexDirection={{ xs: "column", sm: "row" }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {t("teams:detail.rosterTapHint")}
+            </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setIsAddPlayerModalOpen(true)}
+              sx={{ alignSelf: { xs: "flex-start", sm: "auto" } }}
             >
               {t("teams:detail.addPlayer")}
             </Button>
           </Box>
-        </Box>
-
-        <Collapse in={showPlayers}>
-          <Box p={3}>
           {team.players.length === 0 ? (
             <EmptyPlayersState
               onAddClick={() => setIsAddPlayerModalOpen(true)}
@@ -185,81 +199,40 @@ export default function TeamDetailPage() {
             <Grid container spacing={3}>
               {/* Men Column */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    borderColor: "primary.main",
-                    borderWidth: 2,
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.primary.main, 0.02),
-                  }}
+                <RosterGenderPanel
+                  label={t("common:labels.male")}
+                  countLabel={t("teams:detail.playerGroupCount", { count: menPlayers.length })}
+                  accent="men"
+                  emptyLabel={t("players:empty.noPlayers")}
+                  hasContent={menPlayers.length > 0}
                 >
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    sx={{
-                      color: "primary.main",
-                      fontWeight: "bold",
-                      mb: 2
-                    }}
-                  >
-                    {t("common:labels.male")} ({team.players.filter(p => p.gender === "M").length})
-                  </Typography>
-                  {team.players.filter(p => p.gender === "M").length === 0 ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      {t("players:empty.noPlayers")}
-                    </Typography>
-                  ) : (
-                    <PlayersGrid
-                      players={team.players.filter(p => p.gender === "M").sort((a, b) => a.name.localeCompare(b.name))}
-                      onEditPlayer={setEditingPlayer}
-                    />
-                  )}
-                </Paper>
+                  <PlayersGrid
+                    players={menPlayers}
+                    onPlayerClick={setEditingPlayer}
+                  />
+                </RosterGenderPanel>
               </Grid>
 
               {/* Women Column */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2.5,
-                    borderColor: "secondary.main",
-                    borderWidth: 2,
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.secondary.main, 0.02),
-                  }}
+                <RosterGenderPanel
+                  label={t("common:labels.female")}
+                  countLabel={t("teams:detail.playerGroupCount", { count: womenPlayers.length })}
+                  accent="women"
+                  emptyLabel={t("players:empty.noPlayers")}
+                  hasContent={womenPlayers.length > 0}
                 >
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    sx={{
-                      color: "secondary.main",
-                      fontWeight: "bold",
-                      mb: 2
-                    }}
-                  >
-                    {t("common:labels.female")} ({team.players.filter(p => p.gender === "W").length})
-                  </Typography>
-                  {team.players.filter(p => p.gender === "W").length === 0 ? (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      {t("players:empty.noPlayers")}
-                    </Typography>
-                  ) : (
-                    <PlayersGrid
-                      players={team.players.filter(p => p.gender === "W").sort((a, b) => a.name.localeCompare(b.name))}
-                      onEditPlayer={setEditingPlayer}
-                    />
-                  )}
-                </Paper>
+                  <PlayersGrid
+                    players={womenPlayers}
+                    onPlayerClick={setEditingPlayer}
+                  />
+                </RosterGenderPanel>
               </Grid>
             </Grid>
           )}
           </Box>
         </Collapse>
       </Paper>
-
       {/* Lines Section */}
       <Paper sx={{ mt: 3 }}>
         <Box p={3} borderBottom="1px solid" borderColor="divider">
@@ -338,6 +311,7 @@ export default function TeamDetailPage() {
           onClose={() => setEditingPlayer(null)}
           player={editingPlayer}
           teamId={Number(teamId)}
+          onViewStatistics={handleViewPlayerStats}
         />
       )}
 

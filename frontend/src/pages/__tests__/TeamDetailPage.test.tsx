@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
 import TeamDetailPage from "../TeamDetailPage";
+
+const mockUseNavigate = vi.fn();
 
 // Mock useParams to provide teamId
 vi.mock("react-router-dom", async () => {
@@ -9,12 +11,14 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useParams: () => ({ teamId: "1" }),
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mockUseNavigate,
   };
 });
 
 describe("TeamDetailPage - Player Management", () => {
   beforeEach(async () => {
+    mockUseNavigate.mockClear();
+
     // Create a test team before each test
     const response = await fetch("http://localhost:8000/teams", {
       method: "POST",
@@ -43,10 +47,11 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Test Team")).toBeInTheDocument();
     });
 
-    // Click "Add Player" button on the page (not in a dialog)
-    const addButtons = screen.getAllByRole("button", { name: /add player/i });
-    // The first one should be the page button, not the modal one
-    await user.click(addButtons[0]);
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    await user.click(expandButton);
+
+    const addButton = await screen.findByRole("button", { name: /add player/i });
+    await user.click(addButton);
 
     // Modal should open
     await waitFor(() => {
@@ -91,9 +96,11 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Test Team")).toBeInTheDocument();
     });
 
-    // Add a player first
-    const addButtons = screen.getAllByRole("button", { name: /add player/i });
-    await user.click(addButtons[0]);
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    await user.click(expandButton);
+
+    const addButton = await screen.findByRole("button", { name: /add player/i });
+    await user.click(addButton);
 
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -122,15 +129,8 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
 
-    // Expand players section if collapsed
-    const expandButton = screen.getByRole("button", { name: /show players/i });
-    if (expandButton) {
-      await user.click(expandButton);
-    }
-
-    // Click edit button (IconButton with EditIcon)
-    const editButton = await screen.findByRole("button", { name: /edit player/i });
-    await user.click(editButton);
+    const playerCard = await screen.findByRole("button", { name: /open jane smith/i });
+    await user.click(playerCard);
 
     // Edit modal should open
     await waitFor(() => {
@@ -166,9 +166,11 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Test Team")).toBeInTheDocument();
     });
 
-    // Add a player first
-    const addButtons = screen.getAllByRole("button", { name: /add player/i });
-    await user.click(addButtons[0]);
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    await user.click(expandButton);
+
+    const addButton = await screen.findByRole("button", { name: /add player/i });
+    await user.click(addButton);
 
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -197,15 +199,8 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Bob Johnson")).toBeInTheDocument();
     });
 
-    // Expand players section if collapsed
-    const expandButton = screen.getByRole("button", { name: /show players/i });
-    if (expandButton) {
-      await user.click(expandButton);
-    }
-
-    // Click edit button to open edit modal
-    const editButton = await screen.findByRole("button", { name: /edit player/i });
-    await user.click(editButton);
+    const playerCard = await screen.findByRole("button", { name: /open bob johnson/i });
+    await user.click(playerCard);
 
     // Click delete button in the edit modal
     await waitFor(() => {
@@ -230,5 +225,37 @@ describe("TeamDetailPage - Player Management", () => {
 
     // Empty state should appear
     expect(screen.getByText(/no players yet/i)).toBeInTheDocument();
+  });
+
+  it("navigates to player statistics from player edit modal", async () => {
+    const user = userEvent.setup();
+
+    await fetch("http://localhost:8000/players", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        team_id: 1,
+        name: "Stats Player",
+        number: 12,
+        gender: "M",
+      }),
+    });
+
+    render(<TeamDetailPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Team")).toBeInTheDocument();
+    });
+
+    const expandButton = screen.getByRole("button", { name: /show players/i });
+    await user.click(expandButton);
+
+    const playerCard = await screen.findByRole("button", { name: /open stats player/i });
+    await user.click(playerCard);
+
+    const statsButton = await screen.findByRole("button", { name: /view statistics/i });
+    await user.click(statsButton);
+
+    expect(mockUseNavigate).toHaveBeenCalledWith("/statistics/players/1?scope=team&teamId=1");
   });
 });

@@ -40,14 +40,18 @@ describe("CompetitionDetailPage", () => {
   });
 
   it("shows empty state when roster has no players", async () => {
+    const user = userEvent.setup();
     render(<CompetitionDetailPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Test Competition")).toBeInTheDocument();
     });
 
+    const expandRosterButton = screen.getByRole("button", { name: /show roster/i });
+    await user.click(expandRosterButton);
+
     expect(screen.getByText(/no players yet/i)).toBeInTheDocument();
-    expect(screen.getByText("Roster (0)")).toBeInTheDocument();
+    expect(screen.getByText(/0 player(s)? registered/i)).toBeInTheDocument();
   });
 
   it("shows empty state when competition has no games", async () => {
@@ -155,13 +159,14 @@ describe("CompetitionDetailPage", () => {
     });
 
     // Initially roster should be empty
-    expect(screen.getByText("Roster (0)")).toBeInTheDocument();
+    expect(screen.getByText(/0 player(s)? registered/i)).toBeInTheDocument();
+
+    const expandRosterButton = screen.getByRole("button", { name: /show roster/i });
+    await user.click(expandRosterButton);
 
     // Click "Add Players" button
-    const addPlayersButtons = screen.getAllByRole("button", {
-      name: /add players/i,
-    });
-    await user.click(addPlayersButtons[0]);
+    const addPlayersButton = screen.getByRole("button", { name: /add players/i });
+    await user.click(addPlayersButton);
 
     // Modal should open
     await waitFor(() => {
@@ -187,7 +192,7 @@ describe("CompetitionDetailPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Roster (1)")).toBeInTheDocument();
+      expect(screen.getByText(/1 player registered/i)).toBeInTheDocument();
     });
   });
 

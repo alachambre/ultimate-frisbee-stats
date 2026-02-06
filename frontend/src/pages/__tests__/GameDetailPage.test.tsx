@@ -264,7 +264,9 @@ describe("GameDetailPage", () => {
     // Dialog should open
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
-      expect(screen.getByText(/players \(\d+\)/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /players \(\d+\)/i, level: 2 })
+      ).toBeInTheDocument();
     });
 
     // Click Add Players button in the dialog
@@ -312,42 +314,42 @@ describe("GameDetailPage", () => {
 
     // Wait for dialog to open and players to load
     await waitFor(() => {
-      const playersSection = screen.getByText(/players \(\d+\)/i);
+      const playersSection = screen.getByRole("heading", {
+        name: /players \(\d+\)/i,
+        level: 2,
+      });
       expect(playersSection).toBeInTheDocument();
     });
 
     // If there are players, try to remove one
-    const playersText = screen.getByText(/players \(\d+\)/i).textContent;
+    const playersText = screen.getByRole("heading", {
+      name: /players \(\d+\)/i,
+      level: 2,
+    }).textContent;
     const playerCount = parseInt(playersText?.match(/\d+/)?.[0] || "0");
 
     if (playerCount > 0) {
-      // Find a player card and click it
-      const menSection = screen.queryByText(/men \(\d+\)/i);
-      const womenSection = screen.queryByText(/women \(\d+\)/i);
+      // Click on first available remove button
+      const removeButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.getAttribute("aria-label")?.toLowerCase().startsWith("remove "));
 
-      if (menSection || womenSection) {
-        // Click on first available player
-        const playerCards = screen.getAllByRole("button").filter(btn =>
-          btn.getAttribute("aria-label")?.includes("edit player")
-        );
+      if (removeButtons.length > 0) {
+        await user.click(removeButtons[0]);
 
-        if (playerCards.length > 0) {
-          await user.click(playerCards[0]);
+        // Confirmation dialog should appear
+        await waitFor(() => {
+          expect(screen.getByText(/remove player from game\?/i)).toBeInTheDocument();
+        });
 
-          // Confirmation dialog should appear
-          await waitFor(() => {
-            expect(screen.getByText(/remove player from game\?/i)).toBeInTheDocument();
-          });
+        // Confirm removal
+        const confirmButton = screen.getByRole("button", { name: "Remove Player" });
+        await user.click(confirmButton);
 
-          // Confirm removal
-          const confirmButton = screen.getByRole("button", { name: "Remove Player" });
-          await user.click(confirmButton);
-
-          // Dialog should close
-          await waitFor(() => {
-            expect(screen.queryByText(/remove player from game\?/i)).not.toBeInTheDocument();
-          });
-        }
+        // Dialog should close
+        await waitFor(() => {
+          expect(screen.queryByText(/remove player from game\?/i)).not.toBeInTheDocument();
+        });
       }
     }
   });
@@ -371,13 +373,15 @@ describe("GameDetailPage", () => {
     // Dialog should open with player sections
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
-      expect(screen.getByText(/players \(\d+\)/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /players \(\d+\)/i, level: 2 })
+      ).toBeInTheDocument();
     });
 
     // Gender sections should appear - check that at least one of each exists
     await waitFor(() => {
-      expect(screen.getAllByText(/men \(\d+\)/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/women \(\d+\)/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/^men$/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/^women$/i).length).toBeGreaterThan(0);
     });
 
     // Close dialog
