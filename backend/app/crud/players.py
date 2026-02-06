@@ -27,12 +27,13 @@ def get_players_by_team(db: Session, team_id: int) -> List[models.Player]:
 def update_player(db: Session, player_id: int, player_update: schemas.PlayerUpdate) -> Optional[models.Player]:
     db_player = get_player(db, player_id)
     if db_player:
-        if player_update.name is not None:
-            db_player.name = player_update.name
-        if player_update.number is not None:
-            db_player.number = player_update.number
-        if player_update.gender is not None:
-            db_player.gender = player_update.gender
+        update_data = player_update.model_dump(exclude_unset=True)
+        if "name" in update_data:
+            db_player.name = update_data["name"]
+        if "number" in update_data:
+            db_player.number = update_data["number"]
+        if "gender" in update_data:
+            db_player.gender = update_data["gender"]
         db.commit()
         db.refresh(db_player)
     return db_player

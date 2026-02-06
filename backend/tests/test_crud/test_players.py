@@ -85,6 +85,21 @@ def test_update_player(db_session, sample_players):
     assert fetched_player.number == 99
 
 
+def test_update_player_can_clear_number(db_session, sample_players):
+    """Test clearing player jersey number with explicit null update."""
+    player = sample_players[0]
+    assert player.number is not None
+
+    update_data = PlayerUpdate(number=None)
+    updated_player = players.update_player(db_session, player.id, update_data)
+
+    assert updated_player is not None
+    assert updated_player.number is None
+
+    fetched_player = players.get_player(db_session, player.id)
+    assert fetched_player.number is None
+
+
 def test_update_player_not_found(db_session):
     """Test updating a non-existent player"""
     update_data = PlayerUpdate(name="Updated Name", number=42)

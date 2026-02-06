@@ -81,6 +81,22 @@ def test_update_player_api(client, sample_players):
     assert data["number"] == 99
 
 
+def test_update_player_clear_number_api(client, sample_players):
+    """Test PUT /players/{player_id} can clear jersey number with null."""
+    player = sample_players[0]
+    assert player.number is not None
+
+    response = client.put(
+        f"/players/{player.id}",
+        json={"number": None}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == player.id
+    assert data["number"] is None
+
+
 def test_update_player_not_found_api(client):
     """Test PUT /players/{player_id} with invalid ID"""
     response = client.put("/players/999", json={"name": "Test", "number": 1})
