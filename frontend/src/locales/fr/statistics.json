@@ -6,7 +6,9 @@
     "competitionTitle": "Statistiques de la Compétition",
     "backToTeam": "Retour à l'Équipe",
     "backToCompetition": "Retour à la Compétition",
-    "exportCSV": "Exporter CSV"
+    "exportCSV": "Exporter CSV",
+    "exportCsvSummary": "CSV résumé",
+    "exportCsvFull": "CSV détaillé"
   },
   "view": {
     "offense": "Attaque",

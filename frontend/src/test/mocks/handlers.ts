@@ -126,6 +126,20 @@ function buildEmptyStrategyStats(
   };
 }
 
+function buildCsvExportResponse(
+  scope: "game" | "competition" | "team",
+  id: number
+) {
+  const content = `${scope.toUpperCase()} STATISTICS\nid,${id}\n`;
+  return new HttpResponse(content, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${scope}-${id}-statistics.csv"`,
+    },
+  });
+}
+
 export const handlers = [
   // GET /teams - List all teams
   http.get(`${BASE_URL}/teams`, () => {
@@ -1389,5 +1403,39 @@ export const handlers = [
     }
 
     return HttpResponse.json(buildEmptyStrategyStats({ team_id: teamId }));
+  }),
+
+  // ============================================
+  // Export Endpoints
+  // ============================================
+
+  // GET /exports/games/:gameId/csv - Download game statistics CSV
+  http.get(`${BASE_URL}/exports/games/:gameId/csv`, ({ params }) => {
+    const gameId = Number(params.gameId);
+    const game = games.find((g) => g.id === gameId);
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+    return buildCsvExportResponse("game", gameId);
+  }),
+
+  // GET /exports/competitions/:competitionId/csv - Download competition statistics CSV
+  http.get(`${BASE_URL}/exports/competitions/:competitionId/csv`, ({ params }) => {
+    const competitionId = Number(params.competitionId);
+    const competition = competitions.find((c) => c.id === competitionId);
+    if (!competition) {
+      return HttpResponse.json({ detail: "Competition not found" }, { status: 404 });
+    }
+    return buildCsvExportResponse("competition", competitionId);
+  }),
+
+  // GET /exports/teams/:teamId/csv - Download team statistics CSV
+  http.get(`${BASE_URL}/exports/teams/:teamId/csv`, ({ params }) => {
+    const teamId = Number(params.teamId);
+    const team = teams.find((t) => t.id === teamId);
+    if (!team) {
+      return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+    }
+    return buildCsvExportResponse("team", teamId);
   }),
 ];

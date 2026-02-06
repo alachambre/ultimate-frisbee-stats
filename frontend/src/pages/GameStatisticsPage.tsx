@@ -12,17 +12,22 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import DownloadIcon from "@mui/icons-material/Download";
 import { useTranslation } from "react-i18next";
 import { getGame } from "../services/games";
-import { getLiveGameStatistics, getGameTeamStatistics, getGameStrategyStatistics } from "../services/statistics";
+import {
+  downloadGameStatisticsCSV,
+  getLiveGameStatistics,
+  getGameTeamStatistics,
+  getGameStrategyStatistics,
+  type StatisticsExportDetailMode,
+} from "../services/statistics";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import GameTimer from "../components/games/GameTimer";
-import { exportGameStatisticsToCSV } from "../utils/csvExport";
 import TeamStatistics from "../components/statistics/TeamStatistics";
 import StrategyStatistics from "../components/statistics/StrategyStatistics";
 import PlayerStatistics from "../components/statistics/PlayerStatistics";
+import StatisticsExportMenuButton from "../components/statistics/StatisticsExportMenuButton";
 import { queryKeys } from "../utils/queryKeys";
 
 export default function GameStatisticsPage() {
@@ -94,15 +99,14 @@ export default function GameStatisticsPage() {
     navigate(`/games/${gameId}`);
   };
 
-  const handleExportCSV = async () => {
-    if (!game || !teamStats || !playerStats) return;
+  const handleExportCSV = async (detailMode: StatisticsExportDetailMode) => {
+    if (!game || !gameIdValid) return;
 
     setIsExporting(true);
     try {
-      await exportGameStatisticsToCSV(game, teamStats, playerStats, strategyStats);
+      await downloadGameStatisticsCSV(gameIdNumber, detailMode);
     } catch (error) {
       console.error("Error exporting CSV:", error);
-      // Could add error notification here
     } finally {
       setIsExporting(false);
     }
@@ -114,21 +118,20 @@ export default function GameStatisticsPage() {
         title={`${game.team_name} vs ${game.opponent_name} - ${t("statistics:page.title")}`}
       />
 
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={handleBack}
         >
           {t("statistics:page.backToGame")}
         </Button>
-        <Button
-          variant="outlined"
-          startIcon={<DownloadIcon />}
-          onClick={handleExportCSV}
-          disabled={!game || !playerStats || isExporting}
-        >
-          {isExporting ? t("common:action.loading") : t("statistics:page.exportCSV")}
-        </Button>
+        <Box sx={{ ml: "auto" }}>
+          <StatisticsExportMenuButton
+            disabled={!game}
+            isExporting={isExporting}
+            onExport={handleExportCSV}
+          />
+        </Box>
       </Box>
 
       {/* Game Overview Section */}

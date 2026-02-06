@@ -5,7 +5,7 @@ import logging
 import os
 
 from app.database import init_db
-from app.routers import teams, players, games, points, competitions, lines, strategies, calls, turnovers, statistics
+from app.routers import teams, players, games, points, competitions, lines, strategies, calls, turnovers, statistics, exports
 from app.logging_config import setup_logging, get_logger
 
 # Initialize logging
@@ -92,3 +92,4 @@ app.include_router(strategies.router)
 app.include_router(calls.router)
 app.include_router(turnovers.router)
 app.include_router(statistics.router)
+app.include_router(exports.router)

@@ -6,7 +6,9 @@
     "competitionTitle": "Competition Statistics",
     "backToTeam": "Back to Team",
     "backToCompetition": "Back to Competition",
-    "exportCSV": "Export CSV"
+    "exportCSV": "Export CSV",
+    "exportCsvSummary": "Summary CSV",
+    "exportCsvFull": "Full CSV"
   },
   "view": {
     "offense": "Offense",

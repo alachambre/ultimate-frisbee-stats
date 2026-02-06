@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,21 +11,25 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "react-i18next";
 import { getCompetition } from "../services";
 import {
+  downloadCompetitionStatisticsCSV,
   getCompetitionPlayerStatistics,
   getCompetitionTeamStatistics,
   getCompetitionStrategyStatistics,
+  type StatisticsExportDetailMode,
 } from "../services/statistics";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import TeamStatistics from "../components/statistics/TeamStatistics";
 import StrategyStatistics from "../components/statistics/StrategyStatistics";
 import PlayerStatistics from "../components/statistics/PlayerStatistics";
+import StatisticsExportMenuButton from "../components/statistics/StatisticsExportMenuButton";
 import { queryKeys } from "../utils/queryKeys";
 
 export default function CompetitionStatisticsPage() {
   const { competitionId } = useParams<{ competitionId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation(["statistics", "common"]);
+  const [isExporting, setIsExporting] = useState(false);
   const competitionIdNumber = Number(competitionId);
   const competitionIdValid = Number.isFinite(competitionIdNumber);
 
@@ -90,14 +95,34 @@ export default function CompetitionStatisticsPage() {
     navigate(`/competitions/${competitionId}`);
   };
 
+  const handleExportCSV = async (detailMode: StatisticsExportDetailMode) => {
+    if (!competition || !competitionIdValid) return;
+
+    setIsExporting(true);
+    try {
+      await downloadCompetitionStatisticsCSV(competitionIdNumber, detailMode);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <PageHeader title={`${competition.name} - ${t("statistics:page.competitionTitle")}`} />
 
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
           {t("statistics:page.backToCompetition")}
         </Button>
+        <Box sx={{ ml: "auto" }}>
+          <StatisticsExportMenuButton
+            disabled={!competition}
+            isExporting={isExporting}
+            onExport={handleExportCSV}
+          />
+        </Box>
       </Box>
 
       {teamStats && <TeamStatistics teamStats={teamStats} />}
