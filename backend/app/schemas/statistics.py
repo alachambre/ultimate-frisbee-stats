@@ -12,7 +12,7 @@ class PlayerOffenseStats(BaseModel):
     points_lost: int
     hold_rate: float
     points_won_no_turnover: int
-    clean_hold_rate: float  # points_won_no_turnover / points_won (only won points)
+    clean_hold_rate: float  # points_won_no_turnover / points_played
 
     class Config:
         from_attributes = True
@@ -27,7 +27,7 @@ class PlayerDefenseStats(BaseModel):
     points_with_turnover: int
     turnover_rate: float  # points_with_turnover / points_played
     points_won_no_turnover: int
-    clean_break_rate: float  # points_won_no_turnover / points_won (only won points)
+    clean_break_rate: float  # points_won_no_turnover / points_played
     points_lost_no_turnover: int
 
     class Config:
@@ -84,7 +84,6 @@ class DefenseStats(BaseModel):
     points_won_no_turnover: int
     clean_break_rate: float
     points_lost_no_turnover: int  # opponent scored without turnover
-    hold_rate: float  # opponent didn't score on defense (inverse of break_rate)
     pull_stats: PullStats
 
     class Config:

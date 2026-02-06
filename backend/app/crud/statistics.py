@@ -38,8 +38,8 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     - player_number: int
     - points_played: int (number of completed points)
     - effective_time_seconds: int (total playing time minus call durations)
-    - offense: dict (points_played, points_won, points_lost, win_rate, points_won_no_turnover, clean_point_rate)
-    - defense: dict (points_played, points_won, points_lost, win_rate, points_with_turnover, turnover_rate, points_won_no_turnover, clean_break_rate, points_lost_no_turnover)
+    - offense: dict (points_played, points_won, points_lost, hold_rate, points_won_no_turnover, clean_hold_rate)
+    - defense: dict (points_played, points_won, points_lost, break_rate, points_with_turnover, turnover_rate, points_won_no_turnover, clean_break_rate, points_lost_no_turnover)
     """
     # Get the game to verify it exists
     game = get_game(db, game_id)

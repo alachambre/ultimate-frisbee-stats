@@ -99,7 +99,7 @@ All the points bellow should be available at game level / competition level / ge
 ### Offense
 
 - percentage of point scored against all points played (by the player) when starting in offense
-- percentage of point scored without turn against all points scored (with the player playing) when starting in offense
+- percentage of point scored without turn against all points played (with the player playing) when starting in offense
 - percentage of point lost against all points played (by the player) when starting in offense
 
 ### Defense

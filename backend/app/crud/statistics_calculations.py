@@ -281,7 +281,6 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
     defense_break_rate = defense_won / defense_started if defense_started > 0 else 0.0
     defense_turnover_rate = defense_points_with_turnover / defense_started if defense_started > 0 else 0.0
     defense_clean_break_rate = defense_won_no_turnover / defense_started if defense_started > 0 else 0.0
-    defense_hold_rate = defense_break_rate
 
     defense_points_with_pull = [
         point for point in point_facts if (not point.starting_on_offense and point.pull is not None)
@@ -312,7 +311,6 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
             "points_won_no_turnover": defense_won_no_turnover,
             "clean_break_rate": defense_clean_break_rate,
             "points_lost_no_turnover": defense_lost_no_turnover,
-            "hold_rate": defense_hold_rate,
             "pull_stats": {
                 "total_pulls": total_pulls,
                 "inbound_pulls": inbound_pulls,

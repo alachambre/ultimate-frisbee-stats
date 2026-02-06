@@ -161,8 +161,8 @@ def get_game_strategy_statistics(
 
     Offense metrics:
     - Hold rate: % of points won on offense
-    - Clean hold rate: % of holds with 0 turnovers
-    - Quick score rate: % of holds in < 90 seconds
+    - Clean hold rate: % of offensive points won with 0 turnovers (over all offensive points with this strategy)
+    - Quick score rate: % of offensive points won in < 90 seconds (over all offensive points with this strategy)
 
     Defense metrics:
     - Break rate: % of points won on defense
