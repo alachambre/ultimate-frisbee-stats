@@ -12,6 +12,8 @@ from app.crud.statistics_queries import (
     get_completed_points_for_competition,
     get_completed_points_for_team,
     get_game_players,
+    get_competition_players,
+    get_team_players,
     get_calls_for_points,
     get_turnovers_for_points,
     get_strategies_by_ids,
@@ -56,6 +58,74 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     return build_live_player_stats(
         completed_points,
         all_game_players,
+        calls_by_point,
+        turnovers_by_point,
+    )
+
+
+def get_competition_player_stats(db: Session, competition_id: int) -> Optional[List[Dict]]:
+    """
+    Get aggregated player statistics for a competition.
+    Only considers completed points with valid timestamps from games in this competition.
+
+    Returns None if competition not found.
+    """
+    competition = get_competition(db, competition_id)
+    if not competition:
+        return None
+
+    completed_points = get_completed_points_for_competition(
+        db,
+        competition_id,
+        require_timestamps=True,
+    )
+    competition_players = get_competition_players(db, competition_id)
+
+    # Prefer competition roster, but include players that actually appeared in points.
+    # This keeps stats usable even when the roster was not explicitly populated.
+    players_by_id = {player.id: player for player in competition_players}
+    for point in completed_points:
+        for player in point.players:
+            if player.id not in players_by_id:
+                players_by_id[player.id] = player
+
+    point_ids = [point.id for point in completed_points]
+    calls_by_point = get_calls_for_points(db, point_ids)
+    turnovers_by_point = get_turnovers_for_points(db, point_ids)
+
+    return build_live_player_stats(
+        completed_points,
+        list(players_by_id.values()),
+        calls_by_point,
+        turnovers_by_point,
+    )
+
+
+def get_team_player_stats(db: Session, team_id: int) -> Optional[List[Dict]]:
+    """
+    Get aggregated player statistics for a team across all competitions.
+    Only considers completed points with valid timestamps.
+
+    Returns None if team not found.
+    """
+    team = get_team(db, team_id)
+    if not team:
+        return None
+
+    completed_points = get_completed_points_for_team(
+        db,
+        team_id,
+        require_timestamps=True,
+    )
+    team_players = get_team_players(db, team_id)
+
+    point_ids = [point.id for point in completed_points]
+    calls_by_point = get_calls_for_points(db, point_ids)
+    turnovers_by_point = get_turnovers_for_points(db, point_ids)
+
+    return build_live_player_stats(
+        completed_points,
+        team_players,
         calls_by_point,
         turnovers_by_point,
     )
@@ -175,6 +245,76 @@ def get_game_strategy_stats(db: Session, game_id: int) -> Optional[Dict]:
     )
     return {
         "game_id": game_id,
+        "offense_strategies": strategy_stats["offense_strategies"],
+        "defense_strategies": strategy_stats["defense_strategies"],
+    }
+
+
+def get_competition_strategy_stats(db: Session, competition_id: int) -> Optional[Dict]:
+    """
+    Get strategy statistics for a competition.
+    Only considers completed points with assigned strategies and valid timestamps.
+
+    Returns None if competition not found.
+    """
+    competition = get_competition(db, competition_id)
+    if not competition:
+        return None
+
+    completed_points = get_completed_points_for_competition(
+        db,
+        competition_id,
+        require_timestamps=True,
+    )
+    strategy_ids = [point.strategy_id for point in completed_points if point.strategy_id]
+    strategies_by_id = get_strategies_by_ids(db, strategy_ids)
+    turnovers_by_point = get_turnovers_for_points(
+        db,
+        [point.id for point in completed_points],
+    )
+
+    strategy_stats = build_game_strategy_stats(
+        completed_points,
+        strategies_by_id,
+        turnovers_by_point,
+    )
+    return {
+        "competition_id": competition_id,
+        "offense_strategies": strategy_stats["offense_strategies"],
+        "defense_strategies": strategy_stats["defense_strategies"],
+    }
+
+
+def get_team_strategy_stats(db: Session, team_id: int) -> Optional[Dict]:
+    """
+    Get strategy statistics for a team across all competitions.
+    Only considers completed points with assigned strategies and valid timestamps.
+
+    Returns None if team not found.
+    """
+    team = get_team(db, team_id)
+    if not team:
+        return None
+
+    completed_points = get_completed_points_for_team(
+        db,
+        team_id,
+        require_timestamps=True,
+    )
+    strategy_ids = [point.strategy_id for point in completed_points if point.strategy_id]
+    strategies_by_id = get_strategies_by_ids(db, strategy_ids)
+    turnovers_by_point = get_turnovers_for_points(
+        db,
+        [point.id for point in completed_points],
+    )
+
+    strategy_stats = build_game_strategy_stats(
+        completed_points,
+        strategies_by_id,
+        turnovers_by_point,
+    )
+    return {
+        "team_id": team_id,
         "offense_strategies": strategy_stats["offense_strategies"],
         "defense_strategies": strategy_stats["defense_strategies"],
     }

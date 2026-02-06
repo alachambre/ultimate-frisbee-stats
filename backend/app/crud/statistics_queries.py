@@ -83,6 +83,17 @@ def get_game_players(db: Session, game_id: int) -> List[Player]:
     return db.query(Player).join(Game.players).filter(Game.id == game_id).all()
 
 
+def get_competition_players(db: Session, competition_id: int) -> List[Player]:
+    competition = get_competition(db, competition_id)
+    if not competition:
+        return []
+    return list(competition.players)
+
+
+def get_team_players(db: Session, team_id: int) -> List[Player]:
+    return db.query(Player).filter(Player.team_id == team_id).all()
+
+
 def get_calls_for_point(db: Session, point_id: int) -> List[Call]:
     return db.query(Call).filter(Call.point_id == point_id).all()
 

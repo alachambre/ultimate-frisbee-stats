@@ -761,6 +761,209 @@ def test_get_team_team_statistics_not_found(client: TestClient):
     assert response.json()["detail"] == "Team not found"
 
 
+# Competition and Team Player Statistics API Tests
+
+
+def test_get_competition_player_statistics_success(client: TestClient, db_session: Session):
+    """Competition player stats should aggregate all games from that competition only"""
+    from tests.builders import GameScenarioBuilder, CompetitionBuilder, GameBuilder, PointBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team("Team A") \
+        .with_competition("Comp A") \
+        .with_game("Opponent 1") \
+        .with_players(7) \
+        .with_completed_point(offense=True, won=True) \
+        .with_completed_point(offense=False, won=False) \
+        .build()
+
+    player_ids = [player.id for player in scenario.players]
+
+    # Another game in same competition -> should be included
+    same_comp_game = GameBuilder(db_session, scenario.competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, same_comp_game.id, player_ids).offense().won().complete()
+
+    # Different competition -> should be excluded
+    other_comp = CompetitionBuilder(db_session, scenario.team).with_name("Comp B").build()
+    other_game = GameBuilder(db_session, other_comp).with_opponent("Opponent 3").build()
+    PointBuilder(db_session, other_game.id, player_ids).offense().lost().complete()
+
+    response = client.get(f"/statistics/competitions/{scenario.competition.id}/players")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 7
+    assert all(player["points_played"] == 3 for player in data)
+
+
+def test_get_competition_player_statistics_not_found(client: TestClient):
+    response = client.get("/statistics/competitions/99999/players")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Competition not found"
+
+
+def test_get_team_player_statistics_success(client: TestClient, db_session: Session):
+    """Team player stats should aggregate all competitions for that team only"""
+    from tests.builders import GameScenarioBuilder, CompetitionBuilder, GameBuilder, PointBuilder, PlayerBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team("Team A") \
+        .with_competition("Comp A") \
+        .with_game("Opponent 1") \
+        .with_players(7) \
+        .with_completed_point(offense=True, won=True) \
+        .with_completed_point(offense=False, won=False) \
+        .build()
+
+    player_ids = [player.id for player in scenario.players]
+
+    # Another competition for same team -> should be included
+    same_team_comp = CompetitionBuilder(db_session, scenario.team).with_name("Comp A2").build()
+    same_team_game = GameBuilder(db_session, same_team_comp).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, same_team_game.id, player_ids).offense().won().complete()
+
+    # Add bench player with no points -> should still appear
+    PlayerBuilder(db_session, scenario.team).with_name("Bench Player").with_number(99).male().build()
+
+    # Different team -> should be excluded
+    other_team = GameScenarioBuilder(db_session) \
+        .with_team("Team B") \
+        .with_competition("Comp B") \
+        .with_game("Opponent X") \
+        .with_players(7) \
+        .with_completed_point(offense=True, won=True) \
+        .build()
+    assert other_team.team.id != scenario.team.id
+
+    response = client.get(f"/statistics/teams/{scenario.team.id}/players")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 8
+
+    active_players = [player for player in data if player["player_number"] != 99]
+    bench_player = next(player for player in data if player["player_number"] == 99)
+
+    assert all(player["points_played"] == 3 for player in active_players)
+    assert bench_player["points_played"] == 0
+    assert bench_player["effective_time_seconds"] == 0
+
+
+def test_get_team_player_statistics_not_found(client: TestClient):
+    response = client.get("/statistics/teams/99999/players")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Team not found"
+
+
+# Competition and Team Strategy Statistics API Tests
+
+
+def test_get_competition_strategy_statistics_success(client: TestClient, db_session: Session):
+    """Competition strategy stats should aggregate all games from that competition only"""
+    from tests.builders import GameScenarioBuilder, CompetitionBuilder, GameBuilder, PointBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team("Team A") \
+        .with_competition("Comp A") \
+        .with_game("Opponent 1") \
+        .with_players(7) \
+        .with_offense_strategy("Vertical Stack") \
+        .with_defense_strategy("Zone")
+
+    vert = scenario.offense_strategies[0]
+    zone = scenario.defense_strategies[0]
+    scenario.with_completed_point(offense=True, won=True, strategy=vert) \
+        .with_completed_point(offense=False, won=True, strategy=zone) \
+        .build()
+
+    player_ids = [player.id for player in scenario.players]
+
+    # Another game in same competition -> should be included
+    same_comp_game = GameBuilder(db_session, scenario.competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, same_comp_game.id, player_ids).offense().with_strategy(vert.id).won().complete()
+
+    # Different competition -> should be excluded
+    other_comp = CompetitionBuilder(db_session, scenario.team).with_name("Comp B").build()
+    other_game = GameBuilder(db_session, other_comp).with_opponent("Opponent 3").build()
+    PointBuilder(db_session, other_game.id, player_ids).offense().with_strategy(vert.id).won().complete()
+
+    response = client.get(f"/statistics/competitions/{scenario.competition.id}/strategies")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["competition_id"] == scenario.competition.id
+    assert len(data["offense_strategies"]) == 1
+    assert len(data["defense_strategies"]) == 1
+    assert data["offense_strategies"][0]["strategy_name"] == "Vertical Stack"
+    assert data["offense_strategies"][0]["points_played"] == 2
+    assert data["defense_strategies"][0]["strategy_name"] == "Zone"
+    assert data["defense_strategies"][0]["points_played"] == 1
+
+
+def test_get_competition_strategy_statistics_not_found(client: TestClient):
+    response = client.get("/statistics/competitions/99999/strategies")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Competition not found"
+
+
+def test_get_team_strategy_statistics_success(client: TestClient, db_session: Session):
+    """Team strategy stats should aggregate all competitions for that team only"""
+    from tests.builders import GameScenarioBuilder, CompetitionBuilder, GameBuilder, PointBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team("Team A") \
+        .with_competition("Comp A") \
+        .with_game("Opponent 1") \
+        .with_players(7) \
+        .with_offense_strategy("Vertical Stack") \
+        .with_defense_strategy("Zone")
+
+    vert = scenario.offense_strategies[0]
+    zone = scenario.defense_strategies[0]
+    scenario.with_completed_point(offense=True, won=True, strategy=vert) \
+        .with_completed_point(offense=False, won=True, strategy=zone) \
+        .build()
+
+    player_ids = [player.id for player in scenario.players]
+
+    # Another competition for same team -> should be included
+    same_team_comp = CompetitionBuilder(db_session, scenario.team).with_name("Comp A2").build()
+    same_team_game = GameBuilder(db_session, same_team_comp).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, same_team_game.id, player_ids).offense().with_strategy(vert.id).won().complete()
+
+    # Different team -> should be excluded
+    other_team = GameScenarioBuilder(db_session) \
+        .with_team("Team B") \
+        .with_competition("Comp B") \
+        .with_game("Opponent X") \
+        .with_players(7) \
+        .with_offense_strategy("Other O") \
+        .with_defense_strategy("Other D")
+    other_o = other_team.offense_strategies[0]
+    other_d = other_team.defense_strategies[0]
+    other_team.with_completed_point(offense=True, won=True, strategy=other_o) \
+        .with_completed_point(offense=False, won=True, strategy=other_d) \
+        .build()
+
+    response = client.get(f"/statistics/teams/{scenario.team.id}/strategies")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["team_id"] == scenario.team.id
+    assert len(data["offense_strategies"]) == 1
+    assert len(data["defense_strategies"]) == 1
+    assert data["offense_strategies"][0]["strategy_name"] == "Vertical Stack"
+    assert data["offense_strategies"][0]["points_played"] == 2
+    assert data["defense_strategies"][0]["strategy_name"] == "Zone"
+    assert data["defense_strategies"][0]["points_played"] == 1
+
+
+def test_get_team_strategy_statistics_not_found(client: TestClient):
+    response = client.get("/statistics/teams/99999/strategies")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Team not found"
+
+
 # Strategy Statistics API Tests
 
 def test_get_strategy_stats_success(client: TestClient, db_session: Session):
@@ -879,4 +1082,3 @@ def test_get_strategy_stats_multiple_strategies(client: TestClient, db_session: 
     assert data["offense_strategies"][1]["strategy_name"] == "Vertical Stack"
     assert data["defense_strategies"][0]["strategy_name"] == "Man-to-Man"
     assert data["defense_strategies"][1]["strategy_name"] == "Zone"
-

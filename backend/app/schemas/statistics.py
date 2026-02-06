@@ -148,11 +148,25 @@ class DefenseStrategyStats(BaseModel):
         from_attributes = True
 
 
-class GameStrategyStats(BaseModel):
-    """Strategy statistics for a game"""
-    game_id: int
+class StrategyStatsBase(BaseModel):
+    """Common strategy statistics payload shared across scopes"""
     offense_strategies: list[OffenseStrategyStats]
     defense_strategies: list[DefenseStrategyStats]
 
     class Config:
         from_attributes = True
+
+
+class GameStrategyStats(StrategyStatsBase):
+    """Strategy statistics for a game"""
+    game_id: int
+
+
+class CompetitionStrategyStats(StrategyStatsBase):
+    """Strategy statistics for a competition"""
+    competition_id: int
+
+
+class TeamStrategyStats(StrategyStatsBase):
+    """Strategy statistics for a team across all competitions"""
+    team_id: int

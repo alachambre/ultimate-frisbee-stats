@@ -34,6 +34,36 @@ def get_live_game_statistics(
     return stats
 
 
+@router.get("/competitions/{competition_id}/players", response_model=List[schemas.PlayerGameStats])
+def get_competition_player_statistics(
+    competition_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get player statistics aggregated over all completed points in a competition.
+    """
+    stats = crud.get_competition_player_stats(db, competition_id)
+    if stats is None:
+        raise HTTPException(status_code=404, detail="Competition not found")
+
+    return stats
+
+
+@router.get("/teams/{team_id}/players", response_model=List[schemas.PlayerGameStats])
+def get_team_player_statistics(
+    team_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get player statistics aggregated over all completed points for a team.
+    """
+    stats = crud.get_team_player_stats(db, team_id)
+    if stats is None:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    return stats
+
+
 @router.get("/games/{game_id}/team", response_model=schemas.GameTeamStats)
 def get_game_team_statistics(
     game_id: int,
@@ -80,6 +110,38 @@ def get_team_team_statistics(
     Returns offense and defense efficiency metrics, including pull statistics.
     """
     stats = crud.get_team_team_stats(db, team_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    return stats
+
+
+@router.get("/competitions/{competition_id}/strategies", response_model=schemas.CompetitionStrategyStats)
+def get_competition_strategy_statistics(
+    competition_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get strategy statistics for a competition.
+    Returns success rates per strategy on all completed points with assigned strategies.
+    """
+    stats = crud.get_competition_strategy_stats(db, competition_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="Competition not found")
+
+    return stats
+
+
+@router.get("/teams/{team_id}/strategies", response_model=schemas.TeamStrategyStats)
+def get_team_strategy_statistics(
+    team_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get strategy statistics for a team across all competitions.
+    Returns success rates per strategy on all completed points with assigned strategies.
+    """
+    stats = crud.get_team_strategy_stats(db, team_id)
     if not stats:
         raise HTTPException(status_code=404, detail="Team not found")
 
