@@ -486,6 +486,32 @@ def test_remove_players_from_game_partial(db_session, sample_game, sample_player
     assert sample_players[2].id not in game_player_ids
 
 
+def test_remove_players_from_game_disallowed_when_in_points(
+    db_session, sample_game, sample_players, sample_competition
+):
+    """Players who played points cannot be removed from game roster."""
+    from app.crud.competitions import add_players_to_competition
+    from app.crud.points import create_point
+    from app.schemas import PointCreate
+
+    add_players_to_competition(db_session, sample_competition.id, [p.id for p in sample_players])
+
+    player_ids_to_add = [p.id for p in sample_players[:4]]
+    games.add_players_to_game(db_session, sample_game.id, player_ids_to_add)
+
+    create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=[sample_players[0].id],
+        ),
+    )
+
+    with pytest.raises(ValueError, match="have played points"):
+        games.remove_players_from_game(db_session, sample_game.id, [sample_players[0].id])
+
+
 def test_get_game_detail_includes_players(db_session, sample_game, sample_players, sample_competition):
     """Test that game_detail includes selected players"""
     from app.crud.competitions import add_players_to_competition

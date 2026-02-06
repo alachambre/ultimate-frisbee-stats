@@ -387,7 +387,8 @@ export default function CompetitionDetailPage() {
           </Typography>
           {removePlayerMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {t("competitions:detail.removePlayerError")}
+              {(removePlayerMutation.error as { response?: { data?: { detail?: string } } })
+                ?.response?.data?.detail || t("competitions:detail.removePlayerError")}
             </Alert>
           )}
         </DialogContent>

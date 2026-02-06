@@ -175,6 +175,25 @@ def remove_players_from_game(db: Session, game_id: int, player_ids: List[int]) -
     """Remove players from game"""
     db_game = get_game(db, game_id)
     if db_game:
+        if player_ids:
+            used_player_ids = {
+                row[0]
+                for row in db.query(models.point_players.c.player_id)
+                .join(models.Point, models.Point.id == models.point_players.c.point_id)
+                .filter(
+                    models.Point.game_id == game_id,
+                    models.point_players.c.player_id.in_(player_ids)
+                )
+                .distinct()
+                .all()
+            }
+
+            if used_player_ids:
+                blocked = sorted(used_player_ids)
+                raise ValueError(
+                    f"Cannot remove players from game because they have played points: {blocked}"
+                )
+
         db_game.players = [
             p for p in db_game.players if p.id not in player_ids
         ]

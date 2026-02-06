@@ -91,6 +91,37 @@ def remove_players_from_competition(db: Session, competition_id: int, player_ids
     """Remove players from competition roster"""
     db_competition = get_competition(db, competition_id)
     if db_competition:
+        if player_ids:
+            used_in_game_roster = {
+                row[0]
+                for row in db.query(models.game_players.c.player_id)
+                .join(models.Game, models.Game.id == models.game_players.c.game_id)
+                .filter(
+                    models.Game.competition_id == competition_id,
+                    models.game_players.c.player_id.in_(player_ids)
+                )
+                .distinct()
+                .all()
+            }
+            used_in_points = {
+                row[0]
+                for row in db.query(models.point_players.c.player_id)
+                .join(models.Point, models.Point.id == models.point_players.c.point_id)
+                .join(models.Game, models.Game.id == models.Point.game_id)
+                .filter(
+                    models.Game.competition_id == competition_id,
+                    models.point_players.c.player_id.in_(player_ids)
+                )
+                .distinct()
+                .all()
+            }
+            blocked = sorted(used_in_game_roster.union(used_in_points))
+            if blocked:
+                raise ValueError(
+                    "Cannot remove players from competition roster because they are used in games: "
+                    f"{blocked}"
+                )
+
         db_competition.players = [
             p for p in db_competition.players if p.id not in player_ids
         ]

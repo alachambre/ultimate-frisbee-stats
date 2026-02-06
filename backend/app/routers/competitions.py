@@ -113,7 +113,10 @@ def remove_players_from_roster(competition_id: int, request: PlayerIdsRequest, d
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
 
-    return crud.remove_players_from_competition(db, competition_id, request.player_ids)
+    try:
+        return crud.remove_players_from_competition(db, competition_id, request.player_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{competition_id}/games", response_model=List[schemas.GameWithScore])

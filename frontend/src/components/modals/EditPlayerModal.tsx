@@ -88,7 +88,8 @@ export default function EditPlayerModal({
             Are you sure you want to remove {player.name}?
             {deleteMutation.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
-                {t("common:messages.error")}
+                {(deleteMutation.error as { response?: { data?: { detail?: string } } })
+                  ?.response?.data?.detail || t("common:messages.error")}
               </Alert>
             )}
           </Box>

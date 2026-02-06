@@ -200,6 +200,20 @@ def test_remove_players_from_competition(db_session, sample_team, sample_competi
     assert sample_players[0].id not in [p.id for p in competition.players]
 
 
+def test_remove_players_from_competition_disallowed_when_in_game(
+    db_session, sample_team, sample_competition, sample_players, sample_game
+):
+    """Players assigned to a game cannot be removed from competition roster."""
+    from app.crud.games import add_players_to_game
+
+    player_id = sample_players[0].id
+    add_players_to_competition(db_session, sample_competition.id, [player_id])
+    add_players_to_game(db_session, sample_game.id, [player_id])
+
+    with pytest.raises(ValueError, match="used in games"):
+        remove_players_from_competition(db_session, sample_competition.id, [player_id])
+
+
 def test_get_competition_players(db_session, sample_team, sample_competition, sample_players):
     """Test getting all players in a competition"""
     player_ids = [p.id for p in sample_players[:4]]

@@ -107,6 +107,21 @@ def test_delete_player(db_session, sample_players):
     assert deleted_player is None
 
 
+def test_delete_player_disallowed_when_in_game(
+    db_session, sample_players, sample_competition, sample_game
+):
+    """Players used in games cannot be deleted."""
+    from app.crud.games import add_players_to_game
+    from app.crud.competitions import add_players_to_competition
+
+    player = sample_players[0]
+    add_players_to_competition(db_session, sample_competition.id, [player.id])
+    add_players_to_game(db_session, sample_game.id, [player.id])
+
+    with pytest.raises(ValueError, match="used in games"):
+        players.delete_player(db_session, player.id)
+
+
 def test_delete_player_not_found(db_session):
     """Test deleting a non-existent player"""
     success = players.delete_player(db_session, 999)

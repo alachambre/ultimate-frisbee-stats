@@ -153,4 +153,7 @@ def remove_players_from_game(game_id: int, request: PlayerIdsRequest, db: Sessio
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
 
-    return crud.remove_players_from_game(db, game_id, request.player_ids)
+    try:
+        return crud.remove_players_from_game(db, game_id, request.player_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

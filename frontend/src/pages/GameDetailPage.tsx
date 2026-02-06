@@ -498,6 +498,16 @@ export default function GameDetailPage() {
                           <GamePlayerStatsCard
                             stats={stats}
                             highlight={liveStats ? getPlayerHighlight(stats, liveStats) : null}
+                            onDelete={
+                              game.status === "ended"
+                                ? undefined
+                                : () => {
+                                    const player = game.players.find((p) => p.id === stats.player_id);
+                                    if (player) {
+                                      handleRemovePlayer(player);
+                                    }
+                                  }
+                            }
                           />
                         </Grid>
                       ))}
@@ -547,6 +557,16 @@ export default function GameDetailPage() {
                           <GamePlayerStatsCard
                             stats={stats}
                             highlight={liveStats ? getPlayerHighlight(stats, liveStats) : null}
+                            onDelete={
+                              game.status === "ended"
+                                ? undefined
+                                : () => {
+                                    const player = game.players.find((p) => p.id === stats.player_id);
+                                    if (player) {
+                                      handleRemovePlayer(player);
+                                    }
+                                  }
+                            }
                           />
                         </Grid>
                       ))}
@@ -741,7 +761,8 @@ export default function GameDetailPage() {
           </Typography>
           {removePlayerMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {t("games:detail.removePlayerError")}
+              {(removePlayerMutation.error as { response?: { data?: { detail?: string } } })
+                ?.response?.data?.detail || t("games:detail.removePlayerError")}
             </Alert>
           )}
         </DialogContent>

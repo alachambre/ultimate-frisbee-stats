@@ -38,6 +38,9 @@ def update_player(player_id: int, player_update: schemas.PlayerUpdate, db: Sessi
 
 @router.delete("/{player_id}", status_code=204)
 def delete_player(player_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_player(db, player_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Player not found")
+    try:
+        success = crud.delete_player(db, player_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Player not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
