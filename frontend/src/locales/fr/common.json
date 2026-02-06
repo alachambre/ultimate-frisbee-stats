@@ -81,6 +81,7 @@
     "error": "Une erreur s'est produite",
     "success": "Succès",
     "loading": "Chargement...",
+    "coldStartHint": "Le serveur met du temps à répondre.\nSi vous ne vous êtes pas connecté depuis plus de 15 minutes, il est probablement en train de démarrer.",
     "noData": "Aucune donnée disponible",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
     "saved": "Enregistré avec succès",
