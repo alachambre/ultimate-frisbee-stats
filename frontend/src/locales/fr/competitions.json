@@ -14,6 +14,7 @@
     "loading": "Chargement de la compétition...",
     "error": "Erreur lors du chargement de la compétition. Veuillez réessayer.",
     "backToCompetitions": "Retour aux compétitions",
+    "viewStatistics": "Voir les statistiques",
     "edit": "Modifier",
     "delete": "Supprimer",
     "info": "Infos compétition",

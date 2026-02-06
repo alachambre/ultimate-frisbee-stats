@@ -14,6 +14,7 @@
     "loading": "Loading competition...",
     "error": "Error loading competition. Please try again.",
     "backToCompetitions": "Back to Competitions",
+    "viewStatistics": "View Statistics",
     "edit": "Edit",
     "delete": "Delete",
     "info": "Competition Info",

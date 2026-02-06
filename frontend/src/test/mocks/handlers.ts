@@ -51,6 +51,81 @@ export function resetMockData() {
   nextTurnoverId = 1;
 }
 
+function buildEmptyPlayerStatsForPlayers(playersList: Player[]) {
+  return playersList.map((player) => ({
+    player_id: player.id,
+    player_name: player.name,
+    player_number: player.number,
+    points_played: 0,
+    effective_time_seconds: 0,
+    offense: {
+      points_played: 0,
+      points_won: 0,
+      points_lost: 0,
+      hold_rate: 0.0,
+      points_won_no_turnover: 0,
+      clean_hold_rate: 0.0,
+    },
+    defense: {
+      points_played: 0,
+      points_won: 0,
+      points_lost: 0,
+      break_rate: 0.0,
+      points_with_turnover: 0,
+      turnover_rate: 0.0,
+      points_won_no_turnover: 0,
+      clean_break_rate: 0.0,
+      points_lost_no_turnover: 0,
+    },
+  }));
+}
+
+function buildEmptyTeamStats(
+  scope: { game_id: number } | { competition_id: number } | { team_id: number }
+) {
+  return {
+    ...scope,
+    total_completed_points: 0,
+    offense: {
+      points_started: 0,
+      points_won: 0,
+      points_lost: 0,
+      hold_rate: 0.0,
+      points_won_no_turnover: 0,
+      clean_hold_rate: 0.0,
+      broken_rate: 0.0,
+    },
+    defense: {
+      points_started: 0,
+      points_won: 0,
+      points_lost: 0,
+      break_rate: 0.0,
+      points_with_turnover: 0,
+      turnover_rate: 0.0,
+      points_won_no_turnover: 0,
+      clean_break_rate: 0.0,
+      points_lost_no_turnover: 0,
+      hold_rate: 0.0,
+      pull_stats: {
+        total_pulls: 0,
+        inbound_pulls: 0,
+        out_of_bounds_pulls: 0,
+        inbound_rate: 0.0,
+      },
+    },
+  };
+}
+
+function buildEmptyStrategyStats(
+  scope: { game_id: number } | { competition_id: number } | { team_id: number }
+) {
+  return {
+    ...scope,
+    offense_strategies: [],
+    defense_strategies: [],
+  };
+}
+
 export const handlers = [
   // GET /teams - List all teams
   http.get(`${BASE_URL}/teams`, () => {
@@ -1214,36 +1289,7 @@ export const handlers = [
 
     const gamePlayerIds = gamePlayers.get(gameId) || [];
     const gamePlayers_list = players.filter((p) => gamePlayerIds.includes(p.id));
-
-    // Return empty stats for all players
-    const stats = gamePlayers_list.map((player) => ({
-      player_id: player.id,
-      player_name: player.name,
-      player_number: player.number,
-      points_played: 0,
-      effective_time_seconds: 0,
-      offense: {
-        points_played: 0,
-        points_won: 0,
-        points_lost: 0,
-        hold_rate: 0.0,
-        points_won_no_turnover: 0,
-        clean_hold_rate: 0.0,
-      },
-      defense: {
-        points_played: 0,
-        points_won: 0,
-        points_lost: 0,
-        break_rate: 0.0,
-        points_with_turnover: 0,
-        turnover_rate: 0.0,
-        points_won_no_turnover: 0,
-        clean_break_rate: 0.0,
-        points_lost_no_turnover: 0,
-      },
-    }));
-
-    return HttpResponse.json(stats);
+    return HttpResponse.json(buildEmptyPlayerStatsForPlayers(gamePlayers_list));
   }),
 
   // GET /statistics/games/:gameId/team - Get team statistics
@@ -1255,38 +1301,7 @@ export const handlers = [
       return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
     }
 
-    // Return empty team stats
-    return HttpResponse.json({
-      game_id: gameId,
-      total_completed_points: 0,
-      offense: {
-        points_started: 0,
-        points_won: 0,
-        points_lost: 0,
-        hold_rate: 0.0,
-        points_won_no_turnover: 0,
-        clean_hold_rate: 0.0,
-        broken_rate: 0.0,
-      },
-      defense: {
-        points_started: 0,
-        points_won: 0,
-        points_lost: 0,
-        break_rate: 0.0,
-        points_with_turnover: 0,
-        turnover_rate: 0.0,
-        points_won_no_turnover: 0,
-        clean_break_rate: 0.0,
-        points_lost_no_turnover: 0,
-        hold_rate: 0.0,
-        pull_stats: {
-          total_pulls: 0,
-          inbound_pulls: 0,
-          out_of_bounds_pulls: 0,
-          inbound_rate: 0.0,
-        },
-      },
-    });
+    return HttpResponse.json(buildEmptyTeamStats({ game_id: gameId }));
   }),
 
   // GET /statistics/games/:gameId/strategies - Get strategy statistics
@@ -1298,11 +1313,81 @@ export const handlers = [
       return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
     }
 
-    // Return empty strategy stats
-    return HttpResponse.json({
-      game_id: gameId,
-      offense_strategies: [],
-      defense_strategies: [],
-    });
+    return HttpResponse.json(buildEmptyStrategyStats({ game_id: gameId }));
+  }),
+
+  // GET /statistics/competitions/:competitionId/players - Get competition player statistics
+  http.get(`${BASE_URL}/statistics/competitions/:competitionId/players`, ({ params }) => {
+    const competitionId = Number(params.competitionId);
+    const competition = competitions.find((c) => c.id === competitionId);
+
+    if (!competition) {
+      return HttpResponse.json({ detail: "Competition not found" }, { status: 404 });
+    }
+
+    const rosterPlayerIds = competitionPlayers.get(competitionId) || [];
+    const rosterPlayers = players.filter((player) => rosterPlayerIds.includes(player.id));
+    return HttpResponse.json(buildEmptyPlayerStatsForPlayers(rosterPlayers));
+  }),
+
+  // GET /statistics/teams/:teamId/players - Get team player statistics
+  http.get(`${BASE_URL}/statistics/teams/:teamId/players`, ({ params }) => {
+    const teamId = Number(params.teamId);
+    const team = teams.find((t) => t.id === teamId);
+
+    if (!team) {
+      return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+    }
+
+    const teamPlayers = players.filter((player) => player.team_id === teamId);
+    return HttpResponse.json(buildEmptyPlayerStatsForPlayers(teamPlayers));
+  }),
+
+  // GET /statistics/competitions/:competitionId/team - Get competition team statistics
+  http.get(`${BASE_URL}/statistics/competitions/:competitionId/team`, ({ params }) => {
+    const competitionId = Number(params.competitionId);
+    const competition = competitions.find((c) => c.id === competitionId);
+
+    if (!competition) {
+      return HttpResponse.json({ detail: "Competition not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(buildEmptyTeamStats({ competition_id: competitionId }));
+  }),
+
+  // GET /statistics/teams/:teamId/team - Get team statistics
+  http.get(`${BASE_URL}/statistics/teams/:teamId/team`, ({ params }) => {
+    const teamId = Number(params.teamId);
+    const team = teams.find((t) => t.id === teamId);
+
+    if (!team) {
+      return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(buildEmptyTeamStats({ team_id: teamId }));
+  }),
+
+  // GET /statistics/competitions/:competitionId/strategies - Get competition strategy statistics
+  http.get(`${BASE_URL}/statistics/competitions/:competitionId/strategies`, ({ params }) => {
+    const competitionId = Number(params.competitionId);
+    const competition = competitions.find((c) => c.id === competitionId);
+
+    if (!competition) {
+      return HttpResponse.json({ detail: "Competition not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(buildEmptyStrategyStats({ competition_id: competitionId }));
+  }),
+
+  // GET /statistics/teams/:teamId/strategies - Get team strategy statistics
+  http.get(`${BASE_URL}/statistics/teams/:teamId/strategies`, ({ params }) => {
+    const teamId = Number(params.teamId);
+    const team = teams.find((t) => t.id === teamId);
+
+    if (!team) {
+      return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+    }
+
+    return HttpResponse.json(buildEmptyStrategyStats({ team_id: teamId }));
   }),
 ];

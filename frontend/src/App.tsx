@@ -15,6 +15,8 @@ import GameDetailPage from "./pages/GameDetailPage";
 import LineDetailPage from "./pages/LineDetailPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import GameStatisticsPage from "./pages/GameStatisticsPage";
+import TeamStatisticsPage from "./pages/TeamStatisticsPage";
+import CompetitionStatisticsPage from "./pages/CompetitionStatisticsPage";
 
 const theme = createTheme({
   palette: {
@@ -91,6 +93,8 @@ function App() {
                 <Route path="games" element={<GamesPage />} />
                 <Route path="games/:gameId" element={<GameDetailPage />} />
                 <Route path="statistics/games/:gameId" element={<GameStatisticsPage />} />
+                <Route path="statistics/teams/:teamId" element={<TeamStatisticsPage />} />
+                <Route path="statistics/competitions/:competitionId" element={<CompetitionStatisticsPage />} />
               </Route>
             </Routes>
           </BrowserRouter>

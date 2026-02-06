@@ -28,6 +28,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/services/` API layer (per-entity)
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
+- Statistics UI routes: game + competition + team scopes should stay aligned with backend statistics endpoints
 
 **Backend**
 - `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)

@@ -119,7 +119,7 @@ export default function GameStatisticsPage() {
           startIcon={<ArrowBackIcon />}
           onClick={handleBack}
         >
-          {t("statistics:backToGame")}
+          {t("statistics:page.backToGame")}
         </Button>
         <Button
           variant="outlined"

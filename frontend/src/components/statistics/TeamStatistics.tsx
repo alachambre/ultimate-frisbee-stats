@@ -2,11 +2,11 @@ import { Paper, Typography, Box, Grid, Divider } from "@mui/material";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { useTranslation } from "react-i18next";
-import type { GameTeamStats } from "../../types";
+import type { TeamStatsBase } from "../../types";
 import CircularStat from "./CircularStat";
 
 interface TeamStatisticsProps {
-  teamStats: GameTeamStats;
+  teamStats: TeamStatsBase;
 }
 
 export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {

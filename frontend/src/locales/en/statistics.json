@@ -2,6 +2,10 @@
   "page": {
     "title": "Game Statistics",
     "backToGame": "Back to Game",
+    "teamTitle": "Team Statistics",
+    "competitionTitle": "Competition Statistics",
+    "backToTeam": "Back to Team",
+    "backToCompetition": "Back to Competition",
     "exportCSV": "Export CSV"
   },
   "view": {

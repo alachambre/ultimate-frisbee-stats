@@ -21,6 +21,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { getTeam, deleteTeam } from "../services";
@@ -124,14 +125,23 @@ export default function TeamDetailPage() {
               Created {new Date(team.created_at).toLocaleDateString()}
             </Typography>
           </Box>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={() => setIsDeleteConfirmOpen(true)}
-          >
-            {t("common:action.delete")}
-          </Button>
+          <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              startIcon={<BarChartIcon />}
+              onClick={() => navigate(`/statistics/teams/${team.id}`)}
+            >
+              {t("teams:detail.viewStatistics")}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => setIsDeleteConfirmOpen(true)}
+            >
+              {t("common:action.delete")}
+            </Button>
+          </Box>
         </Box>
       </Box>
 

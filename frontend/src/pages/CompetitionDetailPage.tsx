@@ -22,6 +22,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import EventIcon from "@mui/icons-material/Event";
@@ -175,6 +176,13 @@ export default function CompetitionDetailPage() {
             </Box>
           </Box>
           <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              startIcon={<BarChartIcon />}
+              onClick={() => navigate(`/statistics/competitions/${competition.id}`)}
+            >
+              {t("competitions:detail.viewStatistics")}
+            </Button>
             <Button
               variant="outlined"
               startIcon={<EditIcon />}

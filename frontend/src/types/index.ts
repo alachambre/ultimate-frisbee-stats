@@ -378,11 +378,22 @@ export interface DefenseStats {
   pull_stats: PullStats;
 }
 
-export interface GameTeamStats {
-  game_id: number;
+export interface TeamStatsBase {
   total_completed_points: number;
   offense: OffenseStats;
   defense: DefenseStats;
+}
+
+export interface GameTeamStats extends TeamStatsBase {
+  game_id: number;
+}
+
+export interface CompetitionTeamStats extends TeamStatsBase {
+  competition_id: number;
+}
+
+export interface TeamTeamStats extends TeamStatsBase {
+  team_id: number;
 }
 
 export interface OffenseStrategyStats {
@@ -409,8 +420,19 @@ export interface DefenseStrategyStats {
   turnover_rate: number;
 }
 
-export interface GameStrategyStats {
-  game_id: number;
+export interface StrategyStatsBase {
   offense_strategies: OffenseStrategyStats[];
   defense_strategies: DefenseStrategyStats[];
+}
+
+export interface GameStrategyStats extends StrategyStatsBase {
+  game_id: number;
+}
+
+export interface CompetitionStrategyStats extends StrategyStatsBase {
+  competition_id: number;
+}
+
+export interface TeamStrategyStats extends StrategyStatsBase {
+  team_id: number;
 }

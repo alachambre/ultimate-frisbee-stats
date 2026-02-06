@@ -11,6 +11,15 @@ export const queryKeys = {
   liveStats: (gameId: number) => ["liveStats", gameId] as const,
   gameTeamStatistics: (gameId: number) => ["gameTeamStatistics", gameId] as const,
   gameStrategyStatistics: (gameId: number) => ["gameStrategyStatistics", gameId] as const,
+  competitionPlayerStatistics: (competitionId: number) =>
+    ["competitionPlayerStatistics", competitionId] as const,
+  competitionTeamStatistics: (competitionId: number) =>
+    ["competitionTeamStatistics", competitionId] as const,
+  competitionStrategyStatistics: (competitionId: number) =>
+    ["competitionStrategyStatistics", competitionId] as const,
+  teamPlayerStatistics: (teamId: number) => ["teamPlayerStatistics", teamId] as const,
+  teamTeamStatistics: (teamId: number) => ["teamTeamStatistics", teamId] as const,
+  teamStrategyStatistics: (teamId: number) => ["teamStrategyStatistics", teamId] as const,
   teams: ["teams"] as const,
   team: (teamId: number) => ["team", teamId] as const,
   teamLines: (teamId: number) => ["lines", "team", teamId] as const,

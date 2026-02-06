@@ -6,10 +6,10 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTranslation } from "react-i18next";
-import type { GameStrategyStats } from "../../types";
+import type { StrategyStatsBase } from "../../types";
 
 interface StrategyStatisticsProps {
-  strategyStats: GameStrategyStats;
+  strategyStats: StrategyStatsBase;
 }
 
 function formatPercent(value: number): string {
