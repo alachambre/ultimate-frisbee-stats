@@ -1,5 +1,6 @@
 {
   "page": {
+    "globalTitle": "Statistics",
     "title": "Game Statistics",
     "playerTitle": "Player Statistics",
     "backToGame": "Back to Game",
@@ -14,6 +15,23 @@
     "exportCSV": "Export CSV",
     "exportCsvSummary": "Summary CSV",
     "exportCsvFull": "Full CSV"
+  },
+  "workflow": {
+    "description": "Select a team, then drill down by competition and game or jump directly to a player.",
+    "path": "Current path",
+    "team": "Team",
+    "competition": "Competition",
+    "game": "Game",
+    "player": "Player",
+    "mode": "View",
+    "modeCompetition": "Competition -> Game",
+    "modePlayer": "Team -> Player",
+    "selectTeam": "Select team",
+    "selectCompetition": "Select competition",
+    "selectGame": "Select game",
+    "selectPlayer": "Select player",
+    "selectTeamPrompt": "Select a team to start exploring statistics.",
+    "playerNotFound": "Selected player was not found in this team."
   },
   "view": {
     "offense": "Offense",

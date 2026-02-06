@@ -1,5 +1,6 @@
 {
   "page": {
+    "globalTitle": "Statistiques",
     "title": "Statistiques du Match",
     "playerTitle": "Statistiques du Joueur",
     "backToGame": "Retour au Match",
@@ -14,6 +15,23 @@
     "exportCSV": "Exporter CSV",
     "exportCsvSummary": "CSV résumé",
     "exportCsvFull": "CSV détaillé"
+  },
+  "workflow": {
+    "description": "Sélectionnez une équipe, puis naviguez par compétition et match ou allez directement vers un joueur.",
+    "path": "Chemin actuel",
+    "team": "Équipe",
+    "competition": "Compétition",
+    "game": "Match",
+    "player": "Joueur",
+    "mode": "Vue",
+    "modeCompetition": "Compétition -> Match",
+    "modePlayer": "Équipe -> Joueur",
+    "selectTeam": "Sélectionner une équipe",
+    "selectCompetition": "Sélectionner une compétition",
+    "selectGame": "Sélectionner un match",
+    "selectPlayer": "Sélectionner un joueur",
+    "selectTeamPrompt": "Sélectionnez une équipe pour commencer à explorer les statistiques.",
+    "playerNotFound": "Le joueur sélectionné n'a pas été trouvé dans cette équipe."
   },
   "view": {
     "offense": "Attaque",

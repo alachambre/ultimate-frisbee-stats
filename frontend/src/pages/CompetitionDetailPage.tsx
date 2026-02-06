@@ -184,7 +184,11 @@ export default function CompetitionDetailPage() {
             <Button
               variant="outlined"
               startIcon={<BarChartIcon />}
-              onClick={() => navigate(`/statistics/competitions/${competition.id}`)}
+              onClick={() =>
+                navigate(
+                  `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}`
+                )
+              }
             >
               {t("competitions:detail.viewStatistics")}
             </Button>

@@ -271,7 +271,13 @@ export default function GameDetailPage() {
             <Button
               variant="outlined"
               startIcon={<BarChartIcon />}
-              onClick={() => navigate(`/statistics/games/${game.id}`)}
+              onClick={() =>
+                competition &&
+                navigate(
+                  `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}&gameId=${game.id}`
+                )
+              }
+              disabled={!competition}
               sx={{
                 minWidth: { xs: "auto", sm: "auto" },
                 "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },

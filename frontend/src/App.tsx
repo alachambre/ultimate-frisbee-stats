@@ -14,10 +14,7 @@ import GamesPage from "./pages/GamesPage";
 import GameDetailPage from "./pages/GameDetailPage";
 import LineDetailPage from "./pages/LineDetailPage";
 import StrategiesPage from "./pages/StrategiesPage";
-import GameStatisticsPage from "./pages/GameStatisticsPage";
-import TeamStatisticsPage from "./pages/TeamStatisticsPage";
-import CompetitionStatisticsPage from "./pages/CompetitionStatisticsPage";
-import PlayerStatisticsPage from "./pages/PlayerStatisticsPage";
+import StatisticsPage from "./pages/StatisticsPage";
 
 const theme = createTheme({
   palette: {
@@ -93,10 +90,7 @@ function App() {
                 <Route path="strategies" element={<StrategiesPage />} />
                 <Route path="games" element={<GamesPage />} />
                 <Route path="games/:gameId" element={<GameDetailPage />} />
-                <Route path="statistics/games/:gameId" element={<GameStatisticsPage />} />
-                <Route path="statistics/teams/:teamId" element={<TeamStatisticsPage />} />
-                <Route path="statistics/competitions/:competitionId" element={<CompetitionStatisticsPage />} />
-                <Route path="statistics/players/:playerId" element={<PlayerStatisticsPage />} />
+                <Route path="statistics" element={<StatisticsPage />} />
               </Route>
             </Routes>
           </BrowserRouter>

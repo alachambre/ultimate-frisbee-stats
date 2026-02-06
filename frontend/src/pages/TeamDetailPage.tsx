@@ -110,7 +110,7 @@ export default function TeamDetailPage() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const handleViewPlayerStats = (player: Player) => {
-    navigate(`/statistics/players/${player.id}?scope=team&teamId=${team.id}`);
+    navigate(`/statistics?teamId=${team.id}&mode=player&playerId=${player.id}`);
   };
 
   return (
@@ -138,7 +138,7 @@ export default function TeamDetailPage() {
             <Button
               variant="outlined"
               startIcon={<BarChartIcon />}
-              onClick={() => navigate(`/statistics/teams/${team.id}`)}
+              onClick={() => navigate(`/statistics?teamId=${team.id}&mode=competition`)}
             >
               {t("teams:detail.viewStatistics")}
             </Button>
