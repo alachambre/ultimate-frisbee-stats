@@ -5,11 +5,9 @@ import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import GameTimer from "../components/games/GameTimer";
 import StatisticsConfigurationPanel from "../components/statistics/StatisticsConfigurationPanel";
+import CompetitionStatisticsTabs from "../components/statistics/CompetitionStatisticsTabs";
 import PlayerScopeStatistics from "../components/statistics/PlayerScopeStatistics";
-import PlayerStatistics from "../components/statistics/PlayerStatistics";
 import StatisticsSectionContainer from "../components/statistics/StatisticsSectionContainer";
-import StrategyStatistics from "../components/statistics/StrategyStatistics";
-import TeamStatistics from "../components/statistics/TeamStatistics";
 import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
 
 export default function StatisticsPage() {
@@ -160,21 +158,17 @@ export default function StatisticsPage() {
             isExporting={isExporting}
             onExport={handleExportCSV}
           >
-            <>
-              {teamStats && <TeamStatistics teamStats={teamStats} />}
-              {teamStrategyStats && <StrategyStatistics strategyStats={teamStrategyStats} />}
-              {teamPlayerStats && (
-                <PlayerStatistics
-                  playerStats={teamPlayerStats}
-                  onPlayerClick={(nextPlayerId) => {
-                    updateSelection({
-                      mode: "player",
-                      playerId: nextPlayerId,
-                    });
-                  }}
-                />
-              )}
-            </>
+            <CompetitionStatisticsTabs
+              teamStats={teamStats}
+              strategyStats={teamStrategyStats}
+              playerStats={teamPlayerStats}
+              onPlayerClick={(nextPlayerId) => {
+                updateSelection({
+                  mode: "player",
+                  playerId: nextPlayerId,
+                });
+              }}
+            />
           </StatisticsSectionContainer>
         )}
 
@@ -190,23 +184,17 @@ export default function StatisticsPage() {
             isExporting={isExporting}
             onExport={handleExportCSV}
           >
-            <>
-              {competitionTeamStats && <TeamStatistics teamStats={competitionTeamStats} />}
-              {competitionStrategyStats && (
-                <StrategyStatistics strategyStats={competitionStrategyStats} />
-              )}
-              {competitionPlayerStats && (
-                <PlayerStatistics
-                  playerStats={competitionPlayerStats}
-                  onPlayerClick={(nextPlayerId) => {
-                    updateSelection({
-                      mode: "player",
-                      playerId: nextPlayerId,
-                    });
-                  }}
-                />
-              )}
-            </>
+            <CompetitionStatisticsTabs
+              teamStats={competitionTeamStats}
+              strategyStats={competitionStrategyStats}
+              playerStats={competitionPlayerStats}
+              onPlayerClick={(nextPlayerId) => {
+                updateSelection({
+                  mode: "player",
+                  playerId: nextPlayerId,
+                });
+              }}
+            />
           </StatisticsSectionContainer>
         )}
 
@@ -255,19 +243,17 @@ export default function StatisticsPage() {
                 </Box>
               </Paper>
 
-              {gameTeamStats && <TeamStatistics teamStats={gameTeamStats} />}
-              {gameStrategyStats && <StrategyStatistics strategyStats={gameStrategyStats} />}
-              {gamePlayerStats && (
-                <PlayerStatistics
-                  playerStats={gamePlayerStats}
-                  onPlayerClick={(nextPlayerId) => {
-                    updateSelection({
-                      mode: "player",
-                      playerId: nextPlayerId,
-                    });
-                  }}
-                />
-              )}
+              <CompetitionStatisticsTabs
+                teamStats={gameTeamStats}
+                strategyStats={gameStrategyStats}
+                playerStats={gamePlayerStats}
+                onPlayerClick={(nextPlayerId) => {
+                  updateSelection({
+                    mode: "player",
+                    playerId: nextPlayerId,
+                  });
+                }}
+              />
             </>
           </StatisticsSectionContainer>
         )}

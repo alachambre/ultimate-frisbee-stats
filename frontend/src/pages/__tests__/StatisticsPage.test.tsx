@@ -91,6 +91,94 @@ describe("StatisticsPage", () => {
     expect(screen.queryByText("Bob")).not.toBeInTheDocument();
   });
 
+  it("renders competition statistics in tabs to reduce scrolling", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const competition = await createCompetition({
+      team_id: team.id,
+      name: "Windmill",
+      start_date: "2026-01-24",
+      end_date: "2026-01-25",
+    });
+
+    window.history.pushState(
+      {},
+      "",
+      `/statistics?teamId=${team.id}&mode=competition&competitionId=${competition.id}`
+    );
+
+    render(<StatisticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Player" })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: "Player" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Player Statistics" })).toBeInTheDocument();
+    });
+  });
+
+  it("renders the same tabs on team overview in competition flow", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+
+    window.history.pushState({}, "", `/statistics?teamId=${team.id}&mode=competition`);
+
+    render(<StatisticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Player" })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: "Player" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Player Statistics" })).toBeInTheDocument();
+    });
+  });
+
+  it("renders the same tabs on game scope in competition flow", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const competition = await createCompetition({
+      team_id: team.id,
+      name: "Spring Cup",
+      start_date: "2026-03-01",
+      end_date: "2026-03-31",
+    });
+    const game = await createGame({
+      competition_id: competition.id,
+      opponent_name: "Rivals",
+      date: "2026-03-15",
+    });
+
+    window.history.pushState(
+      {},
+      "",
+      `/statistics?teamId=${team.id}&mode=competition&competitionId=${competition.id}&gameId=${game.id}`
+    );
+
+    render(<StatisticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Player" })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: "Player" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Player Statistics" })).toBeInTheDocument();
+    });
+  });
+
   it("navigates from game back to competition using the breadcrumb", async () => {
     const user = userEvent.setup();
 
