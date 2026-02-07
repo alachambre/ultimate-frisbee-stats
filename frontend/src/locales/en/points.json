@@ -123,6 +123,8 @@
   },
   "pointEvents": "Chronology",
   "pointStart": "Point start",
+  "callsTitle": "Calls ({{count}})",
+  "turnoversTitle": "Turnovers ({{count}})",
   "recordCall": "Record Call",
   "recordTurnover": "Record Turnover",
   "resumeFromCall": "Resume from Call",

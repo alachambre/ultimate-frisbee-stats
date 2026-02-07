@@ -13,13 +13,15 @@ import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ScoreboardIcon from "@mui/icons-material/Scoreboard";
 import { useTranslation } from "react-i18next";
 import type { GameWithScore } from "../../types";
+import StatusChip from "../shared/StatusChip";
+import { formatDate } from "../../utils/dateFormatting";
 
 interface GameCardProps {
   game: GameWithScore;
 }
 
 export default function GameCard({ game }: GameCardProps) {
-  const { t } = useTranslation(['games', 'common']);
+  const { t, i18n } = useTranslation(["games", "common"]);
   return (
     <Card
       elevation={0}
@@ -66,39 +68,17 @@ export default function GameCard({ game }: GameCardProps) {
             <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary">
               {game.date
-                ? new Date(game.date).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : t('common:labels.date')}
+                ? formatDate(game.date, i18n.resolvedLanguage)
+                : t("games:detail.dateNotSet")}
             </Typography>
           </Box>
 
           <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
-            <Chip
-              label={
-                game.status === "started"
-                  ? t('games:status.started')
-                  : game.status === "ended"
-                    ? game.our_score > game.opponent_score
-                      ? t('points:dialog.finish.won')
-                      : game.our_score < game.opponent_score
-                        ? t('points:dialog.finish.lost')
-                        : "Tie"
-                    : t('games:status.ready')
-              }
-              color={
-                game.status === "started"
-                  ? "primary"
-                  : game.status === "ended"
-                    ? game.our_score > game.opponent_score
-                      ? "success"
-                      : game.our_score < game.opponent_score
-                        ? "error"
-                        : "warning"
-                    : "info"
-              }
+            <StatusChip
+              kind="game"
+              status={game.status}
+              ourScore={game.our_score}
+              opponentScore={game.opponent_score}
               size="small"
             />
             <Chip label={game.team_name} variant="outlined" size="small" />

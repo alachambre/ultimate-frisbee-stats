@@ -1,4 +1,5 @@
 import { Box, FormHelperText } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 import type { Player } from "../../types";
 
@@ -19,6 +20,7 @@ export default function PlayerSelector({
   error = false,
   helperText,
 }: PlayerSelectorProps) {
+  const { t } = useTranslation(["points", "common"]);
   const selectedCount = selectedIds.length;
   const isValid = !required || selectedCount === 7;
 
@@ -38,13 +40,13 @@ export default function PlayerSelector({
         renderSecondary={(player) =>
           player.number !== null && player.number !== undefined
             ? `#${player.number}`
-            : "No number"
+            : t("common:labels.noNumber")
         }
       />
 
       {(error || helperText) && (
         <FormHelperText error={error} sx={{ mt: 1 }}>
-          {helperText || (required && !isValid && "Please select exactly 7 players")}
+          {helperText || (required && !isValid && t("points:dialog.start.validation.exactly7"))}
         </FormHelperText>
       )}
     </Box>

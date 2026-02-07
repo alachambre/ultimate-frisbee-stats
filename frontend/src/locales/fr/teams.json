@@ -10,6 +10,7 @@
   },
   "detail": {
     "roster": "Effectif",
+    "createdOn": "Créée le {{date}}",
     "rosterSummary": "{{count}} joueur inscrit",
     "rosterSummary_plural": "{{count}} joueurs inscrits",
     "rosterTapHint": "Appuyez sur une carte joueur pour modifier ses informations",

@@ -16,7 +16,7 @@ interface LineCardProps {
 }
 
 export default function LineCard({ line }: LineCardProps) {
-  const { t } = useTranslation(['lines', 'common', 'points']);
+  const { t } = useTranslation(["lines", "common"]);
   const navigate = useNavigate();
   const menCount = line.players.filter((p) => p.gender === "M").length;
   const womenCount = line.players.filter((p) => p.gender === "W").length;
@@ -82,14 +82,14 @@ export default function LineCard({ line }: LineCardProps) {
           />
           {menCount > 0 && (
             <Chip
-              label={`${menCount} ${menCount === 1 ? t('common:labels.male') : t('points:dialog.start.men')}`}
+              label={`${menCount} ${menCount === 1 ? t("common:labels.male") : t("common:labels.men")}`}
               size="small"
               variant="outlined"
             />
           )}
           {womenCount > 0 && (
             <Chip
-              label={`${womenCount} ${womenCount === 1 ? t('common:labels.female') : t('points:dialog.start.women')}`}
+              label={`${womenCount} ${womenCount === 1 ? t("common:labels.female") : t("common:labels.women")}`}
               size="small"
               variant="outlined"
             />

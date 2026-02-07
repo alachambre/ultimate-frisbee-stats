@@ -1,5 +1,6 @@
 import { Box, Typography, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 
 interface EmptyPlayersStateProps {
   onAddClick: () => void;
@@ -9,20 +10,24 @@ interface EmptyPlayersStateProps {
 
 export default function EmptyPlayersState({
   onAddClick,
-  emptyMessage = "No players yet",
-  buttonLabel = "Add First Player",
+  emptyMessage,
+  buttonLabel,
 }: EmptyPlayersStateProps) {
+  const { t } = useTranslation("players");
+  const resolvedEmptyMessage = emptyMessage ?? t("empty.noPlayers");
+  const resolvedButtonLabel = buttonLabel ?? t("empty.addFirst");
+
   return (
     <Box textAlign="center" py={4}>
       <Typography variant="body1" color="text.secondary" mb={2}>
-        {emptyMessage}
+        {resolvedEmptyMessage}
       </Typography>
       <Button
         variant="contained"
         startIcon={<AddIcon />}
         onClick={onAddClick}
       >
-        {buttonLabel}
+        {resolvedButtonLabel}
       </Button>
     </Box>
   );

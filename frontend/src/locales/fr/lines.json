@@ -51,6 +51,7 @@
   },
   "empty": {
     "noLines": "Aucune ligne pour le moment",
+    "description": "Créez des lignes pour organiser les joueurs en groupes offensifs, défensifs ou personnalisés",
     "createFirst": "Créez votre première ligne"
   }
 }

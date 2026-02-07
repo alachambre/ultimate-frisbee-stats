@@ -29,6 +29,7 @@
   },
   "ariaLabel": {
     "close": "Fermer",
+    "toggleRoster": "Afficher/masquer l'effectif",
     "editPoint": "Modifier le point",
     "deletePoint": "Supprimer le point",
     "startingPosition": "Départ en attaque ou défense",
@@ -39,6 +40,7 @@
     "lostPoint": "Point perdu"
   },
   "status": {
+    "label": "Statut",
     "active": "Actif",
     "inactive": "Inactif",
     "ready": "Prêt",
@@ -65,6 +67,7 @@
     "women": "Femmes",
     "allMen": "Tous les hommes",
     "allWomen": "Toutes les femmes",
+    "noNumber": "Sans numéro",
     "clearAll": "Tout effacer",
     "onlySelected": "Sélectionnés uniquement",
     "required": "Requis",
@@ -92,15 +95,20 @@
   "team": "Équipe",
   "game": "Match",
   "competition": "Compétition",
+  "app": {
+    "name": "Monkey Statistics"
+  },
   "validation": {
     "required": "Ce champ est requis",
     "invalid": "Valeur invalide",
+    "endDateAfterStart": "La date de fin doit être après la date de début",
     "tooShort": "Valeur trop courte",
     "tooLong": "Valeur trop longue"
   },
   "home": {
-    "title": "Stats Ultimate Frisbee",
+    "title": "Monkey Statistics",
     "subtitle": "Suivez les performances de votre équipe, match par match, point par point",
+    "byline": "Développé par Monkey Grenoble",
     "cards": {
       "teams": {
         "title": "Gérer les équipes",

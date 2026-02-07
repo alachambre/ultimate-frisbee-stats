@@ -41,14 +41,14 @@ export default function PlayerCard({ player, onCardClick, onEdit, onDelete }: Pl
             <Box display="flex" alignItems="center" gap={0.25}>
               {onEdit && (
                 <Tooltip title={t("card.editPlayer")} arrow>
-                  <IconButton onClick={onEdit} color="primary" size="small" aria-label="Edit player">
+                  <IconButton onClick={onEdit} color="primary" size="small" aria-label={t("card.editPlayer")}>
                     <EditIcon />
                   </IconButton>
                 </Tooltip>
               )}
               {onDelete && (
                 <Tooltip title={t("card.removePlayer")} arrow>
-                  <IconButton onClick={onDelete} color="error" size="small" aria-label="Remove player">
+                  <IconButton onClick={onDelete} color="error" size="small" aria-label={t("card.removePlayer")}>
                     <DeleteIcon />
                   </IconButton>
                 </Tooltip>

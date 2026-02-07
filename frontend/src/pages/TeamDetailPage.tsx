@@ -34,9 +34,10 @@ import EditPlayerModal from "../components/modals/EditPlayerModal";
 import CreateLineModal from "../components/modals/CreateLineModal";
 import EditLineModal from "../components/modals/EditLineModal";
 import { queryKeys } from "../utils/queryKeys";
+import { formatDate } from "../utils/dateFormatting";
 
 export default function TeamDetailPage() {
-  const { t } = useTranslation(["teams", "players", "lines", "common"]);
+  const { t, i18n } = useTranslation(["teams", "players", "lines", "common"]);
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -142,7 +143,7 @@ export default function TeamDetailPage() {
               {team.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Created {new Date(team.created_at).toLocaleDateString()}
+              {t("teams:detail.createdOn", { date: formatDate(team.created_at, i18n.resolvedLanguage) })}
             </Typography>
           </Box>
           <Box

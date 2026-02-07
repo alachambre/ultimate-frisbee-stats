@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Chip,
   Collapse,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -39,6 +38,8 @@ import EditCompetitionModal from "../components/modals/EditCompetitionModal";
 import AddPlayersToRosterModal from "../components/modals/AddPlayersToRosterModal";
 import CreateGameModal from "../components/modals/CreateGameModal";
 import { queryKeys } from "../utils/queryKeys";
+import { formatDateRange } from "../utils/dateFormatting";
+import StatusChip from "../components/shared/StatusChip";
 
 export default function CompetitionDetailPage() {
   const { t, i18n } = useTranslation(["competitions", "players", "games", "common"]);
@@ -91,13 +92,6 @@ export default function CompetitionDetailPage() {
     deleteMutation.mutate();
   };
 
-  const formatDateRange = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const locale = i18n.language === "fr" ? "fr-FR" : "en-US";
-    return `${start.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })} - ${end.toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })}`;
-  };
-
   const menPlayers = competition.players
     .filter((player) => player.gender === "M")
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -130,13 +124,7 @@ export default function CompetitionDetailPage() {
               <Typography variant="h4" fontWeight="bold">
                 {competition.name}
               </Typography>
-              <Chip
-                label={t(`common:status.${competition.status}`)}
-                size="small"
-                color={
-                  competition.status === "ongoing" ? "success" : "default"
-                }
-              />
+              <StatusChip kind="competition" status={competition.status} size="small" />
             </Box>
             {competition.description && (
               <Typography variant="body1" color="text.secondary" mb={1}>
@@ -148,7 +136,8 @@ export default function CompetitionDetailPage() {
               <Typography variant="body2" color="text.secondary">
                 {formatDateRange(
                   competition.start_date,
-                  competition.end_date
+                  competition.end_date,
+                  i18n.resolvedLanguage
                 )}
               </Typography>
             </Box>

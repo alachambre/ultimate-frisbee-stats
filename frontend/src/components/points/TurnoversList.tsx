@@ -33,7 +33,7 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
 };
 
 export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: TurnoversListProps) => {
-  const { t } = useTranslation('points');
+  const { t } = useTranslation(["points", "common"]);
 
   const { data: turnovers = [], isLoading, error } = useQuery({
     queryKey: queryKeys.turnovers(pointId),
@@ -47,7 +47,7 @@ export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: Tu
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        {error instanceof Error ? error.message : t('common:error')}
+        {error instanceof Error ? error.message : t("common:messages.error")}
       </Alert>
     );
   }
@@ -59,7 +59,7 @@ export const TurnoversList = ({ pointId, startingOnOffense, pointStartTime }: Tu
   return (
     <Box sx={{ mb: 2 }}>
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Turnovers ({turnovers.length})
+        {t("points:turnoversTitle", { count: turnovers.length })}
       </Typography>
       <Stack spacing={1}>
         {turnovers.map((turnover, index) => {

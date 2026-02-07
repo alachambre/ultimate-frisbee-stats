@@ -170,7 +170,7 @@ export default function StrategiesPage() {
         open={!!deletingStrategy}
         onClose={() => setDeletingStrategy(null)}
       >
-        <DialogTitle>{t("common:action.delete")} Strategy?</DialogTitle>
+        <DialogTitle>{t("strategies:card.deleteTitle")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {t("strategies:card.deleteConfirm")}

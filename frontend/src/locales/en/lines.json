@@ -51,6 +51,7 @@
   },
   "empty": {
     "noLines": "No lines yet",
+    "description": "Create lines to organize players into offensive, defensive, or custom groups",
     "createFirst": "Create your first line"
   }
 }

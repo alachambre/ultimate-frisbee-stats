@@ -36,7 +36,7 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
 };
 
 export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
-  const { t } = useTranslation('points');
+  const { t } = useTranslation(["points", "common"]);
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
@@ -57,7 +57,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        {error instanceof Error ? error.message : t('common:error')}
+        {error instanceof Error ? error.message : t("common:messages.error")}
       </Alert>
     );
   }
@@ -70,7 +70,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
     <>
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          Calls ({calls.length})
+          {t("points:callsTitle", { count: calls.length })}
         </Typography>
         <Stack spacing={1}>
           {calls.map((call) => {

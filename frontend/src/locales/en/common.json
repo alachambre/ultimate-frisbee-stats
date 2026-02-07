@@ -29,6 +29,7 @@
   },
   "ariaLabel": {
     "close": "Close",
+    "toggleRoster": "Toggle roster",
     "editPoint": "Edit point",
     "deletePoint": "Delete point",
     "startingPosition": "Starting on offense or defense",
@@ -66,6 +67,7 @@
     "women": "Women",
     "allMen": "All Men",
     "allWomen": "All Women",
+    "noNumber": "No number",
     "clearAll": "Clear All",
     "onlySelected": "Only selected",
     "required": "Required",
@@ -93,6 +95,9 @@
   "team": "Team",
   "game": "Game",
   "competition": "Competition",
+  "app": {
+    "name": "Monkey Statistics"
+  },
   "validation": {
     "required": "This field is required",
     "invalid": "Invalid value",
@@ -101,8 +106,9 @@
     "tooLong": "Value is too long"
   },
   "home": {
-    "title": "Ultimate Frisbee Stats",
+    "title": "Monkey Statistics",
     "subtitle": "Track your team's performance, game by game, point by point",
+    "byline": "Developped by Monkey Grenoble",
     "cards": {
       "teams": {
         "title": "Manage Teams",

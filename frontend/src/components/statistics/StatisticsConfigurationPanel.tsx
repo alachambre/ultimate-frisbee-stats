@@ -31,6 +31,7 @@ import type {
   TeamWithPlayers,
 } from "../../types";
 import StatisticsSelectionCard from "./StatisticsSelectionCard";
+import { formatDate } from "../../utils/dateFormatting";
 
 type StatisticsMode = "competition" | "player";
 type PlayerGenderTab = "men" | "women";
@@ -55,16 +56,6 @@ interface StatisticsConfigurationPanelProps {
   onSelectCompetition: (competitionId: number) => void;
   onSelectGame: (gameId: number) => void;
   onSelectPlayer: (playerId: number) => void;
-}
-
-function formatDate(date: string | null | undefined): string {
-  if (!date) return "-";
-
-  return new Date(date).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 function formatDuration(seconds: number): string {
@@ -94,7 +85,7 @@ export default function StatisticsConfigurationPanel({
   onSelectGame,
   onSelectPlayer,
 }: StatisticsConfigurationPanelProps) {
-  const { t } = useTranslation(["statistics", "games", "common"]);
+  const { t, i18n } = useTranslation(["statistics", "games", "common"]);
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
   const [playerGenderTab, setPlayerGenderTab] = useState<PlayerGenderTab>("men");
 
@@ -255,13 +246,14 @@ export default function StatisticsConfigurationPanel({
                 <Grid container spacing={1.5}>
                   {competitionsForTeam.map((competition: CompetitionWithTeam) => (
                     <Grid key={competition.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-                      <StatisticsSelectionCard
-                        title={competition.name}
-                        subtitle={`${formatDate(competition.start_date)} - ${formatDate(
-                          competition.end_date
-                        )}`}
-                        selected={competition.id === competitionId}
-                        onClick={() => onSelectCompetition(competition.id)}
+                        <StatisticsSelectionCard
+                          title={competition.name}
+                          subtitle={`${formatDate(competition.start_date, i18n.resolvedLanguage)} - ${formatDate(
+                            competition.end_date,
+                            i18n.resolvedLanguage
+                          )}`}
+                          selected={competition.id === competitionId}
+                          onClick={() => onSelectCompetition(competition.id)}
                         badge={competition.id === competitionsForTeam[0]?.id ? t("statistics:workflow.latest") : undefined}
                         icon={<EventIcon sx={{ fontSize: 16, color: "text.secondary" }} />}
                       />
@@ -284,7 +276,7 @@ export default function StatisticsConfigurationPanel({
                         <Grid key={game.id} size={{ xs: 12, sm: 6, lg: 4 }}>
                           <StatisticsSelectionCard
                             title={`${game.team_name} vs ${game.opponent_name}`}
-                            subtitle={formatDate(game.date)}
+                            subtitle={formatDate(game.date, i18n.resolvedLanguage)}
                             details={`${game.our_score} - ${game.opponent_score}`}
                             selected={game.id === gameId}
                             onClick={() => onSelectGame(game.id)}

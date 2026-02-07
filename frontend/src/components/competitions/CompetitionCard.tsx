@@ -10,18 +10,17 @@ import {
 import { alpha } from "@mui/material/styles";
 import EventIcon from "@mui/icons-material/Event";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { useTranslation } from "react-i18next";
 import type { CompetitionWithTeam } from "../../types";
+import StatusChip from "../shared/StatusChip";
+import { formatDateRange } from "../../utils/dateFormatting";
 
 interface CompetitionCardProps {
   competition: CompetitionWithTeam;
 }
 
 export default function CompetitionCard({ competition }: CompetitionCardProps) {
-  const formatDateRange = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    return `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${end.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
-  };
+  const { i18n } = useTranslation();
 
   return (
     <Card
@@ -77,17 +76,17 @@ export default function CompetitionCard({ competition }: CompetitionCardProps) {
           <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={2}>
             <EventIcon sx={{ fontSize: 16, color: "text.secondary" }} />
             <Typography variant="body2" color="text.secondary">
-              {formatDateRange(competition.start_date, competition.end_date)}
+              {formatDateRange(
+                competition.start_date,
+                competition.end_date,
+                i18n.resolvedLanguage,
+                { startFormat: "monthDay", endFormat: "shortDate" }
+              )}
             </Typography>
           </Box>
 
           <Box display="flex" gap={1} justifyContent="center" flexWrap="wrap">
-            <Chip
-              label={competition.status}
-              size="small"
-              color={competition.status === "ongoing" ? "primary" : "default"}
-              sx={{ textTransform: "capitalize" }}
-            />
+            <StatusChip kind="competition" status={competition.status} size="small" />
             <Chip
               label={competition.team_name}
               variant="outlined"

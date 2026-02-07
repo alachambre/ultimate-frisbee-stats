@@ -71,7 +71,7 @@ describe("PlayerSelector", () => {
       />
     );
 
-    expect(screen.getByText("Please select exactly 7 players")).toBeInTheDocument();
+    expect(screen.getByText("You must select exactly 7 players")).toBeInTheDocument();
   });
 
   it("displays custom helper text", () => {

@@ -18,6 +18,7 @@ import {
   Chip,
   Stack,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { createGame, getCompetitions, getCompetition } from "../../services";
 import { getCompetitionPlayers } from "../../services/competitions";
 import { queryKeys } from "../../utils/queryKeys";
@@ -216,7 +217,7 @@ export default function CreateGameModal({
                       label={`${selectedMen} ${t("common:labels.male")}`}
                       size="small"
                       sx={{
-                        backgroundColor: (theme) => `${theme.colors.men.main}20`,
+                        backgroundColor: (theme) => alpha(theme.colors.men.main, 0.12),
                         color: (theme) => theme.colors.men.main,
                       }}
                     />
@@ -224,7 +225,7 @@ export default function CreateGameModal({
                       label={`${selectedWomen} ${t("common:labels.female")}`}
                       size="small"
                       sx={{
-                        backgroundColor: (theme) => `${theme.colors.women.main}20`,
+                        backgroundColor: (theme) => alpha(theme.colors.women.main, 0.12),
                         color: (theme) => theme.colors.women.main,
                       }}
                     />
@@ -262,7 +263,7 @@ export default function CreateGameModal({
                 renderSecondary={(player) =>
                   player.number !== null && player.number !== undefined
                     ? `#${player.number}`
-                    : "No number"
+                    : t("common:labels.noNumber")
                 }
               />
             </Box>

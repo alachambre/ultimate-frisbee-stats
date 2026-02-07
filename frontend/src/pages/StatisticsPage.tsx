@@ -59,14 +59,14 @@ export default function StatisticsPage() {
   } = useStatisticsPageData();
 
   if (isLoadingTeams) {
-    return <LoadingState message={t("common:loading")} />;
+    return <LoadingState message={t("common:action.loading")} />;
   }
 
   if (teamsError || !teams) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Alert severity="error">
-          {t("common:error")}: {teamsError?.message}
+          {t("common:messages.error")}: {teamsError?.message}
         </Alert>
       </Container>
     );
@@ -128,21 +128,21 @@ export default function StatisticsPage() {
         }}
       />
 
-      {controlsLoading && <LoadingState message={t("common:loading")} />}
+      {controlsLoading && <LoadingState message={t("common:action.loading")} />}
 
       {!controlsLoading && controlsError && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {t("common:error")}: {controlsError.message}
+          {t("common:messages.error")}: {controlsError.message}
         </Alert>
       )}
 
       {!controlsLoading && !controlsError && teamId !== undefined && isScopeLoading && (
-        <LoadingState message={t("common:loading")} />
+        <LoadingState message={t("common:action.loading")} />
       )}
 
       {!controlsLoading && !controlsError && teamId !== undefined && !isScopeLoading && scopeError && (
         <Alert severity="error">
-          {t("common:error")}: {scopeError.message}
+          {t("common:messages.error")}: {scopeError.message}
         </Alert>
       )}
 

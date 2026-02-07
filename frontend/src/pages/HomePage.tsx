@@ -23,10 +23,13 @@ export default function HomePage() {
             fontSize: { xs: "2rem", sm: "3rem" },
           }}
         >
-          🥏 {t('home.title')}
+          🐒 {t("app.name")}
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
           {t('home.subtitle')}
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+          {t("home.byline")}
         </Typography>
       </Box>
 

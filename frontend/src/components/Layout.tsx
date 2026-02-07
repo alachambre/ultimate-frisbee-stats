@@ -82,7 +82,7 @@ export default function Layout() {
               letterSpacing: "0.5px",
             }}
           >
-            🥏 Ultimate Stats
+            🐒 {t("common:app.name")}
           </Typography>
 
           {/* Language Selector */}
@@ -178,7 +178,7 @@ export default function Layout() {
               borderBottom: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
             }}
           >
-            {t('navigation:drawer.title')}
+            {t("common:app.name")}
           </Typography>
           <List>
             {menuItems.map((item) => (

@@ -10,6 +10,7 @@
   },
   "detail": {
     "roster": "Roster",
+    "createdOn": "Created {{date}}",
     "rosterSummary": "{{count}} player registered",
     "rosterSummary_plural": "{{count}} players registered",
     "rosterTapHint": "Tap a player card to edit details",

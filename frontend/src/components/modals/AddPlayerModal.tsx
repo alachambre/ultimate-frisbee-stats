@@ -66,7 +66,7 @@ export default function AddPlayerModal({
   return (
     <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit}>
-        <DialogTitle>{t("common:action.add")} Player</DialogTitle>
+        <DialogTitle>{t("players:modal.add.title")}</DialogTitle>
         <DialogContent>
           <PlayerForm
             playerName={playerName}

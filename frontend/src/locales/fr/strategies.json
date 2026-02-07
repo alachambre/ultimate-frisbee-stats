@@ -32,6 +32,7 @@
     "selectTeam": "Sélectionnez une équipe"
   },
   "card": {
+    "deleteTitle": "Supprimer la stratégie ?",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette stratégie ?"
   }
 }

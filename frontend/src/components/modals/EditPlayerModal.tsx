@@ -91,10 +91,10 @@ export default function EditPlayerModal({
   if (showDeleteConfirm) {
     return (
       <Dialog open={isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{t("common:action.delete")} Player?</DialogTitle>
+        <DialogTitle>{t("players:modal.edit.deleteTitle")}</DialogTitle>
         <DialogContent>
           <Box>
-            Are you sure you want to remove {player.name}?
+            {t("players:modal.edit.deleteConfirm", { playerName: player.name })}
             {deleteMutation.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {(deleteMutation.error as { response?: { data?: { detail?: string } } })
@@ -162,7 +162,7 @@ export default function EditPlayerModal({
               width: { xs: "100%", sm: "auto" },
             }}
           >
-            {t("common:action.delete")} Player
+            {t("players:modal.edit.delete")}
           </Button>
           {onViewStatistics && (
             <Button

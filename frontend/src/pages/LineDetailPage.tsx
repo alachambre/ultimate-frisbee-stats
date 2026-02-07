@@ -117,16 +117,17 @@ export default function LineDetailPage() {
             )}
             <Box display="flex" alignItems="center" gap={1}>
               <GroupsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-              <Typography variant="body2" color="text.secondary">
-                {t("lines:detail.teamLabel")}{" "}
-                <Link
-                  to={`/teams/${line.team_id}`}
-                  style={{ textDecoration: "none", color: "inherit", fontWeight: "bold" }}
-                >
-                  {team?.name || t("lines:detail.teamLoading")}
-                </Link>
-              </Typography>
-            </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {t("lines:detail.teamLabel")}{" "}
+                  <Box
+                    component={Link}
+                    to={`/teams/${line.team_id}`}
+                    sx={{ textDecoration: "none", color: "inherit", fontWeight: "bold" }}
+                  >
+                    {team?.name || t("lines:detail.teamLoading")}
+                  </Box>
+                </Typography>
+              </Box>
           </Box>
           <Box display="flex" gap={1}>
             <Button

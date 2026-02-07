@@ -154,7 +154,7 @@ export default function AddPlayersModal({
               renderSecondary={(player) =>
                 player.number !== null && player.number !== undefined
                   ? `#${player.number}`
-                  : "No number"
+                  : t("common:labels.noNumber")
               }
             />
           </>

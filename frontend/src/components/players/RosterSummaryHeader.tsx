@@ -4,6 +4,7 @@ import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 
 interface RosterSummaryHeaderProps {
@@ -30,9 +31,12 @@ export default function RosterSummaryHeader({
   isCollapsible = false,
   isExpanded = false,
   onToggle,
-  toggleAriaLabel = "Toggle roster",
+  toggleAriaLabel,
   showBorder = false,
 }: RosterSummaryHeaderProps) {
+  const { t } = useTranslation("common");
+  const resolvedToggleAriaLabel = toggleAriaLabel ?? t("ariaLabel.toggleRoster");
+
   return (
     <Box
       p={3}
@@ -55,7 +59,7 @@ export default function RosterSummaryHeader({
         <Box display="flex" alignItems="center" gap={1}>
           {rightContent}
           {isCollapsible && onToggle && (
-            <IconButton size="small" onClick={onToggle} aria-label={toggleAriaLabel}>
+            <IconButton size="small" onClick={onToggle} aria-label={resolvedToggleAriaLabel}>
               {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </IconButton>
           )}
