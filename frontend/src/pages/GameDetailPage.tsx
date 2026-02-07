@@ -20,6 +20,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Chip,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,6 +29,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AddIcon from "@mui/icons-material/Add";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import GroupIcon from "@mui/icons-material/Group";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
@@ -40,7 +43,6 @@ import LivePointTracker from "../components/points/LivePointTracker";
 import PointHistoryList from "../components/points/PointHistoryList";
 import EditPointDialog from "../components/modals/EditPointDialog";
 import PlayersGrid from "../components/players/PlayersGrid";
-import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
 import RosterGenderPanel from "../components/players/RosterGenderPanel";
 import GamePlayerStatsCard from "../components/players/GamePlayerStatsCard";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
@@ -446,17 +448,29 @@ export default function GameDetailPage() {
             </Box>
           </DialogTitle>
           <DialogContent>
-            <RosterSummaryHeader
-              title={t("games:detail.roster")}
-              subtitle={t("games:detail.rosterSection", { count: game.players.length })}
-              totalLabel={t("games:detail.totalPlayers", { count: game.players.length })}
-              menLabel={t("games:detail.menCount", { count: menPlayers.length })}
-              womenLabel={t("games:detail.womenCount", { count: womenPlayers.length })}
-              showBorder
-            />
+            <Box mb={2} display="flex" gap={1} flexWrap="wrap">
+              <Chip
+                icon={<GroupIcon />}
+                label={t("games:detail.totalPlayers", { count: game.players.length })}
+                variant="outlined"
+                size="small"
+              />
+              <Chip
+                icon={<MaleIcon />}
+                label={t("games:detail.menCount", { count: menPlayers.length })}
+                variant="outlined"
+                size="small"
+              />
+              <Chip
+                icon={<FemaleIcon />}
+                label={t("games:detail.womenCount", { count: womenPlayers.length })}
+                variant="outlined"
+                size="small"
+              />
+            </Box>
 
             {/* Controls Row - Sorting + Add Players Button */}
-            <Box mt={2} mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+            <Box mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
               {/* Sorting Controls - show when we have stats to display */}
               {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 ? (
                 <FormControl size="small" sx={{ minWidth: { xs: 120, sm: 200 } }}>
