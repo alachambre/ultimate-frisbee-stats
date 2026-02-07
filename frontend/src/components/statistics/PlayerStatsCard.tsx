@@ -135,7 +135,12 @@ export default function PlayerStatsCard({ stats, view, onClick }: PlayerStatsCar
   );
 
   return (
-    <Card variant="outlined">
+    <Card
+      sx={{
+        boxShadow: "none",
+        backgroundColor: "action.hover",
+      }}
+    >
       {onClick ? (
         <CardActionArea onClick={onClick} aria-label={`View statistics for ${stats.player_name}`}>
           {content}

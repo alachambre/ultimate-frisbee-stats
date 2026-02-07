@@ -112,13 +112,13 @@ describe("StatisticsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Player" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Players" })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole("tab", { name: "Player" }));
+    await user.click(screen.getByRole("tab", { name: "Players" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Player Statistics" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Players statistics" })).toBeInTheDocument();
     });
   });
 
@@ -133,13 +133,13 @@ describe("StatisticsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Player" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Players" })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole("tab", { name: "Player" }));
+    await user.click(screen.getByRole("tab", { name: "Players" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Player Statistics" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Players statistics" })).toBeInTheDocument();
     });
   });
 
@@ -169,13 +169,13 @@ describe("StatisticsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Player" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Players" })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole("tab", { name: "Player" }));
+    await user.click(screen.getByRole("tab", { name: "Players" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Player Statistics" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Players statistics" })).toBeInTheDocument();
     });
   });
 

@@ -23,6 +23,7 @@
     "competition": "Competition",
     "game": "Game",
     "player": "Player",
+    "players": "Players",
     "strategies": "Strategies",
     "mode": "View",
     "modeCompetition": "Competition -> Game",
@@ -66,7 +67,7 @@
     "defense": "Defense"
   },
   "teamStats": {
-    "title": "Team Statistics",
+    "title": "Team statistics",
     "overview": "Overview",
     "opponent": "Opponent",
     "score": "Score",
@@ -88,7 +89,7 @@
     "pullInbound": "Pull inbound"
   },
   "strategyStats": {
-    "title": "Strategy Statistics",
+    "title": "Strategies statistics",
     "offenseStrategies": "Offense Strategies",
     "defenseStrategies": "Defense Strategies",
     "pointsPlayed": "points played",
@@ -99,7 +100,7 @@
     "turnoverRate": "Turnover Rate"
   },
   "playerStats": {
-    "title": "Player Statistics",
+    "title": "Players statistics",
     "noData": "No player statistics available yet. Complete some points to see statistics.",
     "noDataForScope": "No statistics available for this player in the selected scope yet.",
     "playersCount": "player(s)",

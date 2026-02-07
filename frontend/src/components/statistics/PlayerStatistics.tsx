@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  Paper,
   Typography,
   Box,
   Table,
@@ -23,6 +22,7 @@ import {
   InputLabel,
   ButtonBase,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { useTranslation } from "react-i18next";
@@ -142,20 +142,60 @@ export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerS
 
   if (!playerStats || playerStats.length === 0) {
     return (
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          sx={{
+            mb: 3,
+            pb: 1,
+            borderBottom: 1,
+            borderColor: "divider",
+            position: "relative",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              left: 0,
+              bottom: -1,
+              width: 64,
+              height: 3,
+              borderRadius: 999,
+              backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.75),
+            },
+          }}
+        >
           {t("playerStats.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {t("playerStats.noData")}
         </Typography>
-      </Paper>
+      </Box>
     );
   }
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        sx={{
+          mb: 3,
+          pb: 1,
+          borderBottom: 1,
+          borderColor: "divider",
+          position: "relative",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            left: 0,
+            bottom: -1,
+            width: 64,
+            height: 3,
+            borderRadius: 999,
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.75),
+          },
+        }}
+      >
         {t("playerStats.title")}
       </Typography>
 
@@ -470,6 +510,6 @@ export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerS
           )}
         </>
       )}
-    </Paper>
+    </Box>
   );
 }

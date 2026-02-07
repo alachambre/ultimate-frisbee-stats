@@ -162,12 +162,6 @@ export default function StatisticsPage() {
               teamStats={teamStats}
               strategyStats={teamStrategyStats}
               playerStats={teamPlayerStats}
-              onPlayerClick={(nextPlayerId) => {
-                updateSelection({
-                  mode: "player",
-                  playerId: nextPlayerId,
-                });
-              }}
             />
           </StatisticsSectionContainer>
         )}
@@ -188,12 +182,6 @@ export default function StatisticsPage() {
               teamStats={competitionTeamStats}
               strategyStats={competitionStrategyStats}
               playerStats={competitionPlayerStats}
-              onPlayerClick={(nextPlayerId) => {
-                updateSelection({
-                  mode: "player",
-                  playerId: nextPlayerId,
-                });
-              }}
             />
           </StatisticsSectionContainer>
         )}
@@ -247,12 +235,6 @@ export default function StatisticsPage() {
                 teamStats={gameTeamStats}
                 strategyStats={gameStrategyStats}
                 playerStats={gamePlayerStats}
-                onPlayerClick={(nextPlayerId) => {
-                  updateSelection({
-                    mode: "player",
-                    playerId: nextPlayerId,
-                  });
-                }}
               />
             </>
           </StatisticsSectionContainer>

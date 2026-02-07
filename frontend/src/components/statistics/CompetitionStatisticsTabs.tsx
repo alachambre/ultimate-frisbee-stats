@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, Paper, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type { PlayerGameStats, StrategyStatsBase, TeamStatsBase } from "../../types";
 import PlayerStatistics from "./PlayerStatistics";
@@ -12,7 +12,6 @@ interface CompetitionStatisticsTabsProps {
   teamStats?: TeamStatsBase;
   strategyStats?: StrategyStatsBase;
   playerStats?: PlayerGameStats[];
-  onPlayerClick?: (playerId: number) => void;
 }
 
 const TAB_ORDER: CompetitionStatisticsTab[] = ["team", "strategies", "players"];
@@ -36,7 +35,6 @@ export default function CompetitionStatisticsTabs({
   teamStats,
   strategyStats,
   playerStats,
-  onPlayerClick,
 }: CompetitionStatisticsTabsProps) {
   const { t } = useTranslation(["statistics", "common"]);
   const [requestedTab, setRequestedTab] = useState<CompetitionStatisticsTab>("team");
@@ -59,11 +57,11 @@ export default function CompetitionStatisticsTabs({
     : (TAB_ORDER.find((tab) => tabEnabledState[tab]) ?? "players");
 
   const renderNoData = () => (
-    <Paper sx={{ p: 3 }}>
+    <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
       <Typography variant="body2" color="text.secondary">
         {t("common:messages.noData")}
       </Typography>
-    </Paper>
+    </Box>
   );
 
   return (
@@ -78,7 +76,7 @@ export default function CompetitionStatisticsTabs({
         >
           <Tab value="team" label={t("statistics:workflow.team")} />
           <Tab value="strategies" label={t("statistics:workflow.strategies")} />
-          <Tab value="players" label={t("statistics:workflow.player")} />
+          <Tab value="players" label={t("statistics:workflow.players")} />
         </Tabs>
       </Box>
 
@@ -95,7 +93,6 @@ export default function CompetitionStatisticsTabs({
       {activeTab === "players" && (
         <PlayerStatistics
           playerStats={playerStats ?? []}
-          onPlayerClick={onPlayerClick}
         />
       )}
     </>

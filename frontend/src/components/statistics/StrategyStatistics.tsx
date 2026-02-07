@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Paper, Typography, Box, Grid, Collapse, IconButton, LinearProgress } from "@mui/material";
+import { Typography, Box, Grid, Collapse, IconButton, LinearProgress } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
@@ -95,8 +95,28 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
   }
 
   return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        sx={{
+          mb: 3,
+          pb: 1,
+          borderBottom: 1,
+          borderColor: "divider",
+          position: "relative",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            left: 0,
+            bottom: -1,
+            width: 64,
+            height: 3,
+            borderRadius: 999,
+            backgroundColor: alpha(theme.palette.primary.main, 0.75),
+          },
+        }}
+      >
         {t("strategyStats.title")}
       </Typography>
 
@@ -113,10 +133,11 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
               const isExpanded = expandedOffense.has(strategy.strategy_id);
               return (
                 <Grid size={{ xs: 12, md: 6 }} key={strategy.strategy_id}>
-                  <Paper
-                    variant="outlined"
+                  <Box
                     sx={{
                       p: 2,
+                      borderRadius: 2,
+                      backgroundColor: alpha(theme.palette.primary.main, 0.03),
                       cursor: "pointer",
                       transition: "all 0.2s",
                       "&:hover": {
@@ -169,7 +190,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                         />
                       </Box>
                     </Collapse>
-                  </Paper>
+                  </Box>
                 </Grid>
               );
             })}
@@ -190,10 +211,11 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
               const isExpanded = expandedDefense.has(strategy.strategy_id);
               return (
                 <Grid size={{ xs: 12, md: 6 }} key={strategy.strategy_id}>
-                  <Paper
-                    variant="outlined"
+                  <Box
                     sx={{
                       p: 2,
+                      borderRadius: 2,
+                      backgroundColor: alpha(theme.palette.primary.main, 0.03),
                       cursor: "pointer",
                       transition: "all 0.2s",
                       "&:hover": {
@@ -239,13 +261,13 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                         />
                       </Box>
                     </Collapse>
-                  </Paper>
+                  </Box>
                 </Grid>
               );
             })}
           </Grid>
         </Box>
       )}
-    </Paper>
+    </Box>
   );
 }

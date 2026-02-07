@@ -1,4 +1,5 @@
-import { Paper, Typography, Box, Grid, Divider } from "@mui/material";
+import { Typography, Box, Grid, Divider } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { useTranslation } from "react-i18next";
@@ -11,14 +12,35 @@ interface TeamStatisticsProps {
 
 export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
   const { t } = useTranslation("statistics");
+  const theme = useTheme();
 
   if (teamStats.total_completed_points === 0) {
     return null;
   }
 
   return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        sx={{
+          mb: 3,
+          pb: 1,
+          borderBottom: 1,
+          borderColor: "divider",
+          position: "relative",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            left: 0,
+            bottom: -1,
+            width: 64,
+            height: 3,
+            borderRadius: 999,
+            backgroundColor: alpha(theme.palette.primary.main, 0.75),
+          },
+        }}
+      >
         {t("teamStats.title")}
       </Typography>
 
@@ -103,6 +125,6 @@ export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
           </Grid>
         </Grid>
       </Box>
-    </Paper>
+    </Box>
   );
 }

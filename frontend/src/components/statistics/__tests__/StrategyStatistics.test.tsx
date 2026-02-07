@@ -38,7 +38,7 @@ describe("StrategyStatistics", () => {
 
     render(<StrategyStatistics strategyStats={stats} />);
 
-    expect(screen.getByText("Strategy Statistics")).toBeInTheDocument();
+    expect(screen.getByText("Strategies statistics")).toBeInTheDocument();
     expect(screen.getByText("Offense Strategies")).toBeInTheDocument();
     expect(screen.getByText("Ho Stack")).toBeInTheDocument();
     expect(screen.getByText("5 points played")).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("StrategyStatistics", () => {
 
     render(<StrategyStatistics strategyStats={stats} />);
 
-    expect(screen.getByText("Strategy Statistics")).toBeInTheDocument();
+    expect(screen.getByText("Strategies statistics")).toBeInTheDocument();
     expect(screen.getByText("Defense Strategies")).toBeInTheDocument();
     expect(screen.getByText("Zone")).toBeInTheDocument();
     expect(screen.getByText("3 points played")).toBeInTheDocument();
