@@ -30,7 +30,6 @@ export default function Layout() {
     { label: t('navigation:menu.teams'), path: "/teams" },
     { label: t('navigation:menu.strategies'), path: "/strategies" },
     { label: t('navigation:menu.competitions'), path: "/competitions" },
-    { label: t('navigation:menu.games'), path: "/games" },
     { label: t('navigation:menu.statistics'), path: "/statistics" },
   ];
 

@@ -106,12 +106,13 @@ export default function GameDetailPage() {
     queryFn: () => getCompetition(competitionId as number),
     enabled: !!competitionId,
   });
+  const competitionPath = competitionId ? `/competitions/${competitionId}` : "/competitions";
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteGame(Number(gameId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.games });
-      navigate("/games");
+      navigate(competitionPath);
     },
   });
 
@@ -244,7 +245,7 @@ export default function GameDetailPage() {
       <Box mb={2}>
         <Button
           component={Link}
-          to="/games"
+          to={competitionPath}
           startIcon={<ArrowBackIcon />}
           sx={{ mb: 2 }}
         >

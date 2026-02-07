@@ -112,9 +112,9 @@
         "title": "Competitions",
         "description": "Organize tournaments and track results"
       },
-      "games": {
-        "title": "Games",
-        "description": "Record games and track point-by-point stats"
+      "statistics": {
+        "title": "Statistics",
+        "description": "Explore team, competition, game, and player performance"
       }
     }
   }

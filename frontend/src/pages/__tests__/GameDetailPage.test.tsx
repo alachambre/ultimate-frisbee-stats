@@ -178,9 +178,9 @@ describe("GameDetailPage", () => {
     const confirmButton = screen.getByRole("button", { name: /delete game/i });
     await user.click(confirmButton);
 
-    // Should call navigate to games list
+    // Should call navigate to competition detail
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/games");
+      expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/^\/competitions\/\d+$/));
     });
   });
 

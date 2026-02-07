@@ -110,9 +110,9 @@
         "title": "Compétitions",
         "description": "Organisez des tournois et suivez les résultats"
       },
-      "games": {
-        "title": "Matchs",
-        "description": "Enregistrez les matchs et suivez les stats point par point"
+      "statistics": {
+        "title": "Statistiques",
+        "description": "Explorez les performances par equipe, competition, match et joueur"
       }
     }
   }

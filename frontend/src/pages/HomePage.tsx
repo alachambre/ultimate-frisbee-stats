@@ -3,7 +3,7 @@ import { Container, Typography, Grid, Card, CardActionArea, CardContent, Box } f
 import { alpha } from "@mui/material/styles";
 import GroupIcon from "@mui/icons-material/Group";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import ScoreboardIcon from "@mui/icons-material/Scoreboard";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
@@ -107,14 +107,14 @@ export default function HomePage() {
               },
             }}
           >
-            <CardActionArea component={Link} to="/games" sx={{ height: "100%" }}>
+            <CardActionArea component={Link} to="/statistics" sx={{ height: "100%" }}>
               <CardContent sx={{ textAlign: "center", py: 4 }}>
-                <ScoreboardIcon sx={{ fontSize: 60, color: "secondary.main", mb: 2 }} />
+                <QueryStatsIcon sx={{ fontSize: 60, color: (theme) => theme.colors.pull.main, mb: 2 }} />
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  {t('home.cards.games.title')}
+                  {t('home.cards.statistics.title')}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  {t('home.cards.games.description')}
+                  {t('home.cards.statistics.description')}
                 </Typography>
               </CardContent>
             </CardActionArea>

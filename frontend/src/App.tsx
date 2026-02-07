@@ -10,7 +10,6 @@ import TeamsPage from "./pages/TeamsPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
 import CompetitionsPage from "./pages/CompetitionsPage";
 import CompetitionDetailPage from "./pages/CompetitionDetailPage";
-import GamesPage from "./pages/GamesPage";
 import GameDetailPage from "./pages/GameDetailPage";
 import LineDetailPage from "./pages/LineDetailPage";
 import StrategiesPage from "./pages/StrategiesPage";
@@ -88,7 +87,6 @@ function App() {
                 <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
                 <Route path="lines/:lineId" element={<LineDetailPage />} />
                 <Route path="strategies" element={<StrategiesPage />} />
-                <Route path="games" element={<GamesPage />} />
                 <Route path="games/:gameId" element={<GameDetailPage />} />
                 <Route path="statistics" element={<StatisticsPage />} />
               </Route>

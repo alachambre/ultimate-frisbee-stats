@@ -30,6 +30,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/test/` MSW + test utils
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
 - Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (query-driven workflow: `teamId`, `mode=competition|player`, `competitionId`, `gameId`, `playerId`)
+- Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
 - Statistics page layout is split into dedicated components: `StatisticsConfigurationPanel`, `StatisticsSectionContainer`, and `StatisticsSelectionCard` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
 - Statistics data/query orchestration lives in `frontend/src/pages/hooks/useStatisticsPageData.ts`; keep `StatisticsPage.tsx` focused on composition/rendering
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
