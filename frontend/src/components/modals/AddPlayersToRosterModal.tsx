@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { addPlayersToRoster, getTeamPlayers } from "../../services";
+import { addPlayersToRoster, getTeamPlayers, removePlayersFromRoster } from "../../services";
 import AddPlayersModal from "./AddPlayersModal";
 import { queryKeys } from "../../utils/queryKeys";
 
@@ -27,7 +27,9 @@ export default function AddPlayersToRosterModal({
       title={t('competitions:modal.addPlayers.title')}
       currentPlayerIds={currentRosterIds}
       fetchPlayers={() => getTeamPlayers(teamId)}
+      playersQueryKey={["manage-roster-players", "competition", competitionId, "team", teamId]}
       addPlayers={(playerIds) => addPlayersToRoster(competitionId, playerIds)}
+      removePlayers={(playerIds) => removePlayersFromRoster(competitionId, playerIds)}
       invalidateQueries={[
         queryKeys.competition(competitionId),
         queryKeys.competitionPlayers(competitionId),

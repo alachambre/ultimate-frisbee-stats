@@ -14,7 +14,6 @@ import {
   DialogActions,
   Alert,
   Divider,
-  Grid,
   IconButton,
   Select,
   MenuItem,
@@ -33,7 +32,7 @@ import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
-import { getGame, deleteGame, finishGame, updateGame, removePlayersFromGame, getLiveGameStatistics } from "../services";
+import { getGame, deleteGame, finishGame, updateGame, getLiveGameStatistics } from "../services";
 import { getActivePoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
@@ -42,9 +41,7 @@ import EditGameModal from "../components/modals/EditGameModal";
 import LivePointTracker from "../components/points/LivePointTracker";
 import PointHistoryList from "../components/points/PointHistoryList";
 import EditPointDialog from "../components/modals/EditPointDialog";
-import PlayersGrid from "../components/players/PlayersGrid";
-import RosterGenderPanel from "../components/players/RosterGenderPanel";
-import GamePlayerStatsCard from "../components/players/GamePlayerStatsCard";
+import PlayerSelectionList from "../components/shared/PlayerSelectionList";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
 import type { PointWithPlayers, Player, PlayerGameStats } from "../types";
@@ -62,7 +59,6 @@ export default function GameDetailPage() {
   const [editingPoint, setEditingPoint] = useState<PointWithPlayers | null>(null);
   const [deletingPoint, setDeletingPoint] = useState<PointWithPlayers | null>(null);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
-  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [sortBy, setSortBy] = useState<"name" | "points" | "time">("name");
   const [isRosterDialogOpen, setIsRosterDialogOpen] = useState(false);
   const gameIdNumber = Number(gameId);
@@ -144,16 +140,6 @@ export default function GameDetailPage() {
     },
   });
 
-  const removePlayerMutation = useMutation({
-    mutationFn: (playerId: number) =>
-      removePlayersFromGame(Number(gameId), [playerId]),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
-      setPlayerToRemove(null);
-    },
-  });
-
-
   // Helper function to sort stats
   const sortStats = useCallback((stats: PlayerGameStats[]): PlayerGameStats[] => {
     const sorted = [...stats];
@@ -168,18 +154,10 @@ export default function GameDetailPage() {
     }
   }, [sortBy]);
 
-  // Sorted stats by gender
-  const sortedMenStats = useMemo(() => {
-    if (!liveStats) return [];
-    const menIds = game?.players.filter((p) => p.gender === "M").map((p) => p.id) || [];
-    return sortStats(liveStats.filter((s) => menIds.includes(s.player_id)));
-  }, [liveStats, game?.players, sortStats]);
-
-  const sortedWomenStats = useMemo(() => {
-    if (!liveStats) return [];
-    const womenIds = game?.players.filter((p) => p.gender === "W").map((p) => p.id) || [];
-    return sortStats(liveStats.filter((s) => womenIds.includes(s.player_id)));
-  }, [liveStats, game?.players, sortStats]);
+  const liveStatsByPlayerId = useMemo(
+    () => new Map((liveStats || []).map((stats) => [stats.player_id, stats])),
+    [liveStats]
+  );
 
   const menPlayers = useMemo(
     () =>
@@ -195,6 +173,58 @@ export default function GameDetailPage() {
         .sort((a, b) => a.name.localeCompare(b.name)),
     [game?.players]
   );
+  const rosterPlayersForTabs = useMemo(() => {
+    const allPlayers = game?.players ?? [];
+    if (allPlayers.length === 0) {
+      return [];
+    }
+
+    const hasLiveStats =
+      (game?.status === "started" || game?.status === "ended") &&
+      !!liveStats &&
+      liveStats.length > 0;
+
+    if (!hasLiveStats) {
+      return [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    const playersById = new Map(allPlayers.map((player) => [player.id, player]));
+    const menIds = new Set(allPlayers.filter((player) => player.gender === "M").map((player) => player.id));
+    const womenIds = new Set(allPlayers.filter((player) => player.gender === "W").map((player) => player.id));
+
+    const sortedMenStats = sortStats(liveStats.filter((stats) => menIds.has(stats.player_id)));
+    const sortedWomenStats = sortStats(liveStats.filter((stats) => womenIds.has(stats.player_id)));
+
+    const buildGenderPlayers = (
+      gender: "M" | "W",
+      sortedStats: PlayerGameStats[]
+    ): Player[] => {
+      const orderedIds = sortedStats.map((stats) => stats.player_id);
+      const missingIds = allPlayers
+        .filter((player) => player.gender === gender && !orderedIds.includes(player.id))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((player) => player.id);
+
+      return [...orderedIds, ...missingIds]
+        .map((playerId) => playersById.get(playerId))
+        .filter((player): player is Player => Boolean(player));
+    };
+
+    return [
+      ...buildGenderPlayers("M", sortedMenStats),
+      ...buildGenderPlayers("W", sortedWomenStats),
+    ];
+  }, [game?.players, game?.status, liveStats, sortStats]);
+  const getRosterPlayerHighlight = (playerId: number): "high" | "low" | null => {
+    if (!liveStats || liveStats.length < 5) {
+      return null;
+    }
+    const playerStats = liveStatsByPlayerId.get(playerId);
+    if (!playerStats) {
+      return null;
+    }
+    return getPlayerHighlight(playerStats, liveStats);
+  };
 
   if (isLoading) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -228,16 +258,6 @@ export default function GameDetailPage() {
   const confirmDeletePoint = () => {
     if (deletingPoint) {
       deletePointMutation.mutate(deletingPoint.id);
-    }
-  };
-
-  const handleRemovePlayer = (player: Player) => {
-    setPlayerToRemove(player);
-  };
-
-  const confirmRemovePlayer = () => {
-    if (playerToRemove) {
-      removePlayerMutation.mutate(playerToRemove.id);
     }
   };
 
@@ -509,85 +529,32 @@ export default function GameDetailPage() {
                 </Box>
               </Button>
             </Box>
-            <Grid container spacing={3}>
-              {/* Men Column */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RosterGenderPanel
-                  label={t("games:detail.men")}
-                  countLabel={t("games:detail.playerGroupCount", { count: menPlayers.length })}
-                  accent="men"
-                  emptyLabel={t("players:empty.noPlayers")}
-                  hasContent={menPlayers.length > 0}
-                >
-                  {(game.status === "started" || game.status === "ended") && sortedMenStats.length > 0 ? (
-                    <Grid container spacing={2}>
-                      {sortedMenStats.map((stats) => (
-                        <Grid size={{ xs: 6 }} key={stats.player_id}>
-                          <GamePlayerStatsCard
-                            stats={stats}
-                            highlight={liveStats ? getPlayerHighlight(stats, liveStats) : null}
-                            onDelete={
-                              game.status === "ended"
-                                ? undefined
-                                : () => {
-                                    const player = game.players.find((p) => p.id === stats.player_id);
-                                    if (player) {
-                                      handleRemovePlayer(player);
-                                    }
-                                  }
-                            }
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <PlayersGrid
-                      players={menPlayers}
-                      onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
-                    />
-                  )}
-                </RosterGenderPanel>
-              </Grid>
-
-              {/* Women Column */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RosterGenderPanel
-                  label={t("games:detail.women")}
-                  countLabel={t("games:detail.playerGroupCount", { count: womenPlayers.length })}
-                  accent="women"
-                  emptyLabel={t("players:empty.noPlayers")}
-                  hasContent={womenPlayers.length > 0}
-                >
-                  {(game.status === "started" || game.status === "ended") && sortedWomenStats.length > 0 ? (
-                    <Grid container spacing={2}>
-                      {sortedWomenStats.map((stats) => (
-                        <Grid size={{ xs: 6 }} key={stats.player_id}>
-                          <GamePlayerStatsCard
-                            stats={stats}
-                            highlight={liveStats ? getPlayerHighlight(stats, liveStats) : null}
-                            onDelete={
-                              game.status === "ended"
-                                ? undefined
-                                : () => {
-                                    const player = game.players.find((p) => p.id === stats.player_id);
-                                    if (player) {
-                                      handleRemovePlayer(player);
-                                    }
-                                  }
-                            }
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <PlayersGrid
-                      players={womenPlayers}
-                      onDeletePlayer={game.status === "ended" ? undefined : handleRemovePlayer}
-                    />
-                  )}
-                </RosterGenderPanel>
-              </Grid>
-            </Grid>
+            <PlayerSelectionList
+              players={rosterPlayersForTabs}
+              selectedIds={[]}
+              onToggle={() => {}}
+              menLabel={t("games:detail.men")}
+              womenLabel={t("games:detail.women")}
+              emptyMenLabel={t("players:empty.noPlayers")}
+              emptyWomenLabel={t("players:empty.noPlayers")}
+              getHighlight={getRosterPlayerHighlight}
+              highlightSecondary={false}
+              preserveOrder
+              renderPrimary={(player) => {
+                const stats = liveStatsByPlayerId.get(player.id);
+                if (!stats) {
+                  return player.name;
+                }
+                return `${player.name} - ${stats.points_played} pts`;
+              }}
+              renderSecondary={(player) => {
+                const stats = liveStatsByPlayerId.get(player.id);
+                if (!stats) {
+                  return "";
+                }
+                return `${Math.floor(stats.effective_time_seconds / 60)} min`;
+              }}
+            />
           </DialogContent>
         </Dialog>
       )}
@@ -753,45 +720,8 @@ export default function GameDetailPage() {
         />
       )}
 
-      {/* Remove Player Confirmation Dialog */}
-      <Dialog
-        open={!!playerToRemove}
-        onClose={() => setPlayerToRemove(null)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t("games:detail.removePlayerTitle")}</DialogTitle>
-        <DialogContent>
-          <Typography gutterBottom>
-            {t("games:detail.removePlayerConfirm", { playerName: playerToRemove?.name })}
-          </Typography>
-          {removePlayerMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {(removePlayerMutation.error as { response?: { data?: { detail?: string } } })
-                ?.response?.data?.detail || t("games:detail.removePlayerError")}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setPlayerToRemove(null)}
-            disabled={removePlayerMutation.isPending}
-          >
-            {t("common:action.cancel")}
-          </Button>
-          <Button
-            onClick={confirmRemovePlayer}
-            variant="contained"
-            color="error"
-            disabled={removePlayerMutation.isPending}
-          >
-            {removePlayerMutation.isPending ? t("games:detail.removingPlayer") : t("games:detail.removePlayer")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Add Players to Game Modal */}
-      {competition && (
+      {competition && isAddPlayersModalOpen && (
         <AddPlayersToGameModal
           isOpen={isAddPlayersModalOpen}
           onClose={() => setIsAddPlayersModalOpen(false)}

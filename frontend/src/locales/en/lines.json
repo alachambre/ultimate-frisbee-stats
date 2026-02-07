@@ -9,7 +9,7 @@
     "playersCount": "{{count}} player",
     "playersCount_plural": "{{count}} players",
     "players": "Players",
-    "addPlayers": "Add Players",
+    "addPlayers": "Manage Roster",
     "edit": "Edit",
     "delete": "Delete",
     "deleteTitle": "Delete Line?",
@@ -36,9 +36,9 @@
       "title": "Edit Line"
     },
     "addPlayers": {
-      "title": "Add Players to Line",
+      "title": "Manage Line Roster",
       "loading": "Loading players...",
-      "empty": "All players are already added to this line"
+      "empty": "No team players available"
     }
   },
   "form": {

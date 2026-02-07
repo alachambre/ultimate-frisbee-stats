@@ -129,7 +129,7 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
 
-    const playerCard = await screen.findByRole("button", { name: /open jane smith/i });
+    const playerCard = await screen.findByRole("button", { name: "Jane Smith" });
     await user.click(playerCard);
 
     // Edit modal should open
@@ -199,7 +199,7 @@ describe("TeamDetailPage - Player Management", () => {
       expect(screen.getByText("Bob Johnson")).toBeInTheDocument();
     });
 
-    const playerCard = await screen.findByRole("button", { name: /open bob johnson/i });
+    const playerCard = await screen.findByRole("button", { name: "Bob Johnson" });
     await user.click(playerCard);
 
     // Click delete button in the edit modal
@@ -250,7 +250,7 @@ describe("TeamDetailPage - Player Management", () => {
     const expandButton = screen.getByRole("button", { name: /show players/i });
     await user.click(expandButton);
 
-    const playerCard = await screen.findByRole("button", { name: /open stats player/i });
+    const playerCard = await screen.findByRole("button", { name: "Stats Player" });
     await user.click(playerCard);
 
     const statsButton = await screen.findByRole("button", { name: /view statistics/i });

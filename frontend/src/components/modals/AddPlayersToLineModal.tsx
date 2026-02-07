@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { addPlayersToLine } from "../../services/lines";
+import { addPlayersToLine, removePlayersFromLine } from "../../services/lines";
 import { getTeam } from "../../services";
 import AddPlayersModal from "./AddPlayersModal";
 import { queryKeys } from "../../utils/queryKeys";
@@ -31,7 +31,9 @@ export default function AddPlayersToLineModal({
         const team = await getTeam(teamId);
         return team.players;
       }}
+      playersQueryKey={["manage-roster-players", "line", lineId, "team", teamId]}
       addPlayers={(playerIds) => addPlayersToLine(lineId, playerIds)}
+      removePlayers={(playerIds) => removePlayersFromLine(lineId, playerIds)}
       invalidateQueries={[queryKeys.line(lineId)]}
       loadingMessage={t('lines:modal.addPlayers.loading')}
       emptyMessage={t('lines:modal.addPlayers.empty')}

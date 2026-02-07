@@ -156,16 +156,9 @@ describe("ManagePlayersDialog", () => {
         />
       );
 
-      // Check that the pre-selected players are checked
-      // Men tab should be active by default (tab index 0)
+      // Men tab should be active by default and pre-selected men should be pressed
       await waitFor(() => {
-        const checkboxes = screen.getAllByRole("checkbox");
-        // Bob, Charlie, Frank should be checked (men players)
-        const bobCheckbox = checkboxes.find(cb => {
-          const listItem = cb.closest('li');
-          return listItem?.textContent?.includes('Bob');
-        });
-        expect(bobCheckbox).toBeChecked();
+        expect(screen.getByRole("button", { name: "Bob" })).toHaveAttribute("aria-pressed", "true");
       });
     });
 
@@ -189,13 +182,7 @@ describe("ManagePlayersDialog", () => {
 
       // Check that women are pre-selected
       await waitFor(() => {
-        const checkboxes = screen.getAllByRole("checkbox");
-        // Alice, Diana, Eve, Grace should be checked
-        const aliceCheckbox = checkboxes.find(cb => {
-          const listItem = cb.closest('li');
-          return listItem?.textContent?.includes('Alice');
-        });
-        expect(aliceCheckbox).toBeChecked();
+        expect(screen.getByRole("button", { name: "Alice" })).toHaveAttribute("aria-pressed", "true");
       });
     });
 

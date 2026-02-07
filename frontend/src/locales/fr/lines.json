@@ -9,7 +9,7 @@
     "playersCount": "{{count}} joueur",
     "playersCount_plural": "{{count}} joueurs",
     "players": "Joueurs",
-    "addPlayers": "Ajouter des joueurs",
+    "addPlayers": "Gérer l'effectif",
     "edit": "Modifier",
     "delete": "Supprimer",
     "deleteTitle": "Supprimer la ligne ?",
@@ -36,9 +36,9 @@
       "title": "Modifier la ligne"
     },
     "addPlayers": {
-      "title": "Ajouter des joueurs à la ligne",
+      "title": "Gérer l'effectif de la ligne",
       "loading": "Chargement des joueurs...",
-      "empty": "Tous les joueurs sont déjà ajoutés à cette ligne"
+      "empty": "Aucun joueur disponible dans l'équipe"
     }
   },
   "form": {

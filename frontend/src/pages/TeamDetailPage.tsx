@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Grid,
   Collapse,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -25,10 +24,9 @@ import { getLines, deleteLine } from "../services/lines";
 import type { Player, LineWithPlayers } from "../types";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
-import PlayersGrid from "../components/players/PlayersGrid";
 import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
-import RosterGenderPanel from "../components/players/RosterGenderPanel";
 import EmptyPlayersState from "../components/players/EmptyPlayersState";
+import PlayerSelectionList from "../components/shared/PlayerSelectionList";
 import LinesGrid from "../components/lines/LinesGrid";
 import EmptyLinesState from "../components/lines/EmptyLinesState";
 import AddPlayerModal from "../components/modals/AddPlayerModal";
@@ -112,6 +110,13 @@ export default function TeamDetailPage() {
   const handleViewPlayerStats = (player: Player) => {
     navigate(`/statistics?teamId=${team.id}&mode=player&playerId=${player.id}`);
   };
+  const rosterPlayers = [...menPlayers, ...womenPlayers];
+  const handlePlayerCardClick = (playerId: number) => {
+    const player = team.players.find((candidate) => candidate.id === playerId);
+    if (player) {
+      setEditingPlayer(player);
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -125,7 +130,13 @@ export default function TeamDetailPage() {
         >
           {t("common:action.back")}
         </Button>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", sm: "flex-start" }}
+          flexDirection={{ xs: "column", sm: "row" }}
+          gap={2}
+        >
           <Box>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
               {team.name}
@@ -134,21 +145,47 @@ export default function TeamDetailPage() {
               Created {new Date(team.created_at).toLocaleDateString()}
             </Typography>
           </Box>
-          <Box display="flex" gap={1}>
+          <Box
+            display="flex"
+            gap={1}
+            flexDirection="row"
+          >
             <Button
               variant="outlined"
               startIcon={<BarChartIcon />}
               onClick={() => navigate(`/statistics?teamId=${team.id}&mode=competition`)}
+              aria-label={t("teams:detail.viewStatistics")}
+              sx={{
+                minWidth: { xs: 40, sm: "auto" },
+                px: { xs: 1.25, sm: 2 },
+                "& .MuiButton-startIcon": {
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: { xs: 0, sm: -0.5 },
+                },
+              }}
             >
-              {t("teams:detail.viewStatistics")}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("teams:detail.viewStatistics")}
+              </Box>
             </Button>
             <Button
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setIsDeleteConfirmOpen(true)}
+              aria-label={t("common:action.delete")}
+              sx={{
+                minWidth: { xs: 40, sm: "auto" },
+                px: { xs: 1.25, sm: 2 },
+                "& .MuiButton-startIcon": {
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: { xs: 0, sm: -0.5 },
+                },
+              }}
             >
-              {t("common:action.delete")}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("common:action.delete")}
+              </Box>
             </Button>
           </Box>
         </Box>
@@ -196,39 +233,20 @@ export default function TeamDetailPage() {
               onAddClick={() => setIsAddPlayerModalOpen(true)}
             />
           ) : (
-            <Grid container spacing={3}>
-              {/* Men Column */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RosterGenderPanel
-                  label={t("common:labels.male")}
-                  countLabel={t("teams:detail.playerGroupCount", { count: menPlayers.length })}
-                  accent="men"
-                  emptyLabel={t("players:empty.noPlayers")}
-                  hasContent={menPlayers.length > 0}
-                >
-                  <PlayersGrid
-                    players={menPlayers}
-                    onPlayerClick={setEditingPlayer}
-                  />
-                </RosterGenderPanel>
-              </Grid>
-
-              {/* Women Column */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RosterGenderPanel
-                  label={t("common:labels.female")}
-                  countLabel={t("teams:detail.playerGroupCount", { count: womenPlayers.length })}
-                  accent="women"
-                  emptyLabel={t("players:empty.noPlayers")}
-                  hasContent={womenPlayers.length > 0}
-                >
-                  <PlayersGrid
-                    players={womenPlayers}
-                    onPlayerClick={setEditingPlayer}
-                  />
-                </RosterGenderPanel>
-              </Grid>
-            </Grid>
+            <PlayerSelectionList
+              players={rosterPlayers}
+              selectedIds={[]}
+              onToggle={handlePlayerCardClick}
+              menLabel={t("common:labels.men")}
+              womenLabel={t("common:labels.women")}
+              emptyMenLabel={t("players:empty.noPlayers")}
+              emptyWomenLabel={t("players:empty.noPlayers")}
+              renderSecondary={(player) =>
+                player.number !== null && player.number !== undefined
+                  ? `#${player.number}`
+                  : ""
+              }
+            />
           )}
           </Box>
         </Collapse>

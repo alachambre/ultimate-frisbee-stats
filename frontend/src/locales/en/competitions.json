@@ -30,7 +30,7 @@
     "womenCount": "{{count}} women",
     "showRoster": "Show roster",
     "hideRoster": "Hide roster",
-    "addPlayers": "Add Players",
+    "addPlayers": "Manage Roster",
     "games": "Games",
     "gamesCount": "Games ({{count}})",
     "addGame": "Add Game",
@@ -58,9 +58,9 @@
       "title": "Edit Competition"
     },
     "addPlayers": {
-      "title": "Add Players to Roster",
+      "title": "Manage Competition Roster",
       "loading": "Loading players...",
-      "allInRoster": "All team players are already in the roster"
+      "allInRoster": "No team players available"
     }
   },
   "form": {

@@ -164,13 +164,13 @@ describe("CompetitionDetailPage", () => {
     const expandRosterButton = screen.getByRole("button", { name: /show roster/i });
     await user.click(expandRosterButton);
 
-    // Click "Add Players" button
-    const addPlayersButton = screen.getByRole("button", { name: /add players/i });
-    await user.click(addPlayersButton);
+    // Click "Manage Roster" button
+    const addPlayersButtons = screen.getAllByRole("button", { name: /manage roster/i });
+    await user.click(addPlayersButtons[0]);
 
     // Modal should open
     await waitFor(() => {
-      expect(screen.getByText(/add players to roster/i)).toBeInTheDocument();
+      expect(screen.getByText(/manage competition roster/i)).toBeInTheDocument();
     });
 
     // Player should appear in the available list
@@ -179,11 +179,11 @@ describe("CompetitionDetailPage", () => {
     }, { timeout: 3000 });
 
     // Click on player name to select player
-    const playerName = screen.getByText("John Doe");
+    const playerName = screen.getByRole("button", { name: "John Doe" });
     await user.click(playerName);
 
-    // Add selected players
-    const addButton = await screen.findByRole("button", { name: /add 1 player/i });
+    // Save roster changes
+    const addButton = await screen.findByRole("button", { name: /save changes/i });
     await user.click(addButton);
 
     // Modal should close and player should appear in roster

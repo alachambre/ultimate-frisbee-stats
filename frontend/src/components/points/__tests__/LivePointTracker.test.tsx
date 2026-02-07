@@ -415,5 +415,6 @@ describe("LivePointTracker - Pending Call Feature", () => {
         expect(screen.getByRole("button", { name: /finish point/i })).toBeInTheDocument();
       });
     });
+
   });
 });

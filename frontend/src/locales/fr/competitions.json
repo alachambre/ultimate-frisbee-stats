@@ -30,7 +30,7 @@
     "womenCount": "{{count}} femmes",
     "showRoster": "Afficher l'effectif",
     "hideRoster": "Masquer l'effectif",
-    "addPlayers": "Ajouter des joueurs",
+    "addPlayers": "Gérer l'effectif",
     "games": "Matchs",
     "gamesCount": "Matchs ({{count}})",
     "addGame": "Ajouter un match",
@@ -58,9 +58,9 @@
       "title": "Modifier la compétition"
     },
     "addPlayers": {
-      "title": "Ajouter des joueurs à l'effectif",
+      "title": "Gérer l'effectif de la compétition",
       "loading": "Chargement des joueurs...",
-      "allInRoster": "Tous les joueurs de l'équipe sont déjà dans l'effectif"
+      "allInRoster": "Aucun joueur disponible dans l'équipe"
     }
   },
   "form": {

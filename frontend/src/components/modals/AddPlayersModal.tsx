@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,18 +14,21 @@ import {
 } from "@mui/material";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 import type { Player } from "../../types";
-import { queryKeys } from "../../utils/queryKeys";
 
 interface AddPlayersModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   currentPlayerIds: number[];
-  // Function to fetch available players
+  // Function to fetch roster candidates
   fetchPlayers: () => Promise<Player[]>;
-  // Function to add players (receives selected player IDs)
+  // Query key for roster candidates
+  playersQueryKey: QueryKey;
+  // Function to add players to roster
   addPlayers: (playerIds: number[]) => Promise<unknown>;
-  // Query keys to invalidate after successful add
+  // Function to remove players from roster
+  removePlayers: (playerIds: number[]) => Promise<unknown>;
+  // Query keys to invalidate after successful save
   invalidateQueries: QueryKey[];
   // Optional: custom loading/empty messages
   loadingMessage?: string;
@@ -38,23 +41,46 @@ export default function AddPlayersModal({
   title,
   currentPlayerIds,
   fetchPlayers,
+  playersQueryKey,
   addPlayers,
+  removePlayers,
   invalidateQueries,
   loadingMessage,
   emptyMessage,
 }: AddPlayersModalProps) {
   const { t } = useTranslation("common");
-  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
+  const uniqueCurrentPlayerIds = useMemo(
+    () => Array.from(new Set(currentPlayerIds)),
+    [currentPlayerIds]
+  );
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(
+    uniqueCurrentPlayerIds
+  );
   const queryClient = useQueryClient();
 
   const { data: players, isLoading } = useQuery({
-    queryKey: queryKeys.availablePlayers(isOpen),
+    queryKey: playersQueryKey,
     queryFn: fetchPlayers,
     enabled: isOpen,
   });
 
+  const playersToAdd = selectedPlayerIds.filter(
+    (playerId) => !uniqueCurrentPlayerIds.includes(playerId)
+  );
+  const playersToRemove = uniqueCurrentPlayerIds.filter(
+    (playerId) => !selectedPlayerIds.includes(playerId)
+  );
+  const hasChanges = playersToAdd.length > 0 || playersToRemove.length > 0;
+
   const mutation = useMutation({
-    mutationFn: () => addPlayers(selectedPlayerIds),
+    mutationFn: async () => {
+      if (playersToAdd.length > 0) {
+        await addPlayers(playersToAdd);
+      }
+      if (playersToRemove.length > 0) {
+        await removePlayers(playersToRemove);
+      }
+    },
     onSuccess: () => {
       invalidateQueries.forEach((queryKey) => {
         queryClient.invalidateQueries({ queryKey });
@@ -72,23 +98,19 @@ export default function AddPlayersModal({
   };
 
   const handleClose = () => {
-    setSelectedPlayerIds([]);
+    setSelectedPlayerIds(uniqueCurrentPlayerIds);
     mutation.reset();
     onClose();
   };
 
   const handleSubmit = () => {
-    if (selectedPlayerIds.length > 0) {
+    if (hasChanges) {
       mutation.mutate();
     }
   };
 
-  // Filter out players already added
-  const availablePlayers =
-    players?.filter((p) => !currentPlayerIds.includes(p.id)) || [];
-
   const handleSelectAll = () => {
-    setSelectedPlayerIds(availablePlayers.map((player) => player.id));
+    setSelectedPlayerIds((players || []).map((player) => player.id));
   };
 
   const handleClearAll = () => {
@@ -101,7 +123,7 @@ export default function AddPlayersModal({
       <DialogContent>
         {isLoading ? (
           <Typography>{loadingMessage || t("common:action.loading")}</Typography>
-        ) : availablePlayers.length === 0 ? (
+        ) : (players || []).length === 0 ? (
           <Box py={4} textAlign="center">
             <Typography color="text.secondary">{emptyMessage || t("common:messages.noData")}</Typography>
           </Box>
@@ -112,7 +134,7 @@ export default function AddPlayersModal({
                 size="small"
                 variant="outlined"
                 onClick={handleSelectAll}
-                disabled={availablePlayers.length === 0}
+                disabled={(players || []).length === 0}
               >
                 {t("common:action.select")} {t("common:allPlayers")}
               </Button>
@@ -126,7 +148,7 @@ export default function AddPlayersModal({
               </Button>
             </Stack>
             <PlayerSelectionList
-              players={availablePlayers}
+              players={players || []}
               selectedIds={selectedPlayerIds}
               onToggle={handleToggle}
               renderSecondary={(player) =>
@@ -140,7 +162,7 @@ export default function AddPlayersModal({
 
         {mutation.isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {t("common:error.addingPlayers")}
+            {t("common:error.saving")}
           </Alert>
         )}
       </DialogContent>
@@ -153,13 +175,13 @@ export default function AddPlayersModal({
           variant="contained"
           disabled={
             mutation.isPending ||
-            selectedPlayerIds.length === 0 ||
-            availablePlayers.length === 0
+            !hasChanges ||
+            (players || []).length === 0
           }
         >
           {mutation.isPending
-            ? t("common:action.adding")
-            : t("common:action.addPlayers", { count: selectedPlayerIds.length })}
+            ? t("common:action.saving")
+            : t("common:action.save")}
         </Button>
       </DialogActions>
     </Dialog>

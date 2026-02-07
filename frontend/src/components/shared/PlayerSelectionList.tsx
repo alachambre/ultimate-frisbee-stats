@@ -4,19 +4,16 @@ import {
   Box,
   Tabs,
   Tab,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Checkbox,
-  FormControlLabel,
-  Switch,
+  Card,
+  CardActionArea,
+  Grid,
+  Typography,
   useTheme,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import type { ReactNode } from "react";
 import type { Player } from "../../types";
 
@@ -33,9 +30,8 @@ interface PlayerSelectionListProps {
   renderPrimary?: (player: Player) => ReactNode;
   renderSecondary?: (player: Player) => ReactNode;
   getHighlight?: (playerId: number) => "high" | "low" | null;
-  showOnlySelectedToggle?: boolean;
-  onlySelected?: boolean;
-  onOnlySelectedChange?: (value: boolean) => void;
+  highlightSecondary?: boolean;
+  preserveOrder?: boolean;
   activeTab?: GenderTab;
   onActiveTabChange?: (value: GenderTab) => void;
 }
@@ -51,9 +47,8 @@ export default function PlayerSelectionList({
   renderPrimary,
   renderSecondary,
   getHighlight,
-  showOnlySelectedToggle = false,
-  onlySelected = false,
-  onOnlySelectedChange,
+  highlightSecondary = true,
+  preserveOrder = false,
   activeTab,
   onActiveTabChange,
 }: PlayerSelectionListProps) {
@@ -71,25 +66,23 @@ export default function PlayerSelectionList({
     }
   };
 
-  const visiblePlayers = useMemo(() => {
-    if (!onlySelected) return players;
-    const selectedSet = new Set(selectedIds);
-    return players.filter((player) => selectedSet.has(player.id));
-  }, [onlySelected, players, selectedIds]);
-
   const menPlayers = useMemo(
     () =>
-      visiblePlayers
-        .filter((player) => player.gender === "M")
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [visiblePlayers]
+      preserveOrder
+        ? players.filter((player) => player.gender === "M")
+        : players
+            .filter((player) => player.gender === "M")
+            .sort((a, b) => a.name.localeCompare(b.name)),
+    [players, preserveOrder]
   );
   const womenPlayers = useMemo(
     () =>
-      visiblePlayers
-        .filter((player) => player.gender === "W")
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [visiblePlayers]
+      preserveOrder
+        ? players.filter((player) => player.gender === "W")
+        : players
+            .filter((player) => player.gender === "W")
+            .sort((a, b) => a.name.localeCompare(b.name)),
+    [players, preserveOrder]
   );
 
   const resolvedMenLabel = menLabel || t("labels.men");
@@ -97,62 +90,98 @@ export default function PlayerSelectionList({
   const resolvedEmptyMenLabel = emptyMenLabel || t("messages.noData");
   const resolvedEmptyWomenLabel = emptyWomenLabel || t("messages.noData");
 
-  const renderPlayersList = (playersList: Player[], emptyLabel: string) => (
-    <List dense sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1, mt: 2 }}>
+  const renderPlayersGrid = (playersList: Player[], emptyLabel: string) => (
+    <Grid container spacing={1.25} sx={{ mt: 1 }}>
       {playersList.map((player) => {
-        const highlight = getHighlight?.(player.id);
+        const highlight = getHighlight?.(player.id) || null;
+        const isSelected = selectedIds.includes(player.id);
+        const secondaryContent = renderSecondary?.(player);
+        const accentColor = player.gender === "M" ? theme.colors.men.main : theme.colors.women.main;
+        const highlightColor = highlight === "high"
+          ? theme.palette.success.main
+          : highlight === "low"
+            ? theme.palette.warning.main
+            : null;
+
         return (
-          <ListItem key={player.id} disablePadding>
-            <ListItemButton
-              onClick={() => onToggle(player.id)}
-              dense
+          <Grid key={player.id} size={{ xs: 6, sm: 4 }}>
+            <Card
+              variant="outlined"
               sx={{
-                borderLeft: highlight
-                  ? `3px solid ${highlight === "high" ? theme.palette.success.main : theme.palette.warning.main}`
-                  : "3px solid transparent",
+                borderColor: isSelected ? accentColor : "divider",
+                backgroundColor: isSelected ? alpha(accentColor, 0.12) : "background.paper",
+                borderLeft: highlightColor ? `3px solid ${highlightColor}` : undefined,
               }}
             >
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={selectedIds.includes(player.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemIcon>
-              <ListItemText
-                primary={renderPrimary ? renderPrimary(player) : player.name}
-                secondary={renderSecondary ? renderSecondary(player) : undefined}
-              />
-            </ListItemButton>
-          </ListItem>
+              <CardActionArea
+                onClick={() => onToggle(player.id)}
+                aria-label={player.name}
+                aria-pressed={isSelected}
+                sx={{
+                  p: 1.25,
+                  minHeight: 78,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  justifyContent: "center",
+                  gap: 0.5,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 0.5,
+                  }}
+                >
+                  <Typography variant="body2" fontWeight={isSelected ? "bold" : "medium"} noWrap>
+                    {renderPrimary ? renderPrimary(player) : player.name}
+                  </Typography>
+                  {isSelected && <CheckCircleIcon fontSize="small" sx={{ color: accentColor }} />}
+                </Box>
+
+                {secondaryContent !== null && secondaryContent !== undefined && secondaryContent !== "" && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: highlightSecondary ? (highlightColor || "text.secondary") : "text.secondary",
+                      fontWeight: highlightSecondary && highlight ? 500 : 400,
+                    }}
+                    noWrap
+                  >
+                    {secondaryContent}
+                  </Typography>
+                )}
+              </CardActionArea>
+            </Card>
+          </Grid>
         );
       })}
+
       {playersList.length === 0 && (
-        <ListItem>
-          <ListItemText primary={emptyLabel} secondary={null} />
-        </ListItem>
+        <Grid size={{ xs: 12 }}>
+          <Box
+            sx={{
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1.5,
+              textAlign: "center",
+              color: "text.secondary",
+              backgroundColor: "background.paper",
+            }}
+          >
+            <Typography variant="body2">{emptyLabel}</Typography>
+          </Box>
+        </Grid>
       )}
-    </List>
+    </Grid>
   );
 
   return (
     <Box>
-      {showOnlySelectedToggle && onOnlySelectedChange && (
-        <Box display="flex" justifyContent="flex-end" mb={1}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={onlySelected}
-                onChange={(event) => onOnlySelectedChange(event.target.checked)}
-                size="small"
-              />
-            }
-            label={t("labels.onlySelected")}
-          />
-        </Box>
-      )}
-
       <Box sx={{ borderBottom: 2, borderColor: "divider" }}>
         <Tabs
           value={resolvedActiveTab}
@@ -201,8 +230,8 @@ export default function PlayerSelectionList({
         </Tabs>
       </Box>
 
-      {resolvedActiveTab === "men" && renderPlayersList(menPlayers, resolvedEmptyMenLabel)}
-      {resolvedActiveTab === "women" && renderPlayersList(womenPlayers, resolvedEmptyWomenLabel)}
+      {resolvedActiveTab === "men" && renderPlayersGrid(menPlayers, resolvedEmptyMenLabel)}
+      {resolvedActiveTab === "women" && renderPlayersGrid(womenPlayers, resolvedEmptyWomenLabel)}
     </Box>
   );
 }

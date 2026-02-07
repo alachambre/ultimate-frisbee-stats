@@ -43,7 +43,7 @@
     "editGame": "Modifier le match",
     "deleteGame": "Supprimer le match",
     "deleteGameButton": "Supprimer le match",
-    "addPlayers": "Ajouter des joueurs",
+    "addPlayers": "Gérer l'effectif",
     "removePlayers": "Retirer des joueurs",
     "deletePointTitle": "Supprimer le point ?",
     "deletePointConfirm": "Supprimer le point #{{pointNumber}} ? Cette action est irréversible.",
@@ -70,9 +70,9 @@
       "title": "Modifier le match"
     },
     "addPlayers": {
-      "title": "Ajouter des joueurs au match",
+      "title": "Gérer l'effectif du match",
       "loading": "Chargement des joueurs...",
-      "empty": "Tous les joueurs de l'effectif sont déjà ajoutés à ce match"
+      "empty": "Aucun joueur disponible dans l'effectif de la compétition"
     }
   },
   "form": {

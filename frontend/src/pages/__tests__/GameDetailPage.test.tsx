@@ -269,13 +269,13 @@ describe("GameDetailPage", () => {
       ).toBeInTheDocument();
     });
 
-    // Click Add Players button in the dialog
-    const addButton = screen.getByRole("button", { name: /add players/i });
+    // Click Manage Roster button in the dialog
+    const addButton = screen.getByRole("button", { name: /manage roster/i });
     await user.click(addButton);
 
-    // Add players modal should open (now there are 2 dialogs: roster + add players)
+    // Manage roster modal should open (now there are 2 dialogs: roster + manage roster)
     await waitFor(() => {
-      expect(screen.getByText(/add players to game/i)).toBeInTheDocument();
+      expect(screen.getByText(/manage game roster/i)).toBeInTheDocument();
     });
 
     // Wait for player to appear in modal and click it
@@ -285,22 +285,36 @@ describe("GameDetailPage", () => {
     expect(benchPlayer).toBeDefined();
     expect(screen.queryByText("Bench Player")).not.toBeInTheDocument();
 
-    // Select the player by clicking on the name
-    const playerItem = screen.getByText("New Player");
+    // Select the player by clicking on the card
+    const playerItem = screen.getByRole("button", { name: "New Player" });
     await user.click(playerItem);
 
-    // Submit
-    const addPlayersButton = screen.getByRole("button", { name: /add 1 player/i });
+    // Save changes
+    const addPlayersButton = screen.getByRole("button", { name: /save changes/i });
     await user.click(addPlayersButton);
 
-    // Add players modal should close
+    // Manage roster modal should close
     await waitFor(() => {
-      expect(screen.queryByText(/add players to game/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/manage game roster/i)).not.toBeInTheDocument();
     });
   });
 
   it("allows removing players from game", async () => {
     const user = userEvent.setup();
+
+    const competitions = await (await fetch("http://localhost:8000/competitions")).json();
+    const competition = competitions[0];
+    const games = await (await fetch("http://localhost:8000/games")).json();
+    const game = games[0];
+
+    const removablePlayer = await createPlayer({
+      name: "Removable Player",
+      number: 55,
+      gender: "M",
+      team_id: competition.team_id,
+    });
+    await addPlayersToRoster(competition.id, [removablePlayer.id]);
+    await addPlayersToGame(game.id, [removablePlayer.id]);
 
     render(<GameDetailPage />);
 
@@ -321,37 +335,27 @@ describe("GameDetailPage", () => {
       expect(playersSection).toBeInTheDocument();
     });
 
-    // If there are players, try to remove one
-    const playersText = screen.getByRole("heading", {
-      name: /players \(\d+\)/i,
-      level: 2,
-    }).textContent;
-    const playerCount = parseInt(playersText?.match(/\d+/)?.[0] || "0");
+    const manageButton = screen.getByRole("button", { name: /manage roster/i });
+    await user.click(manageButton);
 
-    if (playerCount > 0) {
-      // Click on first available remove button
-      const removeButtons = screen
-        .getAllByRole("button")
-        .filter((btn) => btn.getAttribute("aria-label")?.toLowerCase().startsWith("remove "));
+    await waitFor(() => {
+      expect(screen.getByText(/manage game roster/i)).toBeInTheDocument();
+    });
 
-      if (removeButtons.length > 0) {
-        await user.click(removeButtons[0]);
+    const playerCard = await screen.findByRole("button", { name: "Removable Player" });
+    expect(playerCard).toHaveAttribute("aria-pressed", "true");
+    await user.click(playerCard);
 
-        // Confirmation dialog should appear
-        await waitFor(() => {
-          expect(screen.getByText(/remove player from game\?/i)).toBeInTheDocument();
-        });
+    const saveButton = screen.getByRole("button", { name: /save changes/i });
+    await user.click(saveButton);
 
-        // Confirm removal
-        const confirmButton = screen.getByRole("button", { name: "Remove Player" });
-        await user.click(confirmButton);
+    await waitFor(() => {
+      expect(screen.queryByText(/manage game roster/i)).not.toBeInTheDocument();
+    });
 
-        // Dialog should close
-        await waitFor(() => {
-          expect(screen.queryByText(/remove player from game\?/i)).not.toBeInTheDocument();
-        });
-      }
-    }
+    await waitFor(() => {
+      expect(screen.queryByText("Removable Player")).not.toBeInTheDocument();
+    });
   });
 
   it("displays player roster in dialog", async () => {
@@ -378,10 +382,10 @@ describe("GameDetailPage", () => {
       ).toBeInTheDocument();
     });
 
-    // Gender sections should appear - check that at least one of each exists
+    // Gender tabs should appear
     await waitFor(() => {
-      expect(screen.getAllByText(/^men$/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/^women$/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole("tab", { name: /^men/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /^women/i })).toBeInTheDocument();
     });
 
     // Close dialog
@@ -449,14 +453,20 @@ describe("GameDetailPage", () => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
-    // Add Players button should be disabled
-    const addButton = screen.getByRole("button", { name: /add players/i });
+    // Manage Roster button should be disabled
+    const addButton = screen.getByRole("button", { name: /manage roster/i });
     expect(addButton).toBeDisabled();
 
     // Players should be visible but delete buttons should not appear
     await waitFor(() => {
-      expect(screen.getByText("Player 1")).toBeInTheDocument();
-      expect(screen.getByText("Player 2")).toBeInTheDocument();
+      expect(screen.getByText(/^Player 1/)).toBeInTheDocument();
+    });
+
+    const womenTab = screen.getByRole("tab", { name: /^women/i });
+    await user.click(womenTab);
+
+    await waitFor(() => {
+      expect(screen.getByText(/^Player 2/)).toBeInTheDocument();
     });
 
     // Close the roster dialog to check main page buttons

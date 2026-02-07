@@ -125,19 +125,16 @@ describe("EditPointDialog", () => {
     // Should show player count in header
     expect(screen.getByText(/\(7\/7/i)).toBeInTheDocument();
 
-    // Get all checkboxes in list items (player checkboxes)
-    const checkboxes = screen.getAllByRole("checkbox");
-    const playerCheckboxes = checkboxes.filter(cb => {
-      const listItem = cb.closest('li');
-      return listItem !== null;
-    }) as HTMLInputElement[];
+    const playerButtons = mockPlayers.map((player) =>
+      screen.getByRole("button", { name: player.name })
+    );
 
-    // Exactly 7 player checkboxes should be checked
-    const checkedCount = playerCheckboxes.filter(cb => cb.checked).length;
-    expect(checkedCount).toBe(7);
+    const selectedCount = playerButtons.filter(
+      (button) => button.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(7);
 
-    const checkbox8 = playerCheckboxes[7] as HTMLInputElement;
-    expect(checkbox8.checked).toBe(false);
+    expect(screen.getByRole("button", { name: "Player 8" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("allows changing outcome for completed points", async () => {
@@ -179,15 +176,7 @@ describe("EditPointDialog", () => {
     const saveButton = screen.getByRole("button", { name: /save changes/i });
     expect(saveButton).toBeEnabled();
 
-    // Find all checkboxes and uncheck the first one
-    const checkboxes = screen.getAllByRole("checkbox");
-    // Skip the first 2 checkboxes (won/lost radios styled as checkboxes)
-    const playerCheckboxes = checkboxes.filter(cb => {
-      const listItem = cb.closest('li');
-      return listItem !== null;
-    });
-
-    await user.click(playerCheckboxes[0]);
+    await user.click(screen.getByRole("button", { name: "Player 1" }));
 
     // Save button should be disabled
     expect(saveButton).toBeDisabled();

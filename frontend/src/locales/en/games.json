@@ -43,7 +43,7 @@
     "editGame": "Edit Game",
     "deleteGame": "Delete Game",
     "deleteGameButton": "Delete Game",
-    "addPlayers": "Add Players",
+    "addPlayers": "Manage Roster",
     "removePlayers": "Remove Players",
     "deletePointTitle": "Delete Point?",
     "deletePointConfirm": "Delete Point #{{pointNumber}}? This cannot be undone.",
@@ -70,9 +70,9 @@
       "title": "Edit Game"
     },
     "addPlayers": {
-      "title": "Add Players to Game",
+      "title": "Manage Game Roster",
       "loading": "Loading players...",
-      "empty": "All roster players are already added to this game"
+      "empty": "No competition roster players available"
     }
   },
   "form": {

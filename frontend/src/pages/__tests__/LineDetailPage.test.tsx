@@ -80,13 +80,13 @@ describe("LineDetailPage", () => {
       expect(screen.getByText("Test Line")).toBeInTheDocument();
     });
 
-    // Click "Add Players" button
-    const addButton = screen.getByRole("button", { name: /add players/i });
-    await user.click(addButton);
+    // Click "Manage Roster" button
+    const addButtons = screen.getAllByRole("button", { name: /manage roster/i });
+    await user.click(addButtons[0]);
 
     // Modal should open
     await waitFor(() => {
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText(/manage line roster/i)).toBeInTheDocument();
     });
 
     // Wait for player to appear in modal and select it
@@ -94,12 +94,12 @@ describe("LineDetailPage", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Select the player by clicking on the name
-    const playerItem = screen.getByText("John Doe");
+    // Select the player by clicking on the card
+    const playerItem = screen.getByRole("button", { name: "John Doe" });
     await user.click(playerItem);
 
     // Submit
-    const addPlayersButton = screen.getByRole("button", { name: /add 1 player/i });
+    const addPlayersButton = screen.getByRole("button", { name: /save changes/i });
     await user.click(addPlayersButton);
 
     // Modal should close and player should appear
@@ -148,23 +148,30 @@ describe("LineDetailPage", () => {
 
     render(<LineDetailPage />);
 
+    const womenTab = await screen.findByRole("tab", { name: /women/i });
+    await user.click(womenTab);
+
     // Wait for player to appear
     await waitFor(() => {
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
 
-    // Click the remove button on the player card
-    const removeButton = screen.getByRole("button", { name: "Remove player" });
-    await user.click(removeButton);
+    const manageButton = screen.getByRole("button", { name: /manage roster/i });
+    await user.click(manageButton);
 
-    // Confirmation dialog should appear
     await waitFor(() => {
-      expect(screen.getByText(/are you sure you want to remove.*from this line/i)).toBeInTheDocument();
+      expect(screen.getByText(/manage line roster/i)).toBeInTheDocument();
     });
 
-    // Confirm removal
-    const confirmButton = screen.getByRole("button", { name: "Remove Player" });
-    await user.click(confirmButton);
+    const womenManageTab = screen.getByRole("tab", { name: /women/i });
+    await user.click(womenManageTab);
+
+    const playerCard = await screen.findByRole("button", { name: "Jane Smith" });
+    expect(playerCard).toHaveAttribute("aria-pressed", "true");
+    await user.click(playerCard);
+
+    const saveButton = screen.getByRole("button", { name: /save changes/i });
+    await user.click(saveButton);
 
     // Player should be removed
     await waitFor(() => {
@@ -245,6 +252,7 @@ describe("LineDetailPage", () => {
   });
 
   it("displays gender-split player sections", async () => {
+    const user = userEvent.setup();
     // Add players of both genders
     const teamResponse = await fetch("http://localhost:8000/teams", {
       method: "GET",
@@ -283,14 +291,19 @@ describe("LineDetailPage", () => {
 
     render(<LineDetailPage />);
 
-    // Wait for players to appear
+    // Men tab is active by default
     await waitFor(() => {
       expect(screen.getByText("Mike Johnson")).toBeInTheDocument();
-      expect(screen.getByText("Sarah Williams")).toBeInTheDocument();
     });
 
-    // Check gender sections - there should be at least one of each
-    expect(screen.getAllByText(/men \(1\)/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/women \(1\)/i).length).toBeGreaterThan(0);
+    // Check tabs with counts
+    expect(screen.getByRole("tab", { name: /^men \(1\)$/i })).toBeInTheDocument();
+    const womenTab = screen.getByRole("tab", { name: /^women \(1\)$/i });
+    expect(womenTab).toBeInTheDocument();
+
+    await user.click(womenTab);
+    await waitFor(() => {
+      expect(screen.getByText("Sarah Williams")).toBeInTheDocument();
+    });
   });
 });

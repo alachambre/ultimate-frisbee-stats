@@ -15,7 +15,6 @@ import {
   Alert,
   Chip,
   Collapse,
-  Grid,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,20 +27,17 @@ import {
   getCompetition,
   deleteCompetition,
   getCompetitionGames,
-  removePlayersFromRoster,
 } from "../services";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
-import PlayersGrid from "../components/players/PlayersGrid";
 import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
-import RosterGenderPanel from "../components/players/RosterGenderPanel";
 import EmptyPlayersState from "../components/players/EmptyPlayersState";
+import PlayerSelectionList from "../components/shared/PlayerSelectionList";
 import GamesGrid from "../components/games/GamesGrid";
 import EmptyGamesState from "../components/games/EmptyGamesState";
 import EditCompetitionModal from "../components/modals/EditCompetitionModal";
 import AddPlayersToRosterModal from "../components/modals/AddPlayersToRosterModal";
 import CreateGameModal from "../components/modals/CreateGameModal";
-import type { Player } from "../types";
 import { queryKeys } from "../utils/queryKeys";
 
 export default function CompetitionDetailPage() {
@@ -55,7 +51,6 @@ export default function CompetitionDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [isCreateGameModalOpen, setIsCreateGameModalOpen] = useState(false);
-  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null);
   const [showRoster, setShowRoster] = useState(false);
 
   const {
@@ -82,19 +77,6 @@ export default function CompetitionDetailPage() {
     },
   });
 
-  const removePlayerMutation = useMutation({
-    mutationFn: (playerId: number) =>
-      removePlayersFromRoster(Number(competitionId), [playerId]),
-    onSuccess: () => {
-      if (competitionIdValid) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.competition(competitionIdNumber),
-        });
-      }
-      setPlayerToRemove(null);
-    },
-  });
-
   if (isLoading) {
     return <LoadingState message={t("competitions:detail.loading")} />;
   }
@@ -107,16 +89,6 @@ export default function CompetitionDetailPage() {
 
   const handleDelete = () => {
     deleteMutation.mutate();
-  };
-
-  const handleRemovePlayer = (player: Player) => {
-    setPlayerToRemove(player);
-  };
-
-  const confirmRemovePlayer = () => {
-    if (playerToRemove) {
-      removePlayerMutation.mutate(playerToRemove.id);
-    }
   };
 
   const formatDateRange = (startDate: string, endDate: string) => {
@@ -132,6 +104,7 @@ export default function CompetitionDetailPage() {
   const womenPlayers = competition.players
     .filter((player) => player.gender === "W")
     .sort((a, b) => a.name.localeCompare(b.name));
+  const rosterPlayers = [...menPlayers, ...womenPlayers];
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -189,23 +162,56 @@ export default function CompetitionDetailPage() {
                   `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}`
                 )
               }
+              aria-label={t("competitions:detail.viewStatistics")}
+              sx={{
+                minWidth: { xs: 40, sm: "auto" },
+                px: { xs: 1.25, sm: 2 },
+                "& .MuiButton-startIcon": {
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: { xs: 0, sm: -0.5 },
+                },
+              }}
             >
-              {t("competitions:detail.viewStatistics")}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("competitions:detail.viewStatistics")}
+              </Box>
             </Button>
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
               onClick={() => setIsEditModalOpen(true)}
+              aria-label={t("competitions:detail.edit")}
+              sx={{
+                minWidth: { xs: 40, sm: "auto" },
+                px: { xs: 1.25, sm: 2 },
+                "& .MuiButton-startIcon": {
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: { xs: 0, sm: -0.5 },
+                },
+              }}
             >
-              {t("competitions:detail.edit")}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("competitions:detail.edit")}
+              </Box>
             </Button>
             <Button
               variant="outlined"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setIsDeleteConfirmOpen(true)}
+              aria-label={t("competitions:detail.delete")}
+              sx={{
+                minWidth: { xs: 40, sm: "auto" },
+                px: { xs: 1.25, sm: 2 },
+                "& .MuiButton-startIcon": {
+                  marginRight: { xs: 0, sm: 1 },
+                  marginLeft: { xs: 0, sm: -0.5 },
+                },
+              }}
             >
-              {t("competitions:detail.delete")}
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("competitions:detail.delete")}
+              </Box>
             </Button>
           </Box>
         </Box>
@@ -251,41 +257,23 @@ export default function CompetitionDetailPage() {
             {competition.players.length === 0 ? (
               <EmptyPlayersState
                 onAddClick={() => setIsAddPlayersModalOpen(true)}
+                buttonLabel={t("competitions:detail.addPlayers")}
               />
             ) : (
-              <Grid container spacing={3}>
-                {/* Men Column */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <RosterGenderPanel
-                    label={t("competitions:detail.men")}
-                    countLabel={t("competitions:detail.playerGroupCount", { count: menPlayers.length })}
-                    accent="men"
-                    emptyLabel={t("competitions:detail.noMalePlayers")}
-                    hasContent={menPlayers.length > 0}
-                  >
-                    <PlayersGrid
-                      players={menPlayers}
-                      onDeletePlayer={handleRemovePlayer}
-                    />
-                  </RosterGenderPanel>
-                </Grid>
-
-                {/* Women Column */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <RosterGenderPanel
-                    label={t("competitions:detail.women")}
-                    countLabel={t("competitions:detail.playerGroupCount", { count: womenPlayers.length })}
-                    accent="women"
-                    emptyLabel={t("competitions:detail.noFemalePlayers")}
-                    hasContent={womenPlayers.length > 0}
-                  >
-                    <PlayersGrid
-                      players={womenPlayers}
-                      onDeletePlayer={handleRemovePlayer}
-                    />
-                  </RosterGenderPanel>
-                </Grid>
-              </Grid>
+              <PlayerSelectionList
+                players={rosterPlayers}
+                selectedIds={[]}
+                onToggle={() => {}}
+                menLabel={t("competitions:detail.men")}
+                womenLabel={t("competitions:detail.women")}
+                emptyMenLabel={t("competitions:detail.noMalePlayers")}
+                emptyWomenLabel={t("competitions:detail.noFemalePlayers")}
+                renderSecondary={(player) =>
+                  player.number !== null && player.number !== undefined
+                    ? `#${player.number}`
+                    : ""
+                }
+              />
             )}
           </Box>
         </Collapse>
@@ -355,43 +343,6 @@ export default function CompetitionDetailPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Remove Player Confirmation Dialog */}
-      <Dialog
-        open={!!playerToRemove}
-        onClose={() => setPlayerToRemove(null)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t("competitions:detail.removePlayerTitle")}</DialogTitle>
-        <DialogContent>
-          <Typography gutterBottom>
-            {t("competitions:detail.removePlayerConfirm", { playerName: playerToRemove?.name })}
-          </Typography>
-          {removePlayerMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {(removePlayerMutation.error as { response?: { data?: { detail?: string } } })
-                ?.response?.data?.detail || t("competitions:detail.removePlayerError")}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setPlayerToRemove(null)}
-            disabled={removePlayerMutation.isPending}
-          >
-            {t("common:action.cancel")}
-          </Button>
-          <Button
-            onClick={confirmRemovePlayer}
-            variant="contained"
-            color="error"
-            disabled={removePlayerMutation.isPending}
-          >
-            {removePlayerMutation.isPending ? t("competitions:detail.removing") : t("competitions:detail.removePlayer")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Modals */}
       <EditCompetitionModal
         key={competition.id}
@@ -400,13 +351,15 @@ export default function CompetitionDetailPage() {
         competition={competition}
       />
 
-      <AddPlayersToRosterModal
-        isOpen={isAddPlayersModalOpen}
-        onClose={() => setIsAddPlayersModalOpen(false)}
-        competitionId={Number(competitionId)}
-        teamId={competition.team_id}
-        currentRosterIds={competition.players.map((p) => p.id)}
-      />
+      {isAddPlayersModalOpen && (
+        <AddPlayersToRosterModal
+          isOpen={isAddPlayersModalOpen}
+          onClose={() => setIsAddPlayersModalOpen(false)}
+          competitionId={Number(competitionId)}
+          teamId={competition.team_id}
+          currentRosterIds={competition.players.map((p) => p.id)}
+        />
+      )}
 
       <CreateGameModal
         isOpen={isCreateGameModalOpen}

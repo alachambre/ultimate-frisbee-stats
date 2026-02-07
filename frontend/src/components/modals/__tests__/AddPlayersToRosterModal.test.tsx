@@ -2,14 +2,15 @@ import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import AddPlayersToRosterModal from "../AddPlayersToRosterModal";
-import { createTeam, createPlayer, createCompetition } from "../../../services";
+import { createTeam, createPlayer, createCompetition, addPlayersToRoster } from "../../../services";
+import type { Player } from "../../../types";
 
 describe("AddPlayersToRosterModal", () => {
   let teamId: number;
   let competitionId: number;
+  let players: Player[];
 
   beforeEach(async () => {
-    // Create a test team, competition, and add players to the team
     const team = await createTeam({ name: "Test Team" });
     teamId = team.id;
     const competition = await createCompetition({
@@ -20,12 +21,13 @@ describe("AddPlayersToRosterModal", () => {
       end_date: "2024-06-30",
     });
     competitionId = competition.id;
-    await createPlayer({ team_id: teamId, name: "Player One", number: 10, gender: "M" });
-    await createPlayer({ team_id: teamId, name: "Player Two", number: 20, gender: "W" });
-    await createPlayer({ team_id: teamId, name: "Player Three", number: 30, gender: "M" });
+    const playerOne = await createPlayer({ team_id: teamId, name: "Player One", number: 10, gender: "M" });
+    const playerTwo = await createPlayer({ team_id: teamId, name: "Player Two", number: 20, gender: "W" });
+    const playerThree = await createPlayer({ team_id: teamId, name: "Player Three", number: 30, gender: "M" });
+    players = [playerOne, playerTwo, playerThree];
   });
 
-  it("displays available players from the team", async () => {
+  it("displays team players in manage roster modal", async () => {
     const user = userEvent.setup();
     render(
       <AddPlayersToRosterModal
@@ -38,17 +40,14 @@ describe("AddPlayersToRosterModal", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
     });
 
-    // Wait for players to load - they load asynchronously
-    // Men tab is active by default, so Player One and Player Three should be visible
     await waitFor(() => {
       expect(screen.getByText("Player One")).toBeInTheDocument();
     }, { timeout: 3000 });
     expect(screen.getByText("Player Three")).toBeInTheDocument();
 
-    // Click on Women tab to see Player Two
     const womenTab = screen.getByRole("tab", { name: /women/i });
     await user.click(womenTab);
 
@@ -57,10 +56,9 @@ describe("AddPlayersToRosterModal", () => {
     });
   });
 
-  it("filters out players already in the roster", async () => {
+  it("preselects roster players and disables save when unchanged", async () => {
     const user = userEvent.setup();
-    // Assume Player One has ID 1 (first player created in beforeEach)
-    const player1Id = 1;
+    await addPlayersToRoster(competitionId, [players[0].id]);
 
     render(
       <AddPlayersToRosterModal
@@ -68,113 +66,59 @@ describe("AddPlayersToRosterModal", () => {
         onClose={vi.fn()}
         competitionId={competitionId}
         teamId={teamId}
-        currentRosterIds={[player1Id]}
+        currentRosterIds={[players[0].id]}
       />
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
     });
 
-    // Wait for players to load - Men tab is active by default
-    await waitFor(() => {
-      expect(screen.getByText("Player Three")).toBeInTheDocument();
-    }, { timeout: 3000 });
-
-    // Player One should not be visible (already in roster)
-    expect(screen.queryByText("Player One")).not.toBeInTheDocument();
-
-    // Click on Women tab to see Player Two
-    const womenTab = screen.getByRole("tab", { name: /women/i });
-    await user.click(womenTab);
-
-    // Player Two should be visible
-    await waitFor(() => {
-      expect(screen.getByText("Player Two")).toBeInTheDocument();
-    });
-  });
-
-  it("shows message when all players are already in roster", async () => {
-    // Assume all three players have IDs 1, 2, 3 (created in beforeEach)
-    const allPlayerIds = [1, 2, 3];
-
-    render(
-      <AddPlayersToRosterModal
-        isOpen={true}
-        onClose={vi.fn()}
-        competitionId={competitionId}
-        teamId={teamId}
-        currentRosterIds={allPlayerIds}
-      />
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("All team players are already in the roster")
-      ).toBeInTheDocument();
-    }, { timeout: 3000 });
-  });
-
-  it("allows selecting players with checkboxes", async () => {
-    const user = userEvent.setup();
-    render(
-      <AddPlayersToRosterModal
-        isOpen={true}
-        onClose={vi.fn()}
-        competitionId={competitionId}
-        teamId={teamId}
-        currentRosterIds={[]}
-      />
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
-    });
-
-    // Wait for players to load
     await waitFor(() => {
       expect(screen.getByText("Player One")).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Submit button should be disabled initially
-    const submitButton = screen.getByRole("button", { name: /add 0 player/i });
-    expect(submitButton).toBeDisabled();
+    const saveButton = screen.getByRole("button", { name: /save changes/i });
+    expect(saveButton).toBeDisabled();
 
-    // Select Player One by clicking on the player name (which triggers the ListItemButton)
-    const player1 = screen.getByText("Player One");
-    await user.click(player1);
+    const playerOneButton = screen.getByRole("button", { name: "Player One" });
+    expect(playerOneButton).toHaveAttribute("aria-pressed", "true");
 
-    // Submit button should show "Add 1 Player"
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /add 1 player$/i })).toBeInTheDocument();
-    });
-
-    // Click on Women tab to see Player Two
-    const womenTab = screen.getByRole("tab", { name: /women/i });
-    await user.click(womenTab);
-
-    // Wait for Player Two to be visible
-    await waitFor(() => {
-      expect(screen.getByText("Player Two")).toBeInTheDocument();
-    });
-
-    // Select Player Two
-    const player2 = screen.getByText("Player Two");
-    await user.click(player2);
-
-    // Submit button should show "Add 2 Players"
-    // Note: Checking for "2" to ensure count updated, as i18n pluralization may vary
-    await waitFor(() => {
-      const button = screen.getByRole("button", { name: /add.*2.*player/i });
-      expect(button).toBeInTheDocument();
-    });
+    await user.click(playerOneButton);
+    expect(saveButton).toBeEnabled();
   });
 
-  it("disables submit button when no players are selected", async () => {
+  it("shows empty message when team has no players", async () => {
+    const emptyTeam = await createTeam({ name: "Empty Team" });
+    const emptyCompetition = await createCompetition({
+      team_id: emptyTeam.id,
+      name: "Empty Competition",
+      description: "No players",
+      start_date: "2024-07-01",
+      end_date: "2024-07-02",
+    });
+
+    render(
+      <AddPlayersToRosterModal
+        isOpen={true}
+        onClose={vi.fn()}
+        competitionId={emptyCompetition.id}
+        teamId={emptyTeam.id}
+        currentRosterIds={[]}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("No team players available")).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it("allows selecting and unselecting players with cards", async () => {
+    const user = userEvent.setup();
     render(
       <AddPlayersToRosterModal
         isOpen={true}
@@ -186,10 +130,48 @@ describe("AddPlayersToRosterModal", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
     });
 
-    const submitButton = screen.getByRole("button", { name: /add 0 player/i });
+    await waitFor(() => {
+      expect(screen.getByText("Player One")).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
+    expect(submitButton).toBeDisabled();
+
+    const player1 = screen.getByRole("button", { name: "Player One" });
+    await user.click(player1);
+    expect(submitButton).toBeEnabled();
+
+    const womenTab = screen.getByRole("tab", { name: /women/i });
+    await user.click(womenTab);
+
+    await waitFor(() => {
+      expect(screen.getByText("Player Two")).toBeInTheDocument();
+    });
+
+    const player2 = screen.getByRole("button", { name: "Player Two" });
+    await user.click(player2);
+    expect(submitButton).toBeEnabled();
+  });
+
+  it("disables submit button when there are no changes", async () => {
+    render(
+      <AddPlayersToRosterModal
+        isOpen={true}
+        onClose={vi.fn()}
+        competitionId={competitionId}
+        teamId={teamId}
+        currentRosterIds={[]}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
+    });
+
+    const submitButton = screen.getByRole("button", { name: /save changes/i });
     expect(submitButton).toBeDisabled();
   });
 
@@ -207,7 +189,7 @@ describe("AddPlayersToRosterModal", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
     });
 
     const cancelButton = screen.getByRole("button", { name: /cancel/i });
@@ -230,23 +212,19 @@ describe("AddPlayersToRosterModal", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Add Players to Roster")).toBeInTheDocument();
+      expect(screen.getByText("Manage Competition Roster")).toBeInTheDocument();
     });
 
-    // Wait for players to load
     await waitFor(() => {
       expect(screen.getByText("Player One")).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Select a player by clicking on the player name
-    const player1 = screen.getByText("Player One");
+    const player1 = screen.getByRole("button", { name: "Player One" });
     await user.click(player1);
 
-    // Click submit
-    const submitButton = await screen.findByRole("button", { name: /add 1 player$/i });
+    const submitButton = await screen.findByRole("button", { name: /save changes/i });
     await user.click(submitButton);
 
-    // onClose should be called after successful addition
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
     });

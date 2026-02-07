@@ -11,7 +11,7 @@ const mockPlayers: Player[] = [
 ];
 
 describe("PlayerSelector", () => {
-  it("renders all players with checkboxes", () => {
+  it("renders all players with cards", () => {
     const onChange = vi.fn();
     render(
       <PlayerSelector players={mockPlayers} selectedIds={[]} onChange={onChange} />
@@ -30,10 +30,9 @@ describe("PlayerSelector", () => {
       <PlayerSelector players={mockPlayers} selectedIds={[1, 3]} onChange={onChange} />
     );
 
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes[0]).toBeChecked();
-    expect(checkboxes[1]).not.toBeChecked();
-    expect(checkboxes[2]).toBeChecked();
+    expect(screen.getByRole("button", { name: "Player 1" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Player 2" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Player 3" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("calls onChange when player is selected", async () => {
@@ -43,8 +42,7 @@ describe("PlayerSelector", () => {
       <PlayerSelector players={mockPlayers} selectedIds={[]} onChange={onChange} />
     );
 
-    const firstCheckbox = screen.getAllByRole("checkbox")[0];
-    await user.click(firstCheckbox);
+    await user.click(screen.getByRole("button", { name: "Player 1" }));
 
     expect(onChange).toHaveBeenCalledWith([1]);
   });
@@ -56,8 +54,7 @@ describe("PlayerSelector", () => {
       <PlayerSelector players={mockPlayers} selectedIds={[1, 2]} onChange={onChange} />
     );
 
-    const firstCheckbox = screen.getAllByRole("checkbox")[0];
-    await user.click(firstCheckbox);
+    await user.click(screen.getByRole("button", { name: "Player 1" }));
 
     expect(onChange).toHaveBeenCalledWith([2]);
   });

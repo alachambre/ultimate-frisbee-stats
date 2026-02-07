@@ -60,7 +60,6 @@ export default function ManagePlayersDialog({
     point.players?.map((p) => p.id) || []
   );
   const [filterLineId, setFilterLineId] = useState<number | "">("");
-  const [onlySelected, setOnlySelected] = useState(false);
 
   // Fetch lines for filtering
   const { data: lines = [] } = useQuery({
@@ -113,18 +112,22 @@ export default function ManagePlayersDialog({
     return getPlayerHighlight(playerStats, liveStats);
   };
 
-  // Helper function to get player's stats formatted as "X points - MM:SS"
+  const getPlayerPoints = (playerId: number): number | null => {
+    if (!liveStats) return null;
+    const playerStats = liveStats.find((s) => s.player_id === playerId);
+    if (!playerStats) return null;
+    return playerStats.points_played;
+  };
+
+  // Helper function to get compact player time formatted as "X min"
   const getPlayerTime = (playerId: number): string | null => {
     if (!liveStats) return null;
     const playerStats = liveStats.find((s) => s.player_id === playerId);
     if (!playerStats) return null;
 
     const minutes = Math.floor(playerStats.effective_time_seconds / 60);
-    const seconds = playerStats.effective_time_seconds % 60;
-    const timeFormatted = `${minutes}:${String(seconds).padStart(2, "0")}`;
-    const pointsText = playerStats.points_played === 1 ? "point" : "points";
 
-    return `${playerStats.points_played} ${pointsText} - ${timeFormatted}`;
+    return `${minutes} min`;
   };
 
   const updateMutation = useMutation({
@@ -148,7 +151,6 @@ export default function ManagePlayersDialog({
     // Reset to point's current players for next time dialog opens
     setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
     setFilterLineId("");
-    setOnlySelected(false);
     updateMutation.reset();
     onClose();
   };
@@ -177,33 +179,6 @@ export default function ManagePlayersDialog({
     const linePlayerIds = new Set(line.players.map((p: Player) => p.id));
     return players.filter((p) => linePlayerIds.has(p.id));
   }, [players, lines, filterLineId]);
-
-  const renderPrimary = (player: Player) => {
-    const highlight = getHighlight(player.id);
-    const playTime = getPlayerTime(player.id);
-    return (
-      <>
-        {player.name}
-        {playTime && (
-          <Box
-            component="span"
-            sx={{
-              ml: 1,
-              fontStyle: "italic",
-              color: highlight === "high"
-                ? theme.palette.success.main
-                : highlight === "low"
-                ? theme.palette.warning.main
-                : "text.secondary",
-              fontWeight: highlight ? 500 : 400,
-            }}
-          >
-            ({playTime})
-          </Box>
-        )}
-      </>
-    );
-  };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -317,10 +292,16 @@ export default function ManagePlayersDialog({
           emptyMenLabel={t("points:dialog.managePlayers.noMen")}
           emptyWomenLabel={t("points:dialog.managePlayers.noWomen")}
           getHighlight={getHighlight}
-          renderPrimary={renderPrimary}
-          showOnlySelectedToggle
-          onlySelected={onlySelected}
-          onOnlySelectedChange={setOnlySelected}
+          highlightSecondary={false}
+          renderPrimary={(player) => (
+            <>
+              <Box component="span">{player.name}</Box>
+              {getPlayerPoints(player.id) !== null && (
+                <Box component="span"> - {getPlayerPoints(player.id)} pts</Box>
+              )}
+            </>
+          )}
+          renderSecondary={(player) => getPlayerTime(player.id)}
         />
       </DialogContent>
       <DialogActions>
