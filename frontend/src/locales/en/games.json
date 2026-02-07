@@ -92,6 +92,9 @@
   "status": {
     "ready": "Not Started",
     "started": "Ongoing",
-    "ended": "Finished"
+    "ended": "Finished",
+    "won": "Won",
+    "lost": "Lost",
+    "draw": "Draw"
   }
 }

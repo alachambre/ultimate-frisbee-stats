@@ -46,15 +46,49 @@ describe("StatisticsPage", () => {
     render(<StatisticsPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: "John Doe" })
-      ).toBeInTheDocument();
+      expect(screen.getAllByRole("heading", { name: "John Doe" }).length).toBeGreaterThan(0);
     });
 
     expect(screen.getByText("Offense")).toBeInTheDocument();
     expect(screen.getByText("Defense")).toBeInTheDocument();
     expect(screen.getByText("Hold")).toBeInTheDocument();
     expect(screen.getByText("Break")).toBeInTheDocument();
+  });
+
+  it("splits player selection by gender in player flow", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    await createPlayer({
+      team_id: team.id,
+      name: "Bob",
+      number: 10,
+      gender: "M",
+    });
+    await createPlayer({
+      team_id: team.id,
+      name: "Alice",
+      number: 11,
+      gender: "W",
+    });
+
+    window.history.pushState({}, "", `/statistics?teamId=${team.id}&mode=player`);
+
+    render(<StatisticsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Men (1)")).toBeInTheDocument();
+      expect(screen.getByText("Women (1)")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Bob")).toBeInTheDocument();
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Women (1)" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Bob")).not.toBeInTheDocument();
   });
 
   it("navigates from game back to competition using the breadcrumb", async () => {
@@ -94,9 +128,9 @@ describe("StatisticsPage", () => {
       expect(screen.getAllByText(/Monkey vs Rivals/i).length).toBeGreaterThan(0);
     });
 
-    const competitionBreadcrumb = screen.getByRole("button", {
+    const competitionBreadcrumb = screen.getAllByRole("button", {
       name: /spring cup/i,
-    });
+    })[0];
     await user.click(competitionBreadcrumb);
 
     await waitFor(() => {

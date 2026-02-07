@@ -92,6 +92,9 @@
   "status": {
     "ready": "Pas commencé",
     "started": "En cours",
-    "ended": "Fini"
+    "ended": "Fini",
+    "won": "Gagné",
+    "lost": "Perdu",
+    "draw": "Égalité"
   }
 }

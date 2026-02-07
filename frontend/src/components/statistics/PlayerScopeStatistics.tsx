@@ -105,7 +105,7 @@ export default function PlayerScopeStatistics({
         </Box>
 
         <Grid container spacing={3} justifyContent="center">
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
             <CircularStat
               label={t("teamStats.hold")}
               percentage={stats.offense.hold_rate}
@@ -115,7 +115,7 @@ export default function PlayerScopeStatistics({
               tooltip={t("tooltips.holdRate")}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
             <CircularStat
               label={t("teamStats.cleanHold")}
               percentage={stats.offense.clean_hold_rate}
@@ -135,7 +135,7 @@ export default function PlayerScopeStatistics({
         </Box>
 
         <Grid container spacing={3} justifyContent="center">
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
             <CircularStat
               label={t("teamStats.turnover")}
               percentage={stats.defense.turnover_rate}
@@ -145,7 +145,7 @@ export default function PlayerScopeStatistics({
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
             <CircularStat
               label={t("teamStats.break")}
               percentage={stats.defense.break_rate}
@@ -155,7 +155,7 @@ export default function PlayerScopeStatistics({
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
             <CircularStat
               label={t("teamStats.cleanBreak")}
               percentage={stats.defense.clean_break_rate}
