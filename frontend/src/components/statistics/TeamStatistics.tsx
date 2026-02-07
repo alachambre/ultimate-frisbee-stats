@@ -86,7 +86,7 @@ export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
               label={t("teamStats.cleanBreak")}
               percentage={teamStats.defense.clean_break_rate}
               count={teamStats.defense.points_won_no_turnover}
-              total={teamStats.defense.points_won}
+              total={teamStats.defense.points_started}
               color={(theme) => theme.colors.defense.light}
               tooltip={t("tooltips.cleanBreakRate")}
             />

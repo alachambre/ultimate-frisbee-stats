@@ -160,7 +160,7 @@ export default function PlayerScopeStatistics({
               label={t("teamStats.cleanBreak")}
               percentage={stats.defense.clean_break_rate}
               count={stats.defense.points_won_no_turnover}
-              total={stats.defense.points_won}
+              total={stats.defense.points_played}
               color={(theme) => theme.colors.defense.light}
               tooltip={t("tooltips.cleanBreakRate")}
             />
