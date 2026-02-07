@@ -182,19 +182,23 @@ export default function PlayerSelectionList({
 
   return (
     <Box>
-      <Box sx={{ borderBottom: 2, borderColor: "divider" }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 0.5 }}>
         <Tabs
           value={resolvedActiveTab}
           onChange={handleTabChange}
           variant="fullWidth"
           TabIndicatorProps={{
             sx: {
-              height: 3,
+              height: 2,
+              borderRadius: 2,
               backgroundColor:
                 resolvedActiveTab === "men"
-                  ? theme.colors.men.main
-                  : theme.colors.women.main,
+                  ? alpha(theme.colors.men.main, 0.65)
+                  : alpha(theme.colors.women.main, 0.65),
             },
+          }}
+          sx={{
+            minHeight: 38,
           }}
         >
           <Tab
@@ -203,12 +207,19 @@ export default function PlayerSelectionList({
             iconPosition="start"
             value="men"
             sx={{
-              color: theme.colors.men.main,
+              minHeight: 38,
+              px: 1,
+              textTransform: "none",
+              fontSize: { xs: "0.8rem", sm: "0.85rem" },
               fontWeight: "medium",
+              color: alpha(theme.colors.men.main, 0.72),
+              "& .MuiSvgIcon-root": {
+                fontSize: 16,
+              },
               "&.Mui-selected": {
                 color: theme.colors.men.main,
-                fontWeight: "bold",
-                backgroundColor: alpha(theme.colors.men.main, 0.08),
+                fontWeight: 600,
+                backgroundColor: alpha(theme.colors.men.main, 0.05),
               },
             }}
           />
@@ -218,12 +229,19 @@ export default function PlayerSelectionList({
             iconPosition="start"
             value="women"
             sx={{
-              color: theme.colors.women.main,
+              minHeight: 38,
+              px: 1,
+              textTransform: "none",
+              fontSize: { xs: "0.8rem", sm: "0.85rem" },
               fontWeight: "medium",
+              color: alpha(theme.colors.women.main, 0.72),
+              "& .MuiSvgIcon-root": {
+                fontSize: 16,
+              },
               "&.Mui-selected": {
                 color: theme.colors.women.main,
-                fontWeight: "bold",
-                backgroundColor: alpha(theme.colors.women.main, 0.08),
+                fontWeight: 600,
+                backgroundColor: alpha(theme.colors.women.main, 0.05),
               },
             }}
           />

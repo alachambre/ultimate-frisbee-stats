@@ -225,20 +225,17 @@ export default function CompetitionDetailPage() {
           <Box p={3}>
             <Box
               display="flex"
-              justifyContent="space-between"
+              justifyContent="flex-end"
               alignItems={{ xs: "stretch", sm: "center" }}
               gap={1.5}
               mb={2}
               flexDirection={{ xs: "column", sm: "row" }}
             >
-              <Typography variant="body2" color="text.secondary">
-                {t("competitions:detail.rosterManageHint")}
-              </Typography>
               <Button
                 variant="contained"
+                size="small"
                 startIcon={<PersonAddIcon />}
                 onClick={() => setIsAddPlayersModalOpen(true)}
-                sx={{ alignSelf: { xs: "flex-start", sm: "auto" } }}
               >
                 {t("competitions:detail.addPlayers")}
               </Button>

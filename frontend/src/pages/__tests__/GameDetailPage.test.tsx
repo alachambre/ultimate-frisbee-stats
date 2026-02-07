@@ -265,7 +265,7 @@ describe("GameDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: /players \(\d+\)/i, level: 2 })
+        screen.getByRole("heading", { name: /game roster/i, level: 2 })
       ).toBeInTheDocument();
     });
 
@@ -329,7 +329,7 @@ describe("GameDetailPage", () => {
     // Wait for dialog to open and players to load
     await waitFor(() => {
       const playersSection = screen.getByRole("heading", {
-        name: /players \(\d+\)/i,
+        name: /game roster/i,
         level: 2,
       });
       expect(playersSection).toBeInTheDocument();
@@ -378,7 +378,7 @@ describe("GameDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: /players \(\d+\)/i, level: 2 })
+        screen.getByRole("heading", { name: /game roster/i, level: 2 })
       ).toBeInTheDocument();
     });
 

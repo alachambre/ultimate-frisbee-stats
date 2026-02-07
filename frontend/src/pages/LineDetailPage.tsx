@@ -158,6 +158,7 @@ export default function LineDetailPage() {
             </Typography>
             <Button
               variant="contained"
+              size="small"
               startIcon={<PersonAddIcon />}
               onClick={() => setIsAddPlayersModalOpen(true)}
             >

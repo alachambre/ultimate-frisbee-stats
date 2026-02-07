@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -15,21 +15,14 @@ import {
   Alert,
   Divider,
   IconButton,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AddIcon from "@mui/icons-material/Add";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import GroupIcon from "@mui/icons-material/Group";
-import MaleIcon from "@mui/icons-material/Male";
-import FemaleIcon from "@mui/icons-material/Female";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import { getGame, deleteGame, finishGame, updateGame, getLiveGameStatistics } from "../services";
@@ -44,7 +37,7 @@ import EditPointDialog from "../components/modals/EditPointDialog";
 import PlayerSelectionList from "../components/shared/PlayerSelectionList";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
-import type { PointWithPlayers, Player, PlayerGameStats } from "../types";
+import type { PointWithPlayers } from "../types";
 import { getPlayerHighlight } from "../utils/playerHighlighting";
 import { queryKeys } from "../utils/queryKeys";
 
@@ -59,7 +52,6 @@ export default function GameDetailPage() {
   const [editingPoint, setEditingPoint] = useState<PointWithPlayers | null>(null);
   const [deletingPoint, setDeletingPoint] = useState<PointWithPlayers | null>(null);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<"name" | "points" | "time">("name");
   const [isRosterDialogOpen, setIsRosterDialogOpen] = useState(false);
   const gameIdNumber = Number(gameId);
   const gameIdValid = Number.isFinite(gameIdNumber);
@@ -140,20 +132,6 @@ export default function GameDetailPage() {
     },
   });
 
-  // Helper function to sort stats
-  const sortStats = useCallback((stats: PlayerGameStats[]): PlayerGameStats[] => {
-    const sorted = [...stats];
-    switch (sortBy) {
-      case "points":
-        return sorted.sort((a, b) => b.points_played - a.points_played || a.player_name.localeCompare(b.player_name));
-      case "time":
-        return sorted.sort((a, b) => b.effective_time_seconds - a.effective_time_seconds || a.player_name.localeCompare(b.player_name));
-      case "name":
-      default:
-        return sorted.sort((a, b) => a.player_name.localeCompare(b.player_name));
-    }
-  }, [sortBy]);
-
   const liveStatsByPlayerId = useMemo(
     () => new Map((liveStats || []).map((stats) => [stats.player_id, stats])),
     [liveStats]
@@ -173,48 +151,10 @@ export default function GameDetailPage() {
         .sort((a, b) => a.name.localeCompare(b.name)),
     [game?.players]
   );
-  const rosterPlayersForTabs = useMemo(() => {
-    const allPlayers = game?.players ?? [];
-    if (allPlayers.length === 0) {
-      return [];
-    }
-
-    const hasLiveStats =
-      (game?.status === "started" || game?.status === "ended") &&
-      !!liveStats &&
-      liveStats.length > 0;
-
-    if (!hasLiveStats) {
-      return [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    const playersById = new Map(allPlayers.map((player) => [player.id, player]));
-    const menIds = new Set(allPlayers.filter((player) => player.gender === "M").map((player) => player.id));
-    const womenIds = new Set(allPlayers.filter((player) => player.gender === "W").map((player) => player.id));
-
-    const sortedMenStats = sortStats(liveStats.filter((stats) => menIds.has(stats.player_id)));
-    const sortedWomenStats = sortStats(liveStats.filter((stats) => womenIds.has(stats.player_id)));
-
-    const buildGenderPlayers = (
-      gender: "M" | "W",
-      sortedStats: PlayerGameStats[]
-    ): Player[] => {
-      const orderedIds = sortedStats.map((stats) => stats.player_id);
-      const missingIds = allPlayers
-        .filter((player) => player.gender === gender && !orderedIds.includes(player.id))
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((player) => player.id);
-
-      return [...orderedIds, ...missingIds]
-        .map((playerId) => playersById.get(playerId))
-        .filter((player): player is Player => Boolean(player));
-    };
-
-    return [
-      ...buildGenderPlayers("M", sortedMenStats),
-      ...buildGenderPlayers("W", sortedWomenStats),
-    ];
-  }, [game?.players, game?.status, liveStats, sortStats]);
+  const rosterPlayersForTabs = useMemo(
+    () => [...menPlayers, ...womenPlayers],
+    [menPlayers, womenPlayers]
+  );
   const getRosterPlayerHighlight = (playerId: number): "high" | "low" | null => {
     if (!liveStats || liveStats.length < 5) {
       return null;
@@ -455,7 +395,7 @@ export default function GameDetailPage() {
           <DialogTitle>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">
-                {t("games:detail.rosterSection", { count: game.players.length })}
+                {t("games:detail.roster")}
               </Typography>
               <IconButton
                 edge="end"
@@ -468,65 +408,19 @@ export default function GameDetailPage() {
             </Box>
           </DialogTitle>
           <DialogContent>
-            <Box mb={2} display="flex" gap={1} flexWrap="wrap">
-              <Chip
-                icon={<GroupIcon />}
-                label={t("games:detail.totalPlayers", { count: game.players.length })}
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                icon={<MaleIcon />}
-                label={t("games:detail.menCount", { count: menPlayers.length })}
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                icon={<FemaleIcon />}
-                label={t("games:detail.womenCount", { count: womenPlayers.length })}
-                variant="outlined"
-                size="small"
-              />
-            </Box>
-
-            {/* Controls Row - Sorting + Add Players Button */}
-            <Box mb={3} display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-              {/* Sorting Controls - show when we have stats to display */}
-              {(game.status === "started" || game.status === "ended") && liveStats && liveStats.length > 0 ? (
-                <FormControl size="small" sx={{ minWidth: { xs: 120, sm: 200 } }}>
-                  <InputLabel id="sort-by-label">{t("games:detail.sortBy")}</InputLabel>
-                  <Select
-                    labelId="sort-by-label"
-                    value={sortBy}
-                    label={t("games:detail.sortBy")}
-                    onChange={(e) => setSortBy(e.target.value as "name" | "points" | "time")}
-                  >
-                    <MenuItem value="name">{t("games:detail.sortByName")}</MenuItem>
-                    <MenuItem value="points">{t("games:detail.sortByPoints")}</MenuItem>
-                    <MenuItem value="time">{t("games:detail.sortByTime")}</MenuItem>
-                  </Select>
-                </FormControl>
-              ) : (
-                <Box />
-              )}
-
-              {/* Add Players Button - icon only on mobile, with text on desktop */}
+            <Box mb={3} display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                size="small"
+                startIcon={<PersonAddIcon />}
                 onClick={() => setIsAddPlayersModalOpen(true)}
                 disabled={game.status === "ended"}
                 sx={{
-                  minWidth: { xs: "auto", sm: "auto" },
-                  height: 40, // Match the FormControl height
-                  "& .MuiButton-startIcon": {
-                    margin: { xs: 0, sm: "0 8px 0 -4px" }
-                  }
+                  width: { xs: "100%", sm: "auto" },
+                  "& .MuiButton-startIcon": { margin: "0 8px 0 -4px" },
                 }}
               >
-                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                  {t("games:detail.addPlayers")}
-                </Box>
+                {t("games:detail.addPlayers")}
               </Button>
             </Box>
             <PlayerSelectionList
