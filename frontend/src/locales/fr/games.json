@@ -48,6 +48,7 @@
     "deletePointTitle": "Supprimer le point ?",
     "deletePointConfirm": "Supprimer le point #{{pointNumber}} ? Cette action est irréversible.",
     "deletePointError": "Erreur lors de la suppression du point. Veuillez réessayer.",
+    "deleteHalftimeError": "Erreur lors de la suppression de la mi-temps. Veuillez réessayer.",
     "deletePoint": "Supprimer le point",
     "deletingPoint": "Suppression...",
     "removePlayerTitle": "Retirer le joueur du match ?",

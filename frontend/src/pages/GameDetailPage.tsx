@@ -25,7 +25,14 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import GroupIcon from "@mui/icons-material/Group";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
-import { getGame, deleteGame, finishGame, updateGame, getLiveGameStatistics } from "../services";
+import {
+  getGame,
+  deleteGame,
+  finishGame,
+  updateGame,
+  getLiveGameStatistics,
+  deleteHalftime,
+} from "../services";
 import { getActivePoint, deletePoint } from "../services/points";
 import { getCompetition } from "../services/competitions";
 import LoadingState from "../components/shared/LoadingState";
@@ -37,7 +44,7 @@ import EditPointDialog from "../components/modals/EditPointDialog";
 import PlayerSelectionList from "../components/shared/PlayerSelectionList";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import GameTimer from "../components/games/GameTimer";
-import type { PointWithPlayers } from "../types";
+import type { PointWithPlayers, Halftime } from "../types";
 import { getPlayerHighlight } from "../utils/playerHighlighting";
 import { queryKeys } from "../utils/queryKeys";
 
@@ -132,6 +139,13 @@ export default function GameDetailPage() {
     },
   });
 
+  const deleteHalftimeMutation = useMutation({
+    mutationFn: (halftimeId: number) => deleteHalftime(halftimeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+    },
+  });
+
   const liveStatsByPlayerId = useMemo(
     () => new Map((liveStats || []).map((stats) => [stats.player_id, stats])),
     [liveStats]
@@ -199,6 +213,10 @@ export default function GameDetailPage() {
     if (deletingPoint) {
       deletePointMutation.mutate(deletingPoint.id);
     }
+  };
+
+  const handleDeleteHalftime = (halftime: Halftime) => {
+    deleteHalftimeMutation.mutate(halftime.id);
   };
 
   return (
@@ -475,9 +493,17 @@ export default function GameDetailPage() {
         <Box p={3}>
           <PointHistoryList
             points={game.points}
+            halftime={game.halftime}
             onEditPoint={handleEditPoint}
             onDeletePoint={handleDeletePoint}
+            onDeleteHalftime={handleDeleteHalftime}
+            isDeletingHalftime={deleteHalftimeMutation.isPending}
           />
+          {deleteHalftimeMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {t("games:detail.deleteHalftimeError", "Error deleting halftime. Please try again.")}
+            </Alert>
+          )}
         </Box>
       </Paper>
 

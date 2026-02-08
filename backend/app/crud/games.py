@@ -140,7 +140,8 @@ def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
         "team_name": competition.team.name if competition and competition.team else "Unknown",
         "competition_name": competition.name if competition else "Unknown",
         "points": points,
-        "players": game.players
+        "players": game.players,
+        "halftime": game.halftime,
     }
 
 

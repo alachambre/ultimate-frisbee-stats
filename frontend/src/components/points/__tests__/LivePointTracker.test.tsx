@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, beforeEach } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import LivePointTracker from "../LivePointTracker";
-import type { GameDetail, Player, Call } from "../../../types";
+import type { GameDetail, Player, Call, Halftime } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -17,7 +18,10 @@ const mockPlayers: Player[] = [
   { id: 7, name: "Grace", number: 70, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
 ];
 
-const createMockGame = (status: "ready" | "started" | "ended" = "started"): GameDetail => ({
+const createMockGame = (
+  status: "ready" | "started" | "ended" = "started",
+  halftime: Halftime | null = null
+): GameDetail => ({
   id: 1,
   competition_id: 1,
   opponent_name: "Test Opponents",
@@ -33,6 +37,7 @@ const createMockGame = (status: "ready" | "started" | "ended" = "started"): Game
   competition_name: "Test Competition",
   points: [],
   players: mockPlayers,
+  halftime,
 });
 
 const createMockRunningPoint = () => ({
@@ -386,7 +391,51 @@ describe("LivePointTracker - Pending Call Feature", () => {
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /start point/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /half time/i })).toBeInTheDocument();
       });
+    });
+
+    it("disables half time button when halftime already exists", async () => {
+      const game = createMockGame("started", {
+        id: 1,
+        game_id: 1,
+        halftime_timestamp: "2024-01-01T11:00:00Z",
+        comments: null,
+        created_at: "2024-01-01T11:00:00Z",
+      });
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /half time/i })).toBeDisabled();
+      });
+    });
+
+    it("opens half time confirmation dialog", async () => {
+      const user = userEvent.setup();
+      const game = createMockGame();
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      const halfTimeButton = await screen.findByRole("button", { name: /half time/i });
+      await user.click(halfTimeButton);
+
+      expect(screen.getByText(/record half time\?/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /confirm/i })).toBeInTheDocument();
     });
 
     it("renders finish point button when point is running", async () => {

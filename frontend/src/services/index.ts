@@ -11,4 +11,5 @@ export * from "./points";
 export * from "./strategies";
 export * from "./calls";
 export * from "./turnovers";
+export * from "./halftimes";
 export * from "./statistics";

@@ -43,6 +43,31 @@ def test_get_game_api(client, sample_game):
     assert isinstance(data["points"], list)
 
 
+def test_get_game_api_includes_halftime(client, sample_game):
+    """Test GET /games/{game_id} includes halftime when it exists."""
+    start_response = client.put(
+        f"/games/{sample_game.id}",
+        json={"status": "started"},
+    )
+    assert start_response.status_code == 200
+
+    create_halftime_response = client.post(
+        "/halftimes",
+        json={"game_id": sample_game.id},
+    )
+    assert create_halftime_response.status_code == 201
+    created_halftime = create_halftime_response.json()
+
+    response = client.get(f"/games/{sample_game.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "halftime" in data
+    assert data["halftime"] is not None
+    assert data["halftime"]["id"] == created_halftime["id"]
+    assert data["halftime"]["game_id"] == sample_game.id
+
+
 def test_get_game_not_found_api(client):
     """Test GET /games/{game_id} with invalid ID"""
     response = client.get("/games/999")

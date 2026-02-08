@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Call, CallCreate, CallUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Call, CallCreate, CallUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -14,6 +14,7 @@ let games: Game[] = [];
 let gamePlayers: Map<number, number[]> = new Map(); // gameId -> playerIds[]
 let strategies: Strategy[] = [];
 let points: PointWithPlayers[] = [];
+let halftimes: Halftime[] = [];
 let calls: Call[] = [];
 let turnovers: TurnoverWithPlayer[] = [];
 let nextTeamId = 1;
@@ -23,6 +24,7 @@ let nextLineId = 1;
 let nextGameId = 1;
 let nextStrategyId = 1;
 let nextPointId = 1;
+let nextHalftimeId = 1;
 let nextCallId = 1;
 let nextTurnoverId = 1;
 
@@ -38,6 +40,7 @@ export function resetMockData() {
   gamePlayers = new Map();
   strategies = [];
   points = [];
+  halftimes = [];
   calls = [];
   turnovers = [];
   nextTeamId = 1;
@@ -47,6 +50,7 @@ export function resetMockData() {
   nextGameId = 1;
   nextStrategyId = 1;
   nextPointId = 1;
+  nextHalftimeId = 1;
   nextCallId = 1;
   nextTurnoverId = 1;
 }
@@ -319,8 +323,11 @@ export const handlers = [
     }
     competitions.splice(index, 1);
     competitionPlayers.delete(competitionId);
-    // Also delete associated games
+    const deletedGameIds = games
+      .filter((game) => game.competition_id === competitionId)
+      .map((game) => game.id);
     games = games.filter((g) => g.competition_id !== competitionId);
+    halftimes = halftimes.filter((halftime) => !deletedGameIds.includes(halftime.game_id));
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -559,6 +566,7 @@ export const handlers = [
     // Get game players
     const gamePlayerIds = gamePlayers.get(gameId) || [];
     const gamePlayers_list = players.filter((p) => gamePlayerIds.includes(p.id));
+    const gameHalftime = halftimes.find((halftime) => halftime.game_id === gameId) || null;
 
     const gameDetail: GameDetail = {
       ...game,
@@ -568,6 +576,7 @@ export const handlers = [
       competition_name: competition?.name || "Unknown",
       points: gamePoints,
       players: gamePlayers_list,
+      halftime: gameHalftime,
     };
     return HttpResponse.json(gameDetail);
   }),
@@ -626,6 +635,7 @@ export const handlers = [
     games.splice(index, 1);
     // Also delete associated points
     points = points.filter((p) => p.game_id !== gameId);
+    halftimes = halftimes.filter((halftime) => halftime.game_id !== gameId);
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -1137,6 +1147,98 @@ export const handlers = [
       }
     });
 
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ============================================
+  // Halftime Endpoints
+  // ============================================
+
+  // POST /halftimes - Create halftime marker
+  http.post(`${BASE_URL}/halftimes`, async ({ request }) => {
+    const halftimeData = (await request.json()) as HalftimeCreate;
+    const game = games.find((entry) => entry.id === halftimeData.game_id);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    if (game.status !== "started") {
+      return HttpResponse.json(
+        { detail: "Can only create halftime on a started game" },
+        { status: 400 }
+      );
+    }
+
+    const existingHalftime = halftimes.find(
+      (entry) => entry.game_id === halftimeData.game_id
+    );
+    if (existingHalftime) {
+      return HttpResponse.json(
+        { detail: `Halftime already exists for game ${halftimeData.game_id}` },
+        { status: 400 }
+      );
+    }
+
+    const halftime: Halftime = {
+      id: nextHalftimeId++,
+      game_id: halftimeData.game_id,
+      halftime_timestamp: halftimeData.halftime_timestamp || new Date().toISOString(),
+      comments: halftimeData.comments ?? null,
+      created_at: new Date().toISOString(),
+    };
+
+    halftimes.push(halftime);
+    return HttpResponse.json(halftime, { status: 201 });
+  }),
+
+  // GET /halftimes/games/:gameId/halftime - Get halftime by game
+  http.get(`${BASE_URL}/halftimes/games/:gameId/halftime`, ({ params }) => {
+    const gameId = Number(params.gameId);
+    const halftime = halftimes.find((entry) => entry.game_id === gameId);
+
+    if (!halftime) {
+      return HttpResponse.json(
+        { detail: "Halftime not found for this game" },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json(halftime);
+  }),
+
+  // PUT /halftimes/:halftimeId - Update halftime marker
+  http.put(`${BASE_URL}/halftimes/:halftimeId`, async ({ params, request }) => {
+    const halftimeId = Number(params.halftimeId);
+    const halftimeIndex = halftimes.findIndex((entry) => entry.id === halftimeId);
+    const updates = (await request.json()) as HalftimeUpdate;
+
+    if (halftimeIndex === -1) {
+      return HttpResponse.json({ detail: "Halftime not found" }, { status: 404 });
+    }
+
+    const currentHalftime = halftimes[halftimeIndex];
+    halftimes[halftimeIndex] = {
+      ...currentHalftime,
+      ...(updates.comments !== undefined ? { comments: updates.comments } : {}),
+      ...(updates.halftime_timestamp !== undefined && updates.halftime_timestamp !== null
+        ? { halftime_timestamp: updates.halftime_timestamp }
+        : {}),
+    };
+
+    return HttpResponse.json(halftimes[halftimeIndex]);
+  }),
+
+  // DELETE /halftimes/:halftimeId - Delete halftime marker
+  http.delete(`${BASE_URL}/halftimes/:halftimeId`, ({ params }) => {
+    const halftimeId = Number(params.halftimeId);
+    const halftimeIndex = halftimes.findIndex((entry) => entry.id === halftimeId);
+
+    if (halftimeIndex === -1) {
+      return HttpResponse.json({ detail: "Halftime not found" }, { status: 404 });
+    }
+
+    halftimes.splice(halftimeIndex, 1);
     return new HttpResponse(null, { status: 204 });
   }),
 

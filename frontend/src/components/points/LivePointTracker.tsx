@@ -7,6 +7,11 @@ import {
   Chip,
   Divider,
   ButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -15,6 +20,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CheckIcon from "@mui/icons-material/Check";
@@ -44,6 +50,7 @@ import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Call } f
 import { useQuery } from "@tanstack/react-query";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import { getCallsByPoint } from "../../services/calls";
+import { createHalftime } from "../../services/halftimes";
 import GroupIcon from "@mui/icons-material/Group";
 import { hasValidPointPlayerComposition } from "../../utils/playerComposition";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
@@ -75,8 +82,10 @@ export default function LivePointTracker({
   const [isTurnoverDialogOpen, setIsTurnoverDialogOpen] = useState(false);
   const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
   const [isManagePlayersDialogOpen, setIsManagePlayersDialogOpen] = useState(false);
+  const [isHalftimeConfirmOpen, setIsHalftimeConfirmOpen] = useState(false);
   const [moreActionsAnchor, setMoreActionsAnchor] = useState<null | HTMLElement>(null);
   const queryClient = useQueryClient();
+  const hasHalftime = Boolean(game.halftime);
 
   // Fetch turnovers for active point (needed for possession logic)
   const { data: existingTurnovers = [] } = useQuery<TurnoverWithPlayer[]>({
@@ -175,6 +184,20 @@ export default function LivePointTracker({
     },
   });
 
+  const createHalftimeMutation = useMutation({
+    mutationFn: () =>
+      createHalftime({
+        game_id: game.id,
+        halftime_timestamp: new Date().toISOString(),
+      }),
+    onSuccess: () => {
+      setIsHalftimeConfirmOpen(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(game.id) });
+      onPointUpdated?.();
+    },
+  });
+
   // Only show live tracker for started games (hide for ready and ended)
   if (game.status !== "started") {
     return null;
@@ -205,14 +228,32 @@ export default function LivePointTracker({
             <Typography variant="body2" color="text.secondary" mb={2}>
               {t("points:empty.noPoints")}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setIsStartDialogOpen(true)}
-              size="large"
-            >
-              {t("points:tracker.newPoint")}
-            </Button>
+            {createHalftimeMutation.isError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {t("common:error.generic")}
+              </Alert>
+            )}
+            <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap">
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setIsStartDialogOpen(true)}
+                size="large"
+              >
+                {t("points:tracker.newPoint")}
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<AccessTimeFilledIcon />}
+                onClick={() => setIsHalftimeConfirmOpen(true)}
+                disabled={hasHalftime || createHalftimeMutation.isPending}
+                size="large"
+              >
+                {createHalftimeMutation.isPending
+                  ? t("points:tracker.recordingHalftime", "Recording...")
+                  : t("points:tracker.halfTime", "Half time")}
+              </Button>
+            </Box>
           </Box>
         ) : (
           // Active or scored point - show appropriate button
@@ -827,6 +868,52 @@ export default function LivePointTracker({
           call={pendingCall}
         />
       )}
+
+      <Dialog
+        open={isHalftimeConfirmOpen}
+        onClose={() => {
+          if (!createHalftimeMutation.isPending) {
+            setIsHalftimeConfirmOpen(false);
+          }
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          {t("points:tracker.halfTimeConfirmTitle", "Record half time?")}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {t(
+              "points:tracker.halfTimeConfirmDescription",
+              "This will add a halftime marker in the game history."
+            )}
+          </Typography>
+          {createHalftimeMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {(createHalftimeMutation.error as { response?: { data?: { detail?: string } } })?.response?.data
+                ?.detail || t("common:error.generic")}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsHalftimeConfirmOpen(false)}
+            disabled={createHalftimeMutation.isPending}
+          >
+            {t("common:action.cancel")}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => createHalftimeMutation.mutate()}
+            disabled={createHalftimeMutation.isPending}
+          >
+            {createHalftimeMutation.isPending
+              ? t("points:tracker.recordingHalftime", "Recording...")
+              : t("common:action.confirm")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

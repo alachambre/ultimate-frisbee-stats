@@ -38,6 +38,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Team roster cards on `TeamDetailPage` are click-to-edit; player statistics access is available from `EditPlayerModal` (team scope)
 - Statistics export UI should expose CSV mode selection (`summary` vs `full`) and pass it to backend `detail` query param
 - Live point interruption flow uses stoppages (`call`, `injury`, `timeout`, `other`) with type selection in the record dialog and type display in chronology/cards
+- Live tracker empty state supports halftime recording (`Half time` button next to `Start Point`) and disables it once a halftime exists; halftime appears in the game history timeline and can be deleted from there
 
 **Backend**
 - `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)

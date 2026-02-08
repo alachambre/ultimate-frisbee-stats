@@ -20,6 +20,10 @@
     "managePlayers": "Gérer les joueurs",
     "launchPull": "Lancer le Pull",
     "launching": "Lancement...",
+    "halfTime": "Mi-temps",
+    "recordingHalftime": "Enregistrement...",
+    "halfTimeConfirmTitle": "Enregistrer la mi-temps ?",
+    "halfTimeConfirmDescription": "Cela ajoutera un marqueur de mi-temps dans l'historique du match.",
     "addComment": "Ajouter un commentaire",
     "editComment": "Modifier le commentaire",
     "comment": "Commentaire",
@@ -108,7 +112,9 @@
     "comment": "Commentaire",
     "weScored": "On a marqué !",
     "theyScored": "Ils ont marqué",
-    "startedOn": "Commencé en"
+    "startedOn": "Commencé en",
+    "halfTime": "Mi-temps",
+    "deleteHalfTime": "Supprimer la mi-temps"
   },
   "status": {
     "ready": "Prêt",

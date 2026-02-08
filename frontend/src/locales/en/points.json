@@ -20,6 +20,10 @@
     "managePlayers": "Manage Players",
     "launchPull": "Launch Pull",
     "launching": "Launching...",
+    "halfTime": "Half time",
+    "recordingHalftime": "Recording...",
+    "halfTimeConfirmTitle": "Record half time?",
+    "halfTimeConfirmDescription": "This will add a halftime marker in the game history.",
     "addComment": "Add Comment",
     "editComment": "Edit Comment",
     "comment": "Comment",
@@ -108,7 +112,9 @@
     "comment": "Comment",
     "weScored": "We scored!",
     "theyScored": "They scored",
-    "startedOn": "Started on"
+    "startedOn": "Started on",
+    "halfTime": "Half time",
+    "deleteHalfTime": "Delete halftime"
   },
   "status": {
     "ready": "Ready",

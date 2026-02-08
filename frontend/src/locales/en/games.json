@@ -48,6 +48,7 @@
     "deletePointTitle": "Delete Point?",
     "deletePointConfirm": "Delete Point #{{pointNumber}}? This cannot be undone.",
     "deletePointError": "Error deleting point. Please try again.",
+    "deleteHalftimeError": "Error deleting halftime. Please try again.",
     "deletePoint": "Delete Point",
     "deletingPoint": "Deleting...",
     "removePlayerTitle": "Remove Player from Game?",

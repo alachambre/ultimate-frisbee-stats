@@ -7,6 +7,7 @@ export const queryKeys = {
     ["competition-games", competitionId] as const,
   games: ["games"] as const,
   game: (gameId: number) => ["game", gameId] as const,
+  halftime: (gameId: number) => ["halftime", gameId] as const,
   activePoint: (gameId: number) => ["activePoint", gameId] as const,
   liveStats: (gameId: number) => ["liveStats", gameId] as const,
   gameTeamStatistics: (gameId: number) => ["gameTeamStatistics", gameId] as const,
