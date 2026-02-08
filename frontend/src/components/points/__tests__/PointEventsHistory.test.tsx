@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import { PointEventsHistory } from "../PointEventsHistory";
-import type { Call, TurnoverWithPlayer } from "../../../types";
+import type { Stoppage, TurnoverWithPlayer } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -12,8 +12,8 @@ const createMockCall = (
   timestamp: string,
   resumeTimestamp: string | null = null,
   comments: string | null = null,
-  stoppageType: Call["stoppage_type"] = "call",
-): Call => ({
+  stoppageType: Stoppage["stoppage_type"] = "call",
+): Stoppage => ({
   id,
   point_id: 1,
   stoppage_type: stoppageType,

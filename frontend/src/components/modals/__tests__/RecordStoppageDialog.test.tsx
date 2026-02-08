@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RecordCallDialog } from "../RecordCallDialog";
+import { RecordStoppageDialog } from "../RecordStoppageDialog";
 import type { PointWithPlayers } from "../../../types";
 
 const mockPoint: PointWithPlayers = {
@@ -32,10 +32,10 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
   );
 };
 
-describe("RecordCallDialog", () => {
+describe("RecordStoppageDialog", () => {
   it("renders dialog with title when open", () => {
     renderWithQueryClient(
-      <RecordCallDialog
+      <RecordStoppageDialog
         open={true}
         onClose={vi.fn()}
         point={mockPoint}
@@ -47,7 +47,7 @@ describe("RecordCallDialog", () => {
 
   it("does not render when closed", () => {
     renderWithQueryClient(
-      <RecordCallDialog
+      <RecordStoppageDialog
         open={false}
         onClose={vi.fn()}
         point={mockPoint}
@@ -59,7 +59,7 @@ describe("RecordCallDialog", () => {
 
   it("shows comments text field", () => {
     renderWithQueryClient(
-      <RecordCallDialog
+      <RecordStoppageDialog
         open={true}
         onClose={vi.fn()}
         point={mockPoint}
@@ -71,7 +71,7 @@ describe("RecordCallDialog", () => {
 
   it("shows stoppage type buttons", () => {
     renderWithQueryClient(
-      <RecordCallDialog
+      <RecordStoppageDialog
         open={true}
         onClose={vi.fn()}
         point={mockPoint}
@@ -87,7 +87,7 @@ describe("RecordCallDialog", () => {
 
   it("has cancel and record buttons", () => {
     renderWithQueryClient(
-      <RecordCallDialog
+      <RecordStoppageDialog
         open={true}
         onClose={vi.fn()}
         point={mockPoint}
@@ -102,7 +102,7 @@ describe("RecordCallDialog", () => {
     const onClose = vi.fn();
 
     renderWithQueryClient(
-      <RecordCallDialog
+      <RecordStoppageDialog
         open={true}
         onClose={onClose}
         point={mockPoint}

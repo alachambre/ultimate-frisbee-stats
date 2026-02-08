@@ -39,6 +39,10 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Statistics export UI should expose CSV mode selection (`summary` vs `full`) and pass it to backend `detail` query param
 - Live point interruption flow uses stoppages (`call`, `injury`, `timeout`, `other`) with type selection in the record dialog and type display in chronology/cards
 - Live tracker empty state supports halftime recording (`Half time` button next to `Start Point`) and disables it once a halftime exists; halftime appears in the game history timeline and can be deleted from there
+- Live point tracker internals are split under `frontend/src/components/points/liveTracker/` (`LivePointHeader`, `LivePointActionBar`, `LivePointContextCards`, `useLivePointState`, `useLivePointMutations`); keep `LivePointTracker.tsx` as composition shell
+- Game detail page is section-based: `frontend/src/pages/hooks/useGameDetailPageData.ts` + `frontend/src/components/games/detail/` (`GameHeaderActions`, `GameScorePanel`, `GameRosterDialog`, `GameHistorySection`)
+- Frontend stoppage API naming uses `frontend/src/services/stoppages.ts` and `queryKeys.stoppages`; legacy call aliases are removed
+- UI sport wording must still follow `GLOSSARY.md`: use `stoppage` for the generic interruption concept, and keep `Call` in English when referring to the specific stoppage type
 
 **Backend**
 - `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)
@@ -47,9 +51,11 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)
 - CSV statistics exports are backend-owned via `/exports/*/csv` endpoints; frontend should only trigger download
+- CSV export implementation is split by concern: `statistics_exports_formatters.py`, `statistics_exports_sections.py`, `statistics_exports_game.py`, `statistics_exports_competition.py`, `statistics_exports_team.py` (`statistics_exports.py` stays as facade)
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable
 - Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
+- `crud/games.py:get_game_detail` must return explicit contract fields (no `__dict__` passthrough)
 - Supabase schema changes are SQL-migration-based (`supabase/migrations/`), not `create_all()` based
 
 ## Design & UI System

@@ -22,10 +22,7 @@ Ultimate frisbee is an international sport with established English terminology 
 - **Cutter** - Player who runs to receive passes downfield
 
 ### Calls/Violations
-- **Foul** - Physical contact violation
-- **Travel** - Foot fault violation
-- **Pick** - Obstruction of a defender
-- **Strip** - Knocking the disc out of someone's hand
+- **Call** - When a player stops the game to discuss something that ahppened on the field
 
 ---
 

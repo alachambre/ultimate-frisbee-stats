@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import LivePointTracker from "../LivePointTracker";
-import type { GameDetail, Player, Call, Halftime } from "../../../types";
+import type { GameDetail, Player, Stoppage, Halftime } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -59,13 +59,13 @@ const createMockRunningPoint = () => ({
   duration_seconds: null,
 });
 
-describe("LivePointTracker - Pending Call Feature", () => {
+describe("LivePointTracker - Pending Stoppage Feature", () => {
   beforeEach(() => {
     // Reset any runtime request handlers we add during tests
     server.resetHandlers();
   });
 
-  describe("Finish Point Button - Pending Call Validation", () => {
+  describe("Finish Point Button - Pending Stoppage Validation", () => {
     it("enables finish button when there are no calls", async () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
@@ -102,7 +102,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const activePoint = createMockRunningPoint();
 
       // Mock calls with all having resume_timestamp (resolved)
-      const resolvedCalls: Call[] = [
+      const resolvedCalls: Stoppage[] = [
         {
           id: 1,
           point_id: 1,
@@ -151,7 +151,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const activePoint = createMockRunningPoint();
 
       // Mock calls with one pending (null resume_timestamp)
-      const callsWithPending: Call[] = [
+      const callsWithPending: Stoppage[] = [
         {
           id: 1,
           point_id: 1,
@@ -193,7 +193,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const activePoint = createMockRunningPoint();
 
       // Mock calls with multiple pending
-      const callsWithPending: Call[] = [
+      const callsWithPending: Stoppage[] = [
         {
           id: 1,
           point_id: 1,
@@ -243,7 +243,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const activePoint = createMockRunningPoint();
 
       // Mock calls with mix of resolved and pending
-      const mixedCalls: Call[] = [
+      const mixedCalls: Stoppage[] = [
         {
           id: 1,
           point_id: 1,
@@ -292,7 +292,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const game = createMockGame();
       const activePoint = createMockRunningPoint();
 
-      const callsWithPending: Call[] = [
+      const callsWithPending: Stoppage[] = [
         {
           id: 1,
           point_id: 1,

@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ResumeFromCallDialog } from "../ResumeFromCallDialog";
-import type { Call } from "../../../types";
+import { ResumeFromStoppageDialog } from "../ResumeFromStoppageDialog";
+import type { Stoppage } from "../../../types";
 
-const mockCall: Call = {
+const mockCall: Stoppage = {
   id: 1,
   point_id: 1,
   stoppage_type: "injury",
@@ -23,37 +23,37 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
   );
 };
 
-describe("ResumeFromCallDialog", () => {
+describe("ResumeFromStoppageDialog", () => {
   it("renders dialog with title when open", () => {
     renderWithQueryClient(
-      <ResumeFromCallDialog
+      <ResumeFromStoppageDialog
         open={true}
         onClose={vi.fn()}
-        call={mockCall}
+        stoppage={mockCall}
       />
     );
 
-    expect(screen.getByText("Resume from Call")).toBeInTheDocument();
+    expect(screen.getByText("Resume from Stoppage")).toBeInTheDocument();
   });
 
   it("does not render when closed", () => {
     renderWithQueryClient(
-      <ResumeFromCallDialog
+      <ResumeFromStoppageDialog
         open={false}
         onClose={vi.fn()}
-        call={mockCall}
+        stoppage={mockCall}
       />
     );
 
-    expect(screen.queryByText("Resume from Call")).not.toBeInTheDocument();
+    expect(screen.queryByText("Resume from Stoppage")).not.toBeInTheDocument();
   });
 
   it("displays call timing information", () => {
     renderWithQueryClient(
-      <ResumeFromCallDialog
+      <ResumeFromStoppageDialog
         open={true}
         onClose={vi.fn()}
-        call={mockCall}
+        stoppage={mockCall}
       />
     );
 
@@ -67,10 +67,10 @@ describe("ResumeFromCallDialog", () => {
 
   it("displays duration in MM:SS format", async () => {
     renderWithQueryClient(
-      <ResumeFromCallDialog
+      <ResumeFromStoppageDialog
         open={true}
         onClose={vi.fn()}
-        call={mockCall}
+        stoppage={mockCall}
       />
     );
 
@@ -87,10 +87,10 @@ describe("ResumeFromCallDialog", () => {
 
   it("has cancel and confirm buttons", () => {
     renderWithQueryClient(
-      <ResumeFromCallDialog
+      <ResumeFromStoppageDialog
         open={true}
         onClose={vi.fn()}
-        call={mockCall}
+        stoppage={mockCall}
       />
     );
 
@@ -102,10 +102,10 @@ describe("ResumeFromCallDialog", () => {
     const onClose = vi.fn();
 
     renderWithQueryClient(
-      <ResumeFromCallDialog
+      <ResumeFromStoppageDialog
         open={true}
         onClose={onClose}
-        call={mockCall}
+        stoppage={mockCall}
       />
     );
 

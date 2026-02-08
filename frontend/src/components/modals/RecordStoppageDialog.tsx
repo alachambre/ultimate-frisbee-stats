@@ -15,27 +15,27 @@ import {
 } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { createCall } from '../../services/calls';
-import type { PointWithPlayers, CallCreate, StoppageType } from '../../types';
+import { createStoppage } from '../../services/stoppages';
+import type { PointWithPlayers, StoppageCreate, StoppageType } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
 import { STOPPAGE_TYPES, getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
-interface RecordCallDialogProps {
+interface RecordStoppageDialogProps {
   open: boolean;
   onClose: () => void;
   point: PointWithPlayers;
 }
 
-export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps) => {
+export const RecordStoppageDialog = ({ open, onClose, point }: RecordStoppageDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
   const [comments, setComments] = useState('');
   const [stoppageType, setStoppageType] = useState<StoppageType>('call');
 
   const mutation = useMutation({
-    mutationFn: (newCall: CallCreate) => createCall(newCall),
+    mutationFn: (newStoppage: StoppageCreate) => createStoppage(newStoppage),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.calls(point.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(point.id) });
       setComments('');
       setStoppageType('call');
       onClose();
@@ -46,7 +46,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
     mutation.mutate({
       point_id: point.id,
       stoppage_type: stoppageType,
-      call_timestamp: new Date().toISOString(), // Generate timestamp when call is recorded
+      call_timestamp: new Date().toISOString(), // Generate timestamp when stoppage is recorded
       comments: comments.trim() || null,
     });
   };

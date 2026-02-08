@@ -11,26 +11,30 @@ import {
 } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { updateCall } from '../../services/calls';
-import type { Call, CallUpdate } from '../../types';
+import { updateStoppage } from '../../services/stoppages';
+import type { Stoppage, StoppageUpdate } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
 import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
-interface ResumeFromCallDialogProps {
+interface ResumeFromStoppageDialogProps {
   open: boolean;
   onClose: () => void;
-  call: Call;
+  stoppage: Stoppage;
 }
 
-export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDialogProps) => {
+export const ResumeFromStoppageDialog = ({
+  open,
+  onClose,
+  stoppage,
+}: ResumeFromStoppageDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
-  const stoppageTypeLabel = getStoppageTypeLabel(t, call.stoppage_type);
+  const stoppageTypeLabel = getStoppageTypeLabel(t, stoppage.stoppage_type);
 
   const mutation = useMutation({
-    mutationFn: (callUpdate: CallUpdate) => updateCall(call.id, callUpdate),
+    mutationFn: (stoppageUpdate: StoppageUpdate) => updateStoppage(stoppage.id, stoppageUpdate),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.calls(call.point_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(stoppage.point_id) });
       onClose();
     },
   });
@@ -49,7 +53,7 @@ export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDial
   };
 
   // Calculate duration using current time for display
-  const callTime = new Date(call.call_timestamp);
+  const callTime = new Date(stoppage.call_timestamp);
   const resumeTime = new Date(); // Use current time for duration display
   const durationSeconds = Math.floor((resumeTime.getTime() - callTime.getTime()) / 1000);
   const minutes = Math.floor(durationSeconds / 60);

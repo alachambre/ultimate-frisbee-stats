@@ -2,12 +2,12 @@ import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
-import { CallsList } from "../CallsList";
-import type { Call } from "../../../types";
+import { StoppagesList } from "../StoppagesList";
+import type { Stoppage } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
-const mockCalls: Call[] = [
+const mockCalls: Stoppage[] = [
   {
     id: 1,
     point_id: 1,
@@ -28,7 +28,7 @@ const mockCalls: Call[] = [
   },
 ];
 
-describe("CallsList", () => {
+describe("StoppagesList", () => {
   it("does not render when there are no calls", async () => {
     server.use(
       http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
@@ -37,7 +37,7 @@ describe("CallsList", () => {
     );
 
     const { container } = render(
-      <CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />
+      <StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />
     );
 
     // Should return null and not render anything
@@ -53,16 +53,16 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Calls (2)")).toBeInTheDocument();
+      expect(screen.getByText("Stoppages (2)")).toBeInTheDocument();
       expect(screen.getByText("Timeout")).toBeInTheDocument();
     });
   });
 
   it("displays call with elapsed time from point start", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -79,7 +79,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       // Should show elapsed time in MM:SS format
@@ -88,7 +88,7 @@ describe("CallsList", () => {
   });
 
   it("displays resolved call with duration", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -105,7 +105,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       // Should show duration label
@@ -116,7 +116,7 @@ describe("CallsList", () => {
   });
 
   it("displays pending call with pending badge", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -133,7 +133,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       expect(screen.getByText(/pending/i)).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe("CallsList", () => {
   });
 
   it("displays call comments when present", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -158,7 +158,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       expect(screen.getByText("Travel on player 23")).toBeInTheDocument();
@@ -166,7 +166,7 @@ describe("CallsList", () => {
   });
 
   it("does not display comments when not present", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -183,11 +183,11 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       // Should show the calls header
-      expect(screen.getByText("Calls (1)")).toBeInTheDocument();
+      expect(screen.getByText("Stoppages (1)")).toBeInTheDocument();
     }, { timeout: 3000 });
 
     // Comments section should not appear (no extra text in card)
@@ -196,7 +196,7 @@ describe("CallsList", () => {
   });
 
   it("shows resume button for pending calls", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -213,7 +213,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
@@ -221,7 +221,7 @@ describe("CallsList", () => {
   });
 
   it("does not show resume button for resolved calls", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -238,7 +238,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /resume/i })).not.toBeInTheDocument();
@@ -252,7 +252,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       // Should show both calls
@@ -264,7 +264,7 @@ describe("CallsList", () => {
   });
 
   it("displays elapsed time with seconds padded to 2 digits", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -281,7 +281,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       // Should show 0:05 (not 0:5)
@@ -290,7 +290,7 @@ describe("CallsList", () => {
   });
 
   it("falls back to absolute time when point start time is null", async () => {
-    const calls: Call[] = [
+    const calls: Stoppage[] = [
       {
         id: 1,
         point_id: 1,
@@ -307,7 +307,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime={null} />);
+    render(<StoppagesList pointId={1} pointStartTime={null} />);
 
     await waitFor(() => {
       // Should show locale time format (won't be MM:SS)
@@ -323,7 +323,7 @@ describe("CallsList", () => {
       })
     );
 
-    render(<CallsList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
+    render(<StoppagesList pointId={1} pointStartTime="2024-01-01T10:00:00Z" />);
 
     await waitFor(() => {
       // Should show error message

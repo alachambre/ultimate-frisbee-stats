@@ -281,7 +281,7 @@ export interface HalftimeUpdate {
 
 export type StoppageType = "call" | "injury" | "timeout" | "other";
 
-export interface Call {
+export interface Stoppage {
   id: number;
   point_id: number;
   stoppage_type?: StoppageType;
@@ -291,7 +291,7 @@ export interface Call {
   created_at: string; // ISO datetime with 'Z'
 }
 
-export interface CallCreate {
+export interface StoppageCreate {
   point_id: number;
   stoppage_type?: StoppageType;
   call_timestamp: string; // ISO datetime
@@ -299,7 +299,7 @@ export interface CallCreate {
   comments?: string | null;
 }
 
-export interface CallUpdate {
+export interface StoppageUpdate {
   stoppage_type?: StoppageType;
   resume_timestamp?: string | null;
   comments?: string | null;

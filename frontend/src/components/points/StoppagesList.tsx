@@ -12,13 +12,13 @@ import {
 import { PauseCircle as PauseCircleIcon } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { getCallsByPoint } from '../../services/calls';
-import type { Call } from '../../types';
-import { ResumeFromCallDialog } from '../modals/ResumeFromCallDialog';
+import { getStoppagesByPoint } from '../../services/stoppages';
+import type { Stoppage } from '../../types';
+import { ResumeFromStoppageDialog } from '../modals/ResumeFromStoppageDialog';
 import { queryKeys } from '../../utils/queryKeys';
 import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
-interface CallsListProps {
+interface StoppagesListProps {
   pointId: number;
   pointStartTime: string | null;
 }
@@ -36,18 +36,18 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
+export const StoppagesList = ({ pointId, pointStartTime }: StoppagesListProps) => {
   const { t } = useTranslation(["points", "common"]);
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
-  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
+  const [selectedStoppage, setSelectedStoppage] = useState<Stoppage | null>(null);
 
-  const { data: calls = [], isLoading, error } = useQuery({
-    queryKey: queryKeys.calls(pointId),
-    queryFn: () => getCallsByPoint(pointId),
+  const { data: stoppages = [], isLoading, error } = useQuery({
+    queryKey: queryKeys.stoppages(pointId),
+    queryFn: () => getStoppagesByPoint(pointId),
   });
 
-  const handleResumeClick = (call: Call) => {
-    setSelectedCall(call);
+  const handleResumeClick = (stoppage: Stoppage) => {
+    setSelectedStoppage(stoppage);
     setResumeDialogOpen(true);
   };
 
@@ -63,25 +63,25 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
     );
   }
 
-  if (calls.length === 0) {
-    return null; // Don't show anything if no calls
+  if (stoppages.length === 0) {
+    return null; // Don't show anything if no stoppages
   }
 
   return (
     <>
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          {t("points:callsTitle", { count: calls.length })}
+          {t("points:callsTitle", { count: stoppages.length })}
         </Typography>
         <Stack spacing={1}>
-          {calls.map((call) => {
-            const callTime = new Date(call.call_timestamp);
-            const isResolved = call.resume_timestamp !== null;
+          {stoppages.map((stoppage) => {
+            const callTime = new Date(stoppage.call_timestamp);
+            const isResolved = stoppage.resume_timestamp !== null;
             let durationText = '';
-            const stoppageTypeLabel = getStoppageTypeLabel(t, call.stoppage_type);
+            const stoppageTypeLabel = getStoppageTypeLabel(t, stoppage.stoppage_type);
 
             if (isResolved) {
-              const resumeTime = new Date(call.resume_timestamp!);
+              const resumeTime = new Date(stoppage.resume_timestamp!);
               const durationSeconds = Math.floor((resumeTime.getTime() - callTime.getTime()) / 1000);
               const minutes = Math.floor(durationSeconds / 60);
               const seconds = durationSeconds % 60;
@@ -89,13 +89,13 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
             }
 
             return (
-              <Card key={call.id} variant="outlined" sx={{ bgcolor: 'background.paper' }}>
+              <Card key={stoppage.id} variant="outlined" sx={{ bgcolor: 'background.paper' }}>
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                     <PauseCircleIcon fontSize="small" color="action" />
                     <Chip label={stoppageTypeLabel} size="small" variant="outlined" />
                     <Typography variant="body2">
-                      {formatElapsedTime(pointStartTime, call.call_timestamp)}
+                      {formatElapsedTime(pointStartTime, stoppage.call_timestamp)}
                     </Typography>
                     {isResolved ? (
                       <Chip
@@ -111,9 +111,9 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
                       />
                     )}
                   </Box>
-                  {call.comments && (
+                  {stoppage.comments && (
                     <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                      {call.comments}
+                      {stoppage.comments}
                     </Typography>
                   )}
                   {!isResolved && (
@@ -121,7 +121,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
                       <Button
                         size="small"
                         variant="outlined"
-                        onClick={() => handleResumeClick(call)}
+                        onClick={() => handleResumeClick(stoppage)}
                       >
                         {t('resumeFromCall')}
                       </Button>
@@ -134,14 +134,14 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
         </Stack>
       </Box>
 
-      {selectedCall && (
-        <ResumeFromCallDialog
+      {selectedStoppage && (
+        <ResumeFromStoppageDialog
           open={resumeDialogOpen}
           onClose={() => {
             setResumeDialogOpen(false);
-            setSelectedCall(null);
+            setSelectedStoppage(null);
           }}
-          call={selectedCall}
+          stoppage={selectedStoppage}
         />
       )}
     </>

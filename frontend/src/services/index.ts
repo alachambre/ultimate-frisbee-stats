@@ -9,7 +9,7 @@ export * from "./lines";
 export * from "./games";
 export * from "./points";
 export * from "./strategies";
-export * from "./calls";
+export * from "./stoppages";
 export * from "./turnovers";
 export * from "./halftimes";
 export * from "./statistics";

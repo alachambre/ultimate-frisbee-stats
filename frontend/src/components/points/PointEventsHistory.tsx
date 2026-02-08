@@ -16,9 +16,9 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { getCallsByPoint } from '../../services/calls';
+import { getStoppagesByPoint } from '../../services/stoppages';
 import { getTurnoversByPoint } from '../../services/turnovers';
-import type { Call, TurnoverWithPlayer } from '../../types';
+import type { Stoppage, TurnoverWithPlayer } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
 import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
@@ -35,7 +35,7 @@ interface PointEventsHistoryProps {
 
 // Union type for point events
 type PointEvent =
-  | { type: 'call'; data: Call; timestamp: string }
+  | { type: 'stoppage'; data: Stoppage; timestamp: string }
   | { type: 'turnover'; data: TurnoverWithPlayer; timestamp: string; sequenceNumber: number }
   | { type: 'point-start'; timestamp: string }
   | { type: 'point-scored'; timestamp: string; won: boolean };
@@ -56,9 +56,9 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
 export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime, strategy, pull, pointStatus, endDateTime, won }: PointEventsHistoryProps) => {
   const { t } = useTranslation('points');
 
-  const { data: calls = [], isLoading: callsLoading, error: callsError } = useQuery({
-    queryKey: queryKeys.calls(pointId),
-    queryFn: () => getCallsByPoint(pointId),
+  const { data: stoppages = [], isLoading: stoppagesLoading, error: stoppagesError } = useQuery({
+    queryKey: queryKeys.stoppages(pointId),
+    queryFn: () => getStoppagesByPoint(pointId),
   });
 
   const { data: turnovers = [], isLoading: turnoversLoading, error: turnoversError } = useQuery({
@@ -66,11 +66,11 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
     queryFn: () => getTurnoversByPoint(pointId),
   });
 
-  if (callsLoading || turnoversLoading) {
+  if (stoppagesLoading || turnoversLoading) {
     return null; // Don't show loading state for this optional component
   }
 
-  const error = callsError || turnoversError;
+  const error = stoppagesError || turnoversError;
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
@@ -92,10 +92,10 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
       timestamp: endDateTime,
       won: won,
     }] : []),
-    ...calls.map((call): PointEvent => ({
-      type: 'call',
-      data: call,
-      timestamp: call.call_timestamp,
+    ...stoppages.map((stoppage): PointEvent => ({
+      type: 'stoppage',
+      data: stoppage,
+      timestamp: stoppage.call_timestamp,
     })),
     ...turnovers.map((turnover, index): PointEvent => ({
       type: 'turnover',
@@ -117,15 +117,15 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
         </Typography>
         <Stack spacing={1}>
           {events.map((event) => {
-            if (event.type === 'call') {
-              const call = event.data;
-              const callTime = new Date(call.call_timestamp);
-              const isResolved = call.resume_timestamp !== null;
+            if (event.type === 'stoppage') {
+              const stoppage = event.data;
+              const callTime = new Date(stoppage.call_timestamp);
+              const isResolved = stoppage.resume_timestamp !== null;
               let durationText = '';
-              const stoppageTypeLabel = getStoppageTypeLabel(t, call.stoppage_type);
+              const stoppageTypeLabel = getStoppageTypeLabel(t, stoppage.stoppage_type);
 
               if (isResolved) {
-                const resumeTime = new Date(call.resume_timestamp!);
+                const resumeTime = new Date(stoppage.resume_timestamp!);
                 const durationSeconds = Math.floor((resumeTime.getTime() - callTime.getTime()) / 1000);
                 const minutes = Math.floor(durationSeconds / 60);
                 const seconds = durationSeconds % 60;
@@ -133,7 +133,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
               }
 
               return (
-                <Card key={`call-${call.id}`} variant="outlined" sx={{ bgcolor: 'background.paper' }}>
+                <Card key={`stoppage-${stoppage.id}`} variant="outlined" sx={{ bgcolor: 'background.paper' }}>
                   <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -155,12 +155,12 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                         )}
                       </Box>
                       <Typography variant="body2" color="text.secondary" fontWeight="medium">
-                        {formatElapsedTime(pointStartTime, call.call_timestamp)}
+                        {formatElapsedTime(pointStartTime, stoppage.call_timestamp)}
                       </Typography>
                     </Box>
-                    {call.comments && (
+                    {stoppage.comments && (
                       <Typography variant="body2" color="text.secondary" sx={{ ml: 3, fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
-                        {call.comments}
+                        {stoppage.comments}
                       </Typography>
                     )}
                   </CardContent>

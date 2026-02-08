@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Call, CallCreate, CallUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -15,7 +15,7 @@ let gamePlayers: Map<number, number[]> = new Map(); // gameId -> playerIds[]
 let strategies: Strategy[] = [];
 let points: PointWithPlayers[] = [];
 let halftimes: Halftime[] = [];
-let calls: Call[] = [];
+let calls: Stoppage[] = [];
 let turnovers: TurnoverWithPlayer[] = [];
 let nextTeamId = 1;
 let nextPlayerId = 1;
@@ -1267,8 +1267,8 @@ export const handlers = [
 
   // POST /stoppages - Create a new stoppage
   http.post(`${BASE_URL}/stoppages`, async ({ request }) => {
-    const newCall = (await request.json()) as CallCreate;
-    const call: Call = {
+    const newCall = (await request.json()) as StoppageCreate;
+    const call: Stoppage = {
       id: nextCallId++,
       ...newCall,
       stoppage_type: newCall.stoppage_type ?? "call",
@@ -1283,7 +1283,7 @@ export const handlers = [
   // PUT /stoppages/:callId - Update a stoppage
   http.put(`${BASE_URL}/stoppages/:callId`, async ({ params, request }) => {
     const callId = Number(params.callId);
-    const updates = (await request.json()) as CallUpdate;
+    const updates = (await request.json()) as StoppageUpdate;
     const callIndex = calls.findIndex((c) => c.id === callId);
 
     if (callIndex === -1) {

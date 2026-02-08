@@ -30,7 +30,7 @@ export const queryKeys = {
   strategies: ["strategies"] as const,
   strategy: (strategyId: number) => ["strategy", strategyId] as const,
   strategiesByCategory: (category: string) => ["strategies", category] as const,
-  calls: (pointId: number) => ["calls", pointId] as const,
+  stoppages: (pointId: number) => ["stoppages", pointId] as const,
   turnovers: (pointId: number) => ["turnovers", pointId] as const,
   availablePlayers: (isOpen: boolean) => ["available-players", isOpen] as const,
 };

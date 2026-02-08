@@ -1,10 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Paper,
   Box,
   Typography,
   Button,
-  Chip,
   Divider,
   ButtonGroup,
   Dialog,
@@ -16,45 +15,35 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  useTheme,
-  Tooltip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import CommentIcon from "@mui/icons-material/Comment";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
-import PauseCircleIcon from "@mui/icons-material/PauseCircle";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { updatePoint } from "../../services/points";
-import PointTimer from "./PointTimer";
 import StartPointDialog from "../modals/StartPointDialog";
 import FinishPointDialog from "../modals/FinishPointDialog";
 import CompletePointDialog from "../modals/CompletePointDialog";
 import AddCommentDialog from "../modals/AddCommentDialog";
 import SelectStrategyDialog from "../modals/SelectStrategyDialog";
-import { RecordCallDialog } from "../modals/RecordCallDialog";
+import { RecordStoppageDialog } from "../modals/RecordStoppageDialog";
 import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
-import { ResumeFromCallDialog } from "../modals/ResumeFromCallDialog";
+import { ResumeFromStoppageDialog } from "../modals/ResumeFromStoppageDialog";
 import ManagePlayersDialog from "../modals/ManagePlayersDialog";
 import { PointEventsHistory } from "./PointEventsHistory";
-import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Call } from "../../types";
+import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Stoppage } from "../../types";
 import { useQuery } from "@tanstack/react-query";
 import { getTurnoversByPoint } from "../../services/turnovers";
-import { getCallsByPoint } from "../../services/calls";
-import { createHalftime } from "../../services/halftimes";
+import { getStoppagesByPoint } from "../../services/stoppages";
 import GroupIcon from "@mui/icons-material/Group";
-import { hasValidPointPlayerComposition } from "../../utils/playerComposition";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import { queryKeys } from "../../utils/queryKeys";
+import { LivePointHeader } from "./liveTracker/LivePointHeader";
+import { LivePointActionBar } from "./liveTracker/LivePointActionBar";
+import { LivePointContextCards } from "./liveTracker/LivePointContextCards";
+import { useLivePointMutations } from "./liveTracker/useLivePointMutations";
+import { useLivePointState } from "./liveTracker/useLivePointState";
 
 interface LivePointTrackerProps {
   game: GameDetail;
@@ -72,7 +61,6 @@ export default function LivePointTracker({
   onPointUpdated,
 }: LivePointTrackerProps) {
   const { t } = useTranslation(["points", "common"]);
-  const theme = useTheme();
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
@@ -84,7 +72,6 @@ export default function LivePointTracker({
   const [isManagePlayersDialogOpen, setIsManagePlayersDialogOpen] = useState(false);
   const [isHalftimeConfirmOpen, setIsHalftimeConfirmOpen] = useState(false);
   const [moreActionsAnchor, setMoreActionsAnchor] = useState<null | HTMLElement>(null);
-  const queryClient = useQueryClient();
   const hasHalftime = Boolean(game.halftime);
 
   // Fetch turnovers for active point (needed for possession logic)
@@ -94,107 +81,37 @@ export default function LivePointTracker({
     enabled: !!activePoint,
   });
 
-  // Fetch calls for active point (needed to check for pending calls)
-  const { data: calls = [] } = useQuery<Call[]>({
-    queryKey: queryKeys.calls(activePoint?.id ?? 0),
-    queryFn: () => getCallsByPoint(activePoint!.id),
+  // Fetch stoppages for active point (needed to check for pending stoppages)
+  const { data: stoppages = [] } = useQuery<Stoppage[]>({
+    queryKey: queryKeys.stoppages(activePoint?.id ?? 0),
+    queryFn: () => getStoppagesByPoint(activePoint!.id),
     enabled: !!activePoint,
   });
 
-  // Check if there are any pending calls (calls without resume_timestamp)
-  const hasPendingCall = calls.some(call => call.resume_timestamp === null);
-  const pendingCall = calls.find(call => call.resume_timestamp === null);
-
-  // Find scored points (most recent scored point)
-  const scoredPoint = useMemo(() => {
-    return game.points
-      .filter((p) => p.status === "scored")
-      .sort((a, b) => b.point_number - a.point_number)[0];
-  }, [game.points]);
-
-  // The "active" point is either running or scored
-  const currentPoint = activePoint || scoredPoint;
-
-  // Mutation to update pull status
-  const updatePullMutation = useMutation({
-    mutationFn: (pull: boolean) => {
-      if (!activePoint) throw new Error("No active point");
-      return updatePoint(activePoint.id, { pull });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(game.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(game.id) });
-      onPointUpdated?.();
-    },
+  const {
+    scoredPoint,
+    currentPoint,
+    hasPendingStoppage,
+    pendingStoppage,
+    hasValidPlayerComposition,
+  } = useLivePointState({
+    game,
+    activePoint,
+    stoppages,
   });
 
-  // Mutation to launch pull (transition ready → running)
-  const launchPullMutation = useMutation({
-    mutationFn: () => {
-      if (!activePoint) throw new Error("No active point");
-      return updatePoint(activePoint.id, { status: "running" });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(game.id) });
-      onPointUpdated?.();
-    },
-  });
-
-  // Check if point has valid player composition (exactly 7 players + correct ABBA gender)
-  const hasValidPlayerComposition = useMemo(
-    () => hasValidPointPlayerComposition(currentPoint, game.points),
-    [currentPoint, game.points]
-  );
-
-  // Mutation to restart a scored point (cancel the score)
-  const restartPointMutation = useMutation({
-    mutationFn: () => {
-      if (!scoredPoint) throw new Error("No scored point");
-      return updatePoint(scoredPoint.id, {
-        status: "running",
-        won: null,
-        end_datetime: null,
-      });
-    },
-    onSuccess: async (updatedPoint) => {
-      // Optimistically update both caches immediately to avoid UI flicker
-
-      // 1. Update activePoint cache
-      queryClient.setQueryData(queryKeys.activePoint(game.id), updatedPoint);
-
-      // 2. Update game cache - replace the scored point with the updated point
-      queryClient.setQueryData(queryKeys.game(game.id), (oldData: unknown) => {
-        if (!oldData || typeof oldData !== 'object') return oldData;
-        const gameData = oldData as { points: PointWithPlayers[] };
-        return {
-          ...gameData,
-          points: gameData.points.map((p) =>
-            p.id === updatedPoint.id ? updatedPoint : p
-          ),
-        };
-      });
-
-      // 3. Invalidate stats queries since un-scoring a point affects statistics
-      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(game.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(game.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(game.id) });
-      onPointUpdated?.();
-    },
-  });
-
-  const createHalftimeMutation = useMutation({
-    mutationFn: () =>
-      createHalftime({
-        game_id: game.id,
-        halftime_timestamp: new Date().toISOString(),
-      }),
-    onSuccess: () => {
+  const {
+    updatePullMutation,
+    launchPullMutation,
+    restartPointMutation,
+    createHalftimeMutation,
+  } = useLivePointMutations({
+    gameId: game.id,
+    activePoint,
+    scoredPoint,
+    onPointUpdated,
+    onHalftimeCreated: () => {
       setIsHalftimeConfirmOpen(false);
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(game.id) });
-      onPointUpdated?.();
     },
   });
 
@@ -258,71 +175,7 @@ export default function LivePointTracker({
         ) : (
           // Active or scored point - show appropriate button
           <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {t("points:history.point")} #{currentPoint.point_number} -{" "}
-                  {currentPoint.status === "ready"
-                    ? t("points:status.ready", "Ready")
-                    : currentPoint.status === "running"
-                    ? t("points:status.running")
-                    : t("points:status.scored")}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  <Chip
-                    label={
-                      currentPoint.starting_on_offense
-                        ? t("points:tracker.offense")
-                        : t("points:tracker.defense")
-                    }
-                    size="small"
-                    sx={(theme) => currentPoint.starting_on_offense ? {} : {
-                      bgcolor: theme.colors.defense.main,
-                      color: theme.palette.common.white,
-                      '& .MuiChip-label': {
-                        color: theme.palette.common.white
-                      }
-                    }}
-                    color={currentPoint.starting_on_offense ? "primary" : undefined}
-                  />
-                  {currentPoint.status === "scored" && (
-                    <Chip
-                      label={currentPoint.won
-                        ? t("points:dialog.finish.weScored")
-                        : t("points:dialog.finish.theyScored")}
-                      size="small"
-                      color={currentPoint.won ? "success" : "error"}
-                    />
-                  )}
-                </Box>
-              </Box>
-              {currentPoint.start_datetime && (
-                <Box textAlign="center">
-                  <Typography
-                    variant="body2"
-                    gutterBottom
-                    sx={{
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      fontWeight: 'medium'
-                    }}
-                  >
-                    {currentPoint.status === "running"
-                      ? t("points:tracker.elapsedTime", "Elapsed Time")
-                      : t("points:tracker.duration", "Duration")}
-                  </Typography>
-                  <PointTimer
-                    key={`${currentPoint.id}-${currentPoint.status}`}
-                    startDatetime={currentPoint.start_datetime}
-                    endDatetime={currentPoint.status === "scored" ? currentPoint.end_datetime || undefined : undefined}
-                    color={currentPoint.starting_on_offense
-                      ? theme.colors.offense.main
-                      : theme.colors.defense.main}
-                  />
-                </Box>
-              )}
-            </Box>
+            <LivePointHeader currentPoint={currentPoint} />
 
             {/* Pull tracking - only for running defensive points */}
             {activePoint &&
@@ -449,321 +302,22 @@ export default function LivePointTracker({
               ].filter(Boolean)}
             </Menu>
 
-            {/* Action Buttons */}
-            <Box display="flex" justifyContent="center" gap={2} mt={3} flexWrap="wrap">
-              {currentPoint.status === "ready" ? (
-                // Ready status - show Launch Pull
-                <>
-                  <Button
-                    variant="contained"
-                    startIcon={<RocketLaunchIcon />}
-                    onClick={() => launchPullMutation.mutate()}
-                    disabled={launchPullMutation.isPending}
-                    size="large"
-                    sx={{
-                      bgcolor: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      '&:hover': {
-                        bgcolor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.dark
-                          : theme.colors.defense.dark,
-                      }
-                    }}
-                  >
-                    {launchPullMutation.isPending
-                      ? t("points:tracker.launching", "Launching...")
-                      : t("points:tracker.launchPull", "Launch Pull")}
-                  </Button>
-                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
-                    <Button
-                      variant="outlined"
-                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                      aria-label={t("common:action.moreActions", "More Actions")}
-                      sx={{
-                        minWidth: 'auto',
-                        px: 2,
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        color: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        '&:hover': {
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.dark
-                            : theme.colors.defense.dark,
-                        }
-                      }}
-                    >
-                      <MoreVertIcon />
-                    </Button>
-                  </Tooltip>
-                </>
-              ) : currentPoint.status === "running" ? (
-                hasPendingCall ? (
-                  // When there's a pending call, show Resume + More Actions buttons
-                  <>
-                    <Tooltip title={t("points:tracker.resume", "Resume")}>
-                      <Button
-                        variant="contained"
-                        color="warning"
-                        onClick={() => setIsResumeDialogOpen(true)}
-                        aria-label={t("points:tracker.resume", "Resume")}
-                        sx={{ minWidth: 'auto', px: 2 }}
-                      >
-                        <PlayArrowIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title={t("common:action.moreActions", "More Actions")}>
-                      <Button
-                        variant="outlined"
-                        onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                        aria-label={t("common:action.moreActions", "More Actions")}
-                        sx={{
-                          minWidth: 'auto',
-                          px: 2,
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          color: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          '&:hover': {
-                            borderColor: (theme) => currentPoint.starting_on_offense
-                              ? theme.colors.offense.dark
-                              : theme.colors.defense.dark,
-                          }
-                        }}
-                      >
-                        <MoreVertIcon />
-                      </Button>
-                    </Tooltip>
-                  </>
-                ) : (
-                  // Normal action buttons when no pending call
-                  <>
-                    <Tooltip title={t("points:tracker.finish", "Finish Point")}>
-                      <Button
-                        variant="outlined"
-                        color="success"
-                        onClick={() => setIsFinishDialogOpen(true)}
-                        aria-label={t("points:tracker.finish", "Finish Point")}
-                        sx={{ minWidth: 'auto', px: 2 }}
-                      >
-                        <CheckCircleIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title={t("points:recordCall", "Record stoppage")}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => setIsCallDialogOpen(true)}
-                        aria-label={t("points:recordCall", "Record stoppage")}
-                        sx={{
-                          minWidth: 'auto',
-                          px: 2,
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          color: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          '&:hover': {
-                            borderColor: (theme) => currentPoint.starting_on_offense
-                              ? theme.colors.offense.dark
-                              : theme.colors.defense.dark,
-                          }
-                        }}
-                      >
-                        <PauseCircleIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title={t("points:recordTurnover", "Record Turnover")}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => setIsTurnoverDialogOpen(true)}
-                        aria-label={t("points:recordTurnover", "Record Turnover")}
-                        sx={{
-                          minWidth: 'auto',
-                          px: 2,
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          color: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          '&:hover': {
-                            borderColor: (theme) => currentPoint.starting_on_offense
-                              ? theme.colors.offense.dark
-                              : theme.colors.defense.dark,
-                          }
-                        }}
-                      >
-                        <SwapHorizIcon />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title={t("common:action.moreActions", "More Actions")}>
-                      <Button
-                        variant="outlined"
-                        onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                        aria-label={t("common:action.moreActions", "More Actions")}
-                        sx={{
-                          minWidth: 'auto',
-                          px: 2,
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          color: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.main
-                            : theme.colors.defense.main,
-                          '&:hover': {
-                            borderColor: (theme) => currentPoint.starting_on_offense
-                              ? theme.colors.offense.dark
-                              : theme.colors.defense.dark,
-                          }
-                        }}
-                      >
-                        <MoreVertIcon />
-                      </Button>
-                    </Tooltip>
-                  </>
-                )
-              ) : (
-                <>
-                  <Tooltip title={t("points:tracker.complete", "Complete Point")}>
-                    <Button
-                      variant="outlined"
-                      color="success"
-                      onClick={() => setIsCompleteDialogOpen(true)}
-                      aria-label={t("points:tracker.complete", "Complete Point")}
-                      sx={{ minWidth: 'auto', px: 2 }}
-                    >
-                      <DoneAllIcon />
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}>
-                    <span>
-                      <Button
-                        variant="outlined"
-                        color="warning"
-                        onClick={() => restartPointMutation.mutate()}
-                        disabled={restartPointMutation.isPending}
-                        aria-label={restartPointMutation.isPending ? t("points:tracker.resuming", "Resuming...") : t("points:tracker.resume", "Resume Point")}
-                        sx={{ minWidth: 'auto', px: 2 }}
-                      >
-                        <RestartAltIcon />
-                      </Button>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title={t("common:action.moreActions", "More Actions")}>
-                    <Button
-                      variant="outlined"
-                      onClick={(e) => setMoreActionsAnchor(e.currentTarget)}
-                      aria-label={t("common:action.moreActions", "More Actions")}
-                      sx={{
-                        minWidth: 'auto',
-                        px: 2,
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        color: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.main
-                          : theme.colors.defense.main,
-                        '&:hover': {
-                          borderColor: (theme) => currentPoint.starting_on_offense
-                            ? theme.colors.offense.dark
-                            : theme.colors.defense.dark,
-                        }
-                      }}
-                    >
-                      <MoreVertIcon />
-                    </Button>
-                  </Tooltip>
-                </>
-              )}
-            </Box>
+            <LivePointActionBar
+              currentPoint={currentPoint}
+              hasPendingStoppage={hasPendingStoppage}
+              isLaunchPullPending={launchPullMutation.isPending}
+              onLaunchPull={() => launchPullMutation.mutate()}
+              isRestartPending={restartPointMutation.isPending}
+              onRestartPoint={() => restartPointMutation.mutate()}
+              onOpenFinish={() => setIsFinishDialogOpen(true)}
+              onOpenRecordStoppage={() => setIsCallDialogOpen(true)}
+              onOpenRecordTurnover={() => setIsTurnoverDialogOpen(true)}
+              onOpenResume={() => setIsResumeDialogOpen(true)}
+              onOpenComplete={() => setIsCompleteDialogOpen(true)}
+              onOpenMoreActions={(event) => setMoreActionsAnchor(event.currentTarget)}
+            />
 
-            {/* Display strategy if exists */}
-            {currentPoint.strategy && (
-              <Box
-                sx={{
-                  mt: 2,
-                  p: 2,
-                  bgcolor: 'action.hover',
-                  borderRadius: 1,
-                  borderLeft: 3,
-                  borderColor: (theme) => currentPoint.starting_on_offense
-                    ? theme.colors.offense.main
-                    : theme.colors.defense.main
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <EmojiObjectsIcon
-                    fontSize="small"
-                    sx={{
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    fontWeight="medium"
-                    sx={{
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main
-                    }}
-                  >
-                    {currentPoint.starting_on_offense
-                      ? t("points:tracker.offense", "Offense")
-                      : t("points:tracker.defense", "Defense")
-                    } / {currentPoint.strategy.name}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-
-            {/* Display comment if exists */}
-            {currentPoint.comments && (
-              <Box
-                sx={{
-                  mt: 2,
-                  p: 2,
-                  bgcolor: 'action.hover',
-                  borderRadius: 1,
-                  borderLeft: 3,
-                  borderColor: (theme) => currentPoint.starting_on_offense
-                    ? theme.colors.offense.main
-                    : theme.colors.defense.main
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <CommentIcon
-                    fontSize="small"
-                    sx={{
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    fontWeight="medium"
-                    sx={{
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main
-                    }}
-                  >
-                    {t("points:tracker.comment", "Comment")}
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {currentPoint.comments}
-                </Typography>
-              </Box>
-            )}
+            <LivePointContextCards currentPoint={currentPoint} />
 
             {/* Divider before chronology */}
             <Divider sx={{ my: 3 }} />
@@ -845,7 +399,7 @@ export default function LivePointTracker({
       )}
 
       {activePoint && (
-        <RecordCallDialog
+        <RecordStoppageDialog
           open={isCallDialogOpen}
           onClose={() => setIsCallDialogOpen(false)}
           point={activePoint}
@@ -861,11 +415,11 @@ export default function LivePointTracker({
         />
       )}
 
-      {pendingCall && (
-        <ResumeFromCallDialog
+      {pendingStoppage && (
+        <ResumeFromStoppageDialog
           open={isResumeDialogOpen}
           onClose={() => setIsResumeDialogOpen(false)}
-          call={pendingCall}
+          stoppage={pendingStoppage}
         />
       )}
 

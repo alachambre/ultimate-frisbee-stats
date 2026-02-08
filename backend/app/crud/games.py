@@ -132,13 +132,23 @@ def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
     points = get_points_by_game(db, game_id)
     our_score, opponent_score = get_game_score(db, game_id)
     competition = get_competition(db, game.competition_id)
+    team_name = competition.team.name if competition and competition.team else "Unknown"
+    competition_name = competition.name if competition else "Unknown"
 
     return {
-        **game.__dict__,
+        "id": game.id,
+        "competition_id": game.competition_id,
+        "opponent_name": game.opponent_name,
+        "date": game.date,
+        "status": game.status,
+        "comments": game.comments,
+        "start_datetime": game.start_datetime,
+        "end_datetime": game.end_datetime,
+        "created_at": game.created_at,
         "our_score": our_score,
         "opponent_score": opponent_score,
-        "team_name": competition.team.name if competition and competition.team else "Unknown",
-        "competition_name": competition.name if competition else "Unknown",
+        "team_name": team_name,
+        "competition_name": competition_name,
         "points": points,
         "players": game.players,
         "halftime": game.halftime,
