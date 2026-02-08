@@ -828,18 +828,16 @@ def test_strategy_deletion_sets_null(db_session, sample_game, sample_players, sa
     updated_point = points.get_point(db_session, point.id)
     assert updated_point.strategy_id is None
 
-def test_recreate_first_point_resets_game_start_time(db_session, sample_game, sample_players):
-    """Test that deleting the only point resets game start_datetime, and recreating it sets a new time"""
+def test_recreate_first_running_point_resets_game_start_time(db_session, sample_game, sample_players):
+    """Deleting the only running point resets game start time; launching again sets a new one."""
     from app.crud import games
-    from datetime import datetime, timezone
-    from time import sleep
     
     player_ids = [p.id for p in sample_players[:7]]
     
     # Initially, game has no start_datetime
     assert sample_game.start_datetime is None
     
-    # Create first point - game's start_datetime should be set
+    # Create first point in ready status - game chrono should not start yet.
     first_point = points.create_point(
         db_session,
         PointCreate(
@@ -848,6 +846,12 @@ def test_recreate_first_point_resets_game_start_time(db_session, sample_game, sa
             player_ids=player_ids
         )
     )
+
+    game_with_ready_point = games.get_game(db_session, sample_game.id)
+    assert game_with_ready_point.start_datetime is None
+
+    # Launch first pull (ready -> running) to start game chrono.
+    points.update_point(db_session, first_point.id, PointUpdate(status=PointStatus.running))
     
     # Get game and verify start_datetime is set
     game_after_first_point = games.get_game(db_session, sample_game.id)
@@ -860,10 +864,7 @@ def test_recreate_first_point_resets_game_start_time(db_session, sample_game, sa
     game_after_delete = games.get_game(db_session, sample_game.id)
     assert game_after_delete.start_datetime is None
     
-    # Wait a tiny bit to ensure different timestamp
-    sleep(0.01)
-    
-    # Create another first point - game's start_datetime should be set again with new time
+    # Create another first point in ready status (chrono still stopped).
     second_point = points.create_point(
         db_session,
         PointCreate(
@@ -872,6 +873,12 @@ def test_recreate_first_point_resets_game_start_time(db_session, sample_game, sa
             player_ids=player_ids
         )
     )
+
+    game_with_second_ready_point = games.get_game(db_session, sample_game.id)
+    assert game_with_second_ready_point.start_datetime is None
+
+    # Launch first pull again.
+    points.update_point(db_session, second_point.id, PointUpdate(status=PointStatus.running))
     
     # Get game and verify start_datetime is set to a new value
     game_after_second_point = games.get_game(db_session, sample_game.id)

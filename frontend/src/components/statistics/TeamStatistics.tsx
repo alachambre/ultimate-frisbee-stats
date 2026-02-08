@@ -66,7 +66,7 @@ export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
               label={t("teamStats.cleanHold")}
               percentage={teamStats.offense.clean_hold_rate}
               count={teamStats.offense.points_won_no_turnover}
-              total={teamStats.offense.points_won}
+              total={teamStats.offense.points_started}
               color={(theme) => theme.colors.offense.light}
               tooltip={t("tooltips.cleanPointRate")}
             />

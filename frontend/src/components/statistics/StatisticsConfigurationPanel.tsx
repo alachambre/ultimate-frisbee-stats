@@ -37,6 +37,8 @@ type StatisticsMode = "competition" | "player";
 type PlayerGenderTab = "men" | "women";
 
 interface StatisticsConfigurationPanelProps {
+  isConfigurationExpanded: boolean;
+  onToggleConfigurationExpanded: () => void;
   mode: StatisticsMode;
   teamId?: number;
   competitionId?: number;
@@ -65,6 +67,8 @@ function formatDuration(seconds: number): string {
 }
 
 export default function StatisticsConfigurationPanel({
+  isConfigurationExpanded,
+  onToggleConfigurationExpanded,
   mode,
   teamId,
   competitionId,
@@ -86,7 +90,6 @@ export default function StatisticsConfigurationPanel({
   onSelectPlayer,
 }: StatisticsConfigurationPanelProps) {
   const { t, i18n } = useTranslation(["statistics", "games", "common"]);
-  const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
   const [playerGenderTab, setPlayerGenderTab] = useState<PlayerGenderTab>("men");
 
   const menPlayersForTeam = useMemo(
@@ -144,7 +147,7 @@ export default function StatisticsConfigurationPanel({
         </Stack>
         <Button
           size="small"
-          onClick={() => setIsConfigurationExpanded((prev) => !prev)}
+          onClick={onToggleConfigurationExpanded}
           endIcon={isConfigurationExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         >
           {isConfigurationExpanded ? t("common:action.hide") : t("common:action.show")}
@@ -205,7 +208,7 @@ export default function StatisticsConfigurationPanel({
             ) : (
               <Grid container spacing={1.5}>
                 {sortedTeams.map((team: TeamWithPlayers) => (
-                  <Grid key={team.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+                  <Grid key={team.id} size={{ xs: 6, sm: 6, lg: 4 }}>
                     <StatisticsSelectionCard
                       title={team.name}
                       subtitle={`${team.players.length} ${t("common:players")}`}
@@ -245,7 +248,7 @@ export default function StatisticsConfigurationPanel({
               ) : (
                 <Grid container spacing={1.5}>
                   {competitionsForTeam.map((competition: CompetitionWithTeam) => (
-                    <Grid key={competition.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <Grid key={competition.id} size={{ xs: 6, sm: 6, lg: 4 }}>
                         <StatisticsSelectionCard
                           title={competition.name}
                           subtitle={`${formatDate(competition.start_date, i18n.resolvedLanguage)} - ${formatDate(
@@ -273,7 +276,7 @@ export default function StatisticsConfigurationPanel({
                   ) : (
                     <Grid container spacing={1.5}>
                       {gamesForCompetition.map((game: GameWithScore) => (
-                        <Grid key={game.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+                        <Grid key={game.id} size={{ xs: 6, sm: 6, lg: 4 }}>
                           <StatisticsSelectionCard
                             title={`${game.team_name} vs ${game.opponent_name}`}
                             subtitle={formatDate(game.date, i18n.resolvedLanguage)}
@@ -382,7 +385,7 @@ export default function StatisticsConfigurationPanel({
                         (player: Player) => {
                           const playerStats = playerStatsById.get(player.id);
                           return (
-                            <Grid key={player.id} size={{ xs: 12, sm: 6, lg: 4 }}>
+                            <Grid key={player.id} size={{ xs: 6, sm: 6, lg: 4 }}>
                               <StatisticsSelectionCard
                                 title={player.name}
                                 subtitle={

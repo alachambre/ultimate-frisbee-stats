@@ -69,6 +69,8 @@
   "teamStats": {
     "title": "Team statistics",
     "overview": "Overview",
+    "gamesCount": "Games",
+    "winLossRatio": "Win / Loss",
     "opponent": "Opponent",
     "score": "Score",
     "gameDuration": "Game Duration",

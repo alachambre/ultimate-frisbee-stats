@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
 import {
@@ -226,5 +226,55 @@ describe("StatisticsPage", () => {
       expect(window.location.search).toContain(`competitionId=${competition.id}`);
       expect(window.location.search).not.toContain("gameId=");
     });
+  });
+
+  it("collapses configuration and scrolls to statistics on mobile when selecting a player", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const player = await createPlayer({
+      team_id: team.id,
+      name: "Bob",
+      number: 10,
+      gender: "M",
+    });
+
+    const originalMatchMedia = window.matchMedia;
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoViewMock = vi.fn();
+
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === "(max-width:600px)",
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+
+    try {
+      window.history.pushState({}, "", `/statistics?teamId=${team.id}&mode=player`);
+
+      render(<StatisticsPage />);
+
+      const playerCard = await screen.findByRole("button", { name: player.name });
+      await user.click(playerCard);
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /show/i })).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(scrollIntoViewMock).toHaveBeenCalled();
+      });
+    } finally {
+      window.matchMedia = originalMatchMedia;
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
   });
 });

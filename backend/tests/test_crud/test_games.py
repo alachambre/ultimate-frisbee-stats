@@ -552,8 +552,8 @@ def test_create_game_no_timestamps(db_session, sample_competition):
     assert game.end_datetime is None
 
 
-def test_start_game_sets_start_datetime(db_session, sample_game):
-    """Test that changing status to started sets start_datetime"""
+def test_start_game_does_not_set_start_datetime(db_session, sample_game):
+    """Test that changing status to started does not set start_datetime."""
     from app.schemas import GameStatus
 
     # Initially no timestamp
@@ -565,26 +565,32 @@ def test_start_game_sets_start_datetime(db_session, sample_game):
 
     assert updated_game is not None
     assert updated_game.status.value == "started"
-    # start_datetime is now set when first point is created, not when game starts
+    # start_datetime is set when first pull is launched, not when game status changes.
     assert updated_game.start_datetime is None
     assert updated_game.end_datetime is None
 
 
 def test_end_game_sets_end_datetime(db_session, sample_game, sample_players):
     """Test that changing status to ended sets end_datetime"""
-    from app.schemas import GameStatus, PointCreate
+    from app.schemas import GameStatus, PointCreate, PointStatus, PointUpdate
     from app.crud import points
 
     # Start the game first
     games.update_game(db_session, sample_game.id, GameUpdate(status=GameStatus.started))
 
-    # Create first point to set start_datetime
+    # Create first point (still ready, game chrono should not start yet)
     point_data = PointCreate(
         game_id=sample_game.id,
         starting_on_offense=True,
         player_ids=[p.id for p in sample_players[:7]]
     )
-    points.create_point(db_session, point_data)
+    point = points.create_point(db_session, point_data)
+
+    game_with_ready_point = games.get_game(db_session, sample_game.id)
+    assert game_with_ready_point.start_datetime is None
+
+    # Launch first pull (ready -> running) to start game chrono
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
 
     # Fetch to get updated game
     started_game = games.get_game(db_session, sample_game.id)
@@ -605,19 +611,25 @@ def test_end_game_sets_end_datetime(db_session, sample_game, sample_players):
 
 def test_finish_game_sets_end_datetime(db_session, sample_game, sample_players):
     """Test that finish_game() sets end_datetime"""
-    from app.schemas import GameStatus, PointCreate
+    from app.schemas import GameStatus, PointCreate, PointStatus, PointUpdate
     from app.crud import points
 
     # Start the game first
     games.update_game(db_session, sample_game.id, GameUpdate(status=GameStatus.started))
 
-    # Create first point to set start_datetime
+    # Create first point (still ready, game chrono should not start yet)
     point_data = PointCreate(
         game_id=sample_game.id,
         starting_on_offense=True,
         player_ids=[p.id for p in sample_players[:7]]
     )
-    points.create_point(db_session, point_data)
+    point = points.create_point(db_session, point_data)
+
+    game_with_ready_point = games.get_game(db_session, sample_game.id)
+    assert game_with_ready_point.start_datetime is None
+
+    # Launch first pull (ready -> running) to start game chrono
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
 
     # Fetch to get updated game
     started_game = games.get_game(db_session, sample_game.id)
@@ -641,7 +653,7 @@ def test_invalid_status_transition_no_timestamp(db_session, sample_game):
     update_data = GameUpdate(status=GameStatus.ended)
     updated_game = games.update_game(db_session, sample_game.id, update_data)
 
-    # Status changes but end_datetime should not be set (only ready->started sets start, started->ended sets end)
+    # Status changes but timestamps should not be set for this path.
     assert updated_game is not None
     assert updated_game.status.value == "ended"
     assert updated_game.start_datetime is None

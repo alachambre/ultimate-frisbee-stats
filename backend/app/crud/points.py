@@ -72,12 +72,6 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
 
         next_point_number = (max_point.point_number + 1) if max_point else 1
 
-        # If this is the first point, set (or reset) the game's start_datetime
-        if next_point_number == 1:
-            if game:
-                game.start_datetime = datetime.now(timezone.utc)
-                db.flush()  # Save the game start time
-
         # Create the point with ready status
         db_point = models.Point(
             game_id=point.game_id,
@@ -141,6 +135,7 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
     if db_point:
         try:
             new_status_enum = None
+            transitioned_ready_to_running = False
 
             # Update player_ids FIRST (before status validation)
             if point_update.player_ids is not None:
@@ -191,7 +186,13 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                 if (new_status_enum == models.PointStatusEnum.running and
                     db_point.status == models.PointStatusEnum.ready and
                     db_point.start_datetime is None):
+                    transitioned_ready_to_running = True
                     db_point.start_datetime = datetime.now(timezone.utc)
+                elif (
+                    new_status_enum == models.PointStatusEnum.running and
+                    db_point.status == models.PointStatusEnum.ready
+                ):
+                    transitioned_ready_to_running = True
 
                 # Validate player count when completing a point
                 if new_status_enum == models.PointStatusEnum.completed:
@@ -211,6 +212,13 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                 db_point.start_datetime = point_update.start_datetime
             if "end_datetime" in point_update.model_fields_set:
                 db_point.end_datetime = point_update.end_datetime
+
+            # Start game chrono when the first pull is launched (first ready -> running transition).
+            # Reuse the point start timestamp so both timers stay aligned.
+            if transitioned_ready_to_running:
+                game = db.query(models.Game).filter(models.Game.id == db_point.game_id).first()
+                if game and game.start_datetime is None:
+                    game.start_datetime = db_point.start_datetime or datetime.now(timezone.utc)
 
             # Prevent setting won unless scored/completed
             if "won" in point_update.model_fields_set and point_update.won is not None:

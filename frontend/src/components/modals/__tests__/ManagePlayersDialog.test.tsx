@@ -530,7 +530,8 @@ describe("ManagePlayersDialog", () => {
   });
 
   describe("Line Filtering", () => {
-    it("displays line filter dropdown", async () => {
+    it("is collapsed by default and expands line filter cards on toggle", async () => {
+      const user = userEvent.setup();
       await createLine({ name: "O-Line", team_id: team.id });
 
       render(
@@ -543,8 +544,17 @@ describe("ManagePlayersDialog", () => {
         />
       );
 
+      const filterToggle = await screen.findByRole("button", { name: /filter by line/i });
+      expect(filterToggle).toHaveAttribute("aria-expanded", "false");
+      expect(screen.queryByRole("button", { name: /all players/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /o-line/i })).not.toBeInTheDocument();
+
+      await user.click(filterToggle);
+
       await waitFor(() => {
-        expect(screen.getByLabelText(/filter by line/i)).toBeInTheDocument();
+        expect(filterToggle).toHaveAttribute("aria-expanded", "true");
+        expect(screen.getByRole("button", { name: /all players/i })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /o-line/i })).toBeInTheDocument();
       });
     });
 
@@ -562,7 +572,6 @@ describe("ManagePlayersDialog", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/filter by line/i)).toBeInTheDocument();
         // All men should be visible initially
         expect(screen.getByText("Bob")).toBeInTheDocument();
         expect(screen.getByText("Charlie")).toBeInTheDocument();

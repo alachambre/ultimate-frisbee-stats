@@ -69,6 +69,8 @@
   "teamStats": {
     "title": "Statistiques d'Équipe",
     "overview": "Vue d'ensemble",
+    "gamesCount": "Matchs",
+    "winLossRatio": "Victoires / Défaites",
     "opponent": "Adversaire",
     "score": "Score",
     "gameDuration": "Durée du Match",

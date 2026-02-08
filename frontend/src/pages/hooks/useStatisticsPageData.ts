@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getCompetitionGames, getCompetitions, getTeams } from "../../services";
+import { getAllGames, getCompetitionGames, getCompetitions, getTeams } from "../../services";
 import {
   downloadCompetitionStatisticsCSV,
   downloadGameStatisticsCSV,
@@ -151,6 +151,12 @@ export function useStatisticsPageData() {
     enabled: mode === "competition" && competitionId !== undefined,
   });
 
+  const { data: allGames } = useQuery({
+    queryKey: queryKeys.games,
+    queryFn: getAllGames,
+    enabled: teamId !== undefined,
+  });
+
   const activeScope: StatisticsScope | undefined = useMemo(() => {
     if (teamId === undefined) return undefined;
 
@@ -286,6 +292,15 @@ export function useStatisticsPageData() {
       }),
     [games]
   );
+
+  const teamGames = useMemo(() => {
+    if (!allGames || competitionsForTeam.length === 0) {
+      return [];
+    }
+
+    const competitionIds = new Set(competitionsForTeam.map((competition) => competition.id));
+    return allGames.filter((game) => competitionIds.has(game.competition_id));
+  }, [allGames, competitionsForTeam]);
 
   const selectedGame = gamesForCompetition.find((game) => game.id === gameId);
 
@@ -462,6 +477,7 @@ export function useStatisticsPageData() {
     sortedTeams,
 
     competitionsForTeam,
+    teamGames,
     selectedCompetition,
     gamesForCompetition,
     selectedGame,

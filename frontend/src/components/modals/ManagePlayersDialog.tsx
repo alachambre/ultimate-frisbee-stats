@@ -5,16 +5,17 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  ButtonBase,
   Alert,
   Box,
   Chip,
+  Collapse,
+  Divider,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MaleIcon from "@mui/icons-material/Male";
 import FemaleIcon from "@mui/icons-material/Female";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -60,6 +61,7 @@ export default function ManagePlayersDialog({
     point.players?.map((p) => p.id) || []
   );
   const [filterLineId, setFilterLineId] = useState<number | "">("");
+  const [isLineFilterExpanded, setIsLineFilterExpanded] = useState(false);
 
   // Fetch lines for filtering
   const { data: lines = [] } = useQuery({
@@ -151,6 +153,7 @@ export default function ManagePlayersDialog({
     // Reset to point's current players for next time dialog opens
     setSelectedPlayerIds(point.players?.map((p) => p.id) || []);
     setFilterLineId("");
+    setIsLineFilterExpanded(false);
     updateMutation.reset();
     onClose();
   };
@@ -180,6 +183,29 @@ export default function ManagePlayersDialog({
     return players.filter((p) => linePlayerIds.has(p.id));
   }, [players, lines, filterLineId]);
 
+  const lineFilterOptions = useMemo(
+    () => [
+      {
+        id: "" as const,
+        name: t("points:dialog.managePlayers.allPlayers"),
+        playerCount: players.length,
+      },
+      ...lines.map((line: LineWithPlayers) => ({
+        id: line.id,
+        name: line.name,
+        playerCount: line.players.length,
+      })),
+    ],
+    [lines, players.length, t]
+  );
+
+  const selectedLineFilterOption = useMemo(
+    () =>
+      lineFilterOptions.find((option) => option.id === filterLineId) ??
+      lineFilterOptions[0],
+    [lineFilterOptions, filterLineId]
+  );
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t("points:dialog.managePlayers.title")}</DialogTitle>
@@ -192,7 +218,16 @@ export default function ManagePlayersDialog({
         )}
 
         {/* Expected composition - simplified */}
-        <Box sx={{ mb: 2, p: 2, bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
+        <Box
+          sx={{
+            mb: 2,
+            p: 2,
+            bgcolor: "background.paper",
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+          }}
+        >
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -255,26 +290,117 @@ export default function ManagePlayersDialog({
         </Box>
 
         {/* Line filter */}
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="line-filter-label">
-            {t("points:dialog.managePlayers.filterByLine")}
-          </InputLabel>
-          <Select
-            labelId="line-filter-label"
-            value={filterLineId}
-            label={t("points:dialog.managePlayers.filterByLine")}
-            onChange={(e) => setFilterLineId(e.target.value as number | "")}
+        <Box
+          sx={{
+            mb: 2,
+            p: 2,
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+            bgcolor: "action.hover",
+          }}
+        >
+          <ButtonBase
+            onClick={() => setIsLineFilterExpanded((prev) => !prev)}
+            sx={{ width: "100%", borderRadius: 1, textAlign: "left" }}
+            aria-label={t("points:dialog.managePlayers.filterByLine")}
+            aria-expanded={isLineFilterExpanded}
+            aria-controls="line-filter-content"
           >
-            <MenuItem value="">
-              <em>{t("points:dialog.managePlayers.allPlayers")}</em>
-            </MenuItem>
-            {lines.map((line: LineWithPlayers) => (
-              <MenuItem key={line.id} value={line.id}>
-                {line.name} ({t("points:dialog.managePlayers.playersCount", { count: line.players.length })})
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  {t("points:dialog.managePlayers.filterByLine")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {selectedLineFilterOption.name} •{" "}
+                  {t("points:dialog.managePlayers.playersCount", {
+                    count: selectedLineFilterOption.playerCount,
+                  })}
+                </Typography>
+              </Box>
+              <ExpandMoreIcon
+                sx={{
+                  color: "text.secondary",
+                  transform: isLineFilterExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: theme.transitions.create("transform", {
+                    duration: theme.transitions.duration.shorter,
+                  }),
+                }}
+              />
+            </Box>
+          </ButtonBase>
+
+          <Collapse in={isLineFilterExpanded} timeout="auto" unmountOnExit id="line-filter-content">
+            <Box
+              sx={{
+                mt: 1.5,
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, minmax(0, 1fr))",
+                  sm: "repeat(3, minmax(0, 1fr))",
+                },
+                gap: 1,
+              }}
+            >
+              {lineFilterOptions.map((option) => {
+                const isSelected = filterLineId === option.id;
+
+                return (
+                  <ButtonBase
+                    key={option.id === "" ? "all-players" : option.id}
+                    onClick={() => setFilterLineId(option.id)}
+                    sx={{
+                      width: "100%",
+                      borderRadius: 1.5,
+                      textAlign: "left",
+                    }}
+                    aria-pressed={isSelected}
+                  >
+                    <Box
+                      sx={{
+                        width: "100%",
+                        px: 1.25,
+                        py: 1,
+                        border: 1,
+                        borderRadius: 1.5,
+                        borderColor: isSelected ? "primary.main" : "divider",
+                        bgcolor: isSelected
+                          ? alpha(theme.palette.primary.main, 0.08)
+                          : "background.paper",
+                        transition: theme.transitions.create(["border-color", "background-color"], {
+                          duration: theme.transitions.duration.shorter,
+                        }),
+                        "&:hover": {
+                          borderColor: isSelected ? "primary.main" : "text.primary",
+                          bgcolor: isSelected
+                            ? alpha(theme.palette.primary.main, 0.14)
+                            : "action.hover",
+                        },
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={isSelected ? 600 : 500} noWrap>
+                        {option.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {t("points:dialog.managePlayers.playersCount", { count: option.playerCount })}
+                      </Typography>
+                    </Box>
+                  </ButtonBase>
+                );
+              })}
+            </Box>
+          </Collapse>
+        </Box>
+
+        <Divider sx={{ my: 1.5 }} />
 
         {/* Validation error */}
         {selectedPlayerIds.length === 7 && !isValidSelection && (
@@ -283,26 +409,39 @@ export default function ManagePlayersDialog({
           </Alert>
         )}
 
-        <PlayerSelectionList
-          players={filteredPlayers}
-          selectedIds={selectedPlayerIds}
-          onToggle={togglePlayer}
-          menLabel={t("points:dialog.start.men")}
-          womenLabel={t("points:dialog.start.women")}
-          emptyMenLabel={t("points:dialog.managePlayers.noMen")}
-          emptyWomenLabel={t("points:dialog.managePlayers.noWomen")}
-          getHighlight={getHighlight}
-          highlightSecondary={false}
-          renderPrimary={(player) => (
-            <>
-              <Box component="span">{player.name}</Box>
-              {getPlayerPoints(player.id) !== null && (
-                <Box component="span"> - {getPlayerPoints(player.id)} pts</Box>
-              )}
-            </>
-          )}
-          renderSecondary={(player) => getPlayerTime(player.id)}
-        />
+        <Box
+          sx={{
+            p: 1.5,
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+            bgcolor: "background.paper",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t("points:dialog.managePlayers.selectedPlayers")}
+          </Typography>
+          <PlayerSelectionList
+            players={filteredPlayers}
+            selectedIds={selectedPlayerIds}
+            onToggle={togglePlayer}
+            menLabel={t("points:dialog.start.men")}
+            womenLabel={t("points:dialog.start.women")}
+            emptyMenLabel={t("points:dialog.managePlayers.noMen")}
+            emptyWomenLabel={t("points:dialog.managePlayers.noWomen")}
+            getHighlight={getHighlight}
+            highlightSecondary={false}
+            renderPrimary={(player) => (
+              <>
+                <Box component="span">{player.name}</Box>
+                {getPlayerPoints(player.id) !== null && (
+                  <Box component="span"> - {getPlayerPoints(player.id)} pts</Box>
+                )}
+              </>
+            )}
+            renderSecondary={(player) => getPlayerTime(player.id)}
+          />
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={updateMutation.isPending}>
