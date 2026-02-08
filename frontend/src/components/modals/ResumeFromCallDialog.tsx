@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { updateCall } from '../../services/calls';
 import type { Call, CallUpdate } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
+import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
 interface ResumeFromCallDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ interface ResumeFromCallDialogProps {
 export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
+  const stoppageTypeLabel = getStoppageTypeLabel(t, call.stoppage_type);
 
   const mutation = useMutation({
     mutationFn: (callUpdate: CallUpdate) => updateCall(call.id, callUpdate),
@@ -66,6 +68,9 @@ export const ResumeFromCallDialog = ({ open, onClose, call }: ResumeFromCallDial
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {t('callStarted')}: {callTime.toLocaleTimeString()}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t('stoppageType')}: {stoppageTypeLabel}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {t('callResumed')}: {resumeTime.toLocaleTimeString()}

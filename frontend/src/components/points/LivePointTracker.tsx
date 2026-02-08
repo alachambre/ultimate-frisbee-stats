@@ -513,11 +513,11 @@ export default function LivePointTracker({
                         <CheckCircleIcon />
                       </Button>
                     </Tooltip>
-                    <Tooltip title={t("points:recordCall", "Record Call")}>
+                    <Tooltip title={t("points:recordCall", "Record stoppage")}>
                       <Button
                         variant="outlined"
                         onClick={() => setIsCallDialogOpen(true)}
-                        aria-label={t("points:recordCall", "Record Call")}
+                        aria-label={t("points:recordCall", "Record stoppage")}
                         sx={{
                           minWidth: 'auto',
                           px: 2,

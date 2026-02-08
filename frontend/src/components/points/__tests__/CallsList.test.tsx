@@ -11,6 +11,7 @@ const mockCalls: Call[] = [
   {
     id: 1,
     point_id: 1,
+    stoppage_type: "call",
     call_timestamp: "2024-01-01T10:02:30Z", // 2:30 into point
     resume_timestamp: "2024-01-01T10:03:00Z", // Resolved after 30 seconds
     comments: "Travel call",
@@ -19,6 +20,7 @@ const mockCalls: Call[] = [
   {
     id: 2,
     point_id: 1,
+    stoppage_type: "timeout",
     call_timestamp: "2024-01-01T10:05:15Z", // 5:15 into point
     resume_timestamp: null, // Pending
     comments: "Pick call",
@@ -29,7 +31,7 @@ const mockCalls: Call[] = [
 describe("CallsList", () => {
   it("does not render when there are no calls", async () => {
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json([]);
       })
     );
@@ -46,7 +48,7 @@ describe("CallsList", () => {
 
   it("renders calls header with count", async () => {
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(mockCalls);
       })
     );
@@ -55,6 +57,7 @@ describe("CallsList", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Calls (2)")).toBeInTheDocument();
+      expect(screen.getByText("Timeout")).toBeInTheDocument();
     });
   });
 
@@ -71,7 +74,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -97,7 +100,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -125,7 +128,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -150,7 +153,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -175,7 +178,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -205,7 +208,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -230,7 +233,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -244,7 +247,7 @@ describe("CallsList", () => {
 
   it("displays multiple calls in order", async () => {
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(mockCalls);
       })
     );
@@ -273,7 +276,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -299,7 +302,7 @@ describe("CallsList", () => {
     ];
 
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json(calls);
       })
     );
@@ -315,7 +318,7 @@ describe("CallsList", () => {
 
   it("handles error state gracefully", async () => {
     server.use(
-      http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+      http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
         return HttpResponse.json({ detail: "Error" }, { status: 500 });
       })
     );

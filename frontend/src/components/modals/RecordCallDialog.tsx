@@ -9,12 +9,16 @@ import {
   Alert,
   CircularProgress,
   Box,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createCall } from '../../services/calls';
-import type { PointWithPlayers, CallCreate } from '../../types';
+import type { PointWithPlayers, CallCreate, StoppageType } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
+import { STOPPAGE_TYPES, getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
 interface RecordCallDialogProps {
   open: boolean;
@@ -26,12 +30,14 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
   const [comments, setComments] = useState('');
+  const [stoppageType, setStoppageType] = useState<StoppageType>('call');
 
   const mutation = useMutation({
     mutationFn: (newCall: CallCreate) => createCall(newCall),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.calls(point.id) });
       setComments('');
+      setStoppageType('call');
       onClose();
     },
   });
@@ -39,6 +45,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
   const handleSubmit = () => {
     mutation.mutate({
       point_id: point.id,
+      stoppage_type: stoppageType,
       call_timestamp: new Date().toISOString(), // Generate timestamp when call is recorded
       comments: comments.trim() || null,
     });
@@ -47,6 +54,7 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
   const handleClose = () => {
     if (!mutation.isPending) {
       setComments('');
+      setStoppageType('call');
       mutation.reset();
       onClose();
     }
@@ -62,6 +70,60 @@ export const RecordCallDialog = ({ open, onClose, point }: RecordCallDialogProps
               {mutation.error instanceof Error ? mutation.error.message : t('common:error')}
             </Alert>
           )}
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {t('stoppageType')}
+            </Typography>
+            <ToggleButtonGroup
+              value={stoppageType}
+              exclusive
+              fullWidth
+              onChange={(_, newValue: StoppageType | null) => {
+                if (newValue !== null) {
+                  setStoppageType(newValue);
+                }
+              }}
+              disabled={mutation.isPending}
+              aria-label={t('stoppageType')}
+              sx={(theme) => ({
+                display: 'grid',
+                gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' },
+                gap: 1,
+                '& .MuiToggleButtonGroup-grouped': {
+                  m: 0,
+                  borderRadius: 1,
+                  border: `1px solid ${theme.palette.divider} !important`,
+                },
+                '& .MuiToggleButton-root': {
+                  minHeight: 38,
+                  px: 1,
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+                },
+                '& .MuiToggleButton-root.Mui-selected': {
+                  color: theme.palette.common.white,
+                  backgroundColor: theme.palette.primary.main,
+                  borderColor: `${theme.palette.primary.main} !important`,
+                },
+                '& .MuiToggleButton-root.Mui-selected:hover': {
+                  backgroundColor: theme.palette.primary.dark,
+                },
+              })}
+            >
+              {STOPPAGE_TYPES.map((type) => (
+                <ToggleButton
+                  key={type}
+                  value={type}
+                  aria-label={getStoppageTypeLabel(t, type)}
+                >
+                  {getStoppageTypeLabel(t, type)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Box>
 
           <TextField
             label={t('addComments')}

@@ -252,12 +252,15 @@ export interface GameDetail extends GameWithScore {
 }
 
 // ============================================
-// Call Types
+// Stoppage Types
 // ============================================
+
+export type StoppageType = "call" | "injury" | "timeout" | "other";
 
 export interface Call {
   id: number;
   point_id: number;
+  stoppage_type?: StoppageType;
   call_timestamp: string; // ISO datetime with 'Z'
   resume_timestamp: string | null; // ISO datetime with 'Z', null until resolved
   comments: string | null;
@@ -266,12 +269,14 @@ export interface Call {
 
 export interface CallCreate {
   point_id: number;
+  stoppage_type?: StoppageType;
   call_timestamp: string; // ISO datetime
   resume_timestamp?: string | null;
   comments?: string | null;
 }
 
 export interface CallUpdate {
+  stoppage_type?: StoppageType;
   resume_timestamp?: string | null;
   comments?: string | null;
 }

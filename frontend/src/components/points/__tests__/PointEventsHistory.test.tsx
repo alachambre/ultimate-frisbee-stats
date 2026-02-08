@@ -7,9 +7,16 @@ import type { Call, TurnoverWithPlayer } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
-const createMockCall = (id: number, timestamp: string, resumeTimestamp: string | null = null, comments: string | null = null): Call => ({
+const createMockCall = (
+  id: number,
+  timestamp: string,
+  resumeTimestamp: string | null = null,
+  comments: string | null = null,
+  stoppageType: Call["stoppage_type"] = "call",
+): Call => ({
   id,
   point_id: 1,
+  stoppage_type: stoppageType,
   call_timestamp: timestamp,
   resume_timestamp: resumeTimestamp,
   comments,
@@ -34,7 +41,7 @@ describe("PointEventsHistory", () => {
   describe("Empty State", () => {
     it("renders nothing when there are no events", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -64,7 +71,7 @@ describe("PointEventsHistory", () => {
   describe("Point Start Event", () => {
     it("renders point start event when pointStartTime is provided", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -94,7 +101,7 @@ describe("PointEventsHistory", () => {
 
     it("renders point start in defense", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -122,7 +129,7 @@ describe("PointEventsHistory", () => {
 
     it("renders strategy information when provided", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -151,7 +158,7 @@ describe("PointEventsHistory", () => {
 
     it("renders pull information when starting in defense", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -182,7 +189,7 @@ describe("PointEventsHistory", () => {
   describe("Point Scored Event", () => {
     it("renders point scored event when point is scored and won is true", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -211,7 +218,7 @@ describe("PointEventsHistory", () => {
 
     it("renders point scored event when point is completed and won is false", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -240,7 +247,7 @@ describe("PointEventsHistory", () => {
 
     it("does not render point scored event when won is null", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -275,7 +282,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(calls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -297,7 +304,7 @@ describe("PointEventsHistory", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/call/i)).toBeInTheDocument();
+        expect(screen.getByText(/^Call/, { selector: "p" })).toBeInTheDocument();
         expect(screen.getByText(/duration.*2:00/i)).toBeInTheDocument(); // Duration: 2 minutes
         expect(screen.getByText("Foul on defense")).toBeInTheDocument();
         expect(screen.queryByText(/pending/i)).not.toBeInTheDocument();
@@ -306,11 +313,11 @@ describe("PointEventsHistory", () => {
 
     it("renders pending call without duration and with pending chip", async () => {
       const calls = [
-        createMockCall(1, "2024-01-01T10:02:00Z", null, "Contest"),
+        createMockCall(1, "2024-01-01T10:02:00Z", null, "Contest", "timeout"),
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(calls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -333,6 +340,7 @@ describe("PointEventsHistory", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/pending/i)).toBeInTheDocument();
+        expect(screen.getByText(/timeout/i)).toBeInTheDocument();
         expect(screen.getByText("Contest")).toBeInTheDocument();
         // Verify no duration is shown (only for resolved calls)
         expect(screen.queryByText(/duration.*:/i)).not.toBeInTheDocument();
@@ -346,7 +354,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(calls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -382,7 +390,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -417,7 +425,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -453,7 +461,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -487,7 +495,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -525,7 +533,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(calls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -550,7 +558,7 @@ describe("PointEventsHistory", () => {
         // Verify all events are present (not checking order due to multiple time displays)
         expect(screen.getByText(/we scored/i)).toBeInTheDocument(); // Point scored
         expect(screen.getByText(/turnover #1/i)).toBeInTheDocument(); // Turnover
-        expect(screen.getByText(/call/i)).toBeInTheDocument(); // Call
+        expect(screen.getByText(/^Call/, { selector: "p" })).toBeInTheDocument(); // Call
         expect(screen.getByText(/point start/i)).toBeInTheDocument(); // Point start
       });
     });
@@ -565,7 +573,7 @@ describe("PointEventsHistory", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(calls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -596,7 +604,7 @@ describe("PointEventsHistory", () => {
   describe("Error Handling", () => {
     it("renders error alert when calls fetch fails", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json({ detail: "Error fetching calls" }, { status: 500 });
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -624,7 +632,7 @@ describe("PointEventsHistory", () => {
 
     it("renders error alert when turnovers fetch fails", async () => {
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {

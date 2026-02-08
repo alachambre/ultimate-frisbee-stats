@@ -1141,34 +1141,35 @@ export const handlers = [
   }),
 
   // ============================================
-  // Call Endpoints
+  // Stoppage Endpoints
   // ============================================
 
-  // GET /calls/:callId - Get a single call
-  http.get(`${BASE_URL}/calls/:callId`, ({ params }) => {
+  // GET /stoppages/:callId - Get a single stoppage
+  http.get(`${BASE_URL}/stoppages/:callId`, ({ params }) => {
     const callId = Number(params.callId);
     const call = calls.find((c) => c.id === callId);
 
     if (!call) {
-      return HttpResponse.json({ detail: "Call not found" }, { status: 404 });
+      return HttpResponse.json({ detail: "Stoppage not found" }, { status: 404 });
     }
 
     return HttpResponse.json(call);
   }),
 
-  // GET /calls/points/:pointId/calls - Get all calls for a point
-  http.get(`${BASE_URL}/calls/points/:pointId/calls`, ({ params }) => {
+  // GET /stoppages/points/:pointId/stoppages - Get all stoppages for a point
+  http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, ({ params }) => {
     const pointId = Number(params.pointId);
     const pointCalls = calls.filter((c) => c.point_id === pointId);
     return HttpResponse.json(pointCalls);
   }),
 
-  // POST /calls - Create a new call
-  http.post(`${BASE_URL}/calls`, async ({ request }) => {
+  // POST /stoppages - Create a new stoppage
+  http.post(`${BASE_URL}/stoppages`, async ({ request }) => {
     const newCall = (await request.json()) as CallCreate;
     const call: Call = {
       id: nextCallId++,
       ...newCall,
+      stoppage_type: newCall.stoppage_type ?? "call",
       resume_timestamp: newCall.resume_timestamp ?? null,
       comments: newCall.comments ?? null,
       created_at: new Date().toISOString(),
@@ -1177,14 +1178,14 @@ export const handlers = [
     return HttpResponse.json(call, { status: 201 });
   }),
 
-  // PUT /calls/:callId - Update a call
-  http.put(`${BASE_URL}/calls/:callId`, async ({ params, request }) => {
+  // PUT /stoppages/:callId - Update a stoppage
+  http.put(`${BASE_URL}/stoppages/:callId`, async ({ params, request }) => {
     const callId = Number(params.callId);
     const updates = (await request.json()) as CallUpdate;
     const callIndex = calls.findIndex((c) => c.id === callId);
 
     if (callIndex === -1) {
-      return HttpResponse.json({ detail: "Call not found" }, { status: 404 });
+      return HttpResponse.json({ detail: "Stoppage not found" }, { status: 404 });
     }
 
     calls[callIndex] = {
@@ -1195,13 +1196,13 @@ export const handlers = [
     return HttpResponse.json(calls[callIndex]);
   }),
 
-  // DELETE /calls/:callId - Delete a call
-  http.delete(`${BASE_URL}/calls/:callId`, ({ params }) => {
+  // DELETE /stoppages/:callId - Delete a stoppage
+  http.delete(`${BASE_URL}/stoppages/:callId`, ({ params }) => {
     const callId = Number(params.callId);
     const callIndex = calls.findIndex((c) => c.id === callId);
 
     if (callIndex === -1) {
-      return HttpResponse.json({ detail: "Call not found" }, { status: 404 });
+      return HttpResponse.json({ detail: "Stoppage not found" }, { status: 404 });
     }
 
     calls.splice(callIndex, 1);

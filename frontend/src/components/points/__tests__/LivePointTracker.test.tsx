@@ -67,7 +67,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
 
       // Mock empty calls array
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -117,7 +117,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(resolvedCalls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -158,7 +158,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(callsWithPending);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -208,7 +208,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(callsWithPending);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -258,7 +258,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(mixedCalls);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -299,7 +299,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       ];
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json(callsWithPending);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -330,7 +330,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const activePoint = createMockRunningPoint();
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
@@ -394,7 +394,7 @@ describe("LivePointTracker - Pending Call Feature", () => {
       const activePoint = createMockRunningPoint();
 
       server.use(
-        http.get(`${BASE_URL}/calls/points/:pointId/calls`, () => {
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
           return HttpResponse.json([]);
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {

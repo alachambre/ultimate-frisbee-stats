@@ -42,7 +42,7 @@ describe("RecordCallDialog", () => {
       />
     );
 
-    expect(screen.getByText("Record Call")).toBeInTheDocument();
+    expect(screen.getByText("Record stoppage")).toBeInTheDocument();
   });
 
   it("does not render when closed", () => {
@@ -54,7 +54,7 @@ describe("RecordCallDialog", () => {
       />
     );
 
-    expect(screen.queryByText("Record Call")).not.toBeInTheDocument();
+    expect(screen.queryByText("Record stoppage")).not.toBeInTheDocument();
   });
 
   it("shows comments text field", () => {
@@ -67,6 +67,22 @@ describe("RecordCallDialog", () => {
     );
 
     expect(screen.getByLabelText(/comments/i)).toBeInTheDocument();
+  });
+
+  it("shows stoppage type buttons", () => {
+    renderWithQueryClient(
+      <RecordCallDialog
+        open={true}
+        onClose={vi.fn()}
+        point={mockPoint}
+      />
+    );
+
+    expect(screen.getByRole("group", { name: /type/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /call/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /injury/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /timeout/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /other/i })).toBeInTheDocument();
   });
 
   it("has cancel and record buttons", () => {

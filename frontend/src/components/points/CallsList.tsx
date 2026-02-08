@@ -16,6 +16,7 @@ import { getCallsByPoint } from '../../services/calls';
 import type { Call } from '../../types';
 import { ResumeFromCallDialog } from '../modals/ResumeFromCallDialog';
 import { queryKeys } from '../../utils/queryKeys';
+import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
 interface CallsListProps {
   pointId: number;
@@ -77,6 +78,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
             const callTime = new Date(call.call_timestamp);
             const isResolved = call.resume_timestamp !== null;
             let durationText = '';
+            const stoppageTypeLabel = getStoppageTypeLabel(t, call.stoppage_type);
 
             if (isResolved) {
               const resumeTime = new Date(call.resume_timestamp!);
@@ -91,6 +93,7 @@ export const CallsList = ({ pointId, pointStartTime }: CallsListProps) => {
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                     <PauseCircleIcon fontSize="small" color="action" />
+                    <Chip label={stoppageTypeLabel} size="small" variant="outlined" />
                     <Typography variant="body2">
                       {formatElapsedTime(pointStartTime, call.call_timestamp)}
                     </Typography>

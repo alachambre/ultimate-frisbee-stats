@@ -7,6 +7,7 @@ import type { Call } from "../../../types";
 const mockCall: Call = {
   id: 1,
   point_id: 1,
+  stoppage_type: "injury",
   call_timestamp: "2024-01-01T10:02:00Z",
   resume_timestamp: null, // Pending call
   comments: "Travel call",
@@ -57,6 +58,8 @@ describe("ResumeFromCallDialog", () => {
     );
 
     // Should show labels for timing
+    expect(screen.getByText(/type/i)).toBeInTheDocument();
+    expect(screen.getByText(/injury/i)).toBeInTheDocument();
     expect(screen.getByText(/started/i)).toBeInTheDocument();
     expect(screen.getByText(/resumed/i)).toBeInTheDocument();
     expect(screen.getByText(/duration/i)).toBeInTheDocument();

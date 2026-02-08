@@ -20,6 +20,7 @@ import { getCallsByPoint } from '../../services/calls';
 import { getTurnoversByPoint } from '../../services/turnovers';
 import type { Call, TurnoverWithPlayer } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
+import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
 interface PointEventsHistoryProps {
   pointId: number;
@@ -121,6 +122,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
               const callTime = new Date(call.call_timestamp);
               const isResolved = call.resume_timestamp !== null;
               let durationText = '';
+              const stoppageTypeLabel = getStoppageTypeLabel(t, call.stoppage_type);
 
               if (isResolved) {
                 const resumeTime = new Date(call.resume_timestamp!);
@@ -137,7 +139,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PauseCircleIcon fontSize="small" color="action" />
                         <Typography variant="body2" fontWeight="medium">
-                          {t('events.call')}
+                          {stoppageTypeLabel}
                           {isResolved && (
                             <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
                               ({t('callDuration')}: {durationText})
