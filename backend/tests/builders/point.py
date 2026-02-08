@@ -8,10 +8,10 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 from sqlalchemy.orm import Session
 
-from app.crud import points as points_crud, turnovers as turnovers_crud, calls as calls_crud
+from app.crud import points as points_crud, turnovers as turnovers_crud, stoppages as stoppages_crud
 from app.schemas.point import PointCreate, PointUpdate
 from app.schemas.turnover import TurnoverCreate
-from app.schemas.call import CallCreate, CallUpdate
+from app.schemas.stoppage import StoppageCreate, StoppageUpdate
 from app.models.point import Point
 
 
@@ -41,7 +41,7 @@ class PointBuilder:
         self._start_time = datetime.now(timezone.utc)
         self._duration = 60
         self._turnovers = []
-        self._calls = []
+        self._stoppages = []
 
     def offense(self) -> "PointBuilder":
         self._offense = True
@@ -83,8 +83,13 @@ class PointBuilder:
         self._turnovers.append(seconds_from_start)
         return self
 
+    def with_stoppage(self, start: int = 10, duration: int = 10) -> "PointBuilder":
+        self._stoppages.append((start, duration))
+        return self
+
     def with_call(self, start: int = 10, duration: int = 10) -> "PointBuilder":
-        self._calls.append((start, duration))
+        # Backward-compatible alias used by existing tests/builders.
+        self._stoppages.append((start, duration))
         return self
 
     def complete(self) -> Point:
@@ -122,19 +127,19 @@ class PointBuilder:
                 )
             )
 
-        # Add calls
-        for start, duration in self._calls:
-            call = calls_crud.create_call(
+        # Add stoppages
+        for start, duration in self._stoppages:
+            stoppage = stoppages_crud.create_stoppage(
                 self.db,
-                CallCreate(
+                StoppageCreate(
                     point_id=point.id,
-                    timestamp=self._start_time + timedelta(seconds=start)
+                    call_timestamp=self._start_time + timedelta(seconds=start)
                 )
             )
-            calls_crud.update_call(
+            stoppages_crud.update_stoppage(
                 self.db,
-                call.id,
-                CallUpdate(
+                stoppage.id,
+                StoppageUpdate(
                     resume_timestamp=self._start_time + timedelta(seconds=start + duration)
                 )
             )

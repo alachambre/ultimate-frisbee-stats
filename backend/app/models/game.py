@@ -25,3 +25,4 @@ class Game(Base):
     competition = relationship("Competition", back_populates="games")
     points = relationship("Point", back_populates="game", cascade="all, delete-orphan")
     players = relationship("Player", secondary=game_players, back_populates="games")
+    halftime = relationship("Halftime", back_populates="game", cascade="all, delete-orphan", uselist=False)

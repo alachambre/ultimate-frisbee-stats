@@ -4,7 +4,7 @@ Pure calculation helpers for statistics.
 from dataclasses import dataclass
 from typing import List, Tuple, Dict, Optional
 
-from app.models.call import Call
+from app.models.stoppage import Stoppage
 from app.models.point import Point
 from app.models.player import Player
 from app.models.strategy import Strategy
@@ -25,18 +25,18 @@ def calculate_point_duration_seconds(point: Point) -> int:
     return int((point.end_datetime - point.start_datetime).total_seconds())
 
 
-def calculate_call_dead_time_seconds(calls: List[Call]) -> int:
+def calculate_stoppage_dead_time_seconds(stoppages: List[Stoppage]) -> int:
     dead_time = 0
-    for call in calls:
-        if call.resume_timestamp:
-            dead_time += int((call.resume_timestamp - call.call_timestamp).total_seconds())
+    for stoppage in stoppages:
+        if stoppage.resume_timestamp:
+            dead_time += int((stoppage.resume_timestamp - stoppage.call_timestamp).total_seconds())
     return dead_time
 
 
-def calculate_effective_time_seconds(point: Point, calls: List[Call]) -> int:
+def calculate_effective_time_seconds(point: Point, stoppages: List[Stoppage]) -> int:
     point_duration = calculate_point_duration_seconds(point)
-    call_dead_time = calculate_call_dead_time_seconds(calls)
-    return max(0, point_duration - call_dead_time)
+    stoppage_dead_time = calculate_stoppage_dead_time_seconds(stoppages)
+    return max(0, point_duration - stoppage_dead_time)
 
 
 def count_turnovers_by_possession(
@@ -92,7 +92,7 @@ def build_point_facts(
 def build_live_player_stats(
     completed_points: List[Point],
     game_players: List[Player],
-    calls_by_point: Dict[int, List[Call]],
+    stoppages_by_point: Dict[int, List[Stoppage]],
     turnovers_by_point: Dict[int, List[Turnover]],
 ) -> List[Dict]:
     if not completed_points:
@@ -147,8 +147,8 @@ def build_live_player_stats(
         }
 
     for point in completed_points:
-        calls = calls_by_point.get(point.id, [])
-        effective_time = calculate_effective_time_seconds(point, calls)
+        stoppages = stoppages_by_point.get(point.id, [])
+        effective_time = calculate_effective_time_seconds(point, stoppages)
 
         turnovers = turnovers_by_point.get(point.id, [])
         our_turnovers, _their_turnovers = count_turnovers_by_possession(

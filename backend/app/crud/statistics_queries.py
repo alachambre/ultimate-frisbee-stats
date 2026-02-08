@@ -10,7 +10,7 @@ from app.models.point import Point
 from app.models.player import Player
 from app.models.competition import Competition
 from app.models.team import Team
-from app.models.call import Call
+from app.models.stoppage import Stoppage
 from app.models.turnover import Turnover
 from app.models.strategy import Strategy
 from app.models.base import PointStatusEnum
@@ -94,22 +94,27 @@ def get_team_players(db: Session, team_id: int) -> List[Player]:
     return db.query(Player).filter(Player.team_id == team_id).all()
 
 
-def get_calls_for_point(db: Session, point_id: int) -> List[Call]:
-    return db.query(Call).filter(Call.point_id == point_id).all()
+def get_stoppages_for_point(db: Session, point_id: int) -> List[Stoppage]:
+    return db.query(Stoppage).filter(Stoppage.point_id == point_id).all()
 
 
-def get_calls_for_points(db: Session, point_ids: List[int]) -> Dict[int, List[Call]]:
+def get_stoppages_for_points(db: Session, point_ids: List[int]) -> Dict[int, List[Stoppage]]:
     if not point_ids:
         return {}
 
     point_id_set = set(point_ids)
-    calls = db.query(Call).filter(Call.point_id.in_(list(point_id_set))).order_by(Call.point_id).all()
+    stoppages = (
+        db.query(Stoppage)
+        .filter(Stoppage.point_id.in_(list(point_id_set)))
+        .order_by(Stoppage.point_id)
+        .all()
+    )
 
-    calls_by_point: Dict[int, List[Call]] = defaultdict(list)
-    for call in calls:
-        calls_by_point[call.point_id].append(call)
+    stoppages_by_point: Dict[int, List[Stoppage]] = defaultdict(list)
+    for stoppage in stoppages:
+        stoppages_by_point[stoppage.point_id].append(stoppage)
 
-    return {point_id: calls_by_point.get(point_id, []) for point_id in point_id_set}
+    return {point_id: stoppages_by_point.get(point_id, []) for point_id in point_id_set}
 
 
 def get_turnovers_for_point(db: Session, point_id: int) -> List[Turnover]:

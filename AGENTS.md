@@ -41,11 +41,14 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 **Backend**
 - `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)
 - `backend/app/tests/` Pytest (CRUD + API)
+- Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`
+- Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)
 - CSV statistics exports are backend-owned via `/exports/*/csv` endpoints; frontend should only trigger download
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable
 - Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
+- Supabase schema changes are SQL-migration-based (`supabase/migrations/`), not `create_all()` based
 
 ## Design & UI System
 - Material UI v7, mobile-first

@@ -16,7 +16,7 @@ from app.crud import (
     strategies as strategies_crud,
     points as points_crud,
     turnovers as turnovers_crud,
-    calls as calls_crud,
+    stoppages as stoppages_crud,
 )
 from app.schemas.team import TeamCreate
 from app.schemas.competition import CompetitionCreate
@@ -25,7 +25,7 @@ from app.schemas.player import PlayerCreate, Gender
 from app.schemas.strategy import StrategyCreate
 from app.schemas.point import PointCreate, PointUpdate, PointFinish
 from app.schemas.turnover import TurnoverCreate
-from app.schemas.call import CallCreate, CallUpdate
+from app.schemas.stoppage import StoppageCreate, StoppageUpdate
 from app.models.team import Team
 from app.models.competition import Competition
 from app.models.game import Game
@@ -273,18 +273,18 @@ class GameScenarioBuilder:
 
         # Add optional call
         if with_call:
-            call = calls_crud.create_call(
+            stoppage = stoppages_crud.create_stoppage(
                 self.db,
-                CallCreate(
+                StoppageCreate(
                     point_id=point.id,
-                    timestamp=start_time + timedelta(seconds=10)
+                    call_timestamp=start_time + timedelta(seconds=10)
                 )
             )
             # Resume the call
-            calls_crud.update_call(
+            stoppages_crud.update_stoppage(
                 self.db,
-                call.id,
-                CallUpdate(
+                stoppage.id,
+                StoppageUpdate(
                     resume_timestamp=start_time + timedelta(seconds=20)
                 )
             )

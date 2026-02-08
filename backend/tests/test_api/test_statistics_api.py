@@ -125,8 +125,8 @@ def test_get_live_game_statistics_multiple_players(client: TestClient, sample_ga
     assert data[2]["effective_time_seconds"] == 0
 
 
-def test_get_live_game_statistics_with_calls(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
-    """Test that calls reduce effective time"""
+def test_get_live_game_statistics_with_stoppages(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
+    """Test that stoppages reduce effective time"""
     # Add player to game
     sample_game.players.append(sample_player)
     db_session.commit()
@@ -145,13 +145,13 @@ def test_get_live_game_statistics_with_calls(client: TestClient, sample_game: mo
     db_session.add(point)
     db_session.flush()
 
-    # Add call with 1 minute dead time
-    call = models.Call(
+    # Add stoppage with 1 minute dead time
+    stoppage = models.Stoppage(
         point_id=point.id,
         call_timestamp=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
         resume_timestamp=datetime(2024, 1, 1, 10, 3, 0, tzinfo=timezone.utc),
     )
-    db_session.add(call)
+    db_session.add(stoppage)
     db_session.commit()
 
     response = client.get(f"/statistics/games/{sample_game.id}/live")
@@ -159,7 +159,7 @@ def test_get_live_game_statistics_with_calls(client: TestClient, sample_game: mo
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
-    # 300 seconds - 60 seconds (call) = 240 seconds
+    # 300 seconds - 60 seconds (stoppage) = 240 seconds
     assert data[0]["effective_time_seconds"] == 240
 
 

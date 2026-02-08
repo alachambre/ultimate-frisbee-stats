@@ -6,7 +6,7 @@ All schemas are re-exported here for backward compatibility with existing import
     from app import schemas
 """
 
-from .enums import Gender, CompetitionStatus, GameStatus, PointStatus, StrategyCategory
+from .enums import Gender, CompetitionStatus, GameStatus, PointStatus, StrategyCategory, StoppageType
 from .team import Team, TeamCreate, TeamUpdate, TeamWithPlayers
 from .competition import Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, CompetitionWithTeam
 from .player import Player, PlayerCreate, PlayerUpdate
@@ -14,7 +14,8 @@ from .game import Game, GameCreate, GameUpdate, GameWithScore, GameDetail
 from .point import Point, PointCreate, PointUpdate, PointFinish, PointWithPlayers
 from .line import Line, LineCreate, LineUpdate, LineWithPlayers
 from .strategy import Strategy, StrategyCreate, StrategyUpdate
-from .call import Call, CallCreate, CallUpdate
+from .stoppage import Stoppage, StoppageCreate, StoppageUpdate
+from .halftime import Halftime, HalftimeCreate, HalftimeUpdate
 from .turnover import Turnover, TurnoverCreate, TurnoverUpdate, TurnoverWithPlayer
 
 # Rebuild models with forward references after all models are imported
@@ -33,6 +34,7 @@ __all__ = [
     "GameStatus",
     "PointStatus",
     "StrategyCategory",
+    "StoppageType",
     # Teams
     "Team",
     "TeamCreate",
@@ -69,10 +71,14 @@ __all__ = [
     "Strategy",
     "StrategyCreate",
     "StrategyUpdate",
-    # Calls
-    "Call",
-    "CallCreate",
-    "CallUpdate",
+    # Stoppages
+    "Stoppage",
+    "StoppageCreate",
+    "StoppageUpdate",
+    # Halftime
+    "Halftime",
+    "HalftimeCreate",
+    "HalftimeUpdate",
     # Turnovers
     "Turnover",
     "TurnoverCreate",

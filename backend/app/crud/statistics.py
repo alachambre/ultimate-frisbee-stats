@@ -14,7 +14,7 @@ from app.crud.statistics_queries import (
     get_game_players,
     get_competition_players,
     get_team_players,
-    get_calls_for_points,
+    get_stoppages_for_points,
     get_turnovers_for_points,
     get_strategies_by_ids,
 )
@@ -37,7 +37,7 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     - player_name: str
     - player_number: int
     - points_played: int (number of completed points)
-    - effective_time_seconds: int (total playing time minus call durations)
+    - effective_time_seconds: int (total playing time minus stoppage durations)
     - offense: dict (points_played, points_won, points_lost, hold_rate, points_won_no_turnover, clean_hold_rate)
     - defense: dict (points_played, points_won, points_lost, break_rate, points_with_turnover, turnover_rate, points_won_no_turnover, clean_break_rate, points_lost_no_turnover)
     """
@@ -52,13 +52,13 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
     # Get all players in the game
     all_game_players = get_game_players(db, game_id)
     point_ids = [point.id for point in completed_points]
-    calls_by_point = get_calls_for_points(db, point_ids)
+    stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     return build_live_player_stats(
         completed_points,
         all_game_players,
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
     )
 
@@ -90,13 +90,13 @@ def get_competition_player_stats(db: Session, competition_id: int) -> Optional[L
                 players_by_id[player.id] = player
 
     point_ids = [point.id for point in completed_points]
-    calls_by_point = get_calls_for_points(db, point_ids)
+    stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     return build_live_player_stats(
         completed_points,
         list(players_by_id.values()),
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
     )
 
@@ -120,13 +120,13 @@ def get_team_player_stats(db: Session, team_id: int) -> Optional[List[Dict]]:
     team_players = get_team_players(db, team_id)
 
     point_ids = [point.id for point in completed_points]
-    calls_by_point = get_calls_for_points(db, point_ids)
+    stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     return build_live_player_stats(
         completed_points,
         team_players,
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
     )
 

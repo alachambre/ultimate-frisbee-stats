@@ -23,7 +23,7 @@ def get_live_game_statistics(
     Returns stats for all players in the game roster.
 
     Only completed points are included in the calculations.
-    Effective time = point duration - call durations (dead time).
+    Effective time = point duration - stoppage durations (dead time).
     """
     # Verify game exists
     game = db.query(Game).filter(Game.id == game_id).first()

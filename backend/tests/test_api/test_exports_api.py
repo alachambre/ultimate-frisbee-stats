@@ -33,12 +33,12 @@ def test_export_game_statistics_csv_success(client: TestClient, db_session: Sess
     ).build()
     point = scenario.points[0]
     start_time = point.start_datetime
-    call = models.Call(
+    stoppage = models.Stoppage(
         point_id=point.id,
         call_timestamp=start_time + timedelta(seconds=10),
         resume_timestamp=start_time + timedelta(seconds=20),
     )
-    db_session.add(call)
+    db_session.add(stoppage)
     db_session.commit()
 
     response = client.get(f"/exports/games/{scenario.game.id}/csv")
@@ -54,10 +54,10 @@ def test_export_game_statistics_csv_success(client: TestClient, db_session: Sess
     assert "STRATEGY STATISTICS" in content
     assert "POINTS SUMMARY" in content
     assert "Point,Type,Status,Result,Score After" in content
-    assert "Calls,Turnovers,Comments" in content
+    assert "Stoppages,Turnovers,Comments" in content
     assert "Vertical Stack" in content
     assert "POINTS DETAIL" not in content
-    assert "Call 1" not in content
+    assert "Stoppage 1" not in content
     assert "Turnover 1" not in content
 
 
@@ -80,12 +80,12 @@ def test_export_game_statistics_csv_full_detail(client: TestClient, db_session: 
     ).build()
     point = scenario.points[0]
     start_time = point.start_datetime
-    call = models.Call(
+    stoppage = models.Stoppage(
         point_id=point.id,
         call_timestamp=start_time + timedelta(seconds=10),
         resume_timestamp=start_time + timedelta(seconds=20),
     )
-    db_session.add(call)
+    db_session.add(stoppage)
     db_session.commit()
 
     response = client.get(f"/exports/games/{scenario.game.id}/csv?detail=full")
@@ -95,7 +95,7 @@ def test_export_game_statistics_csv_full_detail(client: TestClient, db_session: 
     assert "POINTS SUMMARY" in content
     assert "POINTS DETAIL" in content
     assert "Point 1" in content
-    assert "Calls,1" in content
+    assert "Stoppages,1" in content
     assert "Turnovers,1" in content
 
 

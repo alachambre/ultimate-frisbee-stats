@@ -74,12 +74,20 @@ from app.crud.strategies import (
     delete_strategy,
 )
 
-from app.crud.calls import (
-    create_call,
-    get_call,
-    get_calls_by_point,
-    update_call,
-    delete_call,
+from app.crud.stoppages import (
+    create_stoppage,
+    get_stoppage,
+    get_stoppages_by_point,
+    update_stoppage,
+    delete_stoppage,
+)
+
+from app.crud.halftimes import (
+    create_halftime,
+    get_halftime,
+    get_halftime_by_game,
+    update_halftime,
+    delete_halftime,
 )
 
 from app.crud.turnovers import (
@@ -151,12 +159,18 @@ __all__ = [
     "get_strategies",
     "update_strategy",
     "delete_strategy",
-    # Calls
-    "create_call",
-    "get_call",
-    "get_calls_by_point",
-    "update_call",
-    "delete_call",
+    # Stoppages
+    "create_stoppage",
+    "get_stoppage",
+    "get_stoppages_by_point",
+    "update_stoppage",
+    "delete_stoppage",
+    # Halftimes
+    "create_halftime",
+    "get_halftime",
+    "get_halftime_by_game",
+    "update_halftime",
+    "delete_halftime",
     # Turnovers
     "create_turnover",
     "get_turnover",

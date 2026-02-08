@@ -58,3 +58,4 @@ class GameDetail(GameWithScore):
     """Complete game information with all points and players"""
     points: List['PointWithPlayers']  # Forward reference to avoid circular import
     players: List['Player']  # Selected players for this game
+    halftime: Optional['Halftime'] = None

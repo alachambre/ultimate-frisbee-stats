@@ -40,7 +40,7 @@ class PlayerGameStats(BaseModel):
     player_name: str
     player_number: Optional[int]  # Jersey number can be None
     points_played: int  # Number of completed points played
-    effective_time_seconds: int  # Total effective time (point duration - call durations)
+    effective_time_seconds: int  # Total effective time (point duration - stoppage durations)
     offense: PlayerOffenseStats
     defense: PlayerDefenseStats
 

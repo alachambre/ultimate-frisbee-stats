@@ -30,3 +30,10 @@ class PointStatus(str, Enum):
 class StrategyCategory(str, Enum):
     offense = "offense"
     defense = "defense"
+
+
+class StoppageType(str, Enum):
+    call = "call"
+    injury = "injury"
+    timeout = "timeout"
+    other = "other"

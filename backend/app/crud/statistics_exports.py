@@ -10,7 +10,7 @@ from typing import Dict, List, Literal, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.base import PointStatusEnum
-from app.models.call import Call
+from app.models.stoppage import Stoppage
 from app.models.point import Point
 from app.models.turnover import Turnover
 from app.crud import competitions as competitions_crud
@@ -18,7 +18,7 @@ from app.crud import games as games_crud
 from app.crud import statistics as statistics_crud
 from app.crud.statistics_calculations import build_live_player_stats
 from app.crud.statistics_queries import (
-    get_calls_for_points,
+    get_stoppages_for_points,
     get_competition,
     get_completed_points_for_competition,
     get_completed_points_for_team,
@@ -114,7 +114,7 @@ def _append_team_statistics(rows: List[List[str]], team_stats: Optional[Dict]) -
         [
             "Clean Break Rate",
             str(team_stats["defense"]["points_won_no_turnover"]),
-            str(team_stats["defense"]["points_won"]),
+            str(team_stats["defense"]["points_started"]),
             _format_percent(team_stats["defense"]["clean_break_rate"]),
         ]
     )
@@ -266,11 +266,11 @@ def _point_duration_seconds(point: Point) -> Optional[int]:
     return max(0, int((end - start).total_seconds()))
 
 
-def _call_dead_time_seconds(call: Call) -> int:
-    if not call.call_timestamp or not call.resume_timestamp:
+def _stoppage_dead_time_seconds(stoppage: Stoppage) -> int:
+    if not stoppage.call_timestamp or not stoppage.resume_timestamp:
         return 0
-    start = call.call_timestamp
-    end = call.resume_timestamp
+    start = stoppage.call_timestamp
+    end = stoppage.resume_timestamp
     if start.tzinfo is None:
         start = start.replace(tzinfo=timezone.utc)
     if end.tzinfo is None:
@@ -281,7 +281,7 @@ def _call_dead_time_seconds(call: Call) -> int:
 def _append_point_details(
     rows: List[List[str]],
     points: List[Point],
-    calls_by_point: Dict[int, List[Call]],
+    stoppages_by_point: Dict[int, List[Stoppage]],
     turnovers_by_point: Dict[int, List[Turnover]],
     include_game_context: bool = False,
 ) -> None:
@@ -351,17 +351,18 @@ def _append_point_details(
         rows.append(["Players", player_names or "None"])
         rows.append(["Comments", point.comments or ""])
 
-        calls = calls_by_point.get(point.id, [])
-        rows.append(["Calls", str(len(calls))])
-        for index, call in enumerate(calls, start=1):
+        stoppages = stoppages_by_point.get(point.id, [])
+        rows.append(["Stoppages", str(len(stoppages))])
+        for index, stoppage in enumerate(stoppages, start=1):
             rows.append(
                 [
-                    f"Call {index}",
+                    f"Stoppage {index}",
                     (
-                        f"start={_format_datetime(call.call_timestamp)}, "
-                        f"resume={_format_datetime(call.resume_timestamp) or 'ongoing'}, "
-                        f"dead_time_seconds={_call_dead_time_seconds(call)}, "
-                        f"comments={call.comments or ''}"
+                        f"type={stoppage.stoppage_type}, "
+                        f"start={_format_datetime(stoppage.call_timestamp)}, "
+                        f"resume={_format_datetime(stoppage.resume_timestamp) or 'ongoing'}, "
+                        f"dead_time_seconds={_stoppage_dead_time_seconds(stoppage)}, "
+                        f"comments={stoppage.comments or ''}"
                     ),
                 ]
             )
@@ -385,7 +386,7 @@ def _append_point_details(
 def _append_points_summary(
     rows: List[List[str]],
     points: List[Point],
-    calls_by_point: Dict[int, List[Call]],
+    stoppages_by_point: Dict[int, List[Stoppage]],
     turnovers_by_point: Dict[int, List[Turnover]],
     include_game_columns: bool = False,
 ) -> None:
@@ -407,7 +408,7 @@ def _append_points_summary(
         "Pull",
         "Strategy",
         "Players",
-        "Calls",
+        "Stoppages",
         "Turnovers",
         "Comments",
     ]
@@ -458,7 +459,7 @@ def _append_points_summary(
             "N/A" if point.pull is None else ("In" if point.pull else "Out"),
             point.strategy.name if point.strategy else "",
             players,
-            str(len(calls_by_point.get(point.id, []))),
+            str(len(stoppages_by_point.get(point.id, []))),
             str(len(turnovers_by_point.get(point.id, []))),
             point.comments or "",
         ]
@@ -479,7 +480,7 @@ def _normalize_detail_mode(detail_mode: str) -> Literal["summary", "full"]:
 def _append_points_sections(
     rows: List[List[str]],
     points: List[Point],
-    calls_by_point: Dict[int, List[Call]],
+    stoppages_by_point: Dict[int, List[Stoppage]],
     turnovers_by_point: Dict[int, List[Turnover]],
     detail_mode: str,
     include_game_columns: bool = False,
@@ -491,7 +492,7 @@ def _append_points_sections(
     _append_points_summary(
         rows,
         points,
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
         include_game_columns=include_game_columns,
     )
@@ -499,7 +500,7 @@ def _append_points_sections(
         _append_point_details(
             rows,
             points,
-            calls_by_point,
+            stoppages_by_point,
             turnovers_by_point,
             include_game_context=include_game_columns,
         )
@@ -570,7 +571,7 @@ def get_game_statistics_csv(
 
     points = game_detail.get("points", [])
     point_ids = [point.id for point in points]
-    calls_by_point = get_calls_for_points(db, point_ids)
+    stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
     player_stats = statistics_crud.get_live_game_player_stats(db, game_id)
     if not player_stats and points:
@@ -583,7 +584,7 @@ def get_game_statistics_csv(
             player_stats = build_live_player_stats(
                 points,
                 list(players_by_id.values()),
-                calls_by_point,
+                stoppages_by_point,
                 turnovers_by_point,
             )
 
@@ -614,7 +615,7 @@ def get_game_statistics_csv(
     _append_points_sections(
         rows,
         points,
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
         detail_mode=detail_mode,
         include_game_columns=False,
@@ -637,7 +638,7 @@ def get_competition_statistics_csv(
     strategy_stats = statistics_crud.get_competition_strategy_stats(db, competition_id)
     completed_points = get_completed_points_for_competition(db, competition_id)
     point_ids = [point.id for point in completed_points]
-    calls_by_point = get_calls_for_points(db, point_ids)
+    stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     competition_games = []
@@ -670,7 +671,7 @@ def get_competition_statistics_csv(
     _append_points_sections(
         rows,
         completed_points,
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
         detail_mode=detail_mode,
         include_game_columns=True,
@@ -693,7 +694,7 @@ def get_team_statistics_csv(
     strategy_stats = statistics_crud.get_team_strategy_stats(db, team_id)
     completed_points = get_completed_points_for_team(db, team_id)
     point_ids = [point.id for point in completed_points]
-    calls_by_point = get_calls_for_points(db, point_ids)
+    stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     competitions = sorted(
@@ -739,7 +740,7 @@ def get_team_statistics_csv(
     _append_points_sections(
         rows,
         completed_points,
-        calls_by_point,
+        stoppages_by_point,
         turnovers_by_point,
         detail_mode=detail_mode,
         include_game_columns=True,
