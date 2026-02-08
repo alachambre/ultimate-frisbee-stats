@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Alert, Box, Container, Divider, Paper, Typography } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTranslation } from "react-i18next";
@@ -15,8 +15,6 @@ import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
 export default function StatisticsPage() {
   const { t } = useTranslation(["statistics", "games", "common"]);
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
-  const [shouldScrollToPlayerStats, setShouldScrollToPlayerStats] = useState(false);
-  const playerStatisticsTopRef = useRef<HTMLDivElement | null>(null);
   const {
     mode,
     teamId,
@@ -87,45 +85,6 @@ export default function StatisticsPage() {
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width:600px)").matches;
-
-  useEffect(() => {
-    if (!shouldScrollToPlayerStats || !isMobileViewport) {
-      return;
-    }
-
-    const canScrollToPlayerStats =
-      !controlsLoading &&
-      !controlsError &&
-      teamId !== undefined &&
-      !isScopeLoading &&
-      !scopeError &&
-      activeScope === "player" &&
-      selectedPlayer &&
-      selectedPlayerStats;
-
-    if (!canScrollToPlayerStats) {
-      return;
-    }
-
-    window.setTimeout(() => {
-      playerStatisticsTopRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      setShouldScrollToPlayerStats(false);
-    }, 140);
-  }, [
-    shouldScrollToPlayerStats,
-    isMobileViewport,
-    controlsLoading,
-    controlsError,
-    teamId,
-    isScopeLoading,
-    scopeError,
-    activeScope,
-    selectedPlayer,
-    selectedPlayerStats,
-  ]);
 
   if (isLoadingTeams) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -201,7 +160,6 @@ export default function StatisticsPage() {
 
           if (mode === "player" && isMobileViewport) {
             setIsConfigurationExpanded(false);
-            setShouldScrollToPlayerStats(true);
           }
         }}
       />
@@ -440,16 +398,14 @@ export default function StatisticsPage() {
               isExporting={isExporting}
               onExport={handleExportCSV}
             >
-              <Box ref={playerStatisticsTopRef} sx={{ scrollMarginTop: { xs: 12, sm: 16 } }}>
-                <PlayerScopeStatistics
-                  playerName={selectedPlayer.name}
-                  playerNumber={selectedPlayer.number}
-                  teamName={selectedTeam?.name}
-                  scopeLabel={t("statistics:playerScope.team")}
-                  contextLabel={selectedTeam?.name}
-                  stats={selectedPlayerStats}
-                />
-              </Box>
+              <PlayerScopeStatistics
+                playerName={selectedPlayer.name}
+                playerNumber={selectedPlayer.number}
+                teamName={selectedTeam?.name}
+                scopeLabel={t("statistics:playerScope.team")}
+                contextLabel={selectedTeam?.name}
+                stats={selectedPlayerStats}
+              />
             </StatisticsSectionContainer>
           )}
       </Box>

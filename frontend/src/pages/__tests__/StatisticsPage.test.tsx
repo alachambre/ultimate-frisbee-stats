@@ -228,7 +228,7 @@ describe("StatisticsPage", () => {
     });
   });
 
-  it("collapses configuration and scrolls to statistics on mobile when selecting a player", async () => {
+  it("collapses configuration on mobile when selecting a player", async () => {
     const user = userEvent.setup();
     const team = await createTeam({ name: "Monkey" });
     const player = await createPlayer({
@@ -269,9 +269,7 @@ describe("StatisticsPage", () => {
         expect(screen.getByRole("button", { name: /show/i })).toBeInTheDocument();
       });
 
-      await waitFor(() => {
-        expect(scrollIntoViewMock).toHaveBeenCalled();
-      });
+      expect(scrollIntoViewMock).not.toHaveBeenCalled();
     } finally {
       window.matchMedia = originalMatchMedia;
       Element.prototype.scrollIntoView = originalScrollIntoView;

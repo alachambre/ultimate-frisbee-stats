@@ -208,7 +208,7 @@ export default function StatisticsConfigurationPanel({
             ) : (
               <Grid container spacing={1.5}>
                 {sortedTeams.map((team: TeamWithPlayers) => (
-                  <Grid key={team.id} size={{ xs: 6, sm: 6, lg: 4 }}>
+                  <Grid key={team.id} size={{ xs: 12, sm: 6, lg: 4 }}>
                     <StatisticsSelectionCard
                       title={team.name}
                       subtitle={`${team.players.length} ${t("common:players")}`}
@@ -248,7 +248,7 @@ export default function StatisticsConfigurationPanel({
               ) : (
                 <Grid container spacing={1.5}>
                   {competitionsForTeam.map((competition: CompetitionWithTeam) => (
-                    <Grid key={competition.id} size={{ xs: 6, sm: 6, lg: 4 }}>
+                    <Grid key={competition.id} size={{ xs: 12, sm: 6, lg: 4 }}>
                         <StatisticsSelectionCard
                           title={competition.name}
                           subtitle={`${formatDate(competition.start_date, i18n.resolvedLanguage)} - ${formatDate(
@@ -276,7 +276,7 @@ export default function StatisticsConfigurationPanel({
                   ) : (
                     <Grid container spacing={1.5}>
                       {gamesForCompetition.map((game: GameWithScore) => (
-                        <Grid key={game.id} size={{ xs: 6, sm: 6, lg: 4 }}>
+                        <Grid key={game.id} size={{ xs: 12, sm: 6, lg: 4 }}>
                           <StatisticsSelectionCard
                             title={`${game.team_name} vs ${game.opponent_name}`}
                             subtitle={formatDate(game.date, i18n.resolvedLanguage)}
@@ -385,7 +385,7 @@ export default function StatisticsConfigurationPanel({
                         (player: Player) => {
                           const playerStats = playerStatsById.get(player.id);
                           return (
-                            <Grid key={player.id} size={{ xs: 6, sm: 6, lg: 4 }}>
+                            <Grid key={player.id} size={{ xs: 12, sm: 6, lg: 4 }}>
                               <StatisticsSelectionCard
                                 title={player.name}
                                 subtitle={
