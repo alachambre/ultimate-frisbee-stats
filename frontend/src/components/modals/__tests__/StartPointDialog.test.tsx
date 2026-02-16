@@ -2,30 +2,48 @@ import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import StartPointDialog from "../StartPointDialog";
-import { createTeam, createGame, createCompetition } from "../../../services";
+import {
+  createTeam,
+  createGame,
+  createCompetition,
+  getGame,
+  startPoint,
+  updatePoint,
+  finishPoint,
+  updateGame,
+  createHalftime,
+} from "../../../services";
 
 describe("StartPointDialog", () => {
-  it("renders with offense/defense toggle", () => {
+  it("renders with offense/defense toggle", async () => {
+    const { game } = await setupGame();
+
     render(
       <StartPointDialog
         open={true}
         onClose={vi.fn()}
-        gameId={1}
+        gameId={game.id}
       />
     );
 
     expect(screen.getByText("Create a new point")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /offense/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /defense/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /left endzone/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /right endzone/i })).toBeInTheDocument();
+    });
   });
 
   it("allows toggling between offense and defense", async () => {
     const user = userEvent.setup();
+    const { game } = await setupGame();
+
     render(
       <StartPointDialog
         open={true}
         onClose={vi.fn()}
-        gameId={1}
+        gameId={game.id}
       />
     );
 
@@ -49,11 +67,13 @@ describe("StartPointDialog", () => {
   it("calls onClose when cancel is clicked", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
+    const { game } = await setupGame();
+
     render(
       <StartPointDialog
         open={true}
         onClose={onClose}
-        gameId={1}
+        gameId={game.id}
       />
     );
 
@@ -78,10 +98,156 @@ describe("StartPointDialog", () => {
     );
 
     const createButton = screen.getByRole("button", { name: /create point/i });
+    await waitFor(() => {
+      expect(createButton).toBeEnabled();
+    });
     await user.click(createButton);
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalled();
+    });
+  });
+
+  it("stores Side A on the first point by default", async () => {
+    const user = userEvent.setup();
+    const { game } = await setupGame();
+
+    render(
+      <StartPointDialog
+        open={true}
+        onClose={vi.fn()}
+        gameId={game.id}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /left endzone/i })).toHaveAttribute("aria-pressed", "true");
+    });
+
+    const createButton = screen.getByRole("button", { name: /create point/i });
+    await waitFor(() => {
+      expect(createButton).toBeEnabled();
+    });
+    await user.click(createButton);
+
+    await waitFor(async () => {
+      const updatedGame = await getGame(game.id);
+      expect(updatedGame.points).toHaveLength(1);
+      expect(updatedGame.points[0].field_side).toBe("table_left");
+    });
+  });
+
+  it("allows selecting Side B for the first point", async () => {
+    const user = userEvent.setup();
+    const { game } = await setupGame();
+
+    render(
+      <StartPointDialog
+        open={true}
+        onClose={vi.fn()}
+        gameId={game.id}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /right endzone/i })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: /right endzone/i }));
+    const createButton = screen.getByRole("button", { name: /create point/i });
+    await waitFor(() => {
+      expect(createButton).toBeEnabled();
+    });
+    await user.click(createButton);
+
+    await waitFor(async () => {
+      const updatedGame = await getGame(game.id);
+      expect(updatedGame.points).toHaveLength(1);
+      expect(updatedGame.points[0].field_side).toBe("table_right");
+    });
+  });
+
+  it("auto-infers side for next point from previous completed point", async () => {
+    const user = userEvent.setup();
+    const { game } = await setupGame();
+
+    const firstPoint = await startPoint({
+      game_id: game.id,
+      starting_on_offense: true,
+      field_side: "table_left",
+    });
+    await updatePoint(firstPoint.id, { status: "running" });
+    await finishPoint(firstPoint.id, { won: true });
+
+    render(
+      <StartPointDialog
+        open={true}
+        onClose={vi.fn()}
+        gameId={game.id}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/field side will be set automatically/i)).toBeInTheDocument();
+    });
+    const createButton = screen.getByRole("button", { name: /create point/i });
+    await waitFor(() => {
+      expect(createButton).toBeEnabled();
+    });
+    await user.click(createButton);
+
+    await waitFor(async () => {
+      const updatedGame = await getGame(game.id);
+      expect(updatedGame.points).toHaveLength(2);
+      const createdPoint = updatedGame.points.find((point) => point.point_number === 2);
+      expect(createdPoint?.field_side).toBe("table_right");
+    });
+  });
+
+  it("requires side selection again after halftime and uses user choice", async () => {
+    const user = userEvent.setup();
+    const { game } = await setupGame();
+
+    const firstPoint = await startPoint({
+      game_id: game.id,
+      starting_on_offense: true,
+      field_side: "table_left",
+    });
+    await updatePoint(firstPoint.id, { status: "running" });
+    await finishPoint(firstPoint.id, { won: true });
+    await updateGame(game.id, { status: "started" });
+    await createHalftime({
+      game_id: game.id,
+      halftime_timestamp: new Date(Date.parse(firstPoint.created_at) + 1000).toISOString(),
+    });
+
+    render(
+      <StartPointDialog
+        open={true}
+        onClose={vi.fn()}
+        gameId={game.id}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /left endzone/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /right endzone/i })).toBeInTheDocument();
+      expect(screen.getByText(/new half/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/field side will be set automatically/i)).not.toBeInTheDocument();
+
+    // Override inferred side (which would be right side) and force left side manually
+    await user.click(screen.getByRole("button", { name: /left endzone/i }));
+    const createButton = screen.getByRole("button", { name: /create point/i });
+    await waitFor(() => {
+      expect(createButton).toBeEnabled();
+    });
+    await user.click(createButton);
+
+    await waitFor(async () => {
+      const updatedGame = await getGame(game.id);
+      expect(updatedGame.points).toHaveLength(2);
+      const createdPoint = updatedGame.points.find((point) => point.point_number === 2);
+      expect(createdPoint?.field_side).toBe("table_left");
     });
   });
 });

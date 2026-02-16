@@ -465,5 +465,35 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       });
     });
 
+    it("displays field side in chronology when field side is set", async () => {
+      const game = createMockGame();
+      const activePoint = {
+        ...createMockRunningPoint(),
+        field_side: "table_left" as const,
+      };
+
+      server.use(
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/point start in offense - left side/i)).toBeInTheDocument();
+      });
+    });
+
   });
 });

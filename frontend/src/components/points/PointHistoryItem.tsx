@@ -164,7 +164,7 @@ export default function PointHistoryItem({
           )}
         </Box>
 
-        {/* Strategy and Comments with styled boxes */}
+        {/* Strategy and comments with styled boxes */}
         {(point.strategy || point.comments) && (
           <Box mb={2}>
             {point.strategy && (
@@ -329,6 +329,7 @@ export default function PointHistoryItem({
               pointStatus={point.status}
               endDateTime={point.end_datetime}
               won={point.won}
+              fieldSide={point.field_side}
             />
           </AccordionDetails>
         </Accordion>

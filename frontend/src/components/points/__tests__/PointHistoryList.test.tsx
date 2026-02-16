@@ -7,14 +7,15 @@ import type { PointWithPlayers, Halftime } from "../../../types";
 const createPoint = (
   id: number,
   pointNumber: number,
-  startDatetime: string
+  startDatetime: string,
+  fieldSide: "table_left" | "table_right" | null = null
 ): PointWithPlayers => ({
   id,
   game_id: 1,
   point_number: pointNumber,
   starting_on_offense: true,
   won: true,
-  field_side: null,
+  field_side: fieldSide,
   pull: true,
   strategy_id: null,
   comments: null,
@@ -82,5 +83,26 @@ describe("PointHistoryList", () => {
     await user.click(screen.getByRole("button", { name: /delete halftime/i }));
 
     expect(onDeleteHalftime).toHaveBeenCalledWith(halftime);
+  });
+
+  it("renders field side in chronology when available", async () => {
+    const user = userEvent.setup();
+    const points: PointWithPlayers[] = [
+      createPoint(1, 1, "2024-01-01T10:00:00Z", "table_left"),
+    ];
+
+    render(
+      <PointHistoryList
+        points={points}
+        halftime={null}
+        onEditPoint={vi.fn()}
+        onDeletePoint={vi.fn()}
+        onDeleteHalftime={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: /show chronology/i }));
+
+    expect(await screen.findByText(/point start in offense - left side/i)).toBeInTheDocument();
   });
 });

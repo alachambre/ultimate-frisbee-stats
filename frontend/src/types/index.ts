@@ -7,6 +7,7 @@ export type CompetitionStatus = "ongoing" | "completed";
 export type GameStatus = "ready" | "started" | "ended";
 export type PointStatus = "ready" | "running" | "scored" | "completed";
 export type StrategyCategory = "offense" | "defense";
+export type FieldSide = "table_left" | "table_right";
 
 // ============================================
 // Team Types
@@ -193,7 +194,7 @@ export interface GameWithScore extends Game {
 
 export interface PointBase {
   starting_on_offense: boolean;
-  field_side?: string | null;
+  field_side?: FieldSide | null;
   pull?: boolean | null;
   comments?: string | null;
 }
@@ -214,7 +215,7 @@ export interface PointFinish {
 export interface PointUpdate {
   starting_on_offense?: boolean;
   won?: boolean | null;
-  field_side?: string | null;
+  field_side?: FieldSide | null;
   pull?: boolean | null;
   strategy_id?: number | null;
   comments?: string | null;

@@ -18,9 +18,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getStoppagesByPoint } from '../../services/stoppages';
 import { getTurnoversByPoint } from '../../services/turnovers';
-import type { Stoppage, TurnoverWithPlayer } from '../../types';
+import type { FieldSide, Stoppage, TurnoverWithPlayer } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
 import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
+import { normalizeFieldSide } from '../../utils/fieldSide';
 
 interface PointEventsHistoryProps {
   pointId: number;
@@ -31,6 +32,7 @@ interface PointEventsHistoryProps {
   pointStatus?: string;
   endDateTime?: string | null;
   won?: boolean | null;
+  fieldSide?: FieldSide | null;
 }
 
 // Union type for point events
@@ -53,8 +55,14 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime, strategy, pull, pointStatus, endDateTime, won }: PointEventsHistoryProps) => {
+export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime, strategy, pull, pointStatus, endDateTime, won, fieldSide }: PointEventsHistoryProps) => {
   const { t } = useTranslation('points');
+  const normalizedFieldSide = normalizeFieldSide(fieldSide);
+  const fieldSideLabel = normalizedFieldSide
+    ? normalizedFieldSide === 'table_left'
+      ? t('dialog.start.sideA')
+      : t('dialog.start.sideB')
+    : null;
 
   const { data: stoppages = [], isLoading: stoppagesLoading, error: stoppagesError } = useQuery({
     queryKey: queryKeys.stoppages(pointId),
@@ -262,6 +270,7 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                         <PlayArrowIcon fontSize="small" color="primary" />
                         <Typography variant="body2" fontWeight="medium">
                           {t('pointStart')} {startingOnOffense ? t('tracker.inOffense') : t('tracker.inDefense')}
+                          {fieldSideLabel ? ` - ${fieldSideLabel}` : ''}
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary" fontWeight="medium">

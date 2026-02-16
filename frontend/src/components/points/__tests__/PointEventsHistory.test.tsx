@@ -127,6 +127,35 @@ describe("PointEventsHistory", () => {
       });
     });
 
+    it("appends field side to point start event when available", async () => {
+      server.use(
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <PointEventsHistory
+          pointId={1}
+          startingOnOffense={false}
+          pointStartTime="2024-01-01T10:00:00Z"
+          strategy={null}
+          pull={null}
+          pointStatus="running"
+          endDateTime={null}
+          won={null}
+          fieldSide="table_left"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/point start in defense - left side/i)).toBeInTheDocument();
+      });
+    });
+
     it("renders strategy information when provided", async () => {
       server.use(
         http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {

@@ -333,6 +333,7 @@ export default function LivePointTracker({
                 pointStatus={currentPoint.status}
                 endDateTime={currentPoint.end_datetime}
                 won={currentPoint.won}
+                fieldSide={currentPoint.field_side}
               />
             )}
           </Box>
