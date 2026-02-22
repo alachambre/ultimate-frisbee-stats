@@ -20,6 +20,8 @@ export default function CircularStat({
   tooltip,
 }: CircularStatProps) {
   const displayPercentage = Math.round(percentage * 100);
+  const hasNoData = total !== undefined && total === 0;
+  const centerValueLabel = hasNoData ? "—" : `${displayPercentage}%`;
 
   return (
     <Box sx={{ textAlign: "center" }}>
@@ -44,7 +46,7 @@ export default function CircularStat({
         {/* Progress circle */}
         <CircularProgress
           variant="determinate"
-          value={displayPercentage}
+          value={hasNoData ? 0 : displayPercentage}
           size={140}
           thickness={4}
           sx={{
@@ -73,7 +75,7 @@ export default function CircularStat({
             fontWeight="bold"
             sx={{ color: typeof color === "function" ? color : color }}
           >
-            {displayPercentage}%
+            {centerValueLabel}
           </Typography>
           {count !== undefined && total !== undefined && (
             <Typography variant="body2" color="text.secondary">
