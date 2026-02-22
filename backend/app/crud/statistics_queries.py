@@ -149,3 +149,23 @@ def get_strategies_by_ids(db: Session, strategy_ids: List[int]) -> Dict[int, Str
         return {}
     strategies = db.query(Strategy).filter(Strategy.id.in_(list(set(strategy_ids)))).all()
     return {strategy.id: strategy for strategy in strategies}
+
+
+def filter_points_by_player_ids(points: List[Point], required_player_ids: Optional[List[int]]) -> List[Point]:
+    """
+    Keep only points where all required players were on the point.
+    """
+    if not required_player_ids:
+        return points
+
+    required_ids = set(required_player_ids)
+    if not required_ids:
+        return points
+
+    filtered_points: List[Point] = []
+    for point in points:
+        point_player_ids = {player.id for player in point.players}
+        if required_ids.issubset(point_player_ids):
+            filtered_points.append(point)
+
+    return filtered_points

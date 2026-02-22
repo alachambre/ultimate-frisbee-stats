@@ -14,6 +14,7 @@ from app.crud.statistics_calculations import (
     build_team_team_stats,
 )
 from app.crud.statistics_queries import (
+    filter_points_by_player_ids,
     get_competition,
     get_competition_players,
     get_completed_points,
@@ -36,12 +37,14 @@ def _fetch_scope_completed_points(
     points_fetcher: Callable[..., List],
     *,
     require_timestamps: bool = False,
+    required_player_ids: Optional[List[int]] = None,
 ) -> Optional[List]:
     """Return completed points for a scope or None if the scope does not exist."""
     if not scope_fetcher(db, scope_id):
         return None
 
-    return points_fetcher(db, scope_id, require_timestamps=require_timestamps)
+    points = points_fetcher(db, scope_id, require_timestamps=require_timestamps)
+    return filter_points_by_player_ids(points, required_player_ids)
 
 
 def _get_point_ids(points: List) -> List[int]:
@@ -64,6 +67,7 @@ def _build_scope_player_stats(
     players_fetcher: Callable[[Session, int], List],
     *,
     include_players_from_points: bool = False,
+    required_player_ids: Optional[List[int]] = None,
 ) -> Optional[List[Dict]]:
     completed_points = _fetch_scope_completed_points(
         db,
@@ -71,6 +75,7 @@ def _build_scope_player_stats(
         scope_fetcher,
         points_fetcher,
         require_timestamps=True,
+        required_player_ids=required_player_ids,
     )
     if completed_points is None:
         return None
@@ -105,12 +110,15 @@ def _build_scope_team_stats(
     scope_fetcher: Callable[[Session, int], object],
     points_fetcher: Callable[..., List],
     calculator: Callable[[int, List, Dict[int, List]], Dict],
+    *,
+    required_player_ids: Optional[List[int]] = None,
 ) -> Optional[Dict]:
     completed_points = _fetch_scope_completed_points(
         db,
         scope_id,
         scope_fetcher,
         points_fetcher,
+        required_player_ids=required_player_ids,
     )
     if completed_points is None:
         return None
@@ -125,6 +133,8 @@ def _build_scope_strategy_stats(
     scope_key: str,
     scope_fetcher: Callable[[Session, int], object],
     points_fetcher: Callable[..., List],
+    *,
+    required_player_ids: Optional[List[int]] = None,
 ) -> Optional[Dict]:
     completed_points = _fetch_scope_completed_points(
         db,
@@ -132,6 +142,7 @@ def _build_scope_strategy_stats(
         scope_fetcher,
         points_fetcher,
         require_timestamps=True,
+        required_player_ids=required_player_ids,
     )
     if completed_points is None:
         return None
@@ -153,7 +164,11 @@ def _build_scope_strategy_stats(
     }
 
 
-def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
+def get_live_game_player_stats(
+    db: Session,
+    game_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> List[Dict]:
     """
     Get live statistics for all players in a game.
     Only considers completed points.
@@ -173,11 +188,16 @@ def get_live_game_player_stats(db: Session, game_id: int) -> List[Dict]:
         get_game,
         get_completed_points,
         get_game_players,
+        required_player_ids=required_player_ids,
     )
     return player_stats or []
 
 
-def get_competition_player_stats(db: Session, competition_id: int) -> Optional[List[Dict]]:
+def get_competition_player_stats(
+    db: Session,
+    competition_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[List[Dict]]:
     """
     Get aggregated player statistics for a competition.
     Only considers completed points with valid timestamps from games in this competition.
@@ -191,10 +211,15 @@ def get_competition_player_stats(db: Session, competition_id: int) -> Optional[L
         get_completed_points_for_competition,
         get_competition_players,
         include_players_from_points=True,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_team_player_stats(db: Session, team_id: int) -> Optional[List[Dict]]:
+def get_team_player_stats(
+    db: Session,
+    team_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[List[Dict]]:
     """
     Get aggregated player statistics for a team across all competitions.
     Only considers completed points with valid timestamps.
@@ -207,10 +232,15 @@ def get_team_player_stats(db: Session, team_id: int) -> Optional[List[Dict]]:
         get_team,
         get_completed_points_for_team,
         get_team_players,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
+def get_game_team_stats(
+    db: Session,
+    game_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
     """
     Get team statistics for a game.
     Only considers completed points.
@@ -229,10 +259,15 @@ def get_game_team_stats(db: Session, game_id: int) -> Optional[Dict]:
         get_game,
         get_completed_points,
         build_game_team_stats,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_competition_team_stats(db: Session, competition_id: int) -> Optional[Dict]:
+def get_competition_team_stats(
+    db: Session,
+    competition_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
     """
     Get aggregated team statistics for an entire competition.
     Only considers completed points from all games in the competition.
@@ -245,10 +280,15 @@ def get_competition_team_stats(db: Session, competition_id: int) -> Optional[Dic
         get_competition,
         get_completed_points_for_competition,
         build_competition_team_stats,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_team_team_stats(db: Session, team_id: int) -> Optional[Dict]:
+def get_team_team_stats(
+    db: Session,
+    team_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
     """
     Get aggregated team statistics across all competitions for a team.
     Only considers completed points from all games tied to the team.
@@ -261,10 +301,15 @@ def get_team_team_stats(db: Session, team_id: int) -> Optional[Dict]:
         get_team,
         get_completed_points_for_team,
         build_team_team_stats,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_game_strategy_stats(db: Session, game_id: int) -> Optional[Dict]:
+def get_game_strategy_stats(
+    db: Session,
+    game_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
     """
     Get strategy statistics for a game.
     Only considers completed points with assigned strategies.
@@ -282,10 +327,15 @@ def get_game_strategy_stats(db: Session, game_id: int) -> Optional[Dict]:
         "game_id",
         get_game,
         get_completed_points,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_competition_strategy_stats(db: Session, competition_id: int) -> Optional[Dict]:
+def get_competition_strategy_stats(
+    db: Session,
+    competition_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
     """
     Get strategy statistics for a competition.
     Only considers completed points with assigned strategies and valid timestamps.
@@ -298,10 +348,15 @@ def get_competition_strategy_stats(db: Session, competition_id: int) -> Optional
         "competition_id",
         get_competition,
         get_completed_points_for_competition,
+        required_player_ids=required_player_ids,
     )
 
 
-def get_team_strategy_stats(db: Session, team_id: int) -> Optional[Dict]:
+def get_team_strategy_stats(
+    db: Session,
+    team_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
     """
     Get strategy statistics for a team across all competitions.
     Only considers completed points with assigned strategies and valid timestamps.
@@ -314,4 +369,5 @@ def get_team_strategy_stats(db: Session, team_id: int) -> Optional[Dict]:
         "team_id",
         get_team,
         get_completed_points_for_team,
+        required_player_ids=required_player_ids,
     )

@@ -55,7 +55,8 @@
     "selectGame": "Sélectionner un match",
     "selectPlayer": "Sélectionner un joueur",
     "selectTeamPrompt": "Sélectionnez une équipe pour commencer à explorer les statistiques.",
-    "choosePlayerPrompt": "Choisissez un joueur pour afficher ses statistiques individuelles.",
+    "choosePlayerPrompt": "Choisissez un ou plusieurs joueurs pour afficher leurs statistiques partagées.",
+    "cohortFilterActive": "Filtre joueurs actif : {{count}} sélectionné(s)",
     "statisticsTabsAriaLabel": "Sections des statistiques de compétition",
     "noCompetitions": "Aucune compétition disponible pour cette équipe.",
     "noGames": "Aucun match disponible pour cette compétition.",
@@ -132,7 +133,9 @@
     "context": "Contexte",
     "team": "Équipe",
     "competition": "Compétition",
-    "game": "Match"
+    "game": "Match",
+    "cohortNames": "Joueurs : {{names}}",
+    "cohortExplanation": "Ces statistiques sont calculées à partir des points où tous les joueurs sélectionnés étaient ensemble sur le point."
   },
   "tooltips": {
     "cleanPointRate": "Pourcentage de points offensifs gagnés sans nos turnovers (sur tous les points offensifs joués)",

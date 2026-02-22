@@ -782,6 +782,41 @@ def test_get_team_team_statistics_not_found(client: TestClient):
     assert response.json()["detail"] == "Team not found"
 
 
+def test_get_team_team_statistics_filters_points_by_selected_players(client: TestClient, db_session: Session):
+    """Team stats should only include points where all selected players played together."""
+    from tests.builders import GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(8)
+        .build()
+    )
+    selected_ids = [scenario.players[0].id, scenario.players[1].id]
+
+    PointBuilder(db_session, scenario.game.id, [player.id for player in scenario.players[:7]]) \
+        .number(1).offense().won().complete()
+    PointBuilder(db_session, scenario.game.id, [scenario.players[0].id] + [player.id for player in scenario.players[2:]]) \
+        .number(2).offense().lost().complete()
+    PointBuilder(db_session, scenario.game.id, [scenario.players[0].id, scenario.players[1].id] + [player.id for player in scenario.players[3:]]) \
+        .number(3).defense().won().complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/team",
+        params=[("player_ids", selected_ids[0]), ("player_ids", selected_ids[1])],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_completed_points"] == 2
+    assert data["offense"]["points_started"] == 1
+    assert data["offense"]["points_won"] == 1
+    assert data["defense"]["points_started"] == 1
+    assert data["defense"]["points_won"] == 1
+
+
 # Competition and Team Player Statistics API Tests
 
 
@@ -874,6 +909,54 @@ def test_get_team_player_statistics_not_found(client: TestClient):
     response = client.get("/statistics/teams/99999/players")
     assert response.status_code == 404
     assert response.json()["detail"] == "Team not found"
+
+
+def test_get_team_player_statistics_filters_points_by_selected_players(client: TestClient, db_session: Session):
+    """Player stats should be computed from points where all selected players were present."""
+    from tests.builders import GameScenarioBuilder, PlayerBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(8)
+        .build()
+    )
+    selected_ids = [scenario.players[0].id, scenario.players[1].id]
+
+    PointBuilder(db_session, scenario.game.id, [player.id for player in scenario.players[:7]]) \
+        .number(1).offense().won().complete()
+    PointBuilder(db_session, scenario.game.id, [scenario.players[0].id] + [player.id for player in scenario.players[2:]]) \
+        .number(2).offense().lost().complete()
+    PointBuilder(db_session, scenario.game.id, [scenario.players[0].id, scenario.players[1].id] + [player.id for player in scenario.players[3:]]) \
+        .number(3).defense().won().complete()
+
+    bench_player = (
+        PlayerBuilder(db_session, scenario.team)
+        .with_name("Bench Player")
+        .with_number(99)
+        .male()
+        .build()
+    )
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/players",
+        params=[("player_ids", selected_ids[0]), ("player_ids", selected_ids[1])],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    selected_stats = [player for player in data if player["player_id"] in selected_ids]
+    assert len(selected_stats) == 2
+    assert all(player["points_played"] == 2 for player in selected_stats)
+
+    filtered_out_player = next(player for player in data if player["player_id"] == scenario.players[7].id)
+    assert filtered_out_player["points_played"] == 1
+
+    bench_stats = next(player for player in data if player["player_id"] == bench_player.id)
+    assert bench_stats["points_played"] == 0
 
 
 # Competition and Team Strategy Statistics API Tests
@@ -983,6 +1066,48 @@ def test_get_team_strategy_statistics_not_found(client: TestClient):
     response = client.get("/statistics/teams/99999/strategies")
     assert response.status_code == 404
     assert response.json()["detail"] == "Team not found"
+
+
+def test_get_team_strategy_statistics_filters_points_by_selected_players(
+    client: TestClient,
+    db_session: Session,
+):
+    """Strategy stats should include only points where selected players were together."""
+    from tests.builders import GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(8)
+        .with_offense_strategy("Vertical Stack")
+        .with_defense_strategy("Zone")
+        .build()
+    )
+
+    selected_ids = [scenario.players[0].id, scenario.players[1].id]
+    offense_strategy_id = scenario.offense_strategies[0].id
+    defense_strategy_id = scenario.defense_strategies[0].id
+
+    PointBuilder(db_session, scenario.game.id, [player.id for player in scenario.players[:7]]) \
+        .number(1).offense().with_strategy(offense_strategy_id).won().complete()
+    PointBuilder(db_session, scenario.game.id, [scenario.players[0].id] + [player.id for player in scenario.players[2:]]) \
+        .number(2).offense().with_strategy(offense_strategy_id).lost().complete()
+    PointBuilder(db_session, scenario.game.id, [scenario.players[0].id, scenario.players[1].id] + [player.id for player in scenario.players[3:]]) \
+        .number(3).defense().with_strategy(defense_strategy_id).won().complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/strategies",
+        params=[("player_ids", selected_ids[0]), ("player_ids", selected_ids[1])],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["offense_strategies"]) == 1
+    assert len(data["defense_strategies"]) == 1
+    assert data["offense_strategies"][0]["points_played"] == 1
+    assert data["defense_strategies"][0]["points_played"] == 1
 
 
 # Strategy Statistics API Tests

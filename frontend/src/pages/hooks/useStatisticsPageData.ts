@@ -28,7 +28,7 @@ interface StatisticsSelection {
   mode: StatisticsMode;
   competitionId?: number;
   gameId?: number;
-  playerId?: number;
+  playerIds: number[];
 }
 
 const STICKY_TEAM_KEY = "statistics:selectedTeamId";
@@ -37,6 +37,21 @@ function parseOptionalId(value: string | null): number | undefined {
   if (!value) return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function normalizePlayerIds(playerIds: number[]): number[] {
+  return Array.from(new Set(playerIds)).sort((a, b) => a - b);
+}
+
+function parsePlayerIds(value: string | null): number[] {
+  if (!value) return [];
+
+  return normalizePlayerIds(
+    value
+      .split(",")
+      .map((entry) => Number(entry.trim()))
+      .filter((entry) => Number.isFinite(entry))
+  );
 }
 
 function buildSearchParams(selection: StatisticsSelection): URLSearchParams {
@@ -58,8 +73,13 @@ function buildSearchParams(selection: StatisticsSelection): URLSearchParams {
     }
   }
 
-  if (selection.mode === "player" && selection.playerId !== undefined) {
-    params.set("playerId", String(selection.playerId));
+  if (selection.playerIds.length > 0) {
+    params.set("playerIds", selection.playerIds.join(","));
+
+    // Keep legacy deep links valid for a single selected player.
+    if (selection.playerIds.length === 1) {
+      params.set("playerId", String(selection.playerIds[0]));
+    }
   }
 
   return params;
@@ -70,24 +90,30 @@ export function useStatisticsPageData() {
   const [isExporting, setIsExporting] = useState(false);
 
   const rawMode = searchParams.get("mode");
-  const rawPlayerId = parseOptionalId(searchParams.get("playerId"));
+  const rawPlayerIds = parsePlayerIds(searchParams.get("playerIds"));
+  const legacyPlayerId = parseOptionalId(searchParams.get("playerId"));
+  const selectedPlayerIds =
+    rawPlayerIds.length > 0
+      ? rawPlayerIds
+      : legacyPlayerId !== undefined
+        ? [legacyPlayerId]
+        : [];
 
   const selection: StatisticsSelection = {
     teamId: parseOptionalId(searchParams.get("teamId")),
-    mode:
-      rawMode === "player" || (rawMode == null && rawPlayerId !== undefined)
-        ? "player"
-        : "competition",
+    mode: rawMode === "player" || (rawMode == null && selectedPlayerIds.length > 0)
+      ? "player"
+      : "competition",
     competitionId: parseOptionalId(searchParams.get("competitionId")),
     gameId: parseOptionalId(searchParams.get("gameId")),
-    playerId: rawPlayerId,
+    playerIds: selectedPlayerIds,
   };
 
   const mode: StatisticsMode = selection.mode;
   const teamId = selection.teamId;
   const competitionId = mode === "competition" ? selection.competitionId : undefined;
   const gameId = mode === "competition" ? selection.gameId : undefined;
-  const playerId = mode === "player" ? selection.playerId : undefined;
+  const playerIds = selection.playerIds;
 
   const updateSelection = useCallback(
     (updates: Partial<StatisticsSelection>, options?: { replace?: boolean }) => {
@@ -96,13 +122,11 @@ export function useStatisticsPageData() {
         mode,
         competitionId,
         gameId,
-        playerId,
+        playerIds,
         ...updates,
       };
 
-      if (merged.mode === "competition") {
-        merged.playerId = undefined;
-      }
+      merged.playerIds = normalizePlayerIds(merged.playerIds ?? []);
 
       if (merged.mode === "player") {
         merged.competitionId = undefined;
@@ -112,14 +136,14 @@ export function useStatisticsPageData() {
       if (merged.teamId === undefined) {
         merged.competitionId = undefined;
         merged.gameId = undefined;
-        merged.playerId = undefined;
+        merged.playerIds = [];
       }
 
       setSearchParams(buildSearchParams(merged), {
         replace: options?.replace,
       });
     },
-    [competitionId, gameId, mode, playerId, setSearchParams, teamId]
+    [competitionId, gameId, mode, playerIds, setSearchParams, teamId]
   );
 
   const {
@@ -161,22 +185,22 @@ export function useStatisticsPageData() {
     if (teamId === undefined) return undefined;
 
     if (mode === "player") {
-      return playerId !== undefined ? "player" : undefined;
+      return playerIds.length > 0 ? "player" : undefined;
     }
 
     if (gameId !== undefined) return "game";
     if (competitionId !== undefined) return "competition";
 
     return "team";
-  }, [competitionId, gameId, mode, playerId, teamId]);
+  }, [competitionId, gameId, mode, playerIds.length, teamId]);
 
   const {
     data: teamStats,
     isLoading: isLoadingTeamStats,
     error: teamStatsError,
   } = useQuery({
-    queryKey: queryKeys.teamTeamStatistics(teamId ?? 0),
-    queryFn: () => getTeamTeamStatistics(teamId as number),
+    queryKey: queryKeys.teamTeamStatistics(teamId ?? 0, playerIds),
+    queryFn: () => getTeamTeamStatistics(teamId as number, playerIds),
     enabled: activeScope === "team" && teamId !== undefined,
   });
 
@@ -185,8 +209,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingTeamPlayerStats,
     error: teamPlayerStatsError,
   } = useQuery({
-    queryKey: queryKeys.teamPlayerStatistics(teamId ?? 0),
-    queryFn: () => getTeamPlayerStatistics(teamId as number),
+    queryKey: queryKeys.teamPlayerStatistics(teamId ?? 0, playerIds),
+    queryFn: () => getTeamPlayerStatistics(teamId as number, playerIds),
     enabled:
       teamId !== undefined &&
       (mode === "player" || activeScope === "team" || activeScope === "player"),
@@ -197,8 +221,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingTeamStrategyStats,
     error: teamStrategyStatsError,
   } = useQuery({
-    queryKey: queryKeys.teamStrategyStatistics(teamId ?? 0),
-    queryFn: () => getTeamStrategyStatistics(teamId as number),
+    queryKey: queryKeys.teamStrategyStatistics(teamId ?? 0, playerIds),
+    queryFn: () => getTeamStrategyStatistics(teamId as number, playerIds),
     enabled: activeScope === "team" && teamId !== undefined,
   });
 
@@ -207,8 +231,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingCompetitionTeamStats,
     error: competitionTeamStatsError,
   } = useQuery({
-    queryKey: queryKeys.competitionTeamStatistics(competitionId ?? 0),
-    queryFn: () => getCompetitionTeamStatistics(competitionId as number),
+    queryKey: queryKeys.competitionTeamStatistics(competitionId ?? 0, playerIds),
+    queryFn: () => getCompetitionTeamStatistics(competitionId as number, playerIds),
     enabled: activeScope === "competition" && competitionId !== undefined,
   });
 
@@ -217,8 +241,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingCompetitionPlayerStats,
     error: competitionPlayerStatsError,
   } = useQuery({
-    queryKey: queryKeys.competitionPlayerStatistics(competitionId ?? 0),
-    queryFn: () => getCompetitionPlayerStatistics(competitionId as number),
+    queryKey: queryKeys.competitionPlayerStatistics(competitionId ?? 0, playerIds),
+    queryFn: () => getCompetitionPlayerStatistics(competitionId as number, playerIds),
     enabled: activeScope === "competition" && competitionId !== undefined,
   });
 
@@ -227,8 +251,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingCompetitionStrategyStats,
     error: competitionStrategyStatsError,
   } = useQuery({
-    queryKey: queryKeys.competitionStrategyStatistics(competitionId ?? 0),
-    queryFn: () => getCompetitionStrategyStatistics(competitionId as number),
+    queryKey: queryKeys.competitionStrategyStatistics(competitionId ?? 0, playerIds),
+    queryFn: () => getCompetitionStrategyStatistics(competitionId as number, playerIds),
     enabled: activeScope === "competition" && competitionId !== undefined,
   });
 
@@ -237,8 +261,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingGameTeamStats,
     error: gameTeamStatsError,
   } = useQuery({
-    queryKey: queryKeys.gameTeamStatistics(gameId ?? 0),
-    queryFn: () => getGameTeamStatistics(gameId as number),
+    queryKey: queryKeys.gameTeamStatistics(gameId ?? 0, playerIds),
+    queryFn: () => getGameTeamStatistics(gameId as number, playerIds),
     enabled: activeScope === "game" && gameId !== undefined,
   });
 
@@ -247,8 +271,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingGamePlayerStats,
     error: gamePlayerStatsError,
   } = useQuery({
-    queryKey: queryKeys.liveStats(gameId ?? 0),
-    queryFn: () => getLiveGameStatistics(gameId as number),
+    queryKey: queryKeys.liveStats(gameId ?? 0, playerIds),
+    queryFn: () => getLiveGameStatistics(gameId as number, playerIds),
     enabled: activeScope === "game" && gameId !== undefined,
   });
 
@@ -257,8 +281,8 @@ export function useStatisticsPageData() {
     isLoading: isLoadingGameStrategyStats,
     error: gameStrategyStatsError,
   } = useQuery({
-    queryKey: queryKeys.gameStrategyStatistics(gameId ?? 0),
-    queryFn: () => getGameStrategyStatistics(gameId as number),
+    queryKey: queryKeys.gameStrategyStatistics(gameId ?? 0, playerIds),
+    queryFn: () => getGameStrategyStatistics(gameId as number, playerIds),
     enabled: activeScope === "game" && gameId !== undefined,
   });
 
@@ -308,7 +332,12 @@ export function useStatisticsPageData() {
     () => (selectedTeam?.players ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)),
     [selectedTeam?.players]
   );
-  const selectedPlayer = playersForTeam.find((player) => player.id === playerId);
+  const selectedPlayerIdsSet = useMemo(() => new Set(playerIds), [playerIds]);
+  const selectedPlayers = useMemo(
+    () => playersForTeam.filter((player) => selectedPlayerIdsSet.has(player.id)),
+    [playersForTeam, selectedPlayerIdsSet]
+  );
+  const selectedPlayer = selectedPlayers.length === 1 ? selectedPlayers[0] : undefined;
 
   const playerStatsById = useMemo(() => {
     const map = new Map<number, PlayerGameStats>();
@@ -318,9 +347,14 @@ export function useStatisticsPageData() {
     return map;
   }, [teamPlayerStats]);
 
-  const selectedPlayerStats = teamPlayerStats?.find(
-    (stats) => stats.player_id === playerId
-  );
+  const selectedCohortStats = useMemo(() => {
+    if (!teamPlayerStats || playerIds.length === 0) {
+      return undefined;
+    }
+
+    const anchorPlayerId = playerIds[0];
+    return teamPlayerStats.find((stats) => stats.player_id === anchorPlayerId);
+  }, [teamPlayerStats, playerIds]);
 
   const controlsError = competitionsError || gamesError;
   const controlsLoading =
@@ -350,7 +384,8 @@ export function useStatisticsPageData() {
     (activeScope === "player" && teamPlayerStatsError);
 
   const canExport =
-    activeScope === "team" || activeScope === "competition" || activeScope === "game";
+    (activeScope === "team" || activeScope === "competition" || activeScope === "game") &&
+    playerIds.length === 0;
 
   const competitionFlowDisabled =
     teamId !== undefined && !controlsLoading && competitionsForTeam.length === 0;
@@ -370,12 +405,12 @@ export function useStatisticsPageData() {
       if (selectedGame) {
         items.push(`${selectedGame.team_name} vs ${selectedGame.opponent_name}`);
       }
-    } else if (selectedPlayer) {
-      items.push(selectedPlayer.name);
+    } else if (selectedPlayers.length === 1) {
+      items.push(selectedPlayers[0].name);
     }
 
     return items;
-  }, [mode, selectedCompetition, selectedGame, selectedPlayer, selectedTeam]);
+  }, [mode, selectedCompetition, selectedGame, selectedPlayers, selectedTeam]);
 
   useEffect(() => {
     if (!teams || teamId !== undefined) {
@@ -420,7 +455,7 @@ export function useStatisticsPageData() {
       updateSelection(
         {
           mode: "competition",
-          playerId: undefined,
+          playerIds: [],
         },
         { replace: true }
       );
@@ -464,7 +499,7 @@ export function useStatisticsPageData() {
     teamId,
     competitionId,
     gameId,
-    playerId,
+    playerIds,
     activeScope,
     updateSelection,
     isExporting,
@@ -482,8 +517,9 @@ export function useStatisticsPageData() {
     gamesForCompetition,
     selectedGame,
     playersForTeam,
+    selectedPlayers,
     selectedPlayer,
-    selectedPlayerStats,
+    selectedCohortStats,
     playerStatsById,
     statisticsPathItems,
 

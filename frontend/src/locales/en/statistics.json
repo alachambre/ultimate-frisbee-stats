@@ -55,7 +55,8 @@
     "selectGame": "Select game",
     "selectPlayer": "Select player",
     "selectTeamPrompt": "Select a team to start exploring statistics.",
-    "choosePlayerPrompt": "Choose a player to display individual statistics.",
+    "choosePlayerPrompt": "Choose one or more players to display shared statistics.",
+    "cohortFilterActive": "Active player filter: {{count}} selected",
     "statisticsTabsAriaLabel": "Competition statistics sections",
     "noCompetitions": "No competitions available for this team yet.",
     "noGames": "No games available for this competition yet.",
@@ -132,7 +133,9 @@
     "context": "Context",
     "team": "Team",
     "competition": "Competition",
-    "game": "Game"
+    "game": "Game",
+    "cohortNames": "Players: {{names}}",
+    "cohortExplanation": "These statistics are computed from points where all selected players were on the line together."
   },
   "tooltips": {
     "cleanPointRate": "Percentage of offensive points won without our turnovers (over all offensive points played)",

@@ -20,7 +20,7 @@ export default function StatisticsPage() {
     teamId,
     competitionId,
     gameId,
-    playerId,
+    playerIds,
     activeScope,
     updateSelection,
     isExporting,
@@ -38,8 +38,9 @@ export default function StatisticsPage() {
     gamesForCompetition,
     selectedGame,
     playersForTeam,
+    selectedPlayers,
     selectedPlayer,
-    selectedPlayerStats,
+    selectedCohortStats,
     playerStatsById,
     statisticsPathItems,
 
@@ -80,6 +81,9 @@ export default function StatisticsPage() {
 
   const teamScopeOverview = buildScopeOverview(teamGames);
   const competitionScopeOverview = buildScopeOverview(gamesForCompetition);
+  const cohortDisplayName =
+    selectedPlayer?.name ??
+    t("statistics:workflow.playersCount", { count: selectedPlayers.length });
 
   const isMobileViewport =
     typeof window !== "undefined" &&
@@ -113,7 +117,7 @@ export default function StatisticsPage() {
         teamId={teamId}
         competitionId={competitionId}
         gameId={gameId}
-        playerId={playerId}
+        selectedPlayerIds={playerIds}
         sortedTeams={sortedTeams}
         competitionsForTeam={competitionsForTeam}
         gamesForCompetition={gamesForCompetition}
@@ -127,7 +131,6 @@ export default function StatisticsPage() {
           if (nextMode === "competition") {
             updateSelection({
               mode: "competition",
-              playerId: undefined,
             });
             return;
           }
@@ -143,7 +146,7 @@ export default function StatisticsPage() {
             teamId: nextTeamId,
             competitionId: undefined,
             gameId: undefined,
-            playerId: undefined,
+            playerIds: [],
           });
         }}
         onSelectCompetition={(nextCompetitionId) => {
@@ -155,13 +158,17 @@ export default function StatisticsPage() {
         onSelectGame={(nextGameId) => {
           updateSelection({ gameId: nextGameId });
         }}
-        onSelectPlayer={(nextPlayerId) => {
-          updateSelection({ playerId: nextPlayerId });
+        onTogglePlayer={(nextPlayerId) => {
+          const nextPlayerIds = playerIds.includes(nextPlayerId)
+            ? playerIds.filter((playerId) => playerId !== nextPlayerId)
+            : [...playerIds, nextPlayerId];
+          updateSelection({ playerIds: nextPlayerIds });
 
-          if (mode === "player" && isMobileViewport) {
+          if (mode === "player" && isMobileViewport && nextPlayerIds.length > 0) {
             setIsConfigurationExpanded(false);
           }
         }}
+        onClearPlayersSelection={() => updateSelection({ playerIds: [] })}
       />
 
       <Box>
@@ -359,7 +366,7 @@ export default function StatisticsPage() {
           !isScopeLoading &&
           !scopeError &&
           mode === "player" &&
-          playerId === undefined && (
+          playerIds.length === 0 && (
             <Alert severity="info">{t("statistics:workflow.choosePlayerPrompt")}</Alert>
           )}
 
@@ -369,7 +376,7 @@ export default function StatisticsPage() {
           !isScopeLoading &&
           !scopeError &&
           activeScope === "player" &&
-          !selectedPlayer && (
+          selectedPlayers.length !== playerIds.length && (
             <Alert severity="info">{t("statistics:workflow.playerNotFound")}</Alert>
           )}
 
@@ -379,8 +386,9 @@ export default function StatisticsPage() {
           !isScopeLoading &&
           !scopeError &&
           activeScope === "player" &&
-          selectedPlayer &&
-          !selectedPlayerStats && (
+          playerIds.length > 0 &&
+          selectedPlayers.length === playerIds.length &&
+          !selectedCohortStats && (
             <Alert severity="info">{t("statistics:playerStats.noDataForScope")}</Alert>
           )}
 
@@ -390,8 +398,10 @@ export default function StatisticsPage() {
           !isScopeLoading &&
           !scopeError &&
           activeScope === "player" &&
-          selectedPlayer &&
-          selectedPlayerStats && (
+          playerIds.length > 0 &&
+          selectedPlayers.length === playerIds.length &&
+          selectedCohortStats &&
+          selectedPlayers.length > 0 && (
             <StatisticsSectionContainer
               pathItems={statisticsPathItems}
               canExport={canExport}
@@ -399,12 +409,13 @@ export default function StatisticsPage() {
               onExport={handleExportCSV}
             >
               <PlayerScopeStatistics
-                playerName={selectedPlayer.name}
-                playerNumber={selectedPlayer.number}
+                playerName={cohortDisplayName}
+                playerNumber={selectedPlayer?.number}
                 teamName={selectedTeam?.name}
                 scopeLabel={t("statistics:playerScope.team")}
                 contextLabel={selectedTeam?.name}
-                stats={selectedPlayerStats}
+                cohortPlayerNames={selectedPlayers.map((player) => player.name)}
+                stats={selectedCohortStats}
               />
             </StatisticsSectionContainer>
           )}

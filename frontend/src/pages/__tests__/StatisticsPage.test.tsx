@@ -275,4 +275,43 @@ describe("StatisticsPage", () => {
       Element.prototype.scrollIntoView = originalScrollIntoView;
     }
   });
+
+  it("supports selecting multiple players for shared cohort statistics", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const player1 = await createPlayer({
+      team_id: team.id,
+      name: "Bob",
+      number: 10,
+      gender: "M",
+    });
+    const player2 = await createPlayer({
+      team_id: team.id,
+      name: "Tom",
+      number: 11,
+      gender: "M",
+    });
+
+    window.history.pushState({}, "", `/statistics?teamId=${team.id}&mode=player`);
+
+    render(<StatisticsPage />);
+
+    const player1Card = await screen.findByRole("button", { name: "Bob" });
+    const player2Card = await screen.findByRole("button", { name: "Tom" });
+
+    await user.click(player1Card);
+    await user.click(player2Card);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("heading", { name: /2 player/i }).length).toBeGreaterThan(0);
+    });
+
+    expect(screen.getByText("Players: Bob, Tom")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "These statistics are computed from points where all selected players were on the line together."
+      )
+    ).toBeInTheDocument();
+    expect(window.location.search).toContain(`playerIds=${player1.id}%2C${player2.id}`);
+  });
 });

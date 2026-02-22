@@ -11,6 +11,28 @@ import type {
 
 export type StatisticsExportDetailMode = "summary" | "full";
 
+function normalizePlayerIds(playerIds?: number[]): number[] {
+  if (!playerIds || playerIds.length === 0) {
+    return [];
+  }
+
+  return Array.from(new Set(playerIds)).sort((a, b) => a - b);
+}
+
+function appendPlayerIds(path: string, playerIds?: number[]): string {
+  const normalized = normalizePlayerIds(playerIds);
+  if (normalized.length === 0) {
+    return path;
+  }
+
+  const params = new URLSearchParams();
+  normalized.forEach((playerId) => {
+    params.append("player_ids", String(playerId));
+  });
+
+  return `${path}?${params.toString()}`;
+}
+
 function parseFilename(contentDisposition: string | undefined, fallback: string): string {
   if (!contentDisposition) return fallback;
   const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
@@ -48,48 +70,83 @@ async function downloadStatisticsCsv(path: string, fallbackFilename: string): Pr
   downloadBlob(response.data as Blob, filename);
 }
 
-export async function getLiveGameStatistics(gameId: number): Promise<PlayerGameStats[]> {
-  const response = await apiClient.get(`/statistics/games/${gameId}/live`);
+export async function getLiveGameStatistics(
+  gameId: number,
+  playerIds?: number[]
+): Promise<PlayerGameStats[]> {
+  const response = await apiClient.get(appendPlayerIds(`/statistics/games/${gameId}/live`, playerIds));
   return response.data;
 }
 
-export async function getGameTeamStatistics(gameId: number): Promise<GameTeamStats> {
-  const response = await apiClient.get(`/statistics/games/${gameId}/team`);
+export async function getGameTeamStatistics(
+  gameId: number,
+  playerIds?: number[]
+): Promise<GameTeamStats> {
+  const response = await apiClient.get(appendPlayerIds(`/statistics/games/${gameId}/team`, playerIds));
   return response.data;
 }
 
-export async function getGameStrategyStatistics(gameId: number): Promise<GameStrategyStats> {
-  const response = await apiClient.get(`/statistics/games/${gameId}/strategies`);
+export async function getGameStrategyStatistics(
+  gameId: number,
+  playerIds?: number[]
+): Promise<GameStrategyStats> {
+  const response = await apiClient.get(
+    appendPlayerIds(`/statistics/games/${gameId}/strategies`, playerIds)
+  );
   return response.data;
 }
 
-export async function getCompetitionPlayerStatistics(competitionId: number): Promise<PlayerGameStats[]> {
-  const response = await apiClient.get(`/statistics/competitions/${competitionId}/players`);
+export async function getCompetitionPlayerStatistics(
+  competitionId: number,
+  playerIds?: number[]
+): Promise<PlayerGameStats[]> {
+  const response = await apiClient.get(
+    appendPlayerIds(`/statistics/competitions/${competitionId}/players`, playerIds)
+  );
   return response.data;
 }
 
-export async function getTeamPlayerStatistics(teamId: number): Promise<PlayerGameStats[]> {
-  const response = await apiClient.get(`/statistics/teams/${teamId}/players`);
+export async function getTeamPlayerStatistics(
+  teamId: number,
+  playerIds?: number[]
+): Promise<PlayerGameStats[]> {
+  const response = await apiClient.get(appendPlayerIds(`/statistics/teams/${teamId}/players`, playerIds));
   return response.data;
 }
 
-export async function getCompetitionTeamStatistics(competitionId: number): Promise<CompetitionTeamStats> {
-  const response = await apiClient.get(`/statistics/competitions/${competitionId}/team`);
+export async function getCompetitionTeamStatistics(
+  competitionId: number,
+  playerIds?: number[]
+): Promise<CompetitionTeamStats> {
+  const response = await apiClient.get(
+    appendPlayerIds(`/statistics/competitions/${competitionId}/team`, playerIds)
+  );
   return response.data;
 }
 
-export async function getTeamTeamStatistics(teamId: number): Promise<TeamTeamStats> {
-  const response = await apiClient.get(`/statistics/teams/${teamId}/team`);
+export async function getTeamTeamStatistics(
+  teamId: number,
+  playerIds?: number[]
+): Promise<TeamTeamStats> {
+  const response = await apiClient.get(appendPlayerIds(`/statistics/teams/${teamId}/team`, playerIds));
   return response.data;
 }
 
-export async function getCompetitionStrategyStatistics(competitionId: number): Promise<CompetitionStrategyStats> {
-  const response = await apiClient.get(`/statistics/competitions/${competitionId}/strategies`);
+export async function getCompetitionStrategyStatistics(
+  competitionId: number,
+  playerIds?: number[]
+): Promise<CompetitionStrategyStats> {
+  const response = await apiClient.get(
+    appendPlayerIds(`/statistics/competitions/${competitionId}/strategies`, playerIds)
+  );
   return response.data;
 }
 
-export async function getTeamStrategyStatistics(teamId: number): Promise<TeamStrategyStats> {
-  const response = await apiClient.get(`/statistics/teams/${teamId}/strategies`);
+export async function getTeamStrategyStatistics(
+  teamId: number,
+  playerIds?: number[]
+): Promise<TeamStrategyStats> {
+  const response = await apiClient.get(appendPlayerIds(`/statistics/teams/${teamId}/strategies`, playerIds));
   return response.data;
 }
 

@@ -13,6 +13,7 @@ interface PlayerScopeStatisticsProps {
   teamName?: string;
   scopeLabel: string;
   contextLabel?: string;
+  cohortPlayerNames?: string[];
   stats: PlayerGameStats;
 }
 
@@ -28,9 +29,11 @@ export default function PlayerScopeStatistics({
   teamName,
   scopeLabel,
   contextLabel,
+  cohortPlayerNames,
   stats,
 }: PlayerScopeStatisticsProps) {
   const { t } = useTranslation("statistics");
+  const isCohortView = (cohortPlayerNames?.length ?? 0) > 1;
 
   return (
     <Box>
@@ -52,6 +55,16 @@ export default function PlayerScopeStatistics({
             <Typography variant="body2" color="text.secondary">
               {teamName || "-"}
             </Typography>
+            {isCohortView && (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                  {t("playerScope.cohortNames", { names: cohortPlayerNames?.join(", ") })}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t("playerScope.cohortExplanation")}
+                </Typography>
+              </>
+            )}
           </Box>
           <Chip label={playerNumber != null ? `#${playerNumber}` : "-"} />
         </Box>

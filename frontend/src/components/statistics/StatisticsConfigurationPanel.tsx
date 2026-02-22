@@ -43,7 +43,7 @@ interface StatisticsConfigurationPanelProps {
   teamId?: number;
   competitionId?: number;
   gameId?: number;
-  playerId?: number;
+  selectedPlayerIds: number[];
   sortedTeams: TeamWithPlayers[];
   competitionsForTeam: CompetitionWithTeam[];
   gamesForCompetition: GameWithScore[];
@@ -57,7 +57,8 @@ interface StatisticsConfigurationPanelProps {
   onSelectTeam: (teamId: number) => void;
   onSelectCompetition: (competitionId: number) => void;
   onSelectGame: (gameId: number) => void;
-  onSelectPlayer: (playerId: number) => void;
+  onTogglePlayer: (playerId: number) => void;
+  onClearPlayersSelection: () => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -73,7 +74,7 @@ export default function StatisticsConfigurationPanel({
   teamId,
   competitionId,
   gameId,
-  playerId,
+  selectedPlayerIds,
   sortedTeams,
   competitionsForTeam,
   gamesForCompetition,
@@ -87,7 +88,8 @@ export default function StatisticsConfigurationPanel({
   onSelectTeam,
   onSelectCompetition,
   onSelectGame,
-  onSelectPlayer,
+  onTogglePlayer,
+  onClearPlayersSelection,
 }: StatisticsConfigurationPanelProps) {
   const { t, i18n } = useTranslation(["statistics", "games", "common"]);
   const [playerGenderTab, setPlayerGenderTab] = useState<PlayerGenderTab>("men");
@@ -198,6 +200,20 @@ export default function StatisticsConfigurationPanel({
               />
             </Stack>
           </Box>
+
+          {selectedPlayerIds.length > 0 && (
+            <Alert
+              severity="info"
+              sx={{ mb: 2 }}
+              action={
+                <Button color="inherit" size="small" onClick={onClearPlayersSelection}>
+                  {t("common:action.clear")}
+                </Button>
+              }
+            >
+              {t("statistics:workflow.cohortFilterActive", { count: selectedPlayerIds.length })}
+            </Alert>
+          )}
 
           <Box mb={2}>
             <Typography variant="subtitle2" fontWeight="bold" sx={{ display: "block", mb: 0.75 }}>
@@ -398,8 +414,8 @@ export default function StatisticsConfigurationPanel({
                                     ? `${t("statistics:playerStats.playingTime")}: ${formatDuration(playerStats.effective_time_seconds)}`
                                     : undefined
                                 }
-                                selected={player.id === playerId}
-                                onClick={() => onSelectPlayer(player.id)}
+                                selected={selectedPlayerIds.includes(player.id)}
+                                onClick={() => onTogglePlayer(player.id)}
                                 badge={player.number != null ? `#${player.number}` : "-"}
                                 icon={
                                   player.gender === "M" ? (
