@@ -211,6 +211,7 @@ class GameScenarioBuilder:
         won: bool = True,
         strategy: Optional[Strategy] = None,
         duration_seconds: int = 60,
+        field_side: Optional[str] = None,
         pull: Optional[bool] = None,
         with_turnover: bool = False,
         with_call: bool = False,
@@ -256,6 +257,7 @@ class GameScenarioBuilder:
                 game_id=self.game.id,
                 point_number=point_number,
                 starting_on_offense=offense,
+                field_side=field_side,
                 pull=pull,
                 strategy_id=strategy_id
             )
@@ -299,6 +301,7 @@ class GameScenarioBuilder:
                 status="running",
                 player_ids=player_ids,
                 strategy_id=strategy_id,
+                field_side=field_side,
                 pull=pull,
                 start_datetime=start_time
             )

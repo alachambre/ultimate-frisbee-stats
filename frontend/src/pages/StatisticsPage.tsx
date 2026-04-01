@@ -243,6 +243,7 @@ export default function StatisticsPage() {
                   teamStats={teamStats}
                   strategyStats={teamStrategyStats}
                   playerStats={teamPlayerStats}
+                  teamStatsScope="team"
                 />
               </>
             </StatisticsSectionContainer>
@@ -301,6 +302,7 @@ export default function StatisticsPage() {
                   teamStats={competitionTeamStats}
                   strategyStats={competitionStrategyStats}
                   playerStats={competitionPlayerStats}
+                  teamStatsScope="competition"
                 />
               </>
             </StatisticsSectionContainer>
@@ -355,6 +357,7 @@ export default function StatisticsPage() {
                   teamStats={gameTeamStats}
                   strategyStats={gameStrategyStats}
                   playerStats={gamePlayerStats}
+                  teamStatsScope="game"
                 />
               </>
             </StatisticsSectionContainer>

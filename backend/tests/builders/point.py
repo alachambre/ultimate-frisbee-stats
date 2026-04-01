@@ -37,6 +37,7 @@ class PointBuilder:
         self._offense = True
         self._won = False
         self._strategy_id = None
+        self._field_side = None
         self._pull = None
         self._start_time = datetime.now(timezone.utc)
         self._duration = 60
@@ -65,6 +66,10 @@ class PointBuilder:
 
     def with_strategy(self, strategy_id: int) -> "PointBuilder":
         self._strategy_id = strategy_id
+        return self
+
+    def with_field_side(self, field_side: str) -> "PointBuilder":
+        self._field_side = field_side
         return self
 
     def with_pull(self, inbound: bool) -> "PointBuilder":
@@ -101,6 +106,7 @@ class PointBuilder:
                 game_id=self.game_id,
                 point_number=self.point_number,
                 starting_on_offense=self._offense,
+                field_side=self._field_side,
                 pull=self._pull,
                 strategy_id=self._strategy_id
             )
@@ -113,7 +119,8 @@ class PointBuilder:
             PointUpdate(
                 status="running",
                 start_datetime=self._start_time,
-                player_ids=self.player_ids
+                player_ids=self.player_ids,
+                field_side=self._field_side,
             )
         )
 

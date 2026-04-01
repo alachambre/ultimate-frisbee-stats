@@ -20,7 +20,23 @@ from app.crud.statistics_exports_formatters import (
 )
 
 
-def append_team_statistics(rows: List[List[str]], team_stats: Dict | None) -> None:
+def _field_side_label(field_side: str) -> str:
+    return "Left Side" if field_side == "table_left" else "Right Side"
+
+
+def _format_field_side_percentage(
+    points_started: int,
+    rate: float,
+) -> str:
+    return format_percent(rate) if points_started > 0 else "-"
+
+
+def append_team_statistics(
+    rows: List[List[str]],
+    team_stats: Dict | None,
+    *,
+    include_field_side_stats: bool = False,
+) -> None:
     if not team_stats or team_stats.get("total_completed_points", 0) == 0:
         return
 
@@ -45,6 +61,21 @@ def append_team_statistics(rows: List[List[str]], team_stats: Dict | None) -> No
             format_percent(team_stats["offense"]["clean_hold_rate"]),
         ]
     )
+    if include_field_side_stats:
+        offense_field_side_stats = team_stats.get("field_side_stats", {})
+        for field_side in ("table_left", "table_right"):
+            side_stats = offense_field_side_stats.get(field_side, {}).get("offense", {})
+            rows.append(
+                [
+                    f"Hold Rate ({_field_side_label(field_side)})",
+                    str(side_stats.get("points_won", 0)),
+                    str(side_stats.get("points_started", 0)),
+                    _format_field_side_percentage(
+                        side_stats.get("points_started", 0),
+                        side_stats.get("hold_rate", 0),
+                    ),
+                ]
+            )
     rows.append([])
 
     rows.append(["Defense"])
@@ -81,6 +112,21 @@ def append_team_statistics(rows: List[List[str]], team_stats: Dict | None) -> No
             format_percent(team_stats["defense"]["pull_stats"]["inbound_rate"]),
         ]
     )
+    if include_field_side_stats:
+        defense_field_side_stats = team_stats.get("field_side_stats", {})
+        for field_side in ("table_left", "table_right"):
+            side_stats = defense_field_side_stats.get(field_side, {}).get("defense", {})
+            rows.append(
+                [
+                    f"Break Rate ({_field_side_label(field_side)})",
+                    str(side_stats.get("points_won", 0)),
+                    str(side_stats.get("points_started", 0)),
+                    _format_field_side_percentage(
+                        side_stats.get("points_started", 0),
+                        side_stats.get("break_rate", 0),
+                    ),
+                ]
+            )
     rows.append([])
 
 

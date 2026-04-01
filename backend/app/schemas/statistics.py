@@ -90,11 +90,50 @@ class DefenseStats(BaseModel):
         from_attributes = True
 
 
+class FieldSideOffenseStats(BaseModel):
+    """Offensive statistics for a given field side"""
+    points_started: int
+    points_won: int
+    hold_rate: float
+
+    class Config:
+        from_attributes = True
+
+
+class FieldSideDefenseStats(BaseModel):
+    """Defensive statistics for a given field side"""
+    points_started: int
+    points_won: int
+    break_rate: float
+
+    class Config:
+        from_attributes = True
+
+
+class FieldSideSplitStats(BaseModel):
+    """Field-side statistics split by offense and defense"""
+    offense: FieldSideOffenseStats
+    defense: FieldSideDefenseStats
+
+    class Config:
+        from_attributes = True
+
+
+class FieldSideStats(BaseModel):
+    """Field-side statistics for left and right sides"""
+    table_left: FieldSideSplitStats
+    table_right: FieldSideSplitStats
+
+    class Config:
+        from_attributes = True
+
+
 class TeamStatsBase(BaseModel):
     """Common offense/defense statistics payload shared across scopes"""
     total_completed_points: int
     offense: OffenseStats
     defense: DefenseStats
+    field_side_stats: FieldSideStats
 
     class Config:
         from_attributes = True

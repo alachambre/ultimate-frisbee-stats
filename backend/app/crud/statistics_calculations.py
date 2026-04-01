@@ -16,6 +16,7 @@ class PointFacts:
     point_id: int
     starting_on_offense: bool
     won: bool
+    field_side: Optional[str]
     pull: Optional[bool]
     our_turnovers: int
     their_turnovers: int
@@ -80,6 +81,7 @@ def build_point_facts(
                 point_id=point.id,
                 starting_on_offense=point.starting_on_offense,
                 won=point.won is True,
+                field_side=point.field_side,
                 pull=point.pull,
                 our_turnovers=our_turnovers,
                 their_turnovers=their_turnovers,
@@ -87,6 +89,64 @@ def build_point_facts(
         )
 
     return point_facts
+
+
+def build_field_side_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
+    field_side_stats = {
+        "table_left": {
+            "offense": {
+                "points_started": 0,
+                "points_won": 0,
+                "hold_rate": 0.0,
+            },
+            "defense": {
+                "points_started": 0,
+                "points_won": 0,
+                "break_rate": 0.0,
+            },
+        },
+        "table_right": {
+            "offense": {
+                "points_started": 0,
+                "points_won": 0,
+                "hold_rate": 0.0,
+            },
+            "defense": {
+                "points_started": 0,
+                "points_won": 0,
+                "break_rate": 0.0,
+            },
+        },
+    }
+
+    for facts in point_facts:
+        if facts.field_side not in field_side_stats:
+            continue
+
+        side_stats = field_side_stats[facts.field_side]
+        phase_key = "offense" if facts.starting_on_offense else "defense"
+        phase_stats = side_stats[phase_key]
+        phase_stats["points_started"] += 1
+
+        if facts.won:
+            phase_stats["points_won"] += 1
+
+    for side_stats in field_side_stats.values():
+        offense_stats = side_stats["offense"]
+        defense_stats = side_stats["defense"]
+
+        offense_stats["hold_rate"] = (
+            offense_stats["points_won"] / offense_stats["points_started"]
+            if offense_stats["points_started"] > 0
+            else 0.0
+        )
+        defense_stats["break_rate"] = (
+            defense_stats["points_won"] / defense_stats["points_started"]
+            if defense_stats["points_started"] > 0
+            else 0.0
+        )
+
+    return field_side_stats
 
 
 def build_live_player_stats(
@@ -289,6 +349,7 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
     inbound_pulls = len([point for point in defense_points_with_pull if point.pull is True])
     out_of_bounds_pulls = len([point for point in defense_points_with_pull if point.pull is False])
     inbound_rate = inbound_pulls / total_pulls if total_pulls > 0 else 0.0
+    field_side_stats = build_field_side_stats_from_point_facts(point_facts)
 
     return {
         "total_completed_points": len(point_facts),
@@ -318,6 +379,7 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
                 "inbound_rate": inbound_rate,
             },
         },
+        "field_side_stats": field_side_stats,
     }
 
 

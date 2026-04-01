@@ -8,11 +8,134 @@ import CircularStat from "./CircularStat";
 
 interface TeamStatisticsProps {
   teamStats: TeamStatsBase;
+  showFieldSideStats?: boolean;
 }
 
-export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
+function formatPercent(value: number): string {
+  return `${(value * 100).toFixed(0)}%`;
+}
+
+function hasTrackedOffenseFieldSideStats(teamStats: TeamStatsBase): boolean {
+  return (
+    teamStats.field_side_stats.table_left.offense.points_started +
+      teamStats.field_side_stats.table_right.offense.points_started >
+    0
+  );
+}
+
+function hasTrackedDefenseFieldSideStats(teamStats: TeamStatsBase): boolean {
+  return (
+    teamStats.field_side_stats.table_left.defense.points_started +
+      teamStats.field_side_stats.table_right.defense.points_started >
+    0
+  );
+}
+
+interface FieldSideMetricSummaryProps {
+  title: string;
+  color: string;
+  leftSummary: string;
+  rightSummary: string;
+}
+
+function FieldSideMetricSummary({
+  title,
+  color,
+  leftSummary,
+  rightSummary,
+}: FieldSideMetricSummaryProps) {
+  const { t } = useTranslation("statistics");
+
+  return (
+    <Box sx={{ mt: 2.5, mx: "auto", width: "100%", maxWidth: 520 }}>
+      <Typography
+        variant="caption"
+        fontWeight="bold"
+        color="text.secondary"
+        sx={{
+          mb: 1.25,
+          display: "block",
+          textAlign: "center",
+          letterSpacing: 0.6,
+          textTransform: "uppercase",
+        }}
+      >
+        {title}
+      </Typography>
+      <Grid container spacing={1.5}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Box
+            sx={{
+              px: 2,
+              py: 1.25,
+              borderRadius: 2,
+              border: 1,
+              borderColor: alpha(color, 0.16),
+              bgcolor: alpha(color, 0.06),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {t("teamStats.leftSide")}
+            </Typography>
+            <Typography variant="body2" fontWeight="bold" sx={{ color }}>
+              {leftSummary}
+            </Typography>
+          </Box>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Box
+            sx={{
+              px: 2,
+              py: 1.25,
+              borderRadius: 2,
+              border: 1,
+              borderColor: alpha(color, 0.16),
+              bgcolor: alpha(color, 0.06),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {t("teamStats.rightSide")}
+            </Typography>
+            <Typography variant="body2" fontWeight="bold" sx={{ color }}>
+              {rightSummary}
+            </Typography>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
+export default function TeamStatistics({
+  teamStats,
+  showFieldSideStats = false,
+}: TeamStatisticsProps) {
   const { t } = useTranslation("statistics");
   const theme = useTheme();
+  const offenseLeftSummary =
+    teamStats.field_side_stats.table_left.offense.points_started > 0
+      ? `${formatPercent(teamStats.field_side_stats.table_left.offense.hold_rate)} (${teamStats.field_side_stats.table_left.offense.points_won}/${teamStats.field_side_stats.table_left.offense.points_started})`
+      : "-";
+  const offenseRightSummary =
+    teamStats.field_side_stats.table_right.offense.points_started > 0
+      ? `${formatPercent(teamStats.field_side_stats.table_right.offense.hold_rate)} (${teamStats.field_side_stats.table_right.offense.points_won}/${teamStats.field_side_stats.table_right.offense.points_started})`
+      : "-";
+  const defenseLeftSummary =
+    teamStats.field_side_stats.table_left.defense.points_started > 0
+      ? `${formatPercent(teamStats.field_side_stats.table_left.defense.break_rate)} (${teamStats.field_side_stats.table_left.defense.points_won}/${teamStats.field_side_stats.table_left.defense.points_started})`
+      : "-";
+  const defenseRightSummary =
+    teamStats.field_side_stats.table_right.defense.points_started > 0
+      ? `${formatPercent(teamStats.field_side_stats.table_right.defense.break_rate)} (${teamStats.field_side_stats.table_right.defense.points_won}/${teamStats.field_side_stats.table_right.defense.points_started})`
+      : "-";
 
   if (teamStats.total_completed_points === 0) {
     return null;
@@ -72,6 +195,14 @@ export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
             />
           </Grid>
         </Grid>
+        {showFieldSideStats && hasTrackedOffenseFieldSideStats(teamStats) && (
+          <FieldSideMetricSummary
+            title={t("teamStats.holdByFieldSide")}
+            color={theme.colors.offense.main}
+            leftSummary={offenseLeftSummary}
+            rightSummary={offenseRightSummary}
+          />
+        )}
       </Box>
 
       <Divider sx={{ my: 4 }} />
@@ -124,6 +255,14 @@ export default function TeamStatistics({ teamStats }: TeamStatisticsProps) {
             />
           </Grid>
         </Grid>
+        {showFieldSideStats && hasTrackedDefenseFieldSideStats(teamStats) && (
+          <FieldSideMetricSummary
+            title={t("teamStats.breakByFieldSide")}
+            color={theme.colors.defense.main}
+            leftSummary={defenseLeftSummary}
+            rightSummary={defenseRightSummary}
+          />
+        )}
       </Box>
     </Box>
   );

@@ -75,7 +75,7 @@ def get_game_statistics_csv(
     rows.append(["End Time", format_datetime(game_detail.get("end_datetime"))])
     rows.append([])
 
-    append_team_statistics(rows, team_stats)
+    append_team_statistics(rows, team_stats, include_field_side_stats=True)
     append_player_statistics(rows, player_stats)
     append_strategy_statistics(rows, strategy_stats)
     append_points_sections(

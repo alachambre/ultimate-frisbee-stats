@@ -89,7 +89,11 @@
     "break": "Break",
     "turnover": "Turnover",
     "cleanBreak": "Clean Break",
-    "pullInbound": "Pull inbound"
+    "pullInbound": "Pull inbound",
+    "holdByFieldSide": "Hold by field side",
+    "breakByFieldSide": "Break by field side",
+    "leftSide": "Left side",
+    "rightSide": "Right side"
   },
   "strategyStats": {
     "title": "Strategies statistics",

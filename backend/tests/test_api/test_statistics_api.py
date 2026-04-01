@@ -666,6 +666,44 @@ def test_get_game_team_statistics_pull_stats_defense_only(client: TestClient, db
     assert pull_stats["inbound_pulls"] == 1
 
 
+def test_get_game_team_statistics_field_side_stats(client: TestClient, db_session: Session):
+    """Field-side stats should split offense holds and defense breaks by tracked side."""
+    from tests.builders import GameScenarioBuilder
+
+    scenario = GameScenarioBuilder(db_session) \
+        .with_team() \
+        .with_competition() \
+        .with_game() \
+        .with_players(7) \
+        .with_completed_point(offense=True, won=True, field_side="table_left") \
+        .with_completed_point(offense=True, won=False, field_side="table_left") \
+        .with_completed_point(offense=False, won=True, field_side="table_right") \
+        .with_completed_point(offense=False, won=False, field_side="table_right") \
+        .with_completed_point(offense=True, won=True, field_side=None) \
+        .build()
+
+    response = client.get(f"/statistics/games/{scenario.game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    field_side_stats = data["field_side_stats"]
+
+    assert field_side_stats["table_left"]["offense"]["points_started"] == 2
+    assert field_side_stats["table_left"]["offense"]["points_won"] == 1
+    assert field_side_stats["table_left"]["offense"]["hold_rate"] == pytest.approx(0.5, rel=1e-6)
+    assert field_side_stats["table_left"]["defense"]["points_started"] == 0
+    assert field_side_stats["table_left"]["defense"]["points_won"] == 0
+    assert field_side_stats["table_left"]["defense"]["break_rate"] == 0.0
+
+    assert field_side_stats["table_right"]["defense"]["points_started"] == 2
+    assert field_side_stats["table_right"]["defense"]["points_won"] == 1
+    assert field_side_stats["table_right"]["defense"]["break_rate"] == pytest.approx(0.5, rel=1e-6)
+    assert field_side_stats["table_right"]["offense"]["points_started"] == 0
+    assert field_side_stats["table_right"]["offense"]["points_won"] == 0
+    assert field_side_stats["table_right"]["offense"]["hold_rate"] == 0.0
+
+
 # Competition and Team Statistics API Tests
 
 

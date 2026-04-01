@@ -28,8 +28,13 @@ def test_export_game_statistics_csv_success(client: TestClient, db_session: Sess
         offense=True,
         won=True,
         strategy=vertical,
+        field_side="table_left",
         with_turnover=True,
         with_call=False,
+    ).with_completed_point(
+        offense=False,
+        won=True,
+        field_side="table_right",
     ).build()
     point = scenario.points[0]
     start_time = point.start_datetime
@@ -53,6 +58,8 @@ def test_export_game_statistics_csv_success(client: TestClient, db_session: Sess
     assert "PLAYER STATISTICS" in content
     assert "STRATEGY STATISTICS" in content
     assert "POINTS SUMMARY" in content
+    assert "Hold Rate (Left Side),1,1,100%" in content
+    assert "Break Rate (Right Side),1,1,100%" in content
     assert "Point,Type,Status,Result,Score After" in content
     assert "Stoppages,Turnovers,Comments" in content
     assert "Vertical Stack" in content

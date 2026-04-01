@@ -407,10 +407,33 @@ export interface DefenseStats {
   pull_stats: PullStats;
 }
 
+export interface FieldSideOffenseStats {
+  points_started: number;
+  points_won: number;
+  hold_rate: number;
+}
+
+export interface FieldSideDefenseStats {
+  points_started: number;
+  points_won: number;
+  break_rate: number;
+}
+
+export interface FieldSideSplitStats {
+  offense: FieldSideOffenseStats;
+  defense: FieldSideDefenseStats;
+}
+
+export interface FieldSideStats {
+  table_left: FieldSideSplitStats;
+  table_right: FieldSideSplitStats;
+}
+
 export interface TeamStatsBase {
   total_completed_points: number;
   offense: OffenseStats;
   defense: DefenseStats;
+  field_side_stats: FieldSideStats;
 }
 
 export interface GameTeamStats extends TeamStatsBase {

@@ -7,11 +7,13 @@ import StrategyStatistics from "./StrategyStatistics";
 import TeamStatistics from "./TeamStatistics";
 
 type CompetitionStatisticsTab = "team" | "strategies" | "players";
+type TeamStatsScope = "team" | "competition" | "game";
 
 interface CompetitionStatisticsTabsProps {
   teamStats?: TeamStatsBase;
   strategyStats?: StrategyStatsBase;
   playerStats?: PlayerGameStats[];
+  teamStatsScope?: TeamStatsScope;
 }
 
 const TAB_ORDER: CompetitionStatisticsTab[] = ["team", "strategies", "players"];
@@ -35,6 +37,7 @@ export default function CompetitionStatisticsTabs({
   teamStats,
   strategyStats,
   playerStats,
+  teamStatsScope = "competition",
 }: CompetitionStatisticsTabsProps) {
   const { t } = useTranslation(["statistics", "common"]);
   const [requestedTab, setRequestedTab] = useState<CompetitionStatisticsTab>("team");
@@ -81,7 +84,12 @@ export default function CompetitionStatisticsTabs({
       </Box>
 
       {activeTab === "team" &&
-        (hasTeamData && teamStats ? <TeamStatistics teamStats={teamStats} /> : renderNoData())}
+        (hasTeamData && teamStats ? (
+          <TeamStatistics
+            teamStats={teamStats}
+            showFieldSideStats={teamStatsScope === "game"}
+          />
+        ) : renderNoData())}
 
       {activeTab === "strategies" &&
         (hasStrategyData && strategyStats ? (

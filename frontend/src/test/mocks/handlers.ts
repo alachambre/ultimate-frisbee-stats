@@ -116,6 +116,32 @@ function buildEmptyTeamStats(
         inbound_rate: 0.0,
       },
     },
+    field_side_stats: {
+      table_left: {
+        offense: {
+          points_started: 0,
+          points_won: 0,
+          hold_rate: 0.0,
+        },
+        defense: {
+          points_started: 0,
+          points_won: 0,
+          break_rate: 0.0,
+        },
+      },
+      table_right: {
+        offense: {
+          points_started: 0,
+          points_won: 0,
+          hold_rate: 0.0,
+        },
+        defense: {
+          points_started: 0,
+          points_won: 0,
+          break_rate: 0.0,
+        },
+      },
+    },
   };
 }
 
