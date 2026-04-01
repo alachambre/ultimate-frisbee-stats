@@ -42,6 +42,7 @@ import { queryKeys } from "../../utils/queryKeys";
 import { LivePointHeader } from "./liveTracker/LivePointHeader";
 import { LivePointActionBar } from "./liveTracker/LivePointActionBar";
 import { LivePointContextCards } from "./liveTracker/LivePointContextCards";
+import { LivePointMixityIndicator } from "./liveTracker/LivePointMixityIndicator";
 import { useLivePointMutations } from "./liveTracker/useLivePointMutations";
 import { useLivePointState } from "./liveTracker/useLivePointState";
 
@@ -94,6 +95,7 @@ export default function LivePointTracker({
     hasPendingStoppage,
     pendingStoppage,
     hasValidPlayerComposition,
+    expectedGenderRatio,
   } = useLivePointState({
     game,
     activePoint,
@@ -145,6 +147,11 @@ export default function LivePointTracker({
             <Typography variant="body2" color="text.secondary" mb={2}>
               {t("points:empty.noPoints")}
             </Typography>
+            {expectedGenderRatio && (
+              <Box mb={2} display="flex" justifyContent="center">
+                <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
+              </Box>
+            )}
             {createHalftimeMutation.isError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {t("common:error.generic")}
@@ -175,7 +182,10 @@ export default function LivePointTracker({
         ) : (
           // Active or scored point - show appropriate button
           <Box>
-            <LivePointHeader currentPoint={currentPoint} />
+            <LivePointHeader
+              currentPoint={currentPoint}
+              expectedGenderRatio={expectedGenderRatio}
+            />
 
             {/* Pull tracking - only for running defensive points */}
             {activePoint &&

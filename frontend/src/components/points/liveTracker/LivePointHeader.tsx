@@ -1,13 +1,16 @@
 import { Box, Chip, Typography, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import PointTimer from "../PointTimer";
+import { LivePointMixityIndicator } from "./LivePointMixityIndicator";
 import type { PointWithPlayers } from "../../../types";
+import type { GenderRatio } from "../../../utils/playerComposition";
 
 interface LivePointHeaderProps {
   currentPoint: PointWithPlayers;
+  expectedGenderRatio: GenderRatio | null;
 }
 
-export function LivePointHeader({ currentPoint }: LivePointHeaderProps) {
+export function LivePointHeader({ currentPoint, expectedGenderRatio }: LivePointHeaderProps) {
   const { t } = useTranslation(["points"]);
   const theme = useTheme();
 
@@ -43,6 +46,7 @@ export function LivePointHeader({ currentPoint }: LivePointHeaderProps) {
             }
             color={currentPoint.starting_on_offense ? "primary" : undefined}
           />
+          <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
           {currentPoint.status === "scored" && (
             <Chip
               label={

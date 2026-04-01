@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import LivePointTracker from "../LivePointTracker";
-import type { GameDetail, Player, Stoppage, Halftime } from "../../../types";
+import type { GameDetail, Player, PointWithPlayers, Stoppage, Halftime } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -20,7 +20,8 @@ const mockPlayers: Player[] = [
 
 const createMockGame = (
   status: "ready" | "started" | "ended" = "started",
-  halftime: Halftime | null = null
+  halftime: Halftime | null = null,
+  points: PointWithPlayers[] = []
 ): GameDetail => ({
   id: 1,
   competition_id: 1,
@@ -35,29 +36,41 @@ const createMockGame = (
   opponent_score: 0,
   team_name: "Test Team",
   competition_name: "Test Competition",
-  points: [],
+  points,
   players: mockPlayers,
   halftime,
 });
 
-const createMockRunningPoint = () => ({
-  id: 1,
+const createMockPoint = ({
+  id,
+  pointNumber,
+  status = "running",
+  players = mockPlayers,
+}: {
+  id: number;
+  pointNumber: number;
+  status?: "ready" | "running" | "scored" | "completed";
+  players?: Player[];
+}): PointWithPlayers => ({
+  id,
   game_id: 1,
-  point_number: 1,
+  point_number: pointNumber,
   starting_on_offense: true,
   won: null,
   field_side: null,
   pull: true,
   strategy_id: null,
   comments: null,
-  start_datetime: "2024-01-01T10:05:00Z",
-  end_datetime: null,
-  status: "running" as const,
+  start_datetime: status === "ready" ? null : "2024-01-01T10:05:00Z",
+  end_datetime: status === "scored" || status === "completed" ? "2024-01-01T10:15:00Z" : null,
+  status,
   created_at: "2024-01-01T10:05:00Z",
-  players: mockPlayers,
+  players,
   strategy: null,
   duration_seconds: null,
 });
+
+const createMockRunningPoint = () => createMockPoint({ id: 1, pointNumber: 1, status: "running" });
 
 describe("LivePointTracker - Pending Stoppage Feature", () => {
   beforeEach(() => {
@@ -395,6 +408,28 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       });
     });
 
+    it("shows only the mixity badge when it can be inferred before a new point starts", async () => {
+      const previousPoint = createMockPoint({
+        id: 1,
+        pointNumber: 1,
+        status: "completed",
+      });
+      const game = createMockGame("started", null, [previousPoint]);
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      expect(await screen.findByText("Men")).toBeInTheDocument();
+      expect(screen.queryByText(/mixity/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/4M \+ 3W/i)).not.toBeInTheDocument();
+    });
+
     it("disables half time button when halftime already exists", async () => {
       const game = createMockGame("started", {
         id: 1,
@@ -463,6 +498,78 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /finish point/i })).toBeInTheDocument();
       });
+    });
+
+    it("shows the mixity badge next to the offense or defense badge for a ready point", async () => {
+      const previousPoint = createMockPoint({
+        id: 1,
+        pointNumber: 1,
+        status: "completed",
+      });
+      const activePoint = createMockPoint({
+        id: 2,
+        pointNumber: 2,
+        status: "ready",
+      });
+      const game = createMockGame("started", null, [previousPoint, activePoint]);
+
+      server.use(
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      expect(await screen.findByText("Men")).toBeInTheDocument();
+      expect(screen.queryByText(/mixity/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/4M \+ 3W/i)).not.toBeInTheDocument();
+    });
+
+    it("shows the mixity badge next to the offense or defense badge while a point is ongoing", async () => {
+      const previousPoint = createMockPoint({
+        id: 1,
+        pointNumber: 1,
+        status: "scored",
+      });
+      const activePoint = createMockPoint({
+        id: 2,
+        pointNumber: 2,
+        status: "running",
+      });
+      const game = createMockGame("started", null, [previousPoint, activePoint]);
+
+      server.use(
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
+          return HttpResponse.json([]);
+        }),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
+          return HttpResponse.json([]);
+        })
+      );
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={activePoint}
+          players={mockPlayers}
+          teamId={1}
+        />
+      );
+
+      expect(await screen.findByText("Men")).toBeInTheDocument();
+      expect(screen.queryByText(/mixity/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/4M \+ 3W/i)).not.toBeInTheDocument();
     });
 
     it("displays field side in chronology when field side is set", async () => {
