@@ -6,12 +6,17 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import require_team_analyst
 from app.database import get_db
 from app.schemas import statistics as schemas
 from app.crud import statistics as crud
 from app.models.game import Game
 
-router = APIRouter(prefix="/statistics", tags=["statistics"])
+router = APIRouter(
+    prefix="/statistics",
+    tags=["statistics"],
+    dependencies=[Depends(require_team_analyst)],
+)
 
 
 def _normalize_player_ids(player_ids: Optional[List[int]]) -> Optional[List[int]]:

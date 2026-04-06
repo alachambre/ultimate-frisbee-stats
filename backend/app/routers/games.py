@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from app import schemas, crud
 from app.auth.context import AccessContext
-from app.auth.dependencies import get_request_access_context
+from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import (
     serialize_game_detail,
     serialize_games_with_score,
@@ -43,7 +43,11 @@ def list_games(
 
 
 @router.post("", response_model=schemas.Game, status_code=201)
-def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
+def create_game(
+    game: schemas.GameCreate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     # Verify competition exists
     competition = crud.get_competition(db, game.competition_id)
     if not competition:
@@ -89,7 +93,12 @@ def get_game(
 
 
 @router.put("/{game_id}", response_model=schemas.Game)
-def update_game(game_id: int, game_update: schemas.GameUpdate, db: Session = Depends(get_db)):
+def update_game(
+    game_id: int,
+    game_update: schemas.GameUpdate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     game = crud.update_game(db, game_id, game_update)
     if not game:
         logger.warning(f"Failed to update game: game {game_id} not found")
@@ -103,7 +112,11 @@ def update_game(game_id: int, game_update: schemas.GameUpdate, db: Session = Dep
 
 
 @router.post("/{game_id}/finish", response_model=schemas.Game)
-def finish_game(game_id: int, db: Session = Depends(get_db)):
+def finish_game(
+    game_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     game = crud.finish_game(db, game_id)
     if not game:
         logger.warning(f"Failed to finish game: game {game_id} not found")
@@ -114,7 +127,11 @@ def finish_game(game_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{game_id}", status_code=204)
-def delete_game(game_id: int, db: Session = Depends(get_db)):
+def delete_game(
+    game_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     success = crud.delete_game(db, game_id)
     if not success:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -144,7 +161,12 @@ class PlayerIdsRequest(BaseModel):
 
 
 @router.post("/{game_id}/players", response_model=schemas.Game)
-def add_players_to_game(game_id: int, request: PlayerIdsRequest, db: Session = Depends(get_db)):
+def add_players_to_game(
+    game_id: int,
+    request: PlayerIdsRequest,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Add players to game (must be from competition roster)"""
     game = crud.get_game(db, game_id)
     if not game:
@@ -165,7 +187,12 @@ def add_players_to_game(game_id: int, request: PlayerIdsRequest, db: Session = D
 
 
 @router.delete("/{game_id}/players", response_model=schemas.Game)
-def remove_players_from_game(game_id: int, request: PlayerIdsRequest, db: Session = Depends(get_db)):
+def remove_players_from_game(
+    game_id: int,
+    request: PlayerIdsRequest,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Remove players from game"""
     game = crud.get_game(db, game_id)
     if not game:

@@ -4,7 +4,7 @@ from typing import List
 
 from app import schemas, crud
 from app.auth.context import AccessContext
-from app.auth.dependencies import get_request_access_context
+from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_turnover, serialize_turnovers
 from app.database import get_db
 from app.logging_config import get_logger
@@ -18,7 +18,11 @@ router = APIRouter(
 
 
 @router.post("", response_model=schemas.TurnoverWithPlayer, status_code=201)
-def create_turnover(turnover: schemas.TurnoverCreate, db: Session = Depends(get_db)):
+def create_turnover(
+    turnover: schemas.TurnoverCreate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Create a new turnover."""
     try:
         created_turnover = crud.create_turnover(db, turnover)
@@ -47,7 +51,12 @@ def get_turnover(
 
 
 @router.put("/{turnover_id}", response_model=schemas.TurnoverWithPlayer)
-def update_turnover(turnover_id: int, turnover_update: schemas.TurnoverUpdate, db: Session = Depends(get_db)):
+def update_turnover(
+    turnover_id: int,
+    turnover_update: schemas.TurnoverUpdate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Update a turnover."""
     try:
         turnover = crud.update_turnover(db, turnover_id, turnover_update)
@@ -62,7 +71,11 @@ def update_turnover(turnover_id: int, turnover_update: schemas.TurnoverUpdate, d
 
 
 @router.delete("/{turnover_id}", status_code=204)
-def delete_turnover(turnover_id: int, db: Session = Depends(get_db)):
+def delete_turnover(
+    turnover_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Delete a turnover."""
     success = crud.delete_turnover(db, turnover_id)
     if not success:
@@ -84,6 +97,10 @@ def list_point_turnovers(
 
 
 @router.get("/players/{player_id}/turnovers", response_model=List[schemas.Turnover])
-def list_player_turnovers(player_id: int, db: Session = Depends(get_db)):
+def list_player_turnovers(
+    player_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Get all turnovers for a specific player."""
     return crud.get_turnovers_by_player(db, player_id)

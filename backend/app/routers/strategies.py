@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app import schemas, crud
+from app.auth.dependencies import require_team_member
 from app.database import get_db
 
 router = APIRouter(
     prefix="/strategies",
-    tags=["strategies"]
+    tags=["strategies"],
+    dependencies=[Depends(require_team_member)],
 )
 
 

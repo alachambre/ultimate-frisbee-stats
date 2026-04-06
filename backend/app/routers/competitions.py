@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from app import schemas, crud
 from app.auth.context import AccessContext
-from app.auth.dependencies import get_request_access_context
+from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_games_with_score
 from app.database import get_db
 
@@ -16,7 +16,11 @@ router = APIRouter(
 
 
 @router.post("", response_model=schemas.Competition, status_code=201)
-def create_competition(competition: schemas.CompetitionCreate, db: Session = Depends(get_db)):
+def create_competition(
+    competition: schemas.CompetitionCreate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     # Verify team exists
     team = crud.get_team(db, competition.team_id)
     if not team:
@@ -60,7 +64,12 @@ def get_competition(competition_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{competition_id}", response_model=schemas.Competition)
-def update_competition(competition_id: int, competition_update: schemas.CompetitionUpdate, db: Session = Depends(get_db)):
+def update_competition(
+    competition_id: int,
+    competition_update: schemas.CompetitionUpdate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     competition = crud.update_competition(db, competition_id, competition_update)
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
@@ -68,7 +77,11 @@ def update_competition(competition_id: int, competition_update: schemas.Competit
 
 
 @router.delete("/{competition_id}", status_code=204)
-def delete_competition(competition_id: int, db: Session = Depends(get_db)):
+def delete_competition(
+    competition_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     success = crud.delete_competition(db, competition_id)
     if not success:
         raise HTTPException(status_code=404, detail="Competition not found")
@@ -76,7 +89,11 @@ def delete_competition(competition_id: int, db: Session = Depends(get_db)):
 
 # Nested endpoints for competition resources
 @router.get("/{competition_id}/players", response_model=List[schemas.Player])
-def list_competition_players(competition_id: int, db: Session = Depends(get_db)):
+def list_competition_players(
+    competition_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Get the roster for this competition"""
     competition = crud.get_competition(db, competition_id)
     if not competition:
@@ -89,7 +106,12 @@ class PlayerIdsRequest(BaseModel):
 
 
 @router.post("/{competition_id}/players", response_model=schemas.CompetitionWithPlayers)
-def add_players_to_roster(competition_id: int, request: PlayerIdsRequest, db: Session = Depends(get_db)):
+def add_players_to_roster(
+    competition_id: int,
+    request: PlayerIdsRequest,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Add players to competition roster"""
     competition = crud.get_competition(db, competition_id)
     if not competition:
@@ -110,7 +132,12 @@ def add_players_to_roster(competition_id: int, request: PlayerIdsRequest, db: Se
 
 
 @router.delete("/{competition_id}/players", response_model=schemas.CompetitionWithPlayers)
-def remove_players_from_roster(competition_id: int, request: PlayerIdsRequest, db: Session = Depends(get_db)):
+def remove_players_from_roster(
+    competition_id: int,
+    request: PlayerIdsRequest,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Remove players from competition roster"""
     competition = crud.get_competition(db, competition_id)
     if not competition:

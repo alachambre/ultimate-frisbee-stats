@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import schemas, crud
 from app.auth.context import AccessContext
-from app.auth.dependencies import get_request_access_context
+from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_halftime
 from app.database import get_db
 from app.logging_config import get_logger
@@ -17,7 +17,11 @@ router = APIRouter(
 
 
 @router.post("", response_model=schemas.Halftime, status_code=201)
-def create_halftime(halftime: schemas.HalftimeCreate, db: Session = Depends(get_db)):
+def create_halftime(
+    halftime: schemas.HalftimeCreate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Create a halftime marker for a game."""
     try:
         created_halftime = crud.create_halftime(db, halftime)
@@ -49,6 +53,7 @@ def update_halftime(
     halftime_id: int,
     halftime_update: schemas.HalftimeUpdate,
     db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
 ):
     """Update halftime marker."""
     halftime = crud.update_halftime(db, halftime_id, halftime_update)
@@ -60,7 +65,11 @@ def update_halftime(
 
 
 @router.delete("/{halftime_id}", status_code=204)
-def delete_halftime(halftime_id: int, db: Session = Depends(get_db)):
+def delete_halftime(
+    halftime_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Delete halftime marker."""
     success = crud.delete_halftime(db, halftime_id)
     if not success:

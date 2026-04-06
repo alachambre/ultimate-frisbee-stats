@@ -5,11 +5,13 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from app import schemas, crud
+from app.auth.dependencies import require_team_member
 from app.database import get_db
 
 router = APIRouter(
     prefix="/lines",
-    tags=["lines"]
+    tags=["lines"],
+    dependencies=[Depends(require_team_member)],
 )
 
 

@@ -4,7 +4,7 @@ from typing import List
 
 from app import schemas, crud
 from app.auth.context import AccessContext
-from app.auth.dependencies import get_request_access_context
+from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_point
 from app.database import get_db
 from app.logging_config import get_logger
@@ -18,7 +18,11 @@ router = APIRouter(
 
 
 @router.post("", response_model=schemas.PointWithPlayers, status_code=201)
-def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
+def create_point(
+    point: schemas.PointCreate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     try:
         created_point = crud.create_point(db, point)
         player_count = len(point.player_ids) if point.player_ids else 0
@@ -50,7 +54,12 @@ def get_point(
 
 
 @router.put("/{point_id}", response_model=schemas.PointWithPlayers)
-def update_point(point_id: int, point_update: schemas.PointUpdate, db: Session = Depends(get_db)):
+def update_point(
+    point_id: int,
+    point_update: schemas.PointUpdate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     try:
         point = crud.update_point(db, point_id, point_update)
         if not point:
@@ -68,14 +77,23 @@ def update_point(point_id: int, point_update: schemas.PointUpdate, db: Session =
 
 
 @router.delete("/{point_id}", status_code=204)
-def delete_point(point_id: int, db: Session = Depends(get_db)):
+def delete_point(
+    point_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     success = crud.delete_point(db, point_id)
     if not success:
         raise HTTPException(status_code=404, detail="Point not found")
 
 
 @router.post("/{point_id}/finish", response_model=schemas.PointWithPlayers)
-def finish_point(point_id: int, finish_data: schemas.PointFinish, db: Session = Depends(get_db)):
+def finish_point(
+    point_id: int,
+    finish_data: schemas.PointFinish,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     try:
         point = crud.finish_point(db, point_id, finish_data)
         if not point:
@@ -90,7 +108,11 @@ def finish_point(point_id: int, finish_data: schemas.PointFinish, db: Session = 
 
 
 @router.delete("/{point_id}/cancel", status_code=204)
-def cancel_point(point_id: int, db: Session = Depends(get_db)):
+def cancel_point(
+    point_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     try:
         success = crud.cancel_point(db, point_id)
         if not success:

@@ -54,6 +54,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Auth foundation lives under `backend/app/auth/`; keep role and permission logic centralized there (`public`, `team_member`, `team_analyst`, `admin`)
 - Backend auth rollout is controlled by `AUTH_ENFORCEMENT_MODE` with modes `off`, `shadow`, and `enforced`; prefer incremental deploys with `shadow` before enabling enforcement
 - Public spectator payload redaction is centralized in `backend/app/auth/redaction.py`; when exposing anonymous-safe game/point/stoppage/turnover/halftime reads, reuse those serializers instead of hand-redacting fields in routers
+- Backend route authorization uses `require_team_member` for operational/team-management surfaces and `require_team_analyst` for `/statistics` and `/exports`; keep only the approved spectator reads public
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`

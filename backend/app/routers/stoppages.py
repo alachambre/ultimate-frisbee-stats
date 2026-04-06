@@ -4,7 +4,7 @@ from typing import List
 
 from app import schemas, crud
 from app.auth.context import AccessContext
-from app.auth.dependencies import get_request_access_context
+from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_stoppage, serialize_stoppages
 from app.database import get_db
 from app.logging_config import get_logger
@@ -18,7 +18,11 @@ router = APIRouter(
 
 
 @router.post("", response_model=schemas.Stoppage, status_code=201)
-def create_stoppage(stoppage: schemas.StoppageCreate, db: Session = Depends(get_db)):
+def create_stoppage(
+    stoppage: schemas.StoppageCreate,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Create a new stoppage."""
     try:
         created_stoppage = crud.create_stoppage(db, stoppage)
@@ -52,6 +56,7 @@ def update_stoppage(
     stoppage_id: int,
     stoppage_update: schemas.StoppageUpdate,
     db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
 ):
     """Update a stoppage."""
     try:
@@ -70,7 +75,11 @@ def update_stoppage(
 
 
 @router.delete("/{stoppage_id}", status_code=204)
-def delete_stoppage(stoppage_id: int, db: Session = Depends(get_db)):
+def delete_stoppage(
+    stoppage_id: int,
+    db: Session = Depends(get_db),
+    _access_context: AccessContext = Depends(require_team_member),
+):
     """Delete a stoppage."""
     success = crud.delete_stoppage(db, stoppage_id)
     if not success:

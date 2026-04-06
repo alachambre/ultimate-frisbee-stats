@@ -7,10 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import require_team_analyst
 from app.database import get_db
 from app.crud import statistics_exports as crud
 
-router = APIRouter(prefix="/exports", tags=["exports"])
+router = APIRouter(
+    prefix="/exports",
+    tags=["exports"],
+    dependencies=[Depends(require_team_analyst)],
+)
 
 
 def _csv_response(content: str, filename: str) -> Response:
