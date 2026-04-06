@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import schemas, crud
+from app.auth.context import AccessContext
+from app.auth.dependencies import get_request_access_context
+from app.auth.redaction import serialize_turnover, serialize_turnovers
 from app.database import get_db
 from app.logging_config import get_logger
 
@@ -30,13 +33,17 @@ def create_turnover(turnover: schemas.TurnoverCreate, db: Session = Depends(get_
 
 
 @router.get("/{turnover_id}", response_model=schemas.TurnoverWithPlayer)
-def get_turnover(turnover_id: int, db: Session = Depends(get_db)):
+def get_turnover(
+    turnover_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get a specific turnover."""
     turnover = crud.get_turnover(db, turnover_id)
     if not turnover:
         logger.warning(f"Turnover {turnover_id} not found")
         raise HTTPException(status_code=404, detail="Turnover not found")
-    return turnover
+    return serialize_turnover(turnover, access_context)
 
 
 @router.put("/{turnover_id}", response_model=schemas.TurnoverWithPlayer)
@@ -67,9 +74,13 @@ def delete_turnover(turnover_id: int, db: Session = Depends(get_db)):
 
 # Nested endpoints
 @router.get("/points/{point_id}/turnovers", response_model=List[schemas.TurnoverWithPlayer])
-def list_point_turnovers(point_id: int, db: Session = Depends(get_db)):
+def list_point_turnovers(
+    point_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get all turnovers for a specific point."""
-    return crud.get_turnovers_by_point(db, point_id)
+    return serialize_turnovers(crud.get_turnovers_by_point(db, point_id), access_context)
 
 
 @router.get("/players/{player_id}/turnovers", response_model=List[schemas.Turnover])

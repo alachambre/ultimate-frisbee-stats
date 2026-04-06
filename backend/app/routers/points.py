@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import schemas, crud
+from app.auth.context import AccessContext
+from app.auth.dependencies import get_request_access_context
+from app.auth.redaction import serialize_point
 from app.database import get_db
 from app.logging_config import get_logger
 
@@ -35,11 +38,15 @@ def create_point(point: schemas.PointCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{point_id}", response_model=schemas.PointWithPlayers)
-def get_point(point_id: int, db: Session = Depends(get_db)):
+def get_point(
+    point_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     point = crud.get_point(db, point_id)
     if not point:
         raise HTTPException(status_code=404, detail="Point not found")
-    return point
+    return serialize_point(point, access_context)
 
 
 @router.put("/{point_id}", response_model=schemas.PointWithPlayers)
@@ -97,7 +104,11 @@ def cancel_point(point_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/games/{game_id}/running", response_model=schemas.PointWithPlayers)
-def get_running_point(game_id: int, db: Session = Depends(get_db)):
+def get_running_point(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get the running point for a game"""
     # Verify game exists
     game = crud.get_game(db, game_id)
@@ -107,11 +118,15 @@ def get_running_point(game_id: int, db: Session = Depends(get_db)):
     point = crud.get_running_point_for_game(db, game_id)
     if not point:
         raise HTTPException(status_code=404, detail="No running point found for this game")
-    return point
+    return serialize_point(point, access_context)
 
 
 @router.get("/games/{game_id}/active", response_model=schemas.PointWithPlayers)
-def get_active_point(game_id: int, db: Session = Depends(get_db)):
+def get_active_point(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get the active (ready or running) point for a game"""
     # Verify game exists
     game = crud.get_game(db, game_id)
@@ -121,4 +136,4 @@ def get_active_point(game_id: int, db: Session = Depends(get_db)):
     point = crud.get_active_point_for_game(db, game_id)
     if not point:
         raise HTTPException(status_code=404, detail="No active point found for this game")
-    return point
+    return serialize_point(point, access_context)

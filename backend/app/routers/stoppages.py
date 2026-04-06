@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app import schemas, crud
+from app.auth.context import AccessContext
+from app.auth.dependencies import get_request_access_context
+from app.auth.redaction import serialize_stoppage, serialize_stoppages
 from app.database import get_db
 from app.logging_config import get_logger
 
@@ -31,13 +34,17 @@ def create_stoppage(stoppage: schemas.StoppageCreate, db: Session = Depends(get_
 
 
 @router.get("/{stoppage_id}", response_model=schemas.Stoppage)
-def get_stoppage(stoppage_id: int, db: Session = Depends(get_db)):
+def get_stoppage(
+    stoppage_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get a specific stoppage."""
     stoppage = crud.get_stoppage(db, stoppage_id)
     if not stoppage:
         logger.warning(f"Stoppage {stoppage_id} not found")
         raise HTTPException(status_code=404, detail="Stoppage not found")
-    return stoppage
+    return serialize_stoppage(stoppage, access_context)
 
 
 @router.put("/{stoppage_id}", response_model=schemas.Stoppage)
@@ -74,6 +81,10 @@ def delete_stoppage(stoppage_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/points/{point_id}/stoppages", response_model=List[schemas.Stoppage])
-def list_point_stoppages(point_id: int, db: Session = Depends(get_db)):
+def list_point_stoppages(
+    point_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get all stoppages for a specific point."""
-    return crud.get_stoppages_by_point(db, point_id)
+    return serialize_stoppages(crud.get_stoppages_by_point(db, point_id), access_context)

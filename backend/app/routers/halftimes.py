@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import schemas, crud
+from app.auth.context import AccessContext
+from app.auth.dependencies import get_request_access_context
+from app.auth.redaction import serialize_halftime
 from app.database import get_db
 from app.logging_config import get_logger
 
@@ -28,13 +31,17 @@ def create_halftime(halftime: schemas.HalftimeCreate, db: Session = Depends(get_
 
 
 @router.get("/games/{game_id}/halftime", response_model=schemas.Halftime)
-def get_halftime_by_game(game_id: int, db: Session = Depends(get_db)):
+def get_halftime_by_game(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """Get halftime marker for a game."""
     halftime = crud.get_halftime_by_game(db, game_id)
     if not halftime:
         logger.warning(f"Halftime not found for game {game_id}")
         raise HTTPException(status_code=404, detail="Halftime not found")
-    return halftime
+    return serialize_halftime(halftime, access_context)
 
 
 @router.put("/{halftime_id}", response_model=schemas.Halftime)

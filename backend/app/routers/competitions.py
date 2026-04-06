@@ -4,6 +4,9 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from app import schemas, crud
+from app.auth.context import AccessContext
+from app.auth.dependencies import get_request_access_context
+from app.auth.redaction import serialize_games_with_score
 from app.database import get_db
 
 router = APIRouter(
@@ -120,7 +123,11 @@ def remove_players_from_roster(competition_id: int, request: PlayerIdsRequest, d
 
 
 @router.get("/{competition_id}/games", response_model=List[schemas.GameWithScore])
-def list_competition_games(competition_id: int, db: Session = Depends(get_db)):
+def list_competition_games(
+    competition_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     """List all games in this competition"""
     competition = crud.get_competition(db, competition_id)
     if not competition:
@@ -139,4 +146,4 @@ def list_competition_games(competition_id: int, db: Session = Depends(get_db)):
             "competition_name": competition.name
         }
         result.append(game_dict)
-    return result
+    return serialize_games_with_score(result, access_context)

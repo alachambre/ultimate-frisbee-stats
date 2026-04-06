@@ -4,6 +4,13 @@ from typing import List
 from pydantic import BaseModel
 
 from app import schemas, crud
+from app.auth.context import AccessContext
+from app.auth.dependencies import get_request_access_context
+from app.auth.redaction import (
+    serialize_game_detail,
+    serialize_games_with_score,
+    serialize_points,
+)
 from app.database import get_db
 from app.logging_config import get_logger
 
@@ -16,7 +23,10 @@ router = APIRouter(
 
 
 @router.get("", response_model=List[schemas.GameWithScore])
-def list_games(db: Session = Depends(get_db)):
+def list_games(
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     games = crud.get_all_games(db)
     # Transform to include scores, team name, and competition name
     result = []
@@ -29,7 +39,7 @@ def list_games(db: Session = Depends(get_db)):
             "team_name": competition.team.name if competition and competition.team else "Unknown",
             "competition_name": competition.name if competition else "Unknown",
         })
-    return result
+    return serialize_games_with_score(result, access_context)
 
 
 @router.post("", response_model=schemas.Game, status_code=201)
@@ -67,11 +77,15 @@ def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{game_id}", response_model=schemas.GameDetail)
-def get_game(game_id: int, db: Session = Depends(get_db)):
+def get_game(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
     game_detail = crud.get_game_detail(db, game_id)
     if not game_detail:
         raise HTTPException(status_code=404, detail="Game not found")
-    return game_detail
+    return serialize_game_detail(game_detail, access_context)
 
 
 @router.put("/{game_id}", response_model=schemas.Game)
@@ -108,8 +122,12 @@ def delete_game(game_id: int, db: Session = Depends(get_db)):
 
 # Nested endpoints for game resources
 @router.get("/{game_id}/points", response_model=List[schemas.PointWithPlayers])
-def list_game_points(game_id: int, db: Session = Depends(get_db)):
-    return crud.get_points_by_game(db, game_id)
+def list_game_points(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
+    return serialize_points(crud.get_points_by_game(db, game_id), access_context)
 
 
 @router.get("/{game_id}/players", response_model=List[schemas.Player])

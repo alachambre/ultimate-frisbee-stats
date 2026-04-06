@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from app import models, schemas
 from app.logging_config import get_logger
 
@@ -289,7 +289,14 @@ def finish_point(db: Session, point_id: int, finish_data: schemas.PointFinish) -
 
         # Set the result and end datetime
         db_point.won = finish_data.won
-        db_point.end_datetime = finish_data.end_datetime if finish_data.end_datetime else datetime.now(timezone.utc)
+        if finish_data.end_datetime is not None:
+            db_point.end_datetime = finish_data.end_datetime
+        else:
+            candidate_end_datetime = datetime.now(timezone.utc)
+            start_aware = _ensure_timezone_aware(db_point.start_datetime)
+            if start_aware and candidate_end_datetime <= start_aware:
+                candidate_end_datetime = start_aware + timedelta(microseconds=1)
+            db_point.end_datetime = candidate_end_datetime
         db_point.status = models.PointStatusEnum.completed
 
         # Update comments if provided
