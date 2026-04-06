@@ -18,6 +18,7 @@ from .stoppage import Stoppage, StoppageCreate, StoppageUpdate
 from .halftime import Halftime, HalftimeCreate, HalftimeUpdate
 from .turnover import Turnover, TurnoverCreate, TurnoverUpdate, TurnoverWithPlayer
 from .user import User, UserCreate, UserUpdate
+from .auth import AuthMe, CapabilityFlags
 
 # Rebuild models with forward references after all models are imported
 TeamWithPlayers.model_rebuild()
@@ -89,4 +90,7 @@ __all__ = [
     "User",
     "UserCreate",
     "UserUpdate",
+    # Auth
+    "AuthMe",
+    "CapabilityFlags",
 ]

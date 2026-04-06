@@ -27,6 +27,7 @@ cp .env.example .env
 Common settings:
 - `DATABASE_URL` (optional). If unset, SQLite is used locally.
 - `FRONTEND_URL` for CORS when running the frontend locally.
+- `AUTH_ENFORCEMENT_MODE` to control auth rollout: `off`, `shadow`, or `enforced`.
 - `SUPABASE_URL` for the shared Supabase project URL.
 - `SUPABASE_JWKS_URL` for backend JWT verification against Supabase Auth.
 - `SUPABASE_SERVICE_ROLE_KEY` for backend-only admin account management flows.

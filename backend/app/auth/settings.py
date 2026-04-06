@@ -2,10 +2,14 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.auth.types import AuthEnforcementMode
+
 
 class AuthSettings(BaseSettings):
+    auth_enforcement_mode: AuthEnforcementMode = AuthEnforcementMode.OFF
     supabase_url: str | None = None
     supabase_jwks_url: str | None = None
+    supabase_jwt_audience: str = "authenticated"
     supabase_service_role_key: str | None = None
     initial_admin_auth_user_id: str | None = None
     initial_admin_email: str | None = None
@@ -27,6 +31,12 @@ class AuthSettings(BaseSettings):
     @property
     def is_initial_admin_bootstrap_configured(self) -> bool:
         return bool(self.initial_admin_auth_user_id and self.initial_admin_email)
+
+    @property
+    def supabase_jwt_issuer(self) -> str | None:
+        if not self.supabase_url:
+            return None
+        return f"{self.supabase_url.rstrip('/')}/auth/v1"
 
 
 @lru_cache(maxsize=1)

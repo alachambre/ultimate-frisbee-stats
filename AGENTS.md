@@ -29,6 +29,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
 - Auth foundation lives under `frontend/src/auth/`; use the shared roles `public`, `team_member`, `team_analyst`, `admin` and capability helpers there instead of ad hoc UI checks
+- Frontend auth API bootstrap entrypoint is `GET /auth/me`; auth consumption should build on that contract rather than duplicating role resolution logic client-side
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
 - Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (query-driven workflow: `teamId`, `mode=competition|player`, `competitionId`, `gameId`, `playerId` + multi-select `playerIds`)
 - Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
@@ -51,6 +52,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `backend/app/models/`, `schemas/`, `crud/`, `routers/` (domain-organized)
 - `backend/app/tests/` Pytest (CRUD + API)
 - Auth foundation lives under `backend/app/auth/`; keep role and permission logic centralized there (`public`, `team_member`, `team_analyst`, `admin`)
+- Backend auth rollout is controlled by `AUTH_ENFORCEMENT_MODE` with modes `off`, `shadow`, and `enforced`; prefer incremental deploys with `shadow` before enabling enforcement
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`

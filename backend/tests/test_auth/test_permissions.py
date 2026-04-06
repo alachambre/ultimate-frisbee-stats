@@ -3,15 +3,11 @@ from dataclasses import asdict
 from fastapi import HTTPException
 import pytest
 
-from app.auth import (
-    AppRole,
-    build_access_context,
-    get_capabilities_for_role,
-    has_minimum_role,
-    require_admin,
-    require_team_analyst,
-    require_team_member,
-)
+from app.auth.context import build_access_context
+from app.auth.dependencies import require_admin, require_team_analyst, require_team_member
+from app.auth.permissions import AppRole, get_capabilities_for_role, has_minimum_role
+from app.auth.settings import AuthSettings
+from app.auth.types import AuthEnforcementMode
 
 
 @pytest.mark.parametrize(
@@ -113,19 +109,87 @@ def test_build_access_context_marks_non_public_roles_as_authenticated():
 
 def test_require_team_member_rejects_public_requests():
     with pytest.raises(HTTPException) as exc_info:
-        require_team_member(access_context=build_access_context())
+        require_team_member(
+            request=_build_request(),
+            access_context=build_access_context(
+                enforcement_mode=AuthEnforcementMode.ENFORCED
+            ),
+            settings=AuthSettings(auth_enforcement_mode=AuthEnforcementMode.ENFORCED),
+        )
 
     assert exc_info.value.status_code == 401
 
 
 def test_require_team_analyst_rejects_team_members():
     with pytest.raises(HTTPException) as exc_info:
-        require_team_analyst(access_context=build_access_context(AppRole.TEAM_MEMBER))
+        require_team_analyst(
+            request=_build_request(),
+            access_context=build_access_context(
+                AppRole.TEAM_MEMBER,
+                enforcement_mode=AuthEnforcementMode.ENFORCED,
+            ),
+            settings=AuthSettings(auth_enforcement_mode=AuthEnforcementMode.ENFORCED),
+        )
 
     assert exc_info.value.status_code == 403
 
 
 def test_require_admin_accepts_admin_users():
-    access_context = require_admin(access_context=build_access_context(AppRole.ADMIN))
+    access_context = require_admin(
+        request=_build_request(),
+        access_context=build_access_context(
+            AppRole.ADMIN,
+            enforcement_mode=AuthEnforcementMode.ENFORCED,
+        ),
+        settings=AuthSettings(auth_enforcement_mode=AuthEnforcementMode.ENFORCED),
+    )
 
     assert access_context.role == AppRole.ADMIN
+
+
+def test_require_team_member_allows_requests_in_shadow_mode():
+    access_context = require_team_member(
+        request=_build_request(),
+        access_context=build_access_context(
+            enforcement_mode=AuthEnforcementMode.SHADOW
+        ),
+        settings=AuthSettings(auth_enforcement_mode=AuthEnforcementMode.SHADOW),
+    )
+
+    assert access_context.role == AppRole.PUBLIC
+
+
+def test_require_team_member_rejects_authenticated_users_without_app_access():
+    with pytest.raises(HTTPException) as exc_info:
+        require_team_member(
+            request=_build_request(),
+            access_context=build_access_context(
+                AppRole.PUBLIC,
+                is_authenticated=True,
+                has_app_access=False,
+                enforcement_mode=AuthEnforcementMode.ENFORCED,
+                email="user@example.com",
+                auth_user_id="supabase-user-4",
+            ),
+            settings=AuthSettings(auth_enforcement_mode=AuthEnforcementMode.ENFORCED),
+        )
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail == "No app access configured"
+
+
+def _build_request():
+    from starlette.requests import Request
+
+    return Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/protected",
+            "headers": [],
+            "query_string": b"",
+            "server": ("testserver", 80),
+            "client": ("testclient", 50000),
+            "scheme": "http",
+        }
+    )

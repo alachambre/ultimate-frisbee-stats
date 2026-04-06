@@ -1,7 +1,9 @@
 from app.auth.settings import get_auth_settings
+from app.auth.types import AuthEnforcementMode
 
 
 def test_get_auth_settings_reads_environment(monkeypatch):
+    monkeypatch.setenv("AUTH_ENFORCEMENT_MODE", "shadow")
     monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
     monkeypatch.setenv("SUPABASE_JWKS_URL", "https://example.supabase.co/auth/v1/.well-known/jwks.json")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key")
@@ -11,8 +13,10 @@ def test_get_auth_settings_reads_environment(monkeypatch):
 
     settings = get_auth_settings()
 
+    assert settings.auth_enforcement_mode == AuthEnforcementMode.SHADOW
     assert settings.supabase_url == "https://example.supabase.co"
     assert settings.supabase_jwks_url.endswith("/jwks.json")
+    assert settings.supabase_jwt_issuer == "https://example.supabase.co/auth/v1"
     assert settings.has_service_role_key is True
     assert settings.is_supabase_auth_configured is True
     assert settings.initial_admin_auth_user_id == "supabase-admin-1"
