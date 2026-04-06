@@ -21,6 +21,11 @@ cp .env.example .env
 # set VITE_API_BASE_URL if you want a non-default backend
 ```
 
+For the authentication foundation, the frontend also expects:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
 ## Tests and Build
 
 ```bash

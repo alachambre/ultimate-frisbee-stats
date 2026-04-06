@@ -17,6 +17,7 @@ from .strategy import Strategy, StrategyCreate, StrategyUpdate
 from .stoppage import Stoppage, StoppageCreate, StoppageUpdate
 from .halftime import Halftime, HalftimeCreate, HalftimeUpdate
 from .turnover import Turnover, TurnoverCreate, TurnoverUpdate, TurnoverWithPlayer
+from .user import User, UserCreate, UserUpdate
 
 # Rebuild models with forward references after all models are imported
 TeamWithPlayers.model_rebuild()
@@ -84,4 +85,8 @@ __all__ = [
     "TurnoverCreate",
     "TurnoverUpdate",
     "TurnoverWithPlayer",
+    # Users
+    "User",
+    "UserCreate",
+    "UserUpdate",
 ]

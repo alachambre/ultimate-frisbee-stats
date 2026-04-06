@@ -99,6 +99,15 @@ from app.crud.turnovers import (
     delete_turnover,
 )
 
+from app.crud.users import (
+    create_user,
+    get_user,
+    get_user_by_auth_user_id,
+    get_user_by_email,
+    get_users,
+    update_user,
+)
+
 __all__ = [
     # Teams
     "create_team",
@@ -178,4 +187,11 @@ __all__ = [
     "get_turnovers_by_player",
     "update_turnover",
     "delete_turnover",
+    # Users
+    "create_user",
+    "get_user",
+    "get_user_by_auth_user_id",
+    "get_user_by_email",
+    "get_users",
+    "update_user",
 ]

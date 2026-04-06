@@ -4,7 +4,10 @@ from fastapi.responses import JSONResponse
 import logging
 import os
 
+from app.auth.bootstrap import bootstrap_initial_admin
 from app.database import init_db
+from app.auth import get_auth_settings
+from app.database import SessionLocal
 from app.routers import teams, players, games, points, competitions, lines, strategies, stoppages, turnovers, statistics, exports, halftimes
 from app.logging_config import setup_logging, get_logger
 
@@ -65,6 +68,14 @@ def startup_event():
     logger.info("Application starting up...")
     try:
         init_db()
+        auth_settings = get_auth_settings()
+        with SessionLocal() as db:
+            bootstrapped_admin = bootstrap_initial_admin(db, auth_settings)
+        if bootstrapped_admin:
+            logger.info(
+                "Initial admin bootstrap ensured for %s",
+                bootstrapped_admin.email,
+            )
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.critical(f"Failed to initialize database: {e}", exc_info=True)

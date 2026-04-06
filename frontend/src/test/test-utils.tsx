@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../locales";
+import { AuthProvider } from "../auth";
 
 // Create a custom render function that includes providers
 // Similar to backend's conftest.py fixtures
@@ -85,11 +86,13 @@ const AllTheProviders = ({ children }: AllTheProvidersProps) => {
 
   return (
     <I18nextProvider i18n={testI18n}>
-      <ThemeProvider theme={theme}>
-        <QueryClientProvider client={testQueryClient}>
-          <BrowserRouter>{children}</BrowserRouter>
-        </QueryClientProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider theme={theme}>
+          <QueryClientProvider client={testQueryClient}>
+            <BrowserRouter>{children}</BrowserRouter>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </I18nextProvider>
   );
 };

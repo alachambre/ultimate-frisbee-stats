@@ -17,6 +17,7 @@ from .strategy import Strategy
 from .stoppage import Stoppage
 from .halftime import Halftime
 from .turnover import Turnover
+from .user import User
 
 __all__ = [
     "Base",
@@ -39,4 +40,5 @@ __all__ = [
     "Stoppage",
     "Halftime",
     "Turnover",
+    "User",
 ]
