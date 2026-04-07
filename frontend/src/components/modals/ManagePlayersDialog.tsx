@@ -26,8 +26,8 @@ import { getGame } from "../../services/games";
 import { getLines } from "../../services/lines";
 import { getLiveGameStatistics } from "../../services/statistics";
 import { shouldEnforcePermissions, useAuth } from "../../auth";
-import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
-import { getPlayerHighlight } from "../../utils/playerHighlighting";
+import type { Player, PointWithPlayers, LineWithPlayers, PlayerGameStats } from "../../types";
+import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
 import {
   countSelectedPlayersByGender,
   getRequiredGenderRatioForPoint,
@@ -88,6 +88,11 @@ export default function ManagePlayersDialog({
     enabled: open && game?.status === "started" && canViewStatistics,
   });
 
+  const liveStatsByPlayerId = useMemo(
+    () => new Map((liveStats ?? []).map((stats) => [stats.player_id, stats])),
+    [liveStats]
+  );
+
   // Calculate required gender ratio based on ABBA pattern
   const requiredGenderRatio = useMemo(
     () => getRequiredGenderRatioForPoint(point.point_number, game?.points || []),
@@ -110,25 +115,19 @@ export default function ManagePlayersDialog({
 
   // Helper function to determine highlight based on playing time
   const getHighlight = (playerId: number): "high" | "low" | null => {
-    if (!liveStats || liveStats.length < 5) return null;
-
-    const playerStats = liveStats.find((s) => s.player_id === playerId);
-    if (!playerStats) return null;
-
-    return getPlayerHighlight(playerStats, liveStats);
+    if (!liveStats || liveStats.length === 0) return null;
+    return getGenderScopedPlayerHighlight(playerId, players, liveStatsByPlayerId);
   };
 
   const getPlayerPoints = (playerId: number): number | null => {
-    if (!liveStats) return null;
-    const playerStats = liveStats.find((s) => s.player_id === playerId);
+    const playerStats = liveStatsByPlayerId.get(playerId) as PlayerGameStats | undefined;
     if (!playerStats) return null;
     return playerStats.points_played;
   };
 
   // Helper function to get compact player time formatted as "X min"
   const getPlayerTime = (playerId: number): string | null => {
-    if (!liveStats) return null;
-    const playerStats = liveStats.find((s) => s.player_id === playerId);
+    const playerStats = liveStatsByPlayerId.get(playerId) as PlayerGameStats | undefined;
     if (!playerStats) return null;
 
     const minutes = Math.floor(playerStats.effective_time_seconds / 60);

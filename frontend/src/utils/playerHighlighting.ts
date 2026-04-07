@@ -1,8 +1,11 @@
-import type { PlayerGameStats } from "../types";
+import type { Player, PlayerGameStats } from "../types";
+
+export const PLAYER_HIGHLIGHT_TIER_RATIO = 0.2;
+export const PLAYER_HIGHLIGHT_MIN_GROUP_SIZE = 5;
 
 /**
  * Determines if a player should be highlighted based on their playing time
- * relative to other players. Uses quintiles (20% thresholds) to identify
+ * relative to other players. Uses top/bottom percentile buckets to identify
  * players with the most and least playing time.
  *
  * @param playerStats - The stats for the player to evaluate
@@ -13,20 +16,21 @@ export function getPlayerHighlight(
   playerStats: PlayerGameStats,
   allStats: PlayerGameStats[]
 ): "high" | "low" | null {
-  // Need at least 5 players total to create meaningful quintiles
-  if (allStats.length < 5) return null;
+  if (allStats.length < PLAYER_HIGHLIGHT_MIN_GROUP_SIZE) return null;
 
   // Sort ALL players by time (descending) - includes players with 0 time
   const sortedByTime = [...allStats].sort((a, b) => b.effective_time_seconds - a.effective_time_seconds);
 
-  // Calculate top/bottom 20% (quintiles)
-  // With ~20 players, this means ~4 players on each end will be highlighted
-  const quintileSize = Math.max(1, Math.floor(sortedByTime.length / 5));
+  const highlightBucketSize = Math.max(
+    1,
+    Math.floor(sortedByTime.length * PLAYER_HIGHLIGHT_TIER_RATIO)
+  );
 
-  const topThreshold = sortedByTime[quintileSize - 1]?.effective_time_seconds || 0;
-  const bottomThreshold = sortedByTime[sortedByTime.length - quintileSize]?.effective_time_seconds || 0;
+  const topThreshold = sortedByTime[highlightBucketSize - 1]?.effective_time_seconds || 0;
+  const bottomThreshold =
+    sortedByTime[sortedByTime.length - highlightBucketSize]?.effective_time_seconds || 0;
 
-  // Highlight top 20% players (most playing time)
+  // Highlight top bucket players (most playing time)
   // Must have actual playing time to be in top tier
   if (
     playerStats.effective_time_seconds > 0 &&
@@ -42,4 +46,52 @@ export function getPlayerHighlight(
   }
 
   return null;
+}
+
+function buildFallbackPlayerStats(player: Player): PlayerGameStats {
+  return {
+    player_id: player.id,
+    player_name: player.name,
+    player_number: player.number ?? null,
+    points_played: 0,
+    effective_time_seconds: 0,
+    offense: {
+      points_played: 0,
+      points_won: 0,
+      points_lost: 0,
+      hold_rate: 0,
+      points_won_no_turnover: 0,
+      clean_hold_rate: 0,
+    },
+    defense: {
+      points_played: 0,
+      points_won: 0,
+      points_lost: 0,
+      break_rate: 0,
+      points_with_turnover: 0,
+      turnover_rate: 0,
+      points_won_no_turnover: 0,
+      clean_break_rate: 0,
+      points_lost_no_turnover: 0,
+    },
+  };
+}
+
+export function getGenderScopedPlayerHighlight(
+  playerId: number,
+  players: Player[],
+  statsByPlayerId: Map<number, PlayerGameStats>
+): "high" | "low" | null {
+  const targetPlayer = players.find((player) => player.id === playerId);
+  if (!targetPlayer) {
+    return null;
+  }
+
+  const genderScopedStats = players
+    .filter((player) => player.gender === targetPlayer.gender)
+    .map((player) => statsByPlayerId.get(player.id) ?? buildFallbackPlayerStats(player));
+  const targetStats =
+    statsByPlayerId.get(playerId) ?? buildFallbackPlayerStats(targetPlayer);
+
+  return getPlayerHighlight(targetStats, genderScopedStats);
 }

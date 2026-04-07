@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getPlayerHighlight } from "../playerHighlighting";
-import type { PlayerGameStats } from "../../types";
+import {
+  PLAYER_HIGHLIGHT_TIER_RATIO,
+  getGenderScopedPlayerHighlight,
+  getPlayerHighlight,
+} from "../playerHighlighting";
+import type { Player, PlayerGameStats } from "../../types";
 
 describe("getPlayerHighlight", () => {
   // Helper to create mock player stats
@@ -29,6 +33,19 @@ describe("getPlayerHighlight", () => {
       clean_break_rate: 0,
       points_lost_no_turnover: 0,
     },
+  });
+
+  const createPlayer = (playerId: number, gender: "M" | "W"): Player => ({
+    id: playerId,
+    name: `Player ${playerId}`,
+    number: playerId,
+    gender,
+    team_id: 1,
+    created_at: "2024-01-01",
+  });
+
+  it("uses a 20% highlight tier ratio", () => {
+    expect(PLAYER_HIGHLIGHT_TIER_RATIO).toBe(0.2);
   });
 
   describe("Edge Cases", () => {
@@ -276,6 +293,58 @@ describe("getPlayerHighlight", () => {
       // Player with 201 is > bottomThreshold, so not "low"
       // But not >= topThreshold (600), so not "high"
       expect(getPlayerHighlight(stats[3], stats)).toBeNull();
+    });
+  });
+
+  describe("Gender-scoped highlighting", () => {
+    it("compares players only against teammates of the same gender", () => {
+      const players: Player[] = [
+        createPlayer(1, "M"),
+        createPlayer(2, "M"),
+        createPlayer(3, "M"),
+        createPlayer(4, "M"),
+        createPlayer(5, "M"),
+        createPlayer(6, "W"),
+        createPlayer(7, "W"),
+        createPlayer(8, "W"),
+        createPlayer(9, "W"),
+        createPlayer(10, "W"),
+      ];
+      const statsByPlayerId = new Map<number, PlayerGameStats>([
+        [1, createPlayerStats(1, 1000)],
+        [2, createPlayerStats(2, 900)],
+        [3, createPlayerStats(3, 800)],
+        [4, createPlayerStats(4, 700)],
+        [5, createPlayerStats(5, 600)],
+        [6, createPlayerStats(6, 400)],
+        [7, createPlayerStats(7, 350)],
+        [8, createPlayerStats(8, 300)],
+        [9, createPlayerStats(9, 250)],
+        [10, createPlayerStats(10, 200)],
+      ]);
+
+      expect(getGenderScopedPlayerHighlight(1, players, statsByPlayerId)).toBe("high");
+      expect(getGenderScopedPlayerHighlight(6, players, statsByPlayerId)).toBe("high");
+      expect(getGenderScopedPlayerHighlight(5, players, statsByPlayerId)).toBe("low");
+      expect(getGenderScopedPlayerHighlight(10, players, statsByPlayerId)).toBe("low");
+    });
+
+    it("treats missing stats as zero-time players inside the same gender group", () => {
+      const players: Player[] = [
+        createPlayer(1, "W"),
+        createPlayer(2, "W"),
+        createPlayer(3, "W"),
+        createPlayer(4, "W"),
+        createPlayer(5, "W"),
+      ];
+      const statsByPlayerId = new Map<number, PlayerGameStats>([
+        [1, createPlayerStats(1, 500)],
+        [2, createPlayerStats(2, 400)],
+        [3, createPlayerStats(3, 300)],
+        [4, createPlayerStats(4, 200)],
+      ]);
+
+      expect(getGenderScopedPlayerHighlight(5, players, statsByPlayerId)).toBe("low");
     });
   });
 });

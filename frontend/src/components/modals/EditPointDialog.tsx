@@ -156,6 +156,7 @@ export default function EditPointDialog({
         {/* Players Section */}
         <Box>
           <PointPlayerSelection
+            gameId={point.game_id}
             teamId={teamId}
             players={players}
             selectedPlayerIds={selectedPlayerIds}

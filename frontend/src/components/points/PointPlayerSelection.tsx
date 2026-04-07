@@ -11,15 +11,18 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getLines } from "../../services/lines";
+import { getLiveGameStatistics } from "../../services/statistics";
 import PlayerSelector from "./PlayerSelector";
 import type { Player, Line } from "../../types";
 import {
   countSelectedPlayersByGender,
   hasValidPointSelection,
 } from "../../utils/playerComposition";
+import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface PointPlayerSelectionProps {
+  gameId?: number;
   teamId: number;
   players: Player[];
   selectedPlayerIds: number[];
@@ -36,6 +39,7 @@ interface PointPlayerSelectionProps {
 }
 
 export default function PointPlayerSelection({
+  gameId,
   teamId,
   players,
   selectedPlayerIds,
@@ -58,6 +62,26 @@ export default function PointPlayerSelection({
     queryFn: () => getLines(teamId),
     enabled: open,
   });
+
+  const { data: liveStats } = useQuery({
+    queryKey: queryKeys.liveStats(gameId ?? 0),
+    queryFn: () => getLiveGameStatistics(gameId as number),
+    enabled: open && typeof gameId === "number",
+  });
+
+  const liveStatsByPlayerId = useMemo(
+    () => new Map((liveStats ?? []).map((stats) => [stats.player_id, stats])),
+    [liveStats]
+  );
+
+  const getPlayerUsageHighlight = useMemo(() => {
+    if (!liveStats || liveStats.length === 0) {
+      return undefined;
+    }
+
+    return (playerId: number): "high" | "low" | null =>
+      getGenderScopedPlayerHighlight(playerId, players, liveStatsByPlayerId);
+  }, [liveStats, liveStatsByPlayerId, players]);
 
   // Filter players based on selected line
   const filteredPlayers = useMemo(() => {
@@ -221,6 +245,7 @@ export default function PointPlayerSelection({
         onChange={onSelectedPlayerIdsChange}
         required
         error={!isValid && selectedPlayerIds.length > 0}
+        getHighlight={getPlayerUsageHighlight}
       />
     </>
   );

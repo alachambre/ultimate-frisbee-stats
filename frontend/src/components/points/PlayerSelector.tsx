@@ -10,6 +10,8 @@ interface PlayerSelectorProps {
   required?: boolean;
   error?: boolean;
   helperText?: string;
+  getHighlight?: (playerId: number) => "high" | "low" | null;
+  highlightSecondary?: boolean;
 }
 
 export default function PlayerSelector({
@@ -19,6 +21,8 @@ export default function PlayerSelector({
   required = false,
   error = false,
   helperText,
+  getHighlight,
+  highlightSecondary = true,
 }: PlayerSelectorProps) {
   const { t } = useTranslation(["points", "common"]);
   const selectedCount = selectedIds.length;
@@ -37,6 +41,8 @@ export default function PlayerSelector({
         players={players}
         selectedIds={selectedIds}
         onToggle={handleToggle}
+        getHighlight={getHighlight}
+        highlightSecondary={highlightSecondary}
         renderSecondary={(player) =>
           player.number !== null && player.number !== undefined
             ? `#${player.number}`

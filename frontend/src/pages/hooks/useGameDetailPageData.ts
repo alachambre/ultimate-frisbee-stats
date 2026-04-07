@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getGame, getLiveGameStatistics } from "../../services";
 import { getCompetition } from "../../services/competitions";
 import { getActivePoint } from "../../services/points";
-import type { PlayerGameStats } from "../../types";
-import { getPlayerHighlight } from "../../utils/playerHighlighting";
+import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
 
 export function useGameDetailPageData(
@@ -82,16 +81,11 @@ export function useGameDetailPageData(
   );
 
   const getRosterPlayerHighlight = (playerId: number): "high" | "low" | null => {
-    if (!liveStats || liveStats.length < 5) {
+    if (!liveStats || !game) {
       return null;
     }
 
-    const playerStats = liveStatsByPlayerId.get(playerId) as PlayerGameStats | undefined;
-    if (!playerStats) {
-      return null;
-    }
-
-    return getPlayerHighlight(playerStats, liveStats);
+    return getGenderScopedPlayerHighlight(playerId, game.players, liveStatsByPlayerId);
   };
 
   return {

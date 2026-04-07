@@ -1,5 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { useMemo } from "react";
 import {
   Box,
   Button,
@@ -35,6 +36,33 @@ export function GameRosterDialog({
   getHighlight,
 }: GameRosterDialogProps) {
   const { t } = useTranslation(["games", "players", "common"]);
+  const sortedPlayers = useMemo(() => {
+    const comparePlayers = (left: Player, right: Player) => {
+      const pointsDelta =
+        (liveStatsByPlayerId.get(right.id)?.points_played ?? 0) -
+        (liveStatsByPlayerId.get(left.id)?.points_played ?? 0);
+
+      if (pointsDelta !== 0) {
+        return pointsDelta;
+      }
+
+      const nameDelta = left.name.localeCompare(right.name);
+      if (nameDelta !== 0) {
+        return nameDelta;
+      }
+
+      return left.id - right.id;
+    };
+
+    const menPlayers = players
+      .filter((player) => player.gender === "M")
+      .sort(comparePlayers);
+    const womenPlayers = players
+      .filter((player) => player.gender === "W")
+      .sort(comparePlayers);
+
+    return [...menPlayers, ...womenPlayers];
+  }, [liveStatsByPlayerId, players]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={false}>
@@ -65,7 +93,7 @@ export function GameRosterDialog({
           </Box>
         )}
         <PlayerSelectionList
-          players={players}
+          players={sortedPlayers}
           selectedIds={[]}
           onToggle={() => {}}
           menLabel={t("games:detail.men")}
