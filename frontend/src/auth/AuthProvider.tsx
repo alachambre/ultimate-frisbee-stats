@@ -15,7 +15,7 @@ import { getAuthMe, type AuthMeResponse } from "../services/auth";
 import { setApiAccessToken } from "../services/api";
 import { getCapabilitiesForRole } from "./capabilities";
 import { getAuthConfig, isAuthConfigured } from "./config";
-import { getSupabaseClient } from "./supabase";
+import { loadSupabaseClient } from "./supabase";
 import type { AppRole, AuthEnforcementMode, AuthState } from "./types";
 
 export interface AuthProviderProps {
@@ -232,16 +232,31 @@ export function AuthProvider({
 
     setSnapshot(buildBootstrappingSnapshot(configured));
 
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      setApiAccessToken(null);
-      setSnapshot(buildStaticSnapshot({ configured }));
-      return undefined;
-    }
-
     let isDisposed = false;
+    let unsubscribe: (() => void) | undefined;
 
     void (async () => {
+      const supabase = await loadSupabaseClient();
+      if (isDisposed) {
+        return;
+      }
+
+      if (!supabase) {
+        setApiAccessToken(null);
+        setSnapshot(buildStaticSnapshot({ configured }));
+        return;
+      }
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (isDisposed) {
+          return;
+        }
+        void syncSession(session);
+      });
+      unsubscribe = () => subscription.unsubscribe();
+
       const { data, error } = await supabase.auth.getSession();
       if (isDisposed) {
         return;
@@ -257,19 +272,10 @@ export function AuthProvider({
       await syncSession(data.session);
     })();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isDisposed) {
-        return;
-      }
-      void syncSession(session);
-    });
-
     return () => {
       isDisposed = true;
       requestCounterRef.current += 1;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, [
     authUserId,
@@ -289,7 +295,7 @@ export function AuthProvider({
       throw new Error("Authentication is not configured");
     }
 
-    const supabase = getSupabaseClient();
+    const supabase = await loadSupabaseClient();
     if (!supabase) {
       throw new Error("Authentication is not configured");
     }
@@ -308,7 +314,7 @@ export function AuthProvider({
   };
 
   const signOut = async () => {
-    const supabase = getSupabaseClient();
+    const supabase = await loadSupabaseClient();
     if (!supabase) {
       setApiAccessToken(null);
       setSnapshot(buildStaticSnapshot({ configured }));

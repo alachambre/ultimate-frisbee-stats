@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -5,17 +6,19 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./locales";
 import Layout from "./components/Layout";
+import LoadingState from "./components/shared/LoadingState";
 import { AuthProvider, RequireMinimumRole } from "./auth";
 import HomePage from "./pages/HomePage";
-import TeamsPage from "./pages/TeamsPage";
-import TeamDetailPage from "./pages/TeamDetailPage";
-import CompetitionsPage from "./pages/CompetitionsPage";
-import CompetitionDetailPage from "./pages/CompetitionDetailPage";
-import GameDetailPage from "./pages/GameDetailPage";
-import LineDetailPage from "./pages/LineDetailPage";
-import StrategiesPage from "./pages/StrategiesPage";
-import StatisticsPage from "./pages/StatisticsPage";
-import AdminUsersPage from "./pages/AdminUsersPage";
+
+const TeamsPage = lazy(() => import("./pages/TeamsPage"));
+const TeamDetailPage = lazy(() => import("./pages/TeamDetailPage"));
+const CompetitionsPage = lazy(() => import("./pages/CompetitionsPage"));
+const CompetitionDetailPage = lazy(() => import("./pages/CompetitionDetailPage"));
+const GameDetailPage = lazy(() => import("./pages/GameDetailPage"));
+const LineDetailPage = lazy(() => import("./pages/LineDetailPage"));
+const StrategiesPage = lazy(() => import("./pages/StrategiesPage"));
+const StatisticsPage = lazy(() => import("./pages/StatisticsPage"));
+const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
 
 const theme = createTheme({
   palette: {
@@ -73,6 +76,14 @@ const queryClient = new QueryClient({
   },
 });
 
+function renderLazyRoute(content: ReactNode) {
+  return (
+    <Suspense fallback={<LoadingState showColdStartHint={false} />}>
+      {content}
+    </Suspense>
+  );
+}
+
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -86,54 +97,63 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route
                     path="teams"
-                    element={
+                    element={renderLazyRoute(
                       <RequireMinimumRole minimumRole="team_member">
                         <TeamsPage />
                       </RequireMinimumRole>
-                    }
+                    )}
                   />
                   <Route
                     path="teams/:teamId"
-                    element={
+                    element={renderLazyRoute(
                       <RequireMinimumRole minimumRole="team_member">
                         <TeamDetailPage />
                       </RequireMinimumRole>
-                    }
+                    )}
                   />
-                  <Route path="competitions" element={<CompetitionsPage />} />
-                  <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
+                  <Route
+                    path="competitions"
+                    element={renderLazyRoute(<CompetitionsPage />)}
+                  />
+                  <Route
+                    path="competitions/:competitionId"
+                    element={renderLazyRoute(<CompetitionDetailPage />)}
+                  />
                   <Route
                     path="lines/:lineId"
-                    element={
+                    element={renderLazyRoute(
                       <RequireMinimumRole minimumRole="team_member">
                         <LineDetailPage />
                       </RequireMinimumRole>
-                    }
+                    )}
                   />
                   <Route
                     path="strategies"
-                    element={
+                    element={renderLazyRoute(
                       <RequireMinimumRole minimumRole="team_member">
                         <StrategiesPage />
                       </RequireMinimumRole>
-                    }
+                    )}
                   />
-                  <Route path="games/:gameId" element={<GameDetailPage />} />
+                  <Route
+                    path="games/:gameId"
+                    element={renderLazyRoute(<GameDetailPage />)}
+                  />
                   <Route
                     path="statistics"
-                    element={
+                    element={renderLazyRoute(
                       <RequireMinimumRole minimumRole="team_analyst">
                         <StatisticsPage />
                       </RequireMinimumRole>
-                    }
+                    )}
                   />
                   <Route
                     path="admin/users"
-                    element={
+                    element={renderLazyRoute(
                       <RequireMinimumRole minimumRole="admin" alwaysEnforce>
                         <AdminUsersPage />
                       </RequireMinimumRole>
-                    }
+                    )}
                   />
                 </Route>
               </Routes>

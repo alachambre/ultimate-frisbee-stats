@@ -10,6 +10,7 @@ import {
   Typography,
   ToggleButtonGroup,
   ToggleButton,
+  CircularProgress,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
@@ -106,18 +107,16 @@ export default function StartPointDialog({
     () => inferNextFieldSide(lastCompletedPoint) ?? DEFAULT_FIELD_SIDE,
     [lastCompletedPoint]
   );
-
-  const [startingOnOffense, setStartingOnOffense] = useState<boolean>(computedStartingOnOffense);
-  const [fieldSide, setFieldSide] = useState<FieldSide>(DEFAULT_FIELD_SIDE);
-
-  // Reset to computed value when dialog opens
-  const handleDialogEntered = () => {
-    setStartingOnOffense(computedStartingOnOffense);
-    setFieldSide(inferredFieldSide);
-  };
+  const dialogStateKey = `${game?.id ?? "loading"}:${game?.points.length ?? 0}:${game?.halftime?.halftime_timestamp ?? "no-halftime"}:${lastCompletedPoint?.id ?? "no-completed-point"}`;
 
   const startMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      startingOnOffense,
+      fieldSide,
+    }: {
+      startingOnOffense: boolean;
+      fieldSide: FieldSide;
+    }) => {
       // Create point in ready status (no players selected yet)
       const point = await startPoint({
         game_id: gameId,
@@ -140,7 +139,10 @@ export default function StartPointDialog({
   };
 
   const handleSubmit = () => {
-    startMutation.mutate();
+    startMutation.mutate({
+      startingOnOffense: computedStartingOnOffense,
+      fieldSide: inferredFieldSide,
+    });
   };
 
   return (
@@ -149,20 +151,103 @@ export default function StartPointDialog({
       onClose={handleClose}
       maxWidth="xs"
       fullWidth
-      TransitionProps={{
-        onEntered: handleDialogEntered,
-      }}
     >
       <DialogTitle>{t("points:dialog.start.title")}</DialogTitle>
+      {isGameLoading || !game ? (
+        <>
+          <DialogContent>
+            <Box
+              sx={{
+                minHeight: 180,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+              }}
+            >
+              <CircularProgress size={36} />
+              <Typography variant="body2" color="text.secondary">
+                {t("common:action.loading")}
+              </Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>{t("common:action.cancel")}</Button>
+            <Button onClick={handleSubmit} variant="contained" disabled>
+              {t("points:dialog.start.create", "Create Point")}
+            </Button>
+          </DialogActions>
+        </>
+      ) : (
+        <StartPointDialogForm
+          key={dialogStateKey}
+          initialStartingOnOffense={computedStartingOnOffense}
+          initialFieldSide={inferredFieldSide}
+          requiresFieldSideSelection={requiresFieldSideSelection}
+          inferredFieldSide={inferredFieldSide}
+          isFirstPointAfterHalftime={isFirstPointAfterHalftime}
+          isSubmitting={startMutation.isPending}
+          errorMessage={
+            (startMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+            null
+          }
+          onCancel={handleClose}
+          onSubmit={({ startingOnOffense, fieldSide }) =>
+            startMutation.mutate({ startingOnOffense, fieldSide })
+          }
+        />
+      )}
+    </Dialog>
+  );
+}
+
+interface StartPointDialogFormProps {
+  initialStartingOnOffense: boolean;
+  initialFieldSide: FieldSide;
+  requiresFieldSideSelection: boolean;
+  inferredFieldSide: FieldSide;
+  isFirstPointAfterHalftime: boolean;
+  isSubmitting: boolean;
+  errorMessage: string | null;
+  onCancel: () => void;
+  onSubmit: (payload: {
+    startingOnOffense: boolean;
+    fieldSide: FieldSide;
+  }) => void;
+}
+
+function StartPointDialogForm({
+  initialStartingOnOffense,
+  initialFieldSide,
+  requiresFieldSideSelection,
+  inferredFieldSide,
+  isFirstPointAfterHalftime,
+  isSubmitting,
+  errorMessage,
+  onCancel,
+  onSubmit,
+}: StartPointDialogFormProps) {
+  const { t } = useTranslation(["points", "common"]);
+  const [startingOnOffense, setStartingOnOffense] = useState<boolean>(initialStartingOnOffense);
+  const [fieldSide, setFieldSide] = useState<FieldSide>(initialFieldSide);
+
+  const handleSubmit = () => {
+    onSubmit({
+      startingOnOffense,
+      fieldSide: requiresFieldSideSelection ? fieldSide : inferredFieldSide,
+    });
+  };
+
+  return (
+    <>
       <DialogContent>
-        {startMutation.error && (
+        {errorMessage && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {(startMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-              t("common:error.generic")}
+            {errorMessage || t("common:error.generic")}
           </Alert>
         )}
 
-        {/* Starting Position */}
         <Box sx={{ mt: 1 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
             {t("points:dialog.start.pull")}
@@ -361,19 +446,15 @@ export default function StartPointDialog({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={startMutation.isPending}>
+        <Button onClick={onCancel} disabled={isSubmitting}>
           {t("common:action.cancel")}
         </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={startMutation.isPending || isGameLoading}
-        >
-          {startMutation.isPending
+        <Button onClick={handleSubmit} variant="contained" disabled={isSubmitting}>
+          {isSubmitting
             ? t("points:dialog.start.starting", "Creating...")
             : t("points:dialog.start.create", "Create Point")}
         </Button>
       </DialogActions>
-    </Dialog>
+    </>
   );
 }

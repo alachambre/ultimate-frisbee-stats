@@ -4,7 +4,7 @@
 A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the sidelines during games.
 
 **App Name:** Monkey Statistics
-**Branding:** Monkey team logo (red monkey with mountains) used as favicon, PWA icon, and iOS home screen icon
+**Branding:** Monkey Statistics uses the monkey emoji/text mark in-app and a lightweight generic app icon in the PWA shell
 **Theme:** Navy blue (#1e3a8a) matching offense color scheme
 
 ## Tech Stack
@@ -28,6 +28,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/services/` API layer (per-entity)
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
+- Route pages outside the landing shell are lazy-loaded from `frontend/src/App.tsx`; preserve route-level code splitting for heavier screens instead of reintroducing eager page imports
 - Auth foundation lives under `frontend/src/auth/`; use the shared roles `public`, `team_member`, `team_analyst`, `admin` and capability helpers there instead of ad hoc UI checks
 - Frontend auth API bootstrap entrypoint is `GET /auth/me`; auth consumption should build on that contract rather than duplicating role resolution logic client-side
 - Frontend session bootstrap now flows through `AuthProvider` + Supabase Auth + `/auth/me`; keep `AuthProvider` inside `QueryClientProvider` so auth changes can invalidate React Query caches safely

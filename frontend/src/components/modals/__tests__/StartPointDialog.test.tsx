@@ -27,8 +27,8 @@ describe("StartPointDialog", () => {
     );
 
     expect(screen.getByText("Create a new point")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /offense/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /defense/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /offense/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /defense/i })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /left endzone/i })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /right endzone/i })).toBeInTheDocument();
@@ -47,8 +47,8 @@ describe("StartPointDialog", () => {
       />
     );
 
-    const offenseButton = screen.getByRole("button", { name: /offense/i });
-    const defenseButton = screen.getByRole("button", { name: /defense/i });
+    const offenseButton = await screen.findByRole("button", { name: /offense/i });
+    const defenseButton = await screen.findByRole("button", { name: /defense/i });
 
     // Offense is selected by default
     expect(offenseButton).toHaveAttribute("aria-pressed", "true");
@@ -77,6 +77,7 @@ describe("StartPointDialog", () => {
       />
     );
 
+    await screen.findByRole("button", { name: /offense/i });
     const cancelButton = screen.getByRole("button", { name: /cancel/i });
     await user.click(cancelButton);
 
@@ -97,10 +98,10 @@ describe("StartPointDialog", () => {
       />
     );
 
-    const createButton = screen.getByRole("button", { name: /create point/i });
     await waitFor(() => {
-      expect(createButton).toBeEnabled();
+      expect(screen.getByRole("button", { name: /create point/i })).toBeEnabled();
     });
+    const createButton = screen.getByRole("button", { name: /create point/i });
     await user.click(createButton);
 
     await waitFor(() => {
@@ -120,11 +121,12 @@ describe("StartPointDialog", () => {
       />
     );
 
+    await screen.findByRole("button", { name: /left endzone/i });
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /left endzone/i })).toHaveAttribute("aria-pressed", "true");
     });
 
-    const createButton = screen.getByRole("button", { name: /create point/i });
+    const createButton = await screen.findByRole("button", { name: /create point/i });
     await waitFor(() => {
       expect(createButton).toBeEnabled();
     });
@@ -149,11 +151,9 @@ describe("StartPointDialog", () => {
       />
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /right endzone/i })).toBeInTheDocument();
-    });
-    await user.click(screen.getByRole("button", { name: /right endzone/i }));
-    const createButton = screen.getByRole("button", { name: /create point/i });
+    const rightEndzoneButton = await screen.findByRole("button", { name: /right endzone/i });
+    await user.click(rightEndzoneButton);
+    const createButton = await screen.findByRole("button", { name: /create point/i });
     await waitFor(() => {
       expect(createButton).toBeEnabled();
     });
@@ -189,7 +189,7 @@ describe("StartPointDialog", () => {
     await waitFor(() => {
       expect(screen.getByText(/field side will be set automatically/i)).toBeInTheDocument();
     });
-    const createButton = screen.getByRole("button", { name: /create point/i });
+    const createButton = await screen.findByRole("button", { name: /create point/i });
     await waitFor(() => {
       expect(createButton).toBeEnabled();
     });
@@ -237,7 +237,7 @@ describe("StartPointDialog", () => {
 
     // Override inferred side (which would be right side) and force left side manually
     await user.click(screen.getByRole("button", { name: /left endzone/i }));
-    const createButton = screen.getByRole("button", { name: /create point/i });
+    const createButton = await screen.findByRole("button", { name: /create point/i });
     await waitFor(() => {
       expect(createButton).toBeEnabled();
     });
