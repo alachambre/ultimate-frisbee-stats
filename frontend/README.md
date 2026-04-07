@@ -26,6 +26,57 @@ For the authentication foundation, the frontend also expects:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
+The sign-in UI is only shown when both Supabase variables are configured.
+
+## Authentication Flow
+
+The frontend auth flow is:
+
+- Supabase client manages the browser session
+- `AuthProvider` listens to session changes
+- the current access context is bootstrapped from `GET /auth/me`
+- the API client attaches the Supabase access token when available
+
+Current roles:
+
+- `public`
+- `team_member`
+- `team_analyst`
+- `admin`
+
+Important rollout behavior:
+
+- `off`
+  - safe deployment mode
+  - the UI can still show sign-in if configured, but backend role resolution stays
+    effectively public
+- `shadow`
+  - recommended for validating login, `/auth/me`, and admin provisioning
+- `enforced`
+  - full route, navigation, and action gating
+
+Special case:
+
+- `/admin/users` is treated as strict admin-only UI and is not meant to be usable
+  while the backend is still in `off`
+
+## Local Auth Testing
+
+If you want to test login locally:
+
+1. Copy `.env.example` to `.env`
+2. Set:
+   - `VITE_API_BASE_URL=http://localhost:8000`
+   - `VITE_SUPABASE_URL=<your-supabase-url>`
+   - `VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>`
+3. Run the backend in at least `AUTH_ENFORCEMENT_MODE=shadow`
+
+Notes:
+
+- On desktop, sign-in is in the top app bar.
+- On mobile, sign-in is inside the drawer menu.
+- After changing Vite env vars, restart the dev server.
+
 ## Tests and Build
 
 ```bash

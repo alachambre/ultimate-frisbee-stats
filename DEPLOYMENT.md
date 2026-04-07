@@ -1,217 +1,308 @@
 # Deployment Guide
 
-This guide walks through deploying the Ultimate Frisbee Stats application to production using:
-- **Vercel** for the frontend (React PWA)
-- **Render** for the backend (FastAPI)
-- **Supabase** for the database (PostgreSQL)
+This guide covers the production setup used by Monkey Statistics:
 
-**Total Cost: FREE** (all services on free tier)
+- Supabase for PostgreSQL and Supabase Auth
+- Render for the FastAPI backend
+- Vercel for the React frontend
 
-**⚠️ Note on Render Free Tier:**
-- Backend spins down after 15 minutes of inactivity
-- First request after inactivity takes ~30 seconds to wake up ("cold start")
-- Subsequent requests are instant once the server is running
-- Acceptable for personal/team use, but not ideal for high-traffic production
+The authentication rollout is designed to ship safely in stages through
+`AUTH_ENFORCEMENT_MODE=off`, `shadow`, then `enforced`.
 
 ## Prerequisites
 
-- GitHub account
-- Git repository with this code
-- Accounts created on:
-  - [Supabase](https://supabase.com) (free)
-  - [Render](https://render.com) (free tier)
-  - [Vercel](https://vercel.com) (free)
+- A Supabase project
+- A Render web service for `backend/`
+- A Vercel project for `frontend/`
+- The Supabase CLI installed locally for SQL migrations
 
-## Step 1: Set Up Supabase (Database)
+## 1. Set Up Supabase
 
-1. Go to [supabase.com](https://supabase.com) and sign up
-2. Create a new project
-   - Choose a project name
-   - Set a strong database password (save it!)
-   - Choose a region close to your users (Europe for France)
-3. Wait for the database to provision (~2 minutes)
-4. Get your connection string:
-   - Go to **Project Settings** → **Database**
-   - Find **Connection string** → **URI**
-   - Copy the connection string (it looks like: `postgresql://postgres:password@db.xxx.supabase.co:5432/postgres`)
-   - **Save this** - you'll need it for Render
+### Database
 
-## Step 2: Deploy Backend to Render
+1. Create the Supabase project.
+2. Copy the PostgreSQL connection string from:
+   `Project Settings -> Database -> Connection string -> URI`
+3. Apply the repo migrations:
 
-1. Go to [render.com](https://render.com) and sign up with GitHub
-2. Click **New +** → **Web Service**
-3. Connect your GitHub repository and select it
-4. Configure the service:
-   - **Name**: `ultimate-frisbee-stats-backend` (or your choice)
-   - **Region**: Choose closest to you (e.g., Frankfurt for Europe)
-   - **Branch**: `main`
-   - **Root Directory**: `backend`
-   - **Runtime**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-   - **Plan**: **Free**
-
-5. Click **Advanced** and add Environment Variables:
-   ```
-   DATABASE_URL=<your Supabase connection string from Step 1>
-   FRONTEND_URL=https://your-app.vercel.app
-   ```
-   (We'll update FRONTEND_URL after deploying to Vercel in Step 3)
-
-6. Click **Create Web Service**
-7. Render will automatically build and deploy (takes ~2-3 minutes)
-8. Once deployed, copy your Render URL from the dashboard
-9. **Save your Render URL** (e.g., `https://ultimate-frisbee-stats-backend.onrender.com`)
-
-## Step 3: Deploy Frontend to Vercel
-
-1. Go to [vercel.com](https://vercel.com) and sign up with GitHub
-2. Click **Add New** → **Project**
-3. Import your GitHub repository
-4. Configure the project:
-   - **Framework Preset**: Vite
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Environment Variables**:
-     ```
-     VITE_API_BASE_URL=<your Render backend URL from Step 2>
-     ```
-     Example: `VITE_API_BASE_URL=https://ultimate-frisbee-stats-backend.onrender.com`
-
-5. Click **Deploy**
-6. Once deployed, Vercel will give you a URL (e.g., `https://your-app.vercel.app`)
-
-## Step 4: Update Backend CORS
-
-1. Go back to **Render**
-2. Go to your backend service → **Environment** tab
-3. Update the `FRONTEND_URL` environment variable with your Vercel URL:
-   ```
-   FRONTEND_URL=https://your-app.vercel.app
-   ```
-4. Click **Save Changes** - Render will automatically redeploy
-
-## Step 5: Test Your Deployment
-
-1. Open your Vercel URL in a browser
-2. Try creating a team, competition, and game
-3. Track some points
-4. View statistics
-
-**Your app is live!** 🎉
-
-## Automatic Deployments
-
-Both Vercel and Render are now connected to your GitHub repository:
-- **Push to `main`** → Both services automatically redeploy
-- **No manual deployment needed**
-
-## Environment Variables Summary
-
-### Backend (Render)
 ```bash
-DATABASE_URL=postgresql://postgres:password@db.xxx.supabase.co:5432/postgres
+supabase login
+supabase link --project-ref <your-project-ref>
+supabase db push --linked
+```
+
+This applies the SQL files under `supabase/migrations/`, including the
+application `users` table used for app roles.
+
+### Auth values to collect
+
+From the Supabase dashboard, collect these values:
+
+- `SUPABASE_URL`
+  - example: `https://your-project.supabase.co`
+- `SUPABASE_JWKS_URL`
+  - example: `https://your-project.supabase.co/auth/v1/.well-known/jwks.json`
+- frontend anon key
+  - used as `VITE_SUPABASE_ANON_KEY`
+- backend service role or secret key
+  - used as `SUPABASE_SERVICE_ROLE_KEY`
+  - backend only, never expose it in Vercel or any `VITE_*` variable
+
+### First admin auth account
+
+Before enforcing app permissions, create the first admin identity in:
+`Authentication -> Users`
+
+Then copy:
+
+- the Supabase auth user UUID
+- the account email
+
+Those values are used by the backend bootstrap to create the first local
+`admin` row in `public.users`.
+
+## 2. Deploy the Backend on Render
+
+Create a Render web service pointing to the `backend/` directory with:
+
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+### Required Render environment variables
+
+```bash
+DATABASE_URL=postgresql://postgres:<password>@db.<project>.supabase.co:5432/postgres
 FRONTEND_URL=https://your-app.vercel.app
+AUTH_ENFORCEMENT_MODE=off
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_JWKS_URL=https://your-project.supabase.co/auth/v1/.well-known/jwks.json
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+INITIAL_ADMIN_AUTH_USER_ID=<supabase-auth-user-uuid>
+INITIAL_ADMIN_EMAIL=<admin-email>
 ```
 
-### Frontend (Vercel)
+Notes:
+
+- `SUPABASE_SERVICE_ROLE_KEY` is required for admin user management.
+- `INITIAL_ADMIN_*` is optional after the first bootstrap, but keeping it set is
+  fine because the bootstrap is idempotent.
+- `AUTH_ENFORCEMENT_MODE=off` is the safest first production deploy.
+
+### Backend bootstrap check
+
+After deploying the backend, verify one of these:
+
+- Render logs mention the initial admin bootstrap
+- `public.users` contains the expected admin row
+
+Expected row characteristics:
+
+- `auth_user_id` matches the Supabase Auth user UUID
+- `email` matches the admin account email
+- `role=admin`
+- `is_active=true`
+
+## 3. Deploy the Frontend on Vercel
+
+Create a Vercel project pointing to `frontend/` with:
+
+- Framework preset: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+
+### Required Vercel environment variables
+
 ```bash
-VITE_API_BASE_URL=https://ultimate-frisbee-stats-backend.onrender.com
+VITE_API_BASE_URL=https://your-backend.onrender.com
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
 ```
 
-## Costs
+Notes:
 
-- **Supabase**: Free (500MB database, plenty for your needs)
-- **Render**: Free (with cold starts after 15 min inactivity, 750 hours/month)
-- **Vercel**: Free (100GB bandwidth, more than enough)
+- Vite reads `VITE_*` variables at build time, so any change requires a new
+  deployment.
+- The login button only appears when both `VITE_SUPABASE_URL` and
+  `VITE_SUPABASE_ANON_KEY` are configured.
+- Never put `SUPABASE_SERVICE_ROLE_KEY` in Vercel.
 
-**Total: FREE** 🎉
+## 4. Recommended Auth Rollout
 
-### Render Free Tier Limitations
+### Stage 1: Foundation deploy
 
-**Cold Starts:**
-- Server spins down after 15 minutes of inactivity
-- First request after spin-down takes ~30 seconds to wake up
-- Once running, all subsequent requests are instant
-
-**Keeping Server Awake (Optional):**
-- Use a free cron service (e.g., cron-job.org) to ping your API every 14 minutes
-- Example ping URL: `https://your-backend.onrender.com/docs`
-- Recommended for game days when you need instant response
-
-**Upgrade to Paid Plan:**
-- Render Starter: $7/month for always-on, no cold starts
-- Consider if cold starts become too annoying
-
-## Local Development
-
-Your local setup still works with SQLite:
+Deploy backend and frontend with:
 
 ```bash
-# Backend
-cd backend
-source venv/bin/activate
-uvicorn app.main:app --reload
-
-# Frontend
-cd frontend
-npm run dev
+AUTH_ENFORCEMENT_MODE=off
 ```
 
-No environment variables needed for local development - defaults to SQLite and localhost.
+Behavior:
+
+- the app behaves like the pre-auth version
+- login UI can appear if the frontend Supabase vars are configured
+- `/auth/me` still resolves to `public`, so role-aware testing is not meaningful
+  yet
+
+Use this stage to validate:
+
+- migrations applied successfully
+- frontend can reach the backend
+- the initial admin bootstrap completed
+
+### Stage 2: Shadow mode
+
+Switch the backend to:
+
+```bash
+AUTH_ENFORCEMENT_MODE=shadow
+```
+
+Behavior:
+
+- Supabase sessions are resolved
+- `/auth/me` returns the real role and capabilities
+- login and logout become meaningfully testable
+- most product routes still behave like the old app
+- admin routes remain strictly protected
+
+Recommended checks:
+
+1. Sign in with the admin account.
+2. Open `GET /auth/me` in browser devtools and confirm:
+   - `role=admin`
+   - `has_app_access=true`
+   - `enforcement_mode=shadow`
+3. Visit `/admin/users`.
+4. Create `team_member` and `team_analyst` accounts from the admin UI.
+5. Verify public pages still work for anonymous users.
+
+### Stage 3: Enforced mode
+
+Switch the backend to:
+
+```bash
+AUTH_ENFORCEMENT_MODE=enforced
+```
+
+Behavior:
+
+- public users are limited to spectator surfaces
+- public payloads are redacted for comments and strategy data
+- `team_member` users cannot access statistics or exports
+- `team_analyst` users can access the full product except admin-only screens
+- `admin` users can also manage accounts
+
+Recommended checks:
+
+- public: competitions, games, live tracker, score, history, stoppages, turnovers
+- `team_member`: team and game operations, but no statistics
+- `team_analyst`: statistics and exports
+- `admin`: `/admin/users` works end to end
+
+## 5. Local Development With Auth Enabled
+
+Local development still defaults to SQLite for app data. That is useful for local
+auth testing, but remember:
+
+- Supabase Auth users still live in the shared Supabase project
+- local SQLite `users` rows are not the same as production `public.users`
+- creating users through a local backend only provisions the local app database,
+  not production
+
+Recommended local backend `.env`:
+
+```bash
+AUTH_ENFORCEMENT_MODE=shadow
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_JWKS_URL=https://your-project.supabase.co/auth/v1/.well-known/jwks.json
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
+INITIAL_ADMIN_AUTH_USER_ID=<supabase-auth-user-uuid>
+INITIAL_ADMIN_EMAIL=<admin-email>
+```
+
+Recommended local frontend `.env`:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=<supabase-anon-key>
+```
+
+Use at least `shadow` locally. In `off`, the login button can still appear, but
+the backend intentionally resolves `/auth/me` as `public`.
+
+## 6. Environment Variable Summary
+
+### Backend
+
+```bash
+DATABASE_URL
+FRONTEND_URL
+AUTH_ENFORCEMENT_MODE
+SUPABASE_URL
+SUPABASE_JWKS_URL
+SUPABASE_SERVICE_ROLE_KEY
+INITIAL_ADMIN_AUTH_USER_ID
+INITIAL_ADMIN_EMAIL
+```
+
+### Frontend
+
+```bash
+VITE_API_BASE_URL
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
 
 ## Troubleshooting
 
-### "CORS error" in browser console
-- Check that `FRONTEND_URL` in Render matches your Vercel URL
-- Ensure Render redeployed after changing the variable
+### Login button is missing
 
-### "Database connection failed"
-- Verify `DATABASE_URL` in Render is correct
-- Check Supabase project is running
-- Ensure connection string uses `postgresql://` (not `postgres://`)
+Check the Vercel environment and confirm:
 
-### "API not found" errors
-- Verify `VITE_API_BASE_URL` in Vercel points to Render backend
-- Check Render backend is deployed and running
-- Test Render API directly: `https://your-backend.onrender.com/docs`
+- `VITE_SUPABASE_URL` is set
+- `VITE_SUPABASE_ANON_KEY` is set
+- the frontend was redeployed after changing them
 
-### "Slow loading / 30 second delays"
-- This is normal on Render's free tier (cold start after inactivity)
-- See "Keeping Server Awake" section above for solutions
-- Consider upgrading to Render Starter ($7/month) for always-on service
+On mobile, the sign-in action lives in the drawer menu instead of the top bar.
 
-## Custom Domain (Optional)
+### Signed in user still looks public
 
-### Frontend (Vercel)
-1. Go to Vercel project **Settings** → **Domains**
-2. Add your custom domain
-3. Update DNS records as instructed
-4. Update `FRONTEND_URL` in Railway to use new domain
+Check `GET /auth/me`.
 
-### Backend (Railway)
-1. Go to Railway project **Settings** → **Networking**
-2. Add custom domain
-3. Update DNS records as instructed
-4. Update `VITE_API_BASE_URL` in Vercel to use new domain
+If it returns `public` or `has_app_access=false`, verify:
 
-## Database Backups
+- the backend is in `shadow` or `enforced`
+- the signed-in Supabase user UUID matches `public.users.auth_user_id`
+- the local user row is active
 
-Supabase automatically backs up your database daily. To download a backup:
-1. Go to Supabase project **Database** → **Backups**
-2. Download the latest backup
+### Admin page does not work
 
-## Monitoring
+Check all of these:
 
-### Railway Logs
-- View backend logs in Railway dashboard
-- Check for errors during deployments
+- backend is in `shadow` or `enforced`
+- `/auth/me` returns `role=admin`
+- `SUPABASE_SERVICE_ROLE_KEY` is set on Render
 
-### Vercel Logs
-- View frontend deployment logs in Vercel dashboard
-- Check build errors if deployment fails
+Without the service role key, the backend cannot create or update Supabase Auth
+users from `/users`.
 
-### Supabase Metrics
-- Monitor database size and connections in Supabase dashboard
-- Free tier: 500MB storage, 2GB bandwidth/month
+### Public users can still see protected content
+
+Public spectators should not see comments or strategy fields in `shadow` or
+`enforced`. If they do:
+
+- confirm the backend deploy includes the latest auth redaction changes
+- confirm the backend is not still running in `off`
+
+### CORS errors
+
+Check that:
+
+- `FRONTEND_URL` on Render matches the Vercel production URL
+- the backend redeployed after the value changed
+
+### First request is slow
+
+This is expected on the Render free tier after inactivity. The service sleeps and
+needs time to wake up.
