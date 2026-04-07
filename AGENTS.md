@@ -42,6 +42,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Statistics page layout is split into dedicated components: `StatisticsConfigurationPanel`, `StatisticsSectionContainer`, and `StatisticsSelectionCard` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
 - Statistics data/query orchestration lives in `frontend/src/pages/hooks/useStatisticsPageData.ts`; keep `StatisticsPage.tsx` focused on composition/rendering
 - Statistics supports cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
+- Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
 - Statistics UX pattern is progressive: sticky team context + branch switch + selectable cards (competition/game/player) + clickable breadcrumb chips for upward navigation
 - Team roster cards on `TeamDetailPage` are click-to-edit; player statistics access is available from `EditPlayerModal` (team scope)

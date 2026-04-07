@@ -3,9 +3,48 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
 from datetime import datetime, timedelta, timezone
 from app import models, schemas
+from app.crud.statistics_calculations import count_turnovers_by_possession
+from app.crud.statistics_queries import get_turnovers_for_points
 from app.logging_config import get_logger
 
 logger = get_logger("crud.points")
+
+
+def _annotate_point_turnover_counts(
+    point: models.Point,
+    turnovers: List[models.Turnover],
+) -> models.Point:
+    our_turnovers, opponent_turnovers = count_turnovers_by_possession(
+        point.starting_on_offense,
+        turnovers,
+    )
+    setattr(point, "our_turnovers", our_turnovers)
+    setattr(point, "opponent_turnovers", opponent_turnovers)
+    return point
+
+
+def _annotate_points_turnover_counts(
+    db: Session,
+    points: List[models.Point],
+) -> List[models.Point]:
+    if not points:
+        return points
+
+    turnovers_by_point = get_turnovers_for_points(db, [point.id for point in points])
+    for point in points:
+        _annotate_point_turnover_counts(point, turnovers_by_point.get(point.id, []))
+    return points
+
+
+def _annotate_point_turnover_counts_for_single(
+    db: Session,
+    point: Optional[models.Point],
+) -> Optional[models.Point]:
+    if point is None:
+        return None
+
+    _annotate_points_turnover_counts(db, [point])
+    return point
 
 
 def _ensure_timezone_aware(dt: Optional[datetime]) -> Optional[datetime]:
@@ -20,24 +59,26 @@ def _ensure_timezone_aware(dt: Optional[datetime]) -> Optional[datetime]:
 
 def get_running_point_for_game(db: Session, game_id: int) -> Optional[models.Point]:
     """Get the running point for a game, if any"""
-    return db.query(models.Point).options(
+    point = db.query(models.Point).options(
         joinedload(models.Point.players),
         joinedload(models.Point.strategy)
     ).filter(
         models.Point.game_id == game_id,
         models.Point.status == models.PointStatusEnum.running
     ).first()
+    return _annotate_point_turnover_counts_for_single(db, point)
 
 
 def get_active_point_for_game(db: Session, game_id: int) -> Optional[models.Point]:
     """Get the active (ready or running) point for a game, if any"""
-    return db.query(models.Point).options(
+    point = db.query(models.Point).options(
         joinedload(models.Point.players),
         joinedload(models.Point.strategy)
     ).filter(
         models.Point.game_id == game_id,
         models.Point.status.in_([models.PointStatusEnum.ready, models.PointStatusEnum.running])
     ).first()
+    return _annotate_point_turnover_counts_for_single(db, point)
 
 
 def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
@@ -99,7 +140,7 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
             db_point.players = players
         db.commit()
         db.refresh(db_point)
-        return db_point
+        return _annotate_point_turnover_counts_for_single(db, db_point)
     except ValueError:
         # Re-raise ValueError (business logic errors) without logging as error
         raise
@@ -113,21 +154,23 @@ def create_point(db: Session, point: schemas.PointCreate) -> models.Point:
 
 
 def get_point(db: Session, point_id: int) -> Optional[models.Point]:
-    return db.query(models.Point).options(
+    point = db.query(models.Point).options(
         joinedload(models.Point.players),
         joinedload(models.Point.strategy)
     ).filter(
         models.Point.id == point_id
     ).first()
+    return _annotate_point_turnover_counts_for_single(db, point)
 
 
 def get_points_by_game(db: Session, game_id: int) -> List[models.Point]:
-    return db.query(models.Point).options(
+    points = db.query(models.Point).options(
         joinedload(models.Point.players),
         joinedload(models.Point.strategy)
     ).filter(
         models.Point.game_id == game_id
     ).order_by(models.Point.point_number.desc()).all()
+    return _annotate_points_turnover_counts(db, points)
 
 
 def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) -> Optional[models.Point]:
@@ -237,6 +280,7 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
 
             db.commit()
             db.refresh(db_point)
+            _annotate_point_turnover_counts_for_single(db, db_point)
         except ValueError:
             # Re-raise ValueError (business logic errors) without logging as error
             raise
@@ -312,7 +356,7 @@ def finish_point(db: Session, point_id: int, finish_data: schemas.PointFinish) -
 
         db.commit()
         db.refresh(db_point)
-        return db_point
+        return _annotate_point_turnover_counts_for_single(db, db_point)
     except ValueError:
         # Re-raise ValueError (business logic errors) without logging as error
         raise

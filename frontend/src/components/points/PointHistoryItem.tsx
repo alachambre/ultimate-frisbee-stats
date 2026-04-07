@@ -45,6 +45,16 @@ export default function PointHistoryItem({
   const isRunning = point.status === "running";
   const isScored = point.status === "scored";
   const isReady = point.status === "ready";
+  const ourTurnovers = point.our_turnovers ?? 0;
+  const opponentTurnovers = point.opponent_turnovers ?? 0;
+  const totalTurns = ourTurnovers + opponentTurnovers;
+  const shouldShowTurnoverSummary = isCompleted || totalTurns > 0;
+  const turnoverSummaryLabel =
+    totalTurns === 0
+      ? t("points:history.zeroTurn")
+      : t("points:history.turnCount", { count: totalTurns });
+  const turnoverSummaryColor =
+    totalTurns >= 5 ? "error" : totalTurns >= 3 ? "warning" : totalTurns === 0 ? "success" : "default";
 
   // Break logic: winning on defense = break (positive), losing on offense = broken (negative)
   // Only applies to completed points
@@ -164,6 +174,15 @@ export default function PointHistoryItem({
               label={t("points:status.ready")}
               color="default"
               size="small"
+            />
+          )}
+          {shouldShowTurnoverSummary && (
+            <Chip
+              label={turnoverSummaryLabel}
+              color={turnoverSummaryColor}
+              variant={totalTurns === 0 ? "outlined" : "filled"}
+              size="small"
+              sx={{ fontWeight: "bold" }}
             />
           )}
         </Box>

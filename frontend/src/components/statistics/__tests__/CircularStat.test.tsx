@@ -4,15 +4,7 @@ import CircularStat from "../CircularStat";
 
 describe("CircularStat", () => {
   it("shows a placeholder instead of 0% when denominator is zero", () => {
-    render(
-      <CircularStat
-        label="Hold"
-        percentage={0}
-        count={0}
-        total={0}
-        color={(theme) => theme.colors.offense.main}
-      />
-    );
+    render(<CircularStat label="Hold" percentage={0} count={0} total={0} useValueGradient />);
 
     expect(screen.getByText("—")).toBeInTheDocument();
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
@@ -20,15 +12,7 @@ describe("CircularStat", () => {
   });
 
   it("shows percentage normally when denominator is non-zero", () => {
-    render(
-      <CircularStat
-        label="Hold"
-        percentage={0.5}
-        count={1}
-        total={2}
-        color={(theme) => theme.colors.offense.main}
-      />
-    );
+    render(<CircularStat label="Hold" percentage={0.5} count={1} total={2} useValueGradient />);
 
     expect(screen.getByText("50%")).toBeInTheDocument();
     expect(screen.getByText("1/2")).toBeInTheDocument();

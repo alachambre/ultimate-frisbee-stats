@@ -19,7 +19,7 @@ class PointFacts:
     field_side: Optional[str]
     pull: Optional[bool]
     our_turnovers: int
-    their_turnovers: int
+    opponent_turnovers: int
 
 
 def calculate_point_duration_seconds(point: Point) -> int:
@@ -45,23 +45,23 @@ def count_turnovers_by_possession(
     turnovers: List[Turnover],
 ) -> Tuple[int, int]:
     """
-    Returns (our_turnovers, their_turnovers) based on possession order.
+    Returns (our_turnovers, opponent_turnovers) based on possession order.
     """
     our_turnovers = 0
-    their_turnovers = 0
+    opponent_turnovers = 0
     for idx, _turnover in enumerate(turnovers):
         turnover_number = idx + 1  # 1-indexed
         if starting_on_offense:
             if turnover_number % 2 == 1:
                 our_turnovers += 1
             else:
-                their_turnovers += 1
+                opponent_turnovers += 1
         else:
             if turnover_number % 2 == 1:
-                their_turnovers += 1
+                opponent_turnovers += 1
             else:
                 our_turnovers += 1
-    return our_turnovers, their_turnovers
+    return our_turnovers, opponent_turnovers
 
 
 def build_point_facts(
@@ -72,7 +72,7 @@ def build_point_facts(
 
     for point in completed_points:
         turnovers = turnovers_by_point.get(point.id, [])
-        our_turnovers, their_turnovers = count_turnovers_by_possession(
+        our_turnovers, opponent_turnovers = count_turnovers_by_possession(
             point.starting_on_offense,
             turnovers,
         )
@@ -84,7 +84,7 @@ def build_point_facts(
                 field_side=point.field_side,
                 pull=point.pull,
                 our_turnovers=our_turnovers,
-                their_turnovers=their_turnovers,
+                opponent_turnovers=opponent_turnovers,
             )
         )
 
@@ -170,6 +170,8 @@ def build_live_player_stats(
                     "hold_rate": 0.0,
                     "points_won_no_turnover": 0,
                     "clean_hold_rate": 0.0,
+                    "our_turnovers": 0,
+                    "opponent_turnovers": 0,
                 },
                 "defense": {
                     "points_played": 0,
@@ -181,6 +183,8 @@ def build_live_player_stats(
                     "points_won_no_turnover": 0,
                     "clean_break_rate": 0.0,
                     "points_lost_no_turnover": 0,
+                    "our_turnovers": 0,
+                    "opponent_turnovers": 0,
                 },
             }
             for player in game_players
@@ -198,12 +202,16 @@ def build_live_player_stats(
             "offense_won": 0,
             "offense_lost": 0,
             "offense_won_no_turnover": 0,
+            "offense_our_turnovers": 0,
+            "offense_opponent_turnovers": 0,
             "defense_played": 0,
             "defense_won": 0,
             "defense_lost": 0,
             "defense_with_turnover": 0,
             "defense_won_no_turnover": 0,
             "defense_lost_no_turnover": 0,
+            "defense_our_turnovers": 0,
+            "defense_opponent_turnovers": 0,
         }
 
     for point in completed_points:
@@ -211,11 +219,11 @@ def build_live_player_stats(
         effective_time = calculate_effective_time_seconds(point, stoppages)
 
         turnovers = turnovers_by_point.get(point.id, [])
-        our_turnovers, _their_turnovers = count_turnovers_by_possession(
+        our_turnovers, opponent_turnovers = count_turnovers_by_possession(
             point.starting_on_offense,
             turnovers,
         )
-        has_turnovers = len(turnovers) > 0
+        has_turnovers = (our_turnovers + opponent_turnovers) > 0
 
         for player in point.players:
             if player.id not in player_stats:
@@ -226,6 +234,8 @@ def build_live_player_stats(
 
             if point.starting_on_offense:
                 stats["offense_played"] += 1
+                stats["offense_our_turnovers"] += our_turnovers
+                stats["offense_opponent_turnovers"] += opponent_turnovers
                 if point.won:
                     stats["offense_won"] += 1
                     if our_turnovers == 0:
@@ -234,6 +244,8 @@ def build_live_player_stats(
                     stats["offense_lost"] += 1
             else:
                 stats["defense_played"] += 1
+                stats["defense_our_turnovers"] += our_turnovers
+                stats["defense_opponent_turnovers"] += opponent_turnovers
                 if point.won:
                     stats["defense_won"] += 1
                     if our_turnovers == 0:
@@ -279,6 +291,8 @@ def build_live_player_stats(
                 "hold_rate": hold_rate,
                 "points_won_no_turnover": stats["offense_won_no_turnover"],
                 "clean_hold_rate": clean_hold_rate,
+                "our_turnovers": stats["offense_our_turnovers"],
+                "opponent_turnovers": stats["offense_opponent_turnovers"],
             },
             "defense": {
                 "points_played": stats["defense_played"],
@@ -290,6 +304,8 @@ def build_live_player_stats(
                 "points_won_no_turnover": stats["defense_won_no_turnover"],
                 "clean_break_rate": clean_break_rate,
                 "points_lost_no_turnover": stats["defense_lost_no_turnover"],
+                "our_turnovers": stats["defense_our_turnovers"],
+                "opponent_turnovers": stats["defense_opponent_turnovers"],
             },
         })
 
@@ -301,6 +317,8 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
     offense_won = 0
     offense_lost = 0
     offense_won_no_turnover = 0
+    offense_our_turnovers = 0
+    offense_opponent_turnovers = 0
 
     defense_started = 0
     defense_won = 0
@@ -308,12 +326,16 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
     defense_points_with_turnover = 0
     defense_won_no_turnover = 0
     defense_lost_no_turnover = 0
+    defense_our_turnovers = 0
+    defense_opponent_turnovers = 0
 
     for facts in point_facts:
-        total_turnovers = facts.our_turnovers + facts.their_turnovers
+        total_turnovers = facts.our_turnovers + facts.opponent_turnovers
 
         if facts.starting_on_offense:
             offense_started += 1
+            offense_our_turnovers += facts.our_turnovers
+            offense_opponent_turnovers += facts.opponent_turnovers
             if facts.won:
                 offense_won += 1
                 if facts.our_turnovers == 0:
@@ -322,6 +344,8 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
                 offense_lost += 1
         else:
             defense_started += 1
+            defense_our_turnovers += facts.our_turnovers
+            defense_opponent_turnovers += facts.opponent_turnovers
             if facts.won:
                 defense_won += 1
                 if facts.our_turnovers == 0:
@@ -361,6 +385,8 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
             "points_won_no_turnover": offense_won_no_turnover,
             "clean_hold_rate": offense_clean_hold_rate,
             "broken_rate": offense_broken_rate,
+            "our_turnovers": offense_our_turnovers,
+            "opponent_turnovers": offense_opponent_turnovers,
         },
         "defense": {
             "points_started": defense_started,
@@ -372,6 +398,8 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
             "points_won_no_turnover": defense_won_no_turnover,
             "clean_break_rate": defense_clean_break_rate,
             "points_lost_no_turnover": defense_lost_no_turnover,
+            "our_turnovers": defense_our_turnovers,
+            "opponent_turnovers": defense_opponent_turnovers,
             "pull_stats": {
                 "total_pulls": total_pulls,
                 "inbound_pulls": inbound_pulls,

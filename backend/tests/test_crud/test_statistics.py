@@ -187,6 +187,31 @@ def test_get_team_team_stats_aggregates_only_selected_team(db_session):
     assert stats["defense"]["points_won"] == 1
 
 
+def test_get_team_team_stats_aggregates_turnover_totals(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won().with_turnover(10).with_turnover(20).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won().with_turnover(15).complete()
+
+    stats = get_team_team_stats(db_session, scenario.team.id)
+
+    assert stats is not None
+    assert stats["offense"]["our_turnovers"] == 1
+    assert stats["offense"]["opponent_turnovers"] == 1
+    assert stats["defense"]["our_turnovers"] == 0
+    assert stats["defense"]["opponent_turnovers"] == 1
+
+
 def test_get_team_player_stats_aggregates_only_selected_team(db_session):
     scenario = GameScenarioBuilder(db_session) \
         .with_team("Team A") \
@@ -226,6 +251,32 @@ def test_get_team_player_stats_aggregates_only_selected_team(db_session):
     assert all(player_stats["points_played"] == 3 for player_stats in active_players)
     assert bench_player["points_played"] == 0
     assert bench_player["effective_time_seconds"] == 0
+
+
+def test_get_team_player_stats_counts_turnovers_while_player_is_on_field(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won().with_turnover(10).with_turnover(20).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won().with_turnover(15).complete()
+
+    stats = get_team_player_stats(db_session, scenario.team.id)
+
+    assert stats is not None
+    first_player = stats[0]
+    assert first_player["offense"]["our_turnovers"] == 1
+    assert first_player["offense"]["opponent_turnovers"] == 1
+    assert first_player["defense"]["our_turnovers"] == 0
+    assert first_player["defense"]["opponent_turnovers"] == 1
 
 
 def test_get_team_strategy_stats_aggregates_only_selected_team(db_session):

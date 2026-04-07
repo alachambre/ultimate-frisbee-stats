@@ -1,14 +1,17 @@
-import { Box, Typography, CircularProgress, Tooltip, IconButton } from "@mui/material";
-import { alpha, type Theme } from "@mui/material/styles";
+import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
+import { alpha, type Theme, useTheme } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { getValueGradientColor } from "./statValueColors";
 
 interface CircularStatProps {
   label: string;
   percentage: number;
   count?: number;
   total?: number;
-  color: string | ((theme: Theme) => string);
+  color?: string | ((theme: Theme) => string);
   tooltip?: string;
+  useValueGradient?: boolean;
+  valueGradientMidpoint?: number;
 }
 
 export default function CircularStat({
@@ -18,10 +21,18 @@ export default function CircularStat({
   total,
   color,
   tooltip,
+  useValueGradient = false,
+  valueGradientMidpoint,
 }: CircularStatProps) {
+  const theme = useTheme();
   const displayPercentage = Math.round(percentage * 100);
   const hasNoData = total !== undefined && total === 0;
-  const centerValueLabel = hasNoData ? "—" : `${displayPercentage}%`;
+  const resolvedAccentColor =
+    typeof color === "function" ? color(theme) : color ?? theme.palette.primary.main;
+  const statColor = useValueGradient
+    ? getValueGradientColor(theme, percentage, !hasNoData, valueGradientMidpoint)
+    : resolvedAccentColor;
+  const centerValueLabel = hasNoData ? "\u2014" : `${displayPercentage}%`;
 
   return (
     <Box sx={{ textAlign: "center" }}>
@@ -32,31 +43,28 @@ export default function CircularStat({
           mb: 2,
         }}
       >
-        {/* Background circle */}
         <CircularProgress
           variant="determinate"
           value={100}
           size={140}
           thickness={4}
           sx={{
-            color: (theme) => alpha(theme.palette.common.black, 0.1),
+            color: alpha(theme.palette.text.primary, 0.12),
             position: "absolute",
           }}
         />
-        {/* Progress circle */}
         <CircularProgress
           variant="determinate"
           value={hasNoData ? 0 : displayPercentage}
           size={140}
           thickness={4}
           sx={{
-            color: typeof color === "function" ? color : color,
+            color: statColor,
             "& .MuiCircularProgress-circle": {
               strokeLinecap: "round",
             },
           }}
         />
-        {/* Center content */}
         <Box
           sx={{
             top: 0,
@@ -70,11 +78,7 @@ export default function CircularStat({
             justifyContent: "center",
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            sx={{ color: typeof color === "function" ? color : color }}
-          >
+          <Typography variant="h4" fontWeight="bold" sx={{ color: statColor }}>
             {centerValueLabel}
           </Typography>
           {count !== undefined && total !== undefined && (

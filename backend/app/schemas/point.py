@@ -68,6 +68,8 @@ class PointWithPlayers(Point):
     """Point with full player information"""
     players: List['Player']
     strategy: Optional['Strategy'] = None
+    our_turnovers: int = 0
+    opponent_turnovers: int = 0
 
     @computed_field
     @property

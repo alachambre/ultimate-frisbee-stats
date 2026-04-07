@@ -360,6 +360,8 @@ def test_get_live_game_statistics_clean_points(client: TestClient, sample_game: 
     assert player_stats["offense"]["points_won"] == 2
     assert player_stats["offense"]["points_won_no_turnover"] == 1
     assert player_stats["offense"]["clean_hold_rate"] == 0.5
+    assert player_stats["offense"]["our_turnovers"] == 1
+    assert player_stats["offense"]["opponent_turnovers"] == 0
 
 
 def test_get_live_game_statistics_defense_turnovers(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
@@ -413,6 +415,8 @@ def test_get_live_game_statistics_defense_turnovers(client: TestClient, sample_g
     assert player_stats["defense"]["points_with_turnover"] == 1
     assert player_stats["defense"]["turnover_rate"] == 0.5
     assert player_stats["defense"]["points_lost_no_turnover"] == 1
+    assert player_stats["defense"]["our_turnovers"] == 0
+    assert player_stats["defense"]["opponent_turnovers"] == 1
 
 
 # Tests for team statistics endpoint
@@ -562,6 +566,8 @@ def test_get_game_team_statistics_with_turnovers(client: TestClient, sample_game
 
     # Offense: 2 won, 1 clean (offense1)
     assert data["offense"]["points_started"] == 2
+    assert data["offense"]["our_turnovers"] == 1
+    assert data["offense"]["opponent_turnovers"] == 1
     assert data["offense"]["points_won"] == 2
     assert data["offense"]["points_won_no_turnover"] == 1
     assert data["offense"]["clean_hold_rate"] == 0.5  # 1 out of 2
@@ -570,6 +576,8 @@ def test_get_game_team_statistics_with_turnovers(client: TestClient, sample_game
     assert data["defense"]["points_started"] == 1
     assert data["defense"]["points_with_turnover"] == 1
     assert data["defense"]["turnover_rate"] == 1.0
+    assert data["defense"]["our_turnovers"] == 0
+    assert data["defense"]["opponent_turnovers"] == 1
 
 
 def test_get_game_team_statistics_ignores_non_completed(client: TestClient, sample_game: models.Game, db_session: Session):

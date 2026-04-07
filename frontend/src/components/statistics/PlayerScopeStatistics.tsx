@@ -6,6 +6,13 @@ import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import { useTranslation } from "react-i18next";
 import type { PlayerGameStats } from "../../types";
 import CircularStat from "./CircularStat";
+import {
+  BREAK_RATE_VALUE_MIDPOINT,
+  CLEAN_BREAK_RATE_VALUE_MIDPOINT,
+  HOLD_RATE_VALUE_MIDPOINT,
+  TURNOVER_RATE_VALUE_MIDPOINT,
+} from "./statValueColors";
+import TurnoverCountSummary from "./TurnoverCountSummary";
 
 interface PlayerScopeStatisticsProps {
   playerName: string;
@@ -124,7 +131,8 @@ export default function PlayerScopeStatistics({
               percentage={stats.offense.hold_rate}
               count={stats.offense.points_won}
               total={stats.offense.points_played}
-              color={(theme) => theme.colors.offense.main}
+              useValueGradient
+              valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.holdRate")}
             />
           </Grid>
@@ -134,11 +142,15 @@ export default function PlayerScopeStatistics({
               percentage={stats.offense.clean_hold_rate}
               count={stats.offense.points_won_no_turnover}
               total={stats.offense.points_played}
-              color={(theme) => theme.colors.offense.light}
+              useValueGradient
               tooltip={t("tooltips.cleanPointRate")}
             />
           </Grid>
         </Grid>
+        <TurnoverCountSummary
+          ourCount={stats.offense.our_turnovers ?? 0}
+          opponentCount={stats.offense.opponent_turnovers ?? 0}
+        />
       </Paper>
 
       <Paper sx={{ p: 3 }}>
@@ -154,7 +166,8 @@ export default function PlayerScopeStatistics({
               percentage={stats.defense.turnover_rate}
               count={stats.defense.points_with_turnover}
               total={stats.defense.points_played}
-              color={(theme) => theme.colors.defense.main}
+              useValueGradient
+              valueGradientMidpoint={TURNOVER_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
@@ -164,7 +177,8 @@ export default function PlayerScopeStatistics({
               percentage={stats.defense.break_rate}
               count={stats.defense.points_won}
               total={stats.defense.points_played}
-              color={(theme) => theme.colors.defense.dark}
+              useValueGradient
+              valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
@@ -174,11 +188,16 @@ export default function PlayerScopeStatistics({
               percentage={stats.defense.clean_break_rate}
               count={stats.defense.points_won_no_turnover}
               total={stats.defense.points_played}
-              color={(theme) => theme.colors.defense.light}
+              useValueGradient
+              valueGradientMidpoint={CLEAN_BREAK_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.cleanBreakRate")}
             />
           </Grid>
         </Grid>
+        <TurnoverCountSummary
+          ourCount={stats.defense.our_turnovers ?? 0}
+          opponentCount={stats.defense.opponent_turnovers ?? 0}
+        />
 
         <Divider sx={{ my: 3 }} />
 

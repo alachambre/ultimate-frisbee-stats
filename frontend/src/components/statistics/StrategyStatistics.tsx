@@ -7,6 +7,13 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTranslation } from "react-i18next";
 import type { StrategyStatsBase } from "../../types";
+import {
+  BREAK_RATE_VALUE_MIDPOINT,
+  HOLD_RATE_VALUE_MIDPOINT,
+  TURNOVER_RATE_VALUE_MIDPOINT,
+  getValueGradientColor,
+  getValueGradientTrackColor,
+} from "./statValueColors";
 
 interface StrategyStatisticsProps {
   strategyStats: StrategyStatsBase;
@@ -21,30 +28,45 @@ interface StrategyBarProps {
   percentage: number;
   count: number;
   total: number;
-  color: string;
+  valueGradientMidpoint?: number;
 }
 
-function StrategyBar({ label, percentage, count, total, color }: StrategyBarProps) {
+function StrategyBar({
+  label,
+  percentage,
+  count,
+  total,
+  valueGradientMidpoint,
+}: StrategyBarProps) {
   const theme = useTheme();
+  const hasData = total > 0;
+  const barColor = getValueGradientColor(theme, percentage, hasData, valueGradientMidpoint);
+  const percentLabel = hasData ? formatPercent(percentage) : "-";
+
   return (
     <Box sx={{ mb: 1.5 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
         <Typography variant="body2" color="text.secondary">
           {label}
         </Typography>
-        <Typography variant="body2" fontWeight="medium">
-          {formatPercent(percentage)} ({count}/{total})
+        <Typography variant="body2" fontWeight="medium" sx={{ color: barColor }}>
+          {percentLabel} ({count}/{total})
         </Typography>
       </Box>
       <LinearProgress
         variant="determinate"
-        value={percentage * 100}
+        value={hasData ? percentage * 100 : 0}
         sx={{
           height: 8,
           borderRadius: 1,
-          backgroundColor: alpha(theme.palette.common.black, 0.08),
+          backgroundColor: getValueGradientTrackColor(
+            theme,
+            percentage,
+            hasData,
+            valueGradientMidpoint
+          ),
           "& .MuiLinearProgress-bar": {
-            backgroundColor: color,
+            backgroundColor: barColor,
             borderRadius: 1,
           },
         }}
@@ -168,7 +190,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       percentage={strategy.hold_rate}
                       count={strategy.points_won}
                       total={strategy.points_played}
-                      color={theme.colors.offense.main}
+                      valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
                     />
 
                     {/* Expanded details */}
@@ -179,14 +201,12 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           percentage={strategy.clean_hold_rate}
                           count={strategy.clean_holds}
                           total={strategy.points_played}
-                          color={theme.colors.offense.light}
                         />
                         <StrategyBar
                           label={t("strategyStats.quickScores")}
                           percentage={strategy.quick_score_rate}
                           count={strategy.quick_scores}
                           total={strategy.points_played}
-                          color={theme.colors.offense.dark}
                         />
                       </Box>
                     </Collapse>
@@ -246,7 +266,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       percentage={strategy.turnover_rate}
                       count={strategy.points_with_turnover}
                       total={strategy.points_played}
-                      color={theme.colors.defense.main}
+                      valueGradientMidpoint={TURNOVER_RATE_VALUE_MIDPOINT}
                     />
 
                     {/* Expanded details */}
@@ -257,7 +277,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           percentage={strategy.break_rate}
                           count={strategy.points_won}
                           total={strategy.points_played}
-                          color={theme.colors.defense.light}
+                          valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
                         />
                       </Box>
                     </Collapse>

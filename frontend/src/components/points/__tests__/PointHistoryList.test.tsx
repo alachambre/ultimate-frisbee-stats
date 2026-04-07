@@ -8,7 +8,8 @@ const createPoint = (
   id: number,
   pointNumber: number,
   startDatetime: string,
-  fieldSide: "table_left" | "table_right" | null = null
+  fieldSide: "table_left" | "table_right" | null = null,
+  turnoverSummary?: { our: number; opponent: number }
 ): PointWithPlayers => ({
   id,
   game_id: 1,
@@ -25,6 +26,8 @@ const createPoint = (
   created_at: startDatetime,
   players: [],
   strategy: null,
+  our_turnovers: turnoverSummary?.our ?? 0,
+  opponent_turnovers: turnoverSummary?.opponent ?? 0,
   duration_seconds: 300,
 });
 
@@ -104,5 +107,41 @@ describe("PointHistoryList", () => {
     await user.click(screen.getByRole("button", { name: /show chronology/i }));
 
     expect(await screen.findByText(/point start in offense - left side/i)).toBeInTheDocument();
+  });
+
+  it("renders total turns summary on completed point cards", () => {
+    const points: PointWithPlayers[] = [
+      createPoint(1, 1, "2024-01-01T10:00:00Z", null, { our: 2, opponent: 1 }),
+    ];
+
+    render(
+      <PointHistoryList
+        points={points}
+        halftime={null}
+        onEditPoint={vi.fn()}
+        onDeletePoint={vi.fn()}
+        onDeleteHalftime={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("3 turns")).toBeInTheDocument();
+  });
+
+  it("renders zero-turn summary when no turns happened", () => {
+    const points: PointWithPlayers[] = [
+      createPoint(1, 1, "2024-01-01T10:00:00Z"),
+    ];
+
+    render(
+      <PointHistoryList
+        points={points}
+        halftime={null}
+        onEditPoint={vi.fn()}
+        onDeletePoint={vi.fn()}
+        onDeleteHalftime={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("0 turn")).toBeInTheDocument();
   });
 });

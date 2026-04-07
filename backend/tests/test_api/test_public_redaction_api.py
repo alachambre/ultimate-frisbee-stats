@@ -35,10 +35,16 @@ def test_public_game_reads_redact_comments_and_strategy(client, db_session):
 
     assert game_response.status_code == 200
     game_data = game_response.json()
+    completed_point = next(point for point in game_data["points"] if point["status"] == "completed")
+    running_point = next(point for point in game_data["points"] if point["status"] == "running")
     assert game_data["comments"] is None
     assert all(point["comments"] is None for point in game_data["points"])
     assert all(point["strategy"] is None for point in game_data["points"])
     assert all(point["strategy_id"] is None for point in game_data["points"])
+    assert completed_point["our_turnovers"] == 1
+    assert completed_point["opponent_turnovers"] == 0
+    assert running_point["our_turnovers"] == 0
+    assert running_point["opponent_turnovers"] == 1
     assert game_data["halftime"]["comments"] is None
 
     assert points_response.status_code == 200
@@ -50,10 +56,14 @@ def test_public_game_reads_redact_comments_and_strategy(client, db_session):
     assert running_point_response.status_code == 200
     assert running_point_response.json()["comments"] is None
     assert running_point_response.json()["strategy"] is None
+    assert running_point_response.json()["our_turnovers"] == 0
+    assert running_point_response.json()["opponent_turnovers"] == 1
 
     assert point_response.status_code == 200
     assert point_response.json()["comments"] is None
     assert point_response.json()["strategy"] is None
+    assert point_response.json()["our_turnovers"] == 0
+    assert point_response.json()["opponent_turnovers"] == 1
 
 
 def test_public_event_reads_redact_comments(client, db_session):
@@ -218,6 +228,7 @@ def _build_redaction_scenario(db_session):
         won=True,
         strategy=strategy,
         field_side="home",
+        with_turnover=True,
     )
     scenario = builder.build()
 

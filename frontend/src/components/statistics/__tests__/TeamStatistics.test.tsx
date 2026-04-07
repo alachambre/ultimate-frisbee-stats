@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "../../../test/test-utils";
 import TeamStatistics from "../TeamStatistics";
 import type { TeamStatsBase } from "../../../types";
@@ -132,7 +133,85 @@ describe("TeamStatistics", () => {
     expect(screen.queryByText("1/2")).not.toBeInTheDocument();
   });
 
-  it("renders field-side stats only when explicitly enabled", () => {
+  it("renders field-side stats inside advanced accordions only when enabled", async () => {
+    const user = userEvent.setup();
+
+    const teamStats: TeamStatsBase = {
+      total_completed_points: 6,
+      offense: {
+        points_started: 3,
+        points_won: 2,
+        points_lost: 1,
+        hold_rate: 2 / 3,
+        points_won_no_turnover: 2,
+        clean_hold_rate: 2 / 3,
+        broken_rate: 1 / 3,
+      },
+      defense: {
+        points_started: 3,
+        points_won: 2,
+        points_lost: 1,
+        break_rate: 2 / 3,
+        points_with_turnover: 2,
+        turnover_rate: 2 / 3,
+        points_won_no_turnover: 1,
+        clean_break_rate: 1 / 3,
+        points_lost_no_turnover: 0,
+        pull_stats: {
+          total_pulls: 3,
+          inbound_pulls: 2,
+          out_of_bounds_pulls: 1,
+          inbound_rate: 2 / 3,
+        },
+      },
+      field_side_stats: {
+        table_left: {
+          offense: {
+            points_started: 2,
+            points_won: 2,
+            hold_rate: 1,
+          },
+          defense: {
+            points_started: 1,
+            points_won: 1,
+            break_rate: 1,
+          },
+        },
+        table_right: {
+          offense: {
+            points_started: 1,
+            points_won: 0,
+            hold_rate: 0,
+          },
+          defense: {
+            points_started: 2,
+            points_won: 1,
+            break_rate: 0.5,
+          },
+        },
+      },
+    };
+
+    const { rerender } = render(<TeamStatistics teamStats={teamStats} />);
+    expect(screen.queryByRole("button", { name: "Advanced stats" })).not.toBeInTheDocument();
+
+    rerender(<TeamStatistics teamStats={teamStats} showFieldSideStats />);
+
+    const advancedButtons = screen.getAllByRole("button", { name: "Advanced stats" });
+    expect(advancedButtons).toHaveLength(2);
+
+    await user.click(advancedButtons[0]);
+    expect(screen.getByText("Hold by field side")).toBeVisible();
+    expect(screen.getByText("100% (2/2)")).toBeVisible();
+    expect(screen.getByText("0% (0/1)")).toBeVisible();
+
+    await user.click(advancedButtons[1]);
+    expect(screen.getByText("Break by field side")).toBeVisible();
+    expect(screen.getByText("100% (1/1)")).toBeVisible();
+    expect(screen.getByText("50% (1/2)")).toBeVisible();
+  });
+
+  it("renders raw turnover totals for offense and defense", () => {
     const teamStats: TeamStatsBase = {
       total_completed_points: 4,
       offense: {
@@ -143,6 +222,8 @@ describe("TeamStatistics", () => {
         points_won_no_turnover: 1,
         clean_hold_rate: 0.5,
         broken_rate: 0.5,
+        our_turnovers: 3,
+        opponent_turnovers: 1,
       },
       defense: {
         points_started: 2,
@@ -154,6 +235,8 @@ describe("TeamStatistics", () => {
         points_won_no_turnover: 1,
         clean_break_rate: 0.5,
         points_lost_no_turnover: 0,
+        our_turnovers: 1,
+        opponent_turnovers: 4,
         pull_stats: {
           total_pulls: 2,
           inbound_pulls: 1,
@@ -164,9 +247,9 @@ describe("TeamStatistics", () => {
       field_side_stats: {
         table_left: {
           offense: {
-            points_started: 2,
-            points_won: 1,
-            hold_rate: 0.5,
+            points_started: 0,
+            points_won: 0,
+            hold_rate: 0,
           },
           defense: {
             points_started: 0,
@@ -181,25 +264,91 @@ describe("TeamStatistics", () => {
             hold_rate: 0,
           },
           defense: {
-            points_started: 2,
-            points_won: 1,
-            break_rate: 0.5,
+            points_started: 0,
+            points_won: 0,
+            break_rate: 0,
           },
         },
       },
     };
 
-    const { rerender } = render(<TeamStatistics teamStats={teamStats} />);
-    expect(screen.queryByText("Hold by field side")).not.toBeInTheDocument();
-    expect(screen.queryByText("Break by field side")).not.toBeInTheDocument();
+    render(<TeamStatistics teamStats={teamStats} />);
 
-    rerender(<TeamStatistics teamStats={teamStats} showFieldSideStats />);
+    expect(screen.getAllByText("Our turns")).toHaveLength(2);
+    expect(screen.getAllByText("Opponent turns")).toHaveLength(2);
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+  });
 
-    expect(screen.getByText("Hold by field side")).toBeInTheDocument();
-    expect(screen.getByText("Break by field side")).toBeInTheDocument();
-    expect(screen.getAllByText("Left side")).toHaveLength(2);
-    expect(screen.getAllByText("Right side")).toHaveLength(2);
-    expect(screen.getAllByText("50% (1/2)")).toHaveLength(2);
-    expect(screen.getAllByText("-")).toHaveLength(2);
+  it("renders advanced stats below turnover totals", () => {
+    const teamStats: TeamStatsBase = {
+      total_completed_points: 4,
+      offense: {
+        points_started: 2,
+        points_won: 1,
+        points_lost: 1,
+        hold_rate: 0.5,
+        points_won_no_turnover: 1,
+        clean_hold_rate: 0.5,
+        broken_rate: 0.5,
+        our_turnovers: 1,
+        opponent_turnovers: 0,
+      },
+      defense: {
+        points_started: 2,
+        points_won: 1,
+        points_lost: 1,
+        break_rate: 0.5,
+        points_with_turnover: 1,
+        turnover_rate: 0.5,
+        points_won_no_turnover: 1,
+        clean_break_rate: 0.5,
+        points_lost_no_turnover: 0,
+        our_turnovers: 1,
+        opponent_turnovers: 1,
+        pull_stats: {
+          total_pulls: 2,
+          inbound_pulls: 1,
+          out_of_bounds_pulls: 1,
+          inbound_rate: 0.5,
+        },
+      },
+      field_side_stats: {
+        table_left: {
+          offense: {
+            points_started: 1,
+            points_won: 0,
+            hold_rate: 0,
+          },
+          defense: {
+            points_started: 1,
+            points_won: 1,
+            break_rate: 1,
+          },
+        },
+        table_right: {
+          offense: {
+            points_started: 1,
+            points_won: 1,
+            hold_rate: 1,
+          },
+          defense: {
+            points_started: 1,
+            points_won: 0,
+            break_rate: 0,
+          },
+        },
+      },
+    };
+
+    render(<TeamStatistics teamStats={teamStats} showFieldSideStats />);
+
+    const firstOpponentTurns = screen.getAllByText("Opponent turns")[0];
+    const firstAdvancedStats = screen.getAllByRole("button", { name: "Advanced stats" })[0];
+
+    expect(
+      firstOpponentTurns.compareDocumentPosition(firstAdvancedStats) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
   });
 });

@@ -1,18 +1,34 @@
-import { Typography, Box, Grid, Divider } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Grid,
+  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  LinearProgress,
+  Stack,
+} from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
 import type { TeamStatsBase } from "../../types";
 import CircularStat from "./CircularStat";
+import {
+  BREAK_RATE_VALUE_MIDPOINT,
+  CLEAN_BREAK_RATE_VALUE_MIDPOINT,
+  HOLD_RATE_VALUE_MIDPOINT,
+  TURNOVER_RATE_VALUE_MIDPOINT,
+  getValueGradientColor,
+  getValueGradientTrackColor,
+} from "./statValueColors";
+import TurnoverCountSummary from "./TurnoverCountSummary";
 
 interface TeamStatisticsProps {
   teamStats: TeamStatsBase;
   showFieldSideStats?: boolean;
-}
-
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(0)}%`;
 }
 
 function hasTrackedOffenseFieldSideStats(teamStats: TeamStatsBase): boolean {
@@ -31,86 +47,147 @@ function hasTrackedDefenseFieldSideStats(teamStats: TeamStatsBase): boolean {
   );
 }
 
+interface FieldSideProgressRowProps {
+  label: string;
+  percentage: number;
+  count: number;
+  total: number;
+  valueGradientMidpoint?: number;
+}
+
+function FieldSideProgressRow({
+  label,
+  percentage,
+  count,
+  total,
+  valueGradientMidpoint,
+}: FieldSideProgressRowProps) {
+  const theme = useTheme();
+  const hasData = total > 0;
+  const percentLabel = hasData ? `${Math.round(percentage * 100)}%` : "-";
+  const barColor = getValueGradientColor(theme, percentage, hasData, valueGradientMidpoint);
+
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 2,
+          mb: 0.75,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+        <Typography variant="body2" fontWeight="bold" sx={{ color: barColor }}>
+          {percentLabel} ({count}/{total})
+        </Typography>
+      </Box>
+      <LinearProgress
+        variant="determinate"
+        value={hasData ? Math.round(percentage * 100) : 0}
+        sx={{
+          height: 8,
+          borderRadius: 999,
+          bgcolor: getValueGradientTrackColor(theme, percentage, hasData, valueGradientMidpoint),
+          "& .MuiLinearProgress-bar": {
+            borderRadius: 999,
+            backgroundColor: barColor,
+          },
+        }}
+      />
+    </Box>
+  );
+}
+
 interface FieldSideMetricSummaryProps {
   title: string;
-  color: string;
-  leftSummary: string;
-  rightSummary: string;
+  leftPercentage: number;
+  leftCount: number;
+  leftTotal: number;
+  rightPercentage: number;
+  rightCount: number;
+  rightTotal: number;
+  valueGradientMidpoint?: number;
 }
 
 function FieldSideMetricSummary({
   title,
-  color,
-  leftSummary,
-  rightSummary,
+  leftPercentage,
+  leftCount,
+  leftTotal,
+  rightPercentage,
+  rightCount,
+  rightTotal,
+  valueGradientMidpoint,
 }: FieldSideMetricSummaryProps) {
   const { t } = useTranslation("statistics");
+  const theme = useTheme();
 
   return (
-    <Box sx={{ mt: 2.5, mx: "auto", width: "100%", maxWidth: 520 }}>
-      <Typography
-        variant="caption"
-        fontWeight="bold"
-        color="text.secondary"
+    <Accordion
+      disableGutters
+      elevation={0}
+      sx={{
+        mt: 2,
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 2,
+        overflow: "hidden",
+        "&:before": { display: "none" },
+      }}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
         sx={{
-          mb: 1.25,
-          display: "block",
-          textAlign: "center",
-          letterSpacing: 0.6,
-          textTransform: "uppercase",
+          px: 2,
+          py: 0.25,
+          bgcolor: "background.paper",
         }}
       >
-        {title}
-      </Typography>
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Box
-            sx={{
-              px: 2,
-              py: 1.25,
-              borderRadius: 2,
-              border: 1,
-              borderColor: alpha(color, 0.16),
-              bgcolor: alpha(color, 0.06),
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 2,
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {t("teamStats.leftSide")}
-            </Typography>
-            <Typography variant="body2" fontWeight="bold" sx={{ color }}>
-              {leftSummary}
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <Box
-            sx={{
-              px: 2,
-              py: 1.25,
-              borderRadius: 2,
-              border: 1,
-              borderColor: alpha(color, 0.16),
-              bgcolor: alpha(color, 0.06),
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 2,
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {t("teamStats.rightSide")}
-            </Typography>
-            <Typography variant="body2" fontWeight="bold" sx={{ color }}>
-              {rightSummary}
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
-    </Box>
+        <Typography variant="body2" fontWeight="medium">
+          {t("teamStats.advancedStats")}
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails
+        sx={{
+          px: 2,
+          pb: 2,
+          pt: 0,
+          bgcolor: alpha(theme.palette.primary.main, 0.02),
+        }}
+      >
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          sx={{
+            display: "block",
+            mb: 1.5,
+            letterSpacing: 0.6,
+          }}
+        >
+          {title}
+        </Typography>
+        <Stack spacing={2}>
+          <FieldSideProgressRow
+            label={t("teamStats.leftSide")}
+            percentage={leftPercentage}
+            count={leftCount}
+            total={leftTotal}
+            valueGradientMidpoint={valueGradientMidpoint}
+          />
+          <FieldSideProgressRow
+            label={t("teamStats.rightSide")}
+            percentage={rightPercentage}
+            count={rightCount}
+            total={rightTotal}
+            valueGradientMidpoint={valueGradientMidpoint}
+          />
+        </Stack>
+      </AccordionDetails>
+    </Accordion>
   );
 }
 
@@ -120,22 +197,6 @@ export default function TeamStatistics({
 }: TeamStatisticsProps) {
   const { t } = useTranslation("statistics");
   const theme = useTheme();
-  const offenseLeftSummary =
-    teamStats.field_side_stats.table_left.offense.points_started > 0
-      ? `${formatPercent(teamStats.field_side_stats.table_left.offense.hold_rate)} (${teamStats.field_side_stats.table_left.offense.points_won}/${teamStats.field_side_stats.table_left.offense.points_started})`
-      : "-";
-  const offenseRightSummary =
-    teamStats.field_side_stats.table_right.offense.points_started > 0
-      ? `${formatPercent(teamStats.field_side_stats.table_right.offense.hold_rate)} (${teamStats.field_side_stats.table_right.offense.points_won}/${teamStats.field_side_stats.table_right.offense.points_started})`
-      : "-";
-  const defenseLeftSummary =
-    teamStats.field_side_stats.table_left.defense.points_started > 0
-      ? `${formatPercent(teamStats.field_side_stats.table_left.defense.break_rate)} (${teamStats.field_side_stats.table_left.defense.points_won}/${teamStats.field_side_stats.table_left.defense.points_started})`
-      : "-";
-  const defenseRightSummary =
-    teamStats.field_side_stats.table_right.defense.points_started > 0
-      ? `${formatPercent(teamStats.field_side_stats.table_right.defense.break_rate)} (${teamStats.field_side_stats.table_right.defense.points_won}/${teamStats.field_side_stats.table_right.defense.points_started})`
-      : "-";
 
   if (teamStats.total_completed_points === 0) {
     return null;
@@ -167,10 +228,9 @@ export default function TeamStatistics({
         {t("teamStats.title")}
       </Typography>
 
-      {/* Offense Statistics */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-          <FlashOnIcon sx={{ color: (theme) => theme.colors.offense.main }} />
+          <FlashOnIcon sx={{ color: (currentTheme) => currentTheme.colors.offense.main }} />
           <Typography variant="h6">{t("teamStats.offense")}</Typography>
         </Box>
         <Grid container spacing={3} justifyContent="center">
@@ -180,7 +240,8 @@ export default function TeamStatistics({
               percentage={teamStats.offense.hold_rate}
               count={teamStats.offense.points_won}
               total={teamStats.offense.points_started}
-              color={(theme) => theme.colors.offense.main}
+              useValueGradient
+              valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.holdRate")}
             />
           </Grid>
@@ -190,27 +251,34 @@ export default function TeamStatistics({
               percentage={teamStats.offense.clean_hold_rate}
               count={teamStats.offense.points_won_no_turnover}
               total={teamStats.offense.points_started}
-              color={(theme) => theme.colors.offense.light}
+              useValueGradient
               tooltip={t("tooltips.cleanPointRate")}
             />
           </Grid>
         </Grid>
+        <TurnoverCountSummary
+          ourCount={teamStats.offense.our_turnovers ?? 0}
+          opponentCount={teamStats.offense.opponent_turnovers ?? 0}
+        />
         {showFieldSideStats && hasTrackedOffenseFieldSideStats(teamStats) && (
           <FieldSideMetricSummary
             title={t("teamStats.holdByFieldSide")}
-            color={theme.colors.offense.main}
-            leftSummary={offenseLeftSummary}
-            rightSummary={offenseRightSummary}
+            leftPercentage={teamStats.field_side_stats.table_left.offense.hold_rate}
+            leftCount={teamStats.field_side_stats.table_left.offense.points_won}
+            leftTotal={teamStats.field_side_stats.table_left.offense.points_started}
+            rightPercentage={teamStats.field_side_stats.table_right.offense.hold_rate}
+            rightCount={teamStats.field_side_stats.table_right.offense.points_won}
+            rightTotal={teamStats.field_side_stats.table_right.offense.points_started}
+            valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
           />
         )}
       </Box>
 
       <Divider sx={{ my: 4 }} />
 
-      {/* Defense Statistics */}
       <Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-          <ShieldIcon sx={{ color: (theme) => theme.colors.defense.main }} />
+          <ShieldIcon sx={{ color: (currentTheme) => currentTheme.colors.defense.main }} />
           <Typography variant="h6">{t("teamStats.defense")}</Typography>
         </Box>
         <Grid container spacing={3} justifyContent="center">
@@ -220,7 +288,8 @@ export default function TeamStatistics({
               percentage={teamStats.defense.turnover_rate}
               count={teamStats.defense.points_with_turnover}
               total={teamStats.defense.points_started}
-              color={(theme) => theme.colors.defense.main}
+              useValueGradient
+              valueGradientMidpoint={TURNOVER_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
@@ -230,7 +299,8 @@ export default function TeamStatistics({
               percentage={teamStats.defense.break_rate}
               count={teamStats.defense.points_won}
               total={teamStats.defense.points_started}
-              color={(theme) => theme.colors.defense.dark}
+              useValueGradient
+              valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
@@ -240,7 +310,8 @@ export default function TeamStatistics({
               percentage={teamStats.defense.clean_break_rate}
               count={teamStats.defense.points_won_no_turnover}
               total={teamStats.defense.points_started}
-              color={(theme) => theme.colors.defense.light}
+              useValueGradient
+              valueGradientMidpoint={CLEAN_BREAK_RATE_VALUE_MIDPOINT}
               tooltip={t("tooltips.cleanBreakRate")}
             />
           </Grid>
@@ -250,17 +321,25 @@ export default function TeamStatistics({
               percentage={teamStats.defense.pull_stats.inbound_rate}
               count={teamStats.defense.pull_stats.inbound_pulls}
               total={teamStats.defense.pull_stats.total_pulls}
-              color={(theme) => theme.colors.pull.main}
+              useValueGradient
               tooltip={t("tooltips.pullRate")}
             />
           </Grid>
         </Grid>
+        <TurnoverCountSummary
+          ourCount={teamStats.defense.our_turnovers ?? 0}
+          opponentCount={teamStats.defense.opponent_turnovers ?? 0}
+        />
         {showFieldSideStats && hasTrackedDefenseFieldSideStats(teamStats) && (
           <FieldSideMetricSummary
             title={t("teamStats.breakByFieldSide")}
-            color={theme.colors.defense.main}
-            leftSummary={defenseLeftSummary}
-            rightSummary={defenseRightSummary}
+            leftPercentage={teamStats.field_side_stats.table_left.defense.break_rate}
+            leftCount={teamStats.field_side_stats.table_left.defense.points_won}
+            leftTotal={teamStats.field_side_stats.table_left.defense.points_started}
+            rightPercentage={teamStats.field_side_stats.table_right.defense.break_rate}
+            rightCount={teamStats.field_side_stats.table_right.defense.points_won}
+            rightTotal={teamStats.field_side_stats.table_right.defense.points_started}
+            valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
           />
         )}
       </Box>

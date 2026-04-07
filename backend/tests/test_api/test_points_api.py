@@ -181,6 +181,46 @@ def test_get_point_api(client, sample_game, sample_players):
     data = response.json()
     assert data["id"] == point_id
     assert len(data["players"]) == 7
+    assert data["our_turnovers"] == 0
+    assert data["opponent_turnovers"] == 0
+
+
+def test_get_point_api_includes_turnover_summary(client, sample_game, sample_players, db_session):
+    from datetime import datetime, timezone
+    from app import models
+
+    player_ids = [p.id for p in sample_players]
+
+    create_response = client.post("/points", json={
+        "game_id": sample_game.id,
+        "starting_on_offense": False,
+        "player_ids": player_ids
+    })
+    point_id = create_response.json()["id"]
+
+    client.put(f"/points/{point_id}", json={"status": "running"})
+    client.post(f"/points/{point_id}/finish", json={"won": True})
+
+    db_session.add_all(
+        [
+            models.Turnover(
+                point_id=point_id,
+                timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+            ),
+            models.Turnover(
+                point_id=point_id,
+                timestamp=datetime(2024, 1, 1, 10, 1, 30, tzinfo=timezone.utc),
+            ),
+        ]
+    )
+    db_session.commit()
+
+    response = client.get(f"/points/{point_id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["our_turnovers"] == 1
+    assert data["opponent_turnovers"] == 1
 
 
 def test_get_point_not_found_api(client):

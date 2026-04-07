@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def test_create_game_api(client, sample_competition):
@@ -41,6 +41,42 @@ def test_get_game_api(client, sample_game):
     assert "opponent_score" in data
     assert "points" in data
     assert isinstance(data["points"], list)
+
+
+def test_get_game_api_includes_turnover_summary(client, sample_game, db_session):
+    from app import models
+
+    point = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
+    )
+    db_session.add(point)
+    db_session.flush()
+    db_session.add_all(
+        [
+            models.Turnover(
+                point_id=point.id,
+                timestamp=datetime(2024, 1, 1, 10, 0, 30, tzinfo=timezone.utc),
+            ),
+            models.Turnover(
+                point_id=point.id,
+                timestamp=datetime(2024, 1, 1, 10, 1, 15, tzinfo=timezone.utc),
+            ),
+        ]
+    )
+    db_session.commit()
+
+    response = client.get(f"/games/{sample_game.id}")
+
+    assert response.status_code == 200
+    point_data = response.json()["points"][0]
+    assert point_data["our_turnovers"] == 1
+    assert point_data["opponent_turnovers"] == 1
 
 
 def test_get_game_api_includes_halftime(client, sample_game):
@@ -160,6 +196,8 @@ def test_get_game_points_api(client, sample_game, sample_players):
     assert len(data) == 1
     assert data[0]["game_id"] == sample_game.id
     assert "players" in data[0]
+    assert data[0]["our_turnovers"] == 0
+    assert data[0]["opponent_turnovers"] == 0
 
 
 def test_create_game_validation_error_api(client, sample_competition):

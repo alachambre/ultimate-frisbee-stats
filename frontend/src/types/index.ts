@@ -269,6 +269,8 @@ export interface Point extends PointBase {
 export interface PointWithPlayers extends Point {
   players: Player[];
   strategy?: Strategy | null;
+  our_turnovers?: number;
+  opponent_turnovers?: number;
   duration_seconds?: number | null; // Computed property
 }
 
@@ -382,6 +384,8 @@ export interface PlayerOffenseStats {
   hold_rate: number;
   points_won_no_turnover: number;
   clean_hold_rate: number;
+  our_turnovers?: number;
+  opponent_turnovers?: number;
 }
 
 export interface PlayerDefenseStats {
@@ -394,6 +398,8 @@ export interface PlayerDefenseStats {
   points_won_no_turnover: number;
   clean_break_rate: number;
   points_lost_no_turnover: number;
+  our_turnovers?: number;
+  opponent_turnovers?: number;
 }
 
 export interface PlayerGameStats {
@@ -414,6 +420,8 @@ export interface OffenseStats {
   points_won_no_turnover: number;
   clean_hold_rate: number;
   broken_rate: number;
+  our_turnovers?: number;
+  opponent_turnovers?: number;
 }
 
 export interface PullStats {
@@ -433,6 +441,8 @@ export interface DefenseStats {
   points_won_no_turnover: number;
   clean_break_rate: number;
   points_lost_no_turnover: number;
+  our_turnovers?: number;
+  opponent_turnovers?: number;
   pull_stats: PullStats;
 }
 
