@@ -25,6 +25,7 @@ import { updatePoint } from "../../services/points";
 import { getGame } from "../../services/games";
 import { getLines } from "../../services/lines";
 import { getLiveGameStatistics } from "../../services/statistics";
+import { shouldEnforcePermissions, useAuth } from "../../auth";
 import type { Player, PointWithPlayers, LineWithPlayers } from "../../types";
 import { getPlayerHighlight } from "../../utils/playerHighlighting";
 import {
@@ -52,9 +53,12 @@ export default function ManagePlayersDialog({
   players,
   onSuccess,
 }: ManagePlayersDialogProps) {
+  const auth = useAuth();
   const { t } = useTranslation(["points", "common"]);
   const theme = useTheme();
   const queryClient = useQueryClient();
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
 
   // Lazy state initialization from point.players
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(() =>
@@ -81,7 +85,7 @@ export default function ManagePlayersDialog({
   const { data: liveStats = [] } = useQuery({
     queryKey: queryKeys.liveStats(point.game_id),
     queryFn: () => getLiveGameStatistics(point.game_id),
-    enabled: open && game?.status === "started",
+    enabled: open && game?.status === "started" && canViewStatistics,
   });
 
   // Calculate required gender ratio based on ABBA pattern

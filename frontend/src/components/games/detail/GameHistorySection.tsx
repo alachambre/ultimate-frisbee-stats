@@ -6,9 +6,9 @@ import PointHistoryList from "../../points/PointHistoryList";
 interface GameHistorySectionProps {
   points: PointWithPlayers[];
   halftime?: Halftime | null;
-  onEditPoint: (point: PointWithPlayers) => void;
-  onDeletePoint: (point: PointWithPlayers) => void;
-  onDeleteHalftime: (halftime: Halftime) => void;
+  onEditPoint?: (point: PointWithPlayers) => void;
+  onDeletePoint?: (point: PointWithPlayers) => void;
+  onDeleteHalftime?: (halftime: Halftime) => void;
   isDeletingHalftime: boolean;
   hasDeleteHalftimeError: boolean;
 }
@@ -41,7 +41,7 @@ export function GameHistorySection({
           onDeleteHalftime={onDeleteHalftime}
           isDeletingHalftime={isDeletingHalftime}
         />
-        {hasDeleteHalftimeError && (
+        {Boolean(onDeleteHalftime) && hasDeleteHalftimeError && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {t("games:detail.deleteHalftimeError", "Error deleting halftime. Please try again.")}
           </Alert>

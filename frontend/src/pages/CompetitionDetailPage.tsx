@@ -37,11 +37,13 @@ import EmptyGamesState from "../components/games/EmptyGamesState";
 import EditCompetitionModal from "../components/modals/EditCompetitionModal";
 import AddPlayersToRosterModal from "../components/modals/AddPlayersToRosterModal";
 import CreateGameModal from "../components/modals/CreateGameModal";
+import { shouldEnforcePermissions, useAuth } from "../auth";
 import { queryKeys } from "../utils/queryKeys";
 import { formatDateRange } from "../utils/dateFormatting";
 import StatusChip from "../components/shared/StatusChip";
 
 export default function CompetitionDetailPage() {
+  const auth = useAuth();
   const { t, i18n } = useTranslation(["competitions", "players", "games", "common"]);
   const { competitionId } = useParams<{ competitionId: string }>();
   const competitionIdNumber = Number(competitionId);
@@ -53,6 +55,9 @@ export default function CompetitionDetailPage() {
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [isCreateGameModalOpen, setIsCreateGameModalOpen] = useState(false);
   const [showRoster, setShowRoster] = useState(false);
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
+  const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
 
   const {
     data: competition,
@@ -143,65 +148,71 @@ export default function CompetitionDetailPage() {
             </Box>
           </Box>
           <Box display="flex" gap={1}>
-            <Button
-              variant="outlined"
-              startIcon={<BarChartIcon />}
-              onClick={() =>
-                navigate(
-                  `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}`
-                )
-              }
-              aria-label={t("competitions:detail.viewStatistics")}
-              sx={{
-                minWidth: { xs: 40, sm: "auto" },
-                px: { xs: 1.25, sm: 2 },
-                "& .MuiButton-startIcon": {
-                  marginRight: { xs: 0, sm: 1 },
-                  marginLeft: { xs: 0, sm: -0.5 },
-                },
-              }}
-            >
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {t("competitions:detail.viewStatistics")}
-              </Box>
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<EditIcon />}
-              onClick={() => setIsEditModalOpen(true)}
-              aria-label={t("competitions:detail.edit")}
-              sx={{
-                minWidth: { xs: 40, sm: "auto" },
-                px: { xs: 1.25, sm: 2 },
-                "& .MuiButton-startIcon": {
-                  marginRight: { xs: 0, sm: 1 },
-                  marginLeft: { xs: 0, sm: -0.5 },
-                },
-              }}
-            >
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {t("competitions:detail.edit")}
-              </Box>
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => setIsDeleteConfirmOpen(true)}
-              aria-label={t("competitions:detail.delete")}
-              sx={{
-                minWidth: { xs: 40, sm: "auto" },
-                px: { xs: 1.25, sm: 2 },
-                "& .MuiButton-startIcon": {
-                  marginRight: { xs: 0, sm: 1 },
-                  marginLeft: { xs: 0, sm: -0.5 },
-                },
-              }}
-            >
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {t("competitions:detail.delete")}
-              </Box>
-            </Button>
+            {canViewStatistics && (
+              <Button
+                variant="outlined"
+                startIcon={<BarChartIcon />}
+                onClick={() =>
+                  navigate(
+                    `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}`
+                  )
+                }
+                aria-label={t("competitions:detail.viewStatistics")}
+                sx={{
+                  minWidth: { xs: 40, sm: "auto" },
+                  px: { xs: 1.25, sm: 2 },
+                  "& .MuiButton-startIcon": {
+                    marginRight: { xs: 0, sm: 1 },
+                    marginLeft: { xs: 0, sm: -0.5 },
+                  },
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  {t("competitions:detail.viewStatistics")}
+                </Box>
+              </Button>
+            )}
+            {canEditData && (
+              <Button
+                variant="outlined"
+                startIcon={<EditIcon />}
+                onClick={() => setIsEditModalOpen(true)}
+                aria-label={t("competitions:detail.edit")}
+                sx={{
+                  minWidth: { xs: 40, sm: "auto" },
+                  px: { xs: 1.25, sm: 2 },
+                  "& .MuiButton-startIcon": {
+                    marginRight: { xs: 0, sm: 1 },
+                    marginLeft: { xs: 0, sm: -0.5 },
+                  },
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  {t("competitions:detail.edit")}
+                </Box>
+              </Button>
+            )}
+            {canEditData && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setIsDeleteConfirmOpen(true)}
+                aria-label={t("competitions:detail.delete")}
+                sx={{
+                  minWidth: { xs: 40, sm: "auto" },
+                  px: { xs: 1.25, sm: 2 },
+                  "& .MuiButton-startIcon": {
+                    marginRight: { xs: 0, sm: 1 },
+                    marginLeft: { xs: 0, sm: -0.5 },
+                  },
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  {t("competitions:detail.delete")}
+                </Box>
+              </Button>
+            )}
           </Box>
         </Box>
       </Box>
@@ -231,20 +242,28 @@ export default function CompetitionDetailPage() {
               mb={2}
               flexDirection={{ xs: "column", sm: "row" }}
             >
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<PersonAddIcon />}
-                onClick={() => setIsAddPlayersModalOpen(true)}
-              >
-                {t("competitions:detail.addPlayers")}
-              </Button>
+              {canEditData && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<PersonAddIcon />}
+                  onClick={() => setIsAddPlayersModalOpen(true)}
+                >
+                  {t("competitions:detail.addPlayers")}
+                </Button>
+              )}
             </Box>
             {competition.players.length === 0 ? (
-              <EmptyPlayersState
-                onAddClick={() => setIsAddPlayersModalOpen(true)}
-                buttonLabel={t("competitions:detail.addPlayers")}
-              />
+              canEditData ? (
+                <EmptyPlayersState
+                  onAddClick={() => setIsAddPlayersModalOpen(true)}
+                  buttonLabel={t("competitions:detail.addPlayers")}
+                />
+              ) : (
+                <Box sx={{ textAlign: "center", py: 4, color: "text.secondary" }}>
+                  {t("players:empty.noPlayers")}
+                </Box>
+              )
             ) : (
               <PlayerSelectionList
                 players={rosterPlayers}
@@ -272,21 +291,29 @@ export default function CompetitionDetailPage() {
             <Typography variant="h6">
               {t("competitions:detail.gamesCount", { count: games?.length || 0 })}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setIsCreateGameModalOpen(true)}
-            >
-              {t("competitions:detail.addGame")}
-            </Button>
+            {canEditData && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setIsCreateGameModalOpen(true)}
+              >
+                {t("competitions:detail.addGame")}
+              </Button>
+            )}
           </Box>
         </Box>
 
         <Box p={3}>
           {!games || games.length === 0 ? (
-            <EmptyGamesState
-              onCreateClick={() => setIsCreateGameModalOpen(true)}
-            />
+            canEditData ? (
+              <EmptyGamesState
+                onCreateClick={() => setIsCreateGameModalOpen(true)}
+              />
+            ) : (
+              <Box sx={{ textAlign: "center", py: 8, color: "text.secondary" }}>
+                {t("common:messages.noData")}
+              </Box>
+            )
           ) : (
             <GamesGrid games={games} />
           )}
@@ -330,14 +357,16 @@ export default function CompetitionDetailPage() {
       </Dialog>
 
       {/* Modals */}
-      <EditCompetitionModal
-        key={competition.id}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        competition={competition}
-      />
+      {canEditData && (
+        <EditCompetitionModal
+          key={competition.id}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          competition={competition}
+        />
+      )}
 
-      {isAddPlayersModalOpen && (
+      {canEditData && isAddPlayersModalOpen && (
         <AddPlayersToRosterModal
           isOpen={isAddPlayersModalOpen}
           onClose={() => setIsAddPlayersModalOpen(false)}
@@ -347,11 +376,13 @@ export default function CompetitionDetailPage() {
         />
       )}
 
-      <CreateGameModal
-        isOpen={isCreateGameModalOpen}
-        onClose={() => setIsCreateGameModalOpen(false)}
-        competitionId={Number(competitionId)}
-      />
+      {canEditData && (
+        <CreateGameModal
+          isOpen={isCreateGameModalOpen}
+          onClose={() => setIsCreateGameModalOpen(false)}
+          competitionId={Number(competitionId)}
+        />
+      )}
     </Container>
   );
 }

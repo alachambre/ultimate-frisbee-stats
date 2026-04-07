@@ -16,7 +16,8 @@ import PlayerSelectionList from "../../shared/PlayerSelectionList";
 interface GameRosterDialogProps {
   open: boolean;
   onClose: () => void;
-  onOpenAddPlayers: () => void;
+  onOpenAddPlayers?: () => void;
+  canManageRoster?: boolean;
   disabled: boolean;
   players: Player[];
   liveStatsByPlayerId: Map<number, PlayerGameStats>;
@@ -27,6 +28,7 @@ export function GameRosterDialog({
   open,
   onClose,
   onOpenAddPlayers,
+  canManageRoster = true,
   disabled,
   players,
   liveStatsByPlayerId,
@@ -45,21 +47,23 @@ export function GameRosterDialog({
         </Box>
       </DialogTitle>
       <DialogContent>
-        <Box mb={3} display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<PersonAddIcon />}
-            onClick={onOpenAddPlayers}
-            disabled={disabled}
-            sx={{
-              width: { xs: "100%", sm: "auto" },
-              "& .MuiButton-startIcon": { margin: "0 8px 0 -4px" },
-            }}
-          >
-            {t("games:detail.addPlayers")}
-          </Button>
-        </Box>
+        {canManageRoster && onOpenAddPlayers && (
+          <Box mb={3} display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<PersonAddIcon />}
+              onClick={onOpenAddPlayers}
+              disabled={disabled}
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: "0 8px 0 -4px" },
+              }}
+            >
+              {t("games:detail.addPlayers")}
+            </Button>
+          </Box>
+        )}
         <PlayerSelectionList
           players={players}
           selectedIds={[]}

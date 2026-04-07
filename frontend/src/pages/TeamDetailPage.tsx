@@ -33,10 +33,12 @@ import AddPlayerModal from "../components/modals/AddPlayerModal";
 import EditPlayerModal from "../components/modals/EditPlayerModal";
 import CreateLineModal from "../components/modals/CreateLineModal";
 import EditLineModal from "../components/modals/EditLineModal";
+import { shouldEnforcePermissions, useAuth } from "../auth";
 import { queryKeys } from "../utils/queryKeys";
 import { formatDate } from "../utils/dateFormatting";
 
 export default function TeamDetailPage() {
+  const auth = useAuth();
   const { t, i18n } = useTranslation(["teams", "players", "lines", "common"]);
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
@@ -50,6 +52,8 @@ export default function TeamDetailPage() {
   const [showPlayers, setShowPlayers] = useState(false);
   const teamIdNumber = Number(teamId);
   const teamIdValid = Number.isFinite(teamIdNumber);
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
 
   const {
     data: team,
@@ -151,24 +155,26 @@ export default function TeamDetailPage() {
             gap={1}
             flexDirection="row"
           >
-            <Button
-              variant="outlined"
-              startIcon={<BarChartIcon />}
-              onClick={() => navigate(`/statistics?teamId=${team.id}&mode=competition`)}
-              aria-label={t("teams:detail.viewStatistics")}
-              sx={{
-                minWidth: { xs: 40, sm: "auto" },
-                px: { xs: 1.25, sm: 2 },
-                "& .MuiButton-startIcon": {
-                  marginRight: { xs: 0, sm: 1 },
-                  marginLeft: { xs: 0, sm: -0.5 },
-                },
-              }}
-            >
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                {t("teams:detail.viewStatistics")}
-              </Box>
-            </Button>
+            {canViewStatistics && (
+              <Button
+                variant="outlined"
+                startIcon={<BarChartIcon />}
+                onClick={() => navigate(`/statistics?teamId=${team.id}&mode=competition`)}
+                aria-label={t("teams:detail.viewStatistics")}
+                sx={{
+                  minWidth: { xs: 40, sm: "auto" },
+                  px: { xs: 1.25, sm: 2 },
+                  "& .MuiButton-startIcon": {
+                    marginRight: { xs: 0, sm: 1 },
+                    marginLeft: { xs: 0, sm: -0.5 },
+                  },
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  {t("teams:detail.viewStatistics")}
+                </Box>
+              </Button>
+            )}
             <Button
               variant="outlined"
               color="error"
@@ -330,7 +336,7 @@ export default function TeamDetailPage() {
           onClose={() => setEditingPlayer(null)}
           player={editingPlayer}
           teamId={Number(teamId)}
-          onViewStatistics={handleViewPlayerStats}
+          onViewStatistics={canViewStatistics ? handleViewPlayerStats : undefined}
         />
       )}
 

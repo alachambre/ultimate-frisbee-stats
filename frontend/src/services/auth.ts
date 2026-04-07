@@ -1,7 +1,9 @@
 import { apiClient } from "./api";
-import type { AppCapabilities, AppRole } from "../auth";
-
-export type AuthEnforcementMode = "off" | "shadow" | "enforced";
+import type {
+  AppCapabilities,
+  AppRole,
+  AuthEnforcementMode,
+} from "../auth/types";
 
 export interface AuthMeResponse {
   role: AppRole;

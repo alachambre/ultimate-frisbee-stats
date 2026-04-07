@@ -1,48 +1,337 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { Session } from "@supabase/supabase-js";
 
+import { getAuthMe, type AuthMeResponse } from "../services/auth";
+import { setApiAccessToken } from "../services/api";
 import { getCapabilitiesForRole } from "./capabilities";
 import { getAuthConfig, isAuthConfigured } from "./config";
-import type { AppRole, AuthState } from "./types";
+import { getSupabaseClient } from "./supabase";
+import type { AppRole, AuthEnforcementMode, AuthState } from "./types";
 
-interface AuthProviderProps {
+export interface AuthProviderProps {
   children: ReactNode;
   role?: AppRole;
   email?: string | null;
   isLoading?: boolean;
+  isAuthenticated?: boolean;
+  hasAppAccess?: boolean;
+  isConfigured?: boolean;
+  enforcementMode?: AuthEnforcementMode;
+  authUserId?: string | null;
 }
 
-const defaultAuthState: AuthState = {
+type AuthSnapshot = Omit<AuthState, "signInWithPassword" | "signOut">;
+
+const noopAsync = async () => {};
+
+const defaultAuthSnapshot: AuthSnapshot = {
   role: "public",
   capabilities: getCapabilitiesForRole("public"),
   isAuthenticated: false,
+  hasAppAccess: false,
   isLoading: false,
   email: null,
   isConfigured: false,
+  enforcementMode: "off",
+  authUserId: null,
 };
 
-const AuthContext = createContext<AuthState>(defaultAuthState);
+const AuthContext = createContext<AuthState>({
+  ...defaultAuthSnapshot,
+  signInWithPassword: noopAsync,
+  signOut: noopAsync,
+});
 
-export function AuthProvider({
-  children,
+function buildStaticSnapshot({
+  configured,
   role = "public",
   email = null,
   isLoading = false,
+  isAuthenticated,
+  hasAppAccess,
+  isConfigured,
+  enforcementMode = "off",
+  authUserId = null,
+}: {
+  configured: boolean;
+  role?: AppRole;
+  email?: string | null;
+  isLoading?: boolean;
+  isAuthenticated?: boolean;
+  hasAppAccess?: boolean;
+  isConfigured?: boolean;
+  enforcementMode?: AuthEnforcementMode;
+  authUserId?: string | null;
+}): AuthSnapshot {
+  const resolvedIsConfigured = isConfigured ?? configured;
+  const resolvedIsAuthenticated = isAuthenticated ?? role !== "public";
+  const resolvedHasAppAccess = hasAppAccess ?? resolvedIsAuthenticated;
+
+  return {
+    role,
+    capabilities: getCapabilitiesForRole(role),
+    isAuthenticated: resolvedIsAuthenticated,
+    hasAppAccess: resolvedHasAppAccess,
+    isLoading,
+    email,
+    isConfigured: resolvedIsConfigured,
+    enforcementMode,
+    authUserId,
+  };
+}
+
+function buildSnapshotFromAuthMe(
+  authMe: AuthMeResponse,
+  configured: boolean
+): AuthSnapshot {
+  return {
+    role: authMe.role,
+    capabilities: authMe.capabilities,
+    isAuthenticated: authMe.is_authenticated,
+    hasAppAccess: authMe.has_app_access,
+    isLoading: false,
+    email: authMe.email,
+    isConfigured: configured,
+    enforcementMode: authMe.enforcement_mode,
+    authUserId: authMe.auth_user_id,
+  };
+}
+
+function buildFallbackSnapshot(
+  session: Session | null,
+  configured: boolean
+): AuthSnapshot {
+  return {
+    role: "public",
+    capabilities: getCapabilitiesForRole("public"),
+    isAuthenticated: Boolean(session),
+    hasAppAccess: false,
+    isLoading: false,
+    email: session?.user.email ?? null,
+    isConfigured: configured,
+    enforcementMode: "off",
+    authUserId: session?.user.id ?? null,
+  };
+}
+
+function buildBootstrappingSnapshot(configured: boolean): AuthSnapshot {
+  return {
+    ...defaultAuthSnapshot,
+    isLoading: configured,
+    isConfigured: configured,
+  };
+}
+
+export function AuthProvider({
+  children,
+  role,
+  email,
+  isLoading,
+  isAuthenticated,
+  hasAppAccess,
+  isConfigured,
+  enforcementMode,
+  authUserId,
 }: AuthProviderProps) {
+  const queryClient = useQueryClient();
   const { supabaseUrl, supabaseAnonKey } = getAuthConfig();
+  const configured = isAuthConfigured({
+    supabaseUrl,
+    supabaseAnonKey,
+  });
+  const hasStaticOverride =
+    role !== undefined ||
+    email !== undefined ||
+    isLoading !== undefined ||
+    isAuthenticated !== undefined ||
+    hasAppAccess !== undefined ||
+    isConfigured !== undefined ||
+    enforcementMode !== undefined ||
+    authUserId !== undefined;
+  const requestCounterRef = useRef(0);
+  const [snapshot, setSnapshot] = useState<AuthSnapshot>(() =>
+    hasStaticOverride
+      ? buildStaticSnapshot({
+          configured,
+          role,
+          email,
+          isLoading,
+          isAuthenticated,
+          hasAppAccess,
+          isConfigured,
+          enforcementMode,
+          authUserId,
+        })
+      : configured
+        ? buildBootstrappingSnapshot(configured)
+        : buildStaticSnapshot({ configured })
+  );
+
+  const syncSession = useEffectEvent(async (session: Session | null) => {
+    const requestId = ++requestCounterRef.current;
+    setSnapshot((current) => ({
+      ...current,
+      isLoading: true,
+      isConfigured: configured,
+    }));
+    setApiAccessToken(session?.access_token ?? null);
+
+    try {
+      const authMe = await getAuthMe();
+      if (requestCounterRef.current !== requestId) {
+        return;
+      }
+      setSnapshot(buildSnapshotFromAuthMe(authMe, configured));
+    } catch (error) {
+      console.error("Failed to bootstrap auth state", error);
+      if (requestCounterRef.current !== requestId) {
+        return;
+      }
+      setSnapshot(buildFallbackSnapshot(session, configured));
+    }
+
+    await queryClient.invalidateQueries();
+  });
+
+  useEffect(() => {
+    if (hasStaticOverride) {
+      requestCounterRef.current += 1;
+      setApiAccessToken(null);
+      setSnapshot(
+        buildStaticSnapshot({
+          configured,
+          role,
+          email,
+          isLoading,
+          isAuthenticated,
+          hasAppAccess,
+          isConfigured,
+          enforcementMode,
+          authUserId,
+        })
+      );
+      return undefined;
+    }
+
+    if (!configured) {
+      requestCounterRef.current += 1;
+      setApiAccessToken(null);
+      setSnapshot(buildStaticSnapshot({ configured }));
+      return undefined;
+    }
+
+    setSnapshot(buildBootstrappingSnapshot(configured));
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setApiAccessToken(null);
+      setSnapshot(buildStaticSnapshot({ configured }));
+      return undefined;
+    }
+
+    let isDisposed = false;
+
+    void (async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (isDisposed) {
+        return;
+      }
+
+      if (error) {
+        console.error("Failed to load Supabase session", error);
+        setApiAccessToken(null);
+        setSnapshot(buildFallbackSnapshot(null, configured));
+        return;
+      }
+
+      await syncSession(data.session);
+    })();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isDisposed) {
+        return;
+      }
+      void syncSession(session);
+    });
+
+    return () => {
+      isDisposed = true;
+      requestCounterRef.current += 1;
+      subscription.unsubscribe();
+    };
+  }, [
+    authUserId,
+    configured,
+    email,
+    enforcementMode,
+    hasAppAccess,
+    hasStaticOverride,
+    isAuthenticated,
+    isConfigured,
+    isLoading,
+    role,
+  ]);
+
+  const signInWithPassword = async (nextEmail: string, password: string) => {
+    if (!configured) {
+      throw new Error("Authentication is not configured");
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      throw new Error("Authentication is not configured");
+    }
+
+    setSnapshot((current) => ({ ...current, isLoading: true }));
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: nextEmail,
+      password,
+    });
+    if (error) {
+      setSnapshot((current) => ({ ...current, isLoading: false }));
+      throw error;
+    }
+
+    await syncSession(data.session ?? null);
+  };
+
+  const signOut = async () => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setApiAccessToken(null);
+      setSnapshot(buildStaticSnapshot({ configured }));
+      return;
+    }
+
+    setSnapshot((current) => ({ ...current, isLoading: true }));
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setSnapshot((current) => ({ ...current, isLoading: false }));
+      throw error;
+    }
+
+    await syncSession(null);
+  };
 
   const value = useMemo<AuthState>(
     () => ({
-      role,
-      capabilities: getCapabilitiesForRole(role),
-      isAuthenticated: role !== "public",
-      isLoading,
-      email,
-      isConfigured: isAuthConfigured({
-        supabaseUrl,
-        supabaseAnonKey,
-      }),
+      ...snapshot,
+      signInWithPassword,
+      signOut,
     }),
-    [email, isLoading, role, supabaseAnonKey, supabaseUrl]
+    [signInWithPassword, signOut, snapshot]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

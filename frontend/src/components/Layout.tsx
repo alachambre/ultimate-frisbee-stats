@@ -20,17 +20,31 @@ import LanguageIcon from "@mui/icons-material/Language";
 import { useTranslation } from "react-i18next";
 import { alpha } from "@mui/material/styles";
 
+import LoginDialog from "./auth/LoginDialog";
+import { shouldEnforcePermissions, useAuth } from "../auth";
+
 export default function Layout() {
   const location = useLocation();
-  const { t, i18n } = useTranslation(['navigation', 'common']);
+  const auth = useAuth();
+  const { t, i18n } = useTranslation(["navigation", "common"]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [languageMenuAnchor, setLanguageMenuAnchor] = useState<null | HTMLElement>(null);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canAccessTeamAreas = !shouldProtectUi || auth.capabilities.canEditData;
+  const canAccessStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
 
   const menuItems = [
-    { label: t('navigation:menu.teams'), path: "/teams" },
-    { label: t('navigation:menu.strategies'), path: "/strategies" },
-    { label: t('navigation:menu.competitions'), path: "/competitions" },
-    { label: t('navigation:menu.statistics'), path: "/statistics" },
+    ...(canAccessTeamAreas
+      ? [
+          { label: t("navigation:menu.teams"), path: "/teams" },
+          { label: t("navigation:menu.strategies"), path: "/strategies" },
+        ]
+      : []),
+    { label: t("navigation:menu.competitions"), path: "/competitions" },
+    ...(canAccessStatistics
+      ? [{ label: t("navigation:menu.statistics"), path: "/statistics" }]
+      : []),
   ];
 
   const handleDrawerClose = () => {
@@ -47,8 +61,22 @@ export default function Layout() {
 
   const handleLanguageChange = (lng: string) => {
     i18n.changeLanguage(lng);
-    localStorage.setItem('i18nextLng', lng);
+    localStorage.setItem("i18nextLng", lng);
     handleLanguageMenuClose();
+  };
+
+  const handleAuthAction = async () => {
+    if (!auth.isAuthenticated) {
+      setIsLoginDialogOpen(true);
+      return;
+    }
+
+    try {
+      await auth.signOut();
+      setMobileMenuOpen(false);
+    } catch (error) {
+      console.error("Failed to sign out", error);
+    }
   };
 
   return (
@@ -82,10 +110,26 @@ export default function Layout() {
               letterSpacing: "0.5px",
             }}
           >
-            🐒 {t("common:app.name")}
+            ðŸ’ {t("common:app.name")}
           </Typography>
 
-          {/* Language Selector */}
+          {auth.isConfigured && auth.isAuthenticated && auth.email && (
+            <Typography
+              variant="body2"
+              sx={(theme) => ({
+                display: { xs: "none", lg: "block" },
+                maxWidth: 220,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                color: theme.palette.common.white,
+                mr: 2,
+              })}
+            >
+              {auth.email}
+            </Typography>
+          )}
+
           <IconButton
             onClick={handleLanguageMenuOpen}
             sx={(theme) => ({
@@ -102,20 +146,19 @@ export default function Layout() {
             onClose={handleLanguageMenuClose}
           >
             <MenuItem
-              onClick={() => handleLanguageChange('en')}
-              selected={i18n.language === 'en'}
+              onClick={() => handleLanguageChange("en")}
+              selected={i18n.language === "en"}
             >
-              🇬🇧 {t('navigation:language.english')}
+              ðŸ‡¬ðŸ‡§ {t("navigation:language.english")}
             </MenuItem>
             <MenuItem
-              onClick={() => handleLanguageChange('fr')}
-              selected={i18n.language === 'fr'}
+              onClick={() => handleLanguageChange("fr")}
+              selected={i18n.language === "fr"}
             >
-              🇫🇷 {t('navigation:language.french')}
+              ðŸ‡«ðŸ‡· {t("navigation:language.french")}
             </MenuItem>
           </Menu>
 
-          {/* Mobile Menu Icon */}
           <IconButton
             edge="end"
             aria-label="menu"
@@ -128,7 +171,6 @@ export default function Layout() {
             <MenuIcon />
           </IconButton>
 
-          {/* Desktop Navigation */}
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
             {menuItems.map((item) => (
               <Button
@@ -151,11 +193,29 @@ export default function Layout() {
                 {item.label}
               </Button>
             ))}
+            {auth.isConfigured && (
+              <Button
+                onClick={handleAuthAction}
+                disabled={auth.isLoading}
+                variant="outlined"
+                sx={(theme) => ({
+                  color: theme.palette.common.white,
+                  borderColor: alpha(theme.palette.common.white, 0.35),
+                  "&:hover": {
+                    borderColor: alpha(theme.palette.common.white, 0.5),
+                    backgroundColor: alpha(theme.palette.common.white, 0.1),
+                  },
+                })}
+              >
+                {auth.isAuthenticated
+                  ? t("common:auth.signOut")
+                  : t("common:auth.signIn")}
+              </Button>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer Menu */}
       <Drawer
         anchor="right"
         open={mobileMenuOpen}
@@ -212,12 +272,51 @@ export default function Layout() {
               </ListItem>
             ))}
           </List>
+          {auth.isConfigured && (
+            <Box sx={{ px: 2, pt: 1, pb: 2 }}>
+              {auth.isAuthenticated && auth.email && (
+                <Typography
+                  variant="body2"
+                  sx={(theme) => ({
+                    mb: 1.5,
+                    color: alpha(theme.palette.common.white, 0.85),
+                    wordBreak: "break-word",
+                  })}
+                >
+                  {auth.email}
+                </Typography>
+              )}
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleAuthAction}
+                disabled={auth.isLoading}
+                sx={(theme) => ({
+                  color: theme.palette.common.white,
+                  borderColor: alpha(theme.palette.common.white, 0.35),
+                  "&:hover": {
+                    borderColor: alpha(theme.palette.common.white, 0.5),
+                    backgroundColor: alpha(theme.palette.common.white, 0.1),
+                  },
+                })}
+              >
+                {auth.isAuthenticated
+                  ? t("common:auth.signOut")
+                  : t("common:auth.signIn")}
+              </Button>
+            </Box>
+          )}
         </Box>
       </Drawer>
 
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Outlet />
       </Box>
+
+      <LoginDialog
+        open={isLoginDialogOpen}
+        onClose={() => setIsLoginDialogOpen(false)}
+      />
     </Box>
   );
 }

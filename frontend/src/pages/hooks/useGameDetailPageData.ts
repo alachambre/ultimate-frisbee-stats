@@ -7,7 +7,10 @@ import type { PlayerGameStats } from "../../types";
 import { getPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
 
-export function useGameDetailPageData(gameId: string | undefined) {
+export function useGameDetailPageData(
+  gameId: string | undefined,
+  includeLiveStats = true
+) {
   const gameIdNumber = Number(gameId);
   const gameIdValid = Number.isFinite(gameIdNumber);
 
@@ -36,7 +39,10 @@ export function useGameDetailPageData(gameId: string | undefined) {
   const { data: liveStats } = useQuery({
     queryKey: queryKeys.liveStats(gameIdValid ? gameIdNumber : 0),
     queryFn: () => getLiveGameStatistics(gameIdNumber),
-    enabled: gameIdValid && (game?.status === "started" || game?.status === "ended"),
+    enabled:
+      includeLiveStats &&
+      gameIdValid &&
+      (game?.status === "started" || game?.status === "ended"),
     refetchInterval: game?.status === "started" ? 5000 : false,
   });
 

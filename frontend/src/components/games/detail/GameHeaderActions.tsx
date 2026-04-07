@@ -12,6 +12,7 @@ interface GameHeaderActionsProps {
   competitionPath: string;
   teamName: string;
   opponentName: string;
+  canEditData: boolean;
   canViewStatistics: boolean;
   onViewStatistics: () => void;
   onOpenRoster: () => void;
@@ -27,6 +28,7 @@ export function GameHeaderActions({
   competitionPath,
   teamName,
   opponentName,
+  canEditData,
   canViewStatistics,
   onViewStatistics,
   onOpenRoster,
@@ -63,36 +65,39 @@ export function GameHeaderActions({
             </Box>
           </Button>
 
-          <Button
-            variant="outlined"
-            startIcon={<BarChartIcon />}
-            onClick={onViewStatistics}
-            disabled={!canViewStatistics}
-            sx={{
-              minWidth: { xs: "auto", sm: "auto" },
-              "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-              {t("games:detail.viewStatistics")}
-            </Box>
-          </Button>
+          {canViewStatistics && (
+            <Button
+              variant="outlined"
+              startIcon={<BarChartIcon />}
+              onClick={onViewStatistics}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("games:detail.viewStatistics")}
+              </Box>
+            </Button>
+          )}
 
-          <Button
-            variant="outlined"
-            startIcon={<EditIcon />}
-            onClick={onOpenEdit}
-            sx={{
-              minWidth: { xs: "auto", sm: "auto" },
-              "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-              {t("common:action.edit")}
-            </Box>
-          </Button>
+          {canEditData && (
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              onClick={onOpenEdit}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("common:action.edit")}
+              </Box>
+            </Button>
+          )}
 
-          {gameStatus === "ready" && (
+          {canEditData && gameStatus === "ready" && (
             <Button
               variant="contained"
               color="primary"
@@ -106,7 +111,7 @@ export function GameHeaderActions({
             </Button>
           )}
 
-          {gameStatus === "started" && (
+          {canEditData && gameStatus === "started" && (
             <Button
               variant="outlined"
               color="success"
@@ -123,20 +128,22 @@ export function GameHeaderActions({
             </Button>
           )}
 
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={onOpenDelete}
-            sx={{
-              minWidth: { xs: "auto", sm: "auto" },
-              "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-              {t("common:action.delete")}
-            </Box>
-          </Button>
+          {canEditData && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={onOpenDelete}
+              sx={{
+                minWidth: { xs: "auto", sm: "auto" },
+                "& .MuiButton-startIcon": { margin: { xs: 0, sm: "0 8px 0 -4px" } },
+              }}
+            >
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("common:action.delete")}
+              </Box>
+            </Button>
+          )}
         </Box>
       </Box>
     </Box>

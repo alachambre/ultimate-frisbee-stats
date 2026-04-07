@@ -27,8 +27,8 @@ import { PointEventsHistory } from "./PointEventsHistory";
 
 interface PointHistoryItemProps {
   point: PointWithPlayers;
-  onEdit: (point: PointWithPlayers) => void;
-  onDelete: (point: PointWithPlayers) => void;
+  onEdit?: (point: PointWithPlayers) => void;
+  onDelete?: (point: PointWithPlayers) => void;
 }
 
 export default function PointHistoryItem({
@@ -85,21 +85,25 @@ export default function PointHistoryItem({
             </Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
-            <IconButton
-              size="small"
-              onClick={() => onEdit(point)}
-              aria-label={t("common:ariaLabel.editPoint")}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => onDelete(point)}
-              aria-label={t("common:ariaLabel.deletePoint")}
-              color="error"
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            {onEdit && (
+              <IconButton
+                size="small"
+                onClick={() => onEdit(point)}
+                aria-label={t("common:ariaLabel.editPoint")}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            )}
+            {onDelete && (
+              <IconButton
+                size="small"
+                onClick={() => onDelete(point)}
+                aria-label={t("common:ariaLabel.deletePoint")}
+                color="error"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
           </Box>
         </Box>
 

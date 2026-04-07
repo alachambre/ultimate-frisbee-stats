@@ -1,6 +1,7 @@
-import axios from "axios";
+import axios, { AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+let apiAccessToken: string | null = null;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +9,25 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export function setApiAccessToken(token: string | null): void {
+  apiAccessToken = token;
+}
+
+function applyAuthorizationHeader(
+  config: InternalAxiosRequestConfig
+): InternalAxiosRequestConfig {
+  const headers = AxiosHeaders.from(config.headers);
+  if (apiAccessToken) {
+    headers.set("Authorization", `Bearer ${apiAccessToken}`);
+  } else {
+    headers.delete("Authorization");
+  }
+  config.headers = headers;
+  return config;
+}
+
+apiClient.interceptors.request.use((config) => applyAuthorizationHeader(config));
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(

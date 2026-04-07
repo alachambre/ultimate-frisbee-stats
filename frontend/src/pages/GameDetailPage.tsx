@@ -25,10 +25,12 @@ import LivePointTracker from "../components/points/LivePointTracker";
 import ErrorState from "../components/shared/ErrorState";
 import LoadingState from "../components/shared/LoadingState";
 import type { Halftime, PointWithPlayers } from "../types";
+import { shouldEnforcePermissions, useAuth } from "../auth";
 import { queryKeys } from "../utils/queryKeys";
 import { useGameDetailPageData } from "./hooks/useGameDetailPageData";
 
 export default function GameDetailPage() {
+  const auth = useAuth();
   const { t } = useTranslation(["games", "players", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
@@ -41,6 +43,9 @@ export default function GameDetailPage() {
   const [deletingPoint, setDeletingPoint] = useState<PointWithPlayers | null>(null);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
   const [isRosterDialogOpen, setIsRosterDialogOpen] = useState(false);
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
+  const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
 
   const {
     gameIdNumber,
@@ -53,7 +58,7 @@ export default function GameDetailPage() {
     competitionPath,
     rosterPlayersForTabs,
     getRosterPlayerHighlight,
-  } = useGameDetailPageData(gameId);
+  } = useGameDetailPageData(gameId, canViewStatistics);
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteGame(gameIdNumber),
@@ -137,7 +142,8 @@ export default function GameDetailPage() {
         competitionPath={competitionPath}
         teamName={game.team_name}
         opponentName={game.opponent_name}
-        canViewStatistics={Boolean(competition)}
+        canEditData={canEditData}
+        canViewStatistics={Boolean(competition) && canViewStatistics}
         onViewStatistics={() => {
           if (!competition) return;
           navigate(
@@ -167,15 +173,16 @@ export default function GameDetailPage() {
         <GameRosterDialog
           open={isRosterDialogOpen}
           onClose={() => setIsRosterDialogOpen(false)}
-          onOpenAddPlayers={() => setIsAddPlayersModalOpen(true)}
-          disabled={game.status === "ended"}
+          onOpenAddPlayers={canEditData ? () => setIsAddPlayersModalOpen(true) : undefined}
+          canManageRoster={canEditData}
+          disabled={!canEditData || game.status === "ended"}
           players={rosterPlayersForTabs}
           liveStatsByPlayerId={liveStatsByPlayerId}
           getHighlight={getRosterPlayerHighlight}
         />
       )}
 
-      {competition && (
+      {competition && canEditData && (
         <LivePointTracker
           game={game}
           activePoint={activePoint || null}
@@ -188,9 +195,9 @@ export default function GameDetailPage() {
       <GameHistorySection
         points={game.points}
         halftime={game.halftime}
-        onEditPoint={(point) => setEditingPoint(point)}
-        onDeletePoint={handleDeletePoint}
-        onDeleteHalftime={handleDeleteHalftime}
+        onEditPoint={canEditData ? (point) => setEditingPoint(point) : undefined}
+        onDeletePoint={canEditData ? handleDeletePoint : undefined}
+        onDeleteHalftime={canEditData ? handleDeleteHalftime : undefined}
         isDeletingHalftime={deleteHalftimeMutation.isPending}
         hasDeleteHalftimeError={deleteHalftimeMutation.isError}
       />
@@ -237,7 +244,7 @@ export default function GameDetailPage() {
         </DialogActions>
       </Dialog>
 
-      {isEditModalOpen && (
+      {canEditData && isEditModalOpen && (
         <EditGameModal
           key={game.id}
           isOpen={isEditModalOpen}
@@ -246,7 +253,7 @@ export default function GameDetailPage() {
         />
       )}
 
-      <Dialog open={!!deletingPoint} onClose={() => setDeletingPoint(null)} maxWidth="sm" fullWidth>
+      <Dialog open={canEditData && !!deletingPoint} onClose={() => setDeletingPoint(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t("games:detail.deletePointTitle")}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
@@ -275,7 +282,7 @@ export default function GameDetailPage() {
         </DialogActions>
       </Dialog>
 
-      {editingPoint && competition && (
+      {canEditData && editingPoint && competition && (
         <EditPointDialog
           open={!!editingPoint}
           onClose={() => setEditingPoint(null)}
@@ -289,7 +296,7 @@ export default function GameDetailPage() {
         />
       )}
 
-      {competition && isAddPlayersModalOpen && (
+      {competition && canEditData && isAddPlayersModalOpen && (
         <AddPlayersToGameModal
           isOpen={isAddPlayersModalOpen}
           onClose={() => setIsAddPlayersModalOpen(false)}

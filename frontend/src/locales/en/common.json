@@ -105,6 +105,17 @@
     "tooShort": "Value is too short",
     "tooLong": "Value is too long"
   },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signInTitle": "Sign in",
+    "signInDescription": "Use your shared Supabase account to access protected team features.",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submit": "Sign In",
+    "notConfigured": "Authentication is not configured for this environment.",
+    "genericError": "Unable to sign in. Please try again."
+  },
   "home": {
     "title": "Monkey Statistics",
     "subtitle": "Track your team's performance, game by game, point by point",

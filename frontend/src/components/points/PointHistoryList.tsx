@@ -8,9 +8,9 @@ import type { PointWithPlayers, Halftime } from "../../types";
 interface PointHistoryListProps {
   points: PointWithPlayers[];
   halftime?: Halftime | null;
-  onEditPoint: (point: PointWithPlayers) => void;
-  onDeletePoint: (point: PointWithPlayers) => void;
-  onDeleteHalftime: (halftime: Halftime) => void;
+  onEditPoint?: (point: PointWithPlayers) => void;
+  onDeletePoint?: (point: PointWithPlayers) => void;
+  onDeleteHalftime?: (halftime: Halftime) => void;
   isDeletingHalftime?: boolean;
 }
 

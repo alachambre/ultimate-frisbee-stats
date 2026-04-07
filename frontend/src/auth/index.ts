@@ -1,4 +1,16 @@
 export { AuthProvider, useAuth } from "./AuthProvider";
-export { getCapabilitiesForRole, hasMinimumRole, ROLE_HIERARCHY } from "./capabilities";
+export { RequireMinimumRole } from "./RequireMinimumRole";
+export {
+  getCapabilitiesForRole,
+  hasMinimumRole,
+  ROLE_HIERARCHY,
+  shouldEnforcePermissions,
+} from "./capabilities";
 export { getAuthConfig, isAuthConfigured } from "./config";
-export type { AppCapabilities, AppRole, AuthConfig, AuthState } from "./types";
+export type {
+  AppCapabilities,
+  AppRole,
+  AuthConfig,
+  AuthEnforcementMode,
+  AuthState,
+} from "./types";

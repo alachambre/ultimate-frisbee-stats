@@ -4,7 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 
 interface EmptyCompetitionsStateProps {
-  onCreateClick: () => void;
+  onCreateClick?: () => void;
 }
 
 export default function EmptyCompetitionsState({
@@ -49,14 +49,16 @@ export default function EmptyCompetitionsState({
         {t('competitions:page.empty.description')}
       </Typography>
 
-      <Button
-        variant="contained"
-        size="large"
-        startIcon={<AddIcon />}
-        onClick={onCreateClick}
-      >
-        {t('competitions:page.empty.button')}
-      </Button>
+      {onCreateClick && (
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<AddIcon />}
+          onClick={onCreateClick}
+        >
+          {t('competitions:page.empty.button')}
+        </Button>
+      )}
     </Paper>
   );
 }

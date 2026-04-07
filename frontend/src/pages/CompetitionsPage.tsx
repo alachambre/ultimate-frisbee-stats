@@ -9,12 +9,16 @@ import ErrorState from "../components/shared/ErrorState";
 import CompetitionsGrid from "../components/competitions/CompetitionsGrid";
 import EmptyCompetitionsState from "../components/competitions/EmptyCompetitionsState";
 import CreateCompetitionModal from "../components/modals/CreateCompetitionModal";
+import { shouldEnforcePermissions, useAuth } from "../auth";
 import { queryKeys } from "../utils/queryKeys";
 
 export default function CompetitionsPage() {
+  const auth = useAuth();
   const { t } = useTranslation(["competitions", "common"]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<number | "all">("all");
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
 
   const {
     data: competitions,
@@ -28,6 +32,7 @@ export default function CompetitionsPage() {
   const { data: teams } = useQuery({
     queryKey: queryKeys.teams,
     queryFn: () => getTeams(),
+    enabled: canEditData && !auth.isLoading,
   });
 
   // Filter and sort competitions by selected team (newest first)
@@ -55,8 +60,8 @@ export default function CompetitionsPage() {
     <Container maxWidth="lg" sx={{ py: 4, px: { xs: 2, sm: 3 } }}>
       <PageHeader
         title={t("competitions:page.title")}
-        actionLabel={t("competitions:page.newCompetition")}
-        onActionClick={() => setIsCreateModalOpen(true)}
+        actionLabel={canEditData ? t("competitions:page.newCompetition") : undefined}
+        onActionClick={canEditData ? () => setIsCreateModalOpen(true) : undefined}
       />
 
       {/* Team Filter */}
@@ -82,7 +87,7 @@ export default function CompetitionsPage() {
 
       {competitions && competitions.length === 0 ? (
         <EmptyCompetitionsState
-          onCreateClick={() => setIsCreateModalOpen(true)}
+          onCreateClick={canEditData ? () => setIsCreateModalOpen(true) : undefined}
         />
       ) : filteredCompetitions.length === 0 ? (
         <Box sx={{ textAlign: "center", py: 8 }}>
@@ -94,10 +99,12 @@ export default function CompetitionsPage() {
         <CompetitionsGrid competitions={filteredCompetitions} />
       )}
 
-      <CreateCompetitionModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {canEditData && (
+        <CreateCompetitionModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+        />
+      )}
     </Container>
   );
 }

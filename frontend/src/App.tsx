@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./locales";
 import Layout from "./components/Layout";
+import { AuthProvider, RequireMinimumRole } from "./auth";
 import HomePage from "./pages/HomePage";
 import TeamsPage from "./pages/TeamsPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
@@ -77,21 +78,58 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<HomePage />} />
-                <Route path="teams" element={<TeamsPage />} />
-                <Route path="teams/:teamId" element={<TeamDetailPage />} />
-                <Route path="competitions" element={<CompetitionsPage />} />
-                <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
-                <Route path="lines/:lineId" element={<LineDetailPage />} />
-                <Route path="strategies" element={<StrategiesPage />} />
-                <Route path="games/:gameId" element={<GameDetailPage />} />
-                <Route path="statistics" element={<StatisticsPage />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<HomePage />} />
+                  <Route
+                    path="teams"
+                    element={
+                      <RequireMinimumRole minimumRole="team_member">
+                        <TeamsPage />
+                      </RequireMinimumRole>
+                    }
+                  />
+                  <Route
+                    path="teams/:teamId"
+                    element={
+                      <RequireMinimumRole minimumRole="team_member">
+                        <TeamDetailPage />
+                      </RequireMinimumRole>
+                    }
+                  />
+                  <Route path="competitions" element={<CompetitionsPage />} />
+                  <Route path="competitions/:competitionId" element={<CompetitionDetailPage />} />
+                  <Route
+                    path="lines/:lineId"
+                    element={
+                      <RequireMinimumRole minimumRole="team_member">
+                        <LineDetailPage />
+                      </RequireMinimumRole>
+                    }
+                  />
+                  <Route
+                    path="strategies"
+                    element={
+                      <RequireMinimumRole minimumRole="team_member">
+                        <StrategiesPage />
+                      </RequireMinimumRole>
+                    }
+                  />
+                  <Route path="games/:gameId" element={<GameDetailPage />} />
+                  <Route
+                    path="statistics"
+                    element={
+                      <RequireMinimumRole minimumRole="team_analyst">
+                        <StatisticsPage />
+                      </RequireMinimumRole>
+                    }
+                  />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </I18nextProvider>

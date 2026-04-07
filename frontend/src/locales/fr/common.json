@@ -105,6 +105,17 @@
     "tooShort": "Valeur trop courte",
     "tooLong": "Valeur trop longue"
   },
+  "auth": {
+    "signIn": "Connexion",
+    "signOut": "Deconnexion",
+    "signInTitle": "Connexion",
+    "signInDescription": "Utilisez votre compte Supabase partage pour acceder aux espaces proteges de l'equipe.",
+    "emailLabel": "Adresse e-mail",
+    "passwordLabel": "Mot de passe",
+    "submit": "Connexion",
+    "notConfigured": "L'authentification n'est pas configuree pour cet environnement.",
+    "genericError": "Connexion impossible. Veuillez reessayer."
+  },
   "home": {
     "title": "Monkey Statistics",
     "subtitle": "Suivez les performances de votre équipe, match par match, point par point",

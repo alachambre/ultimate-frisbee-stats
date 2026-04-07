@@ -14,7 +14,7 @@ import type { Halftime } from "../../types";
 
 interface HalftimeHistoryItemProps {
   halftime: Halftime;
-  onDelete: (halftime: Halftime) => void;
+  onDelete?: (halftime: Halftime) => void;
   isDeleting?: boolean;
 }
 
@@ -39,19 +39,21 @@ export default function HalftimeHistoryItem({
               {t("points:history.halfTime")}
             </Typography>
           </Box>
-          <Tooltip title={t("common:action.delete")}>
-            <span>
-              <IconButton
-                size="small"
-                onClick={() => onDelete(halftime)}
-                aria-label={t("points:history.deleteHalfTime")}
-                color="error"
-                disabled={isDeleting}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
+          {onDelete && (
+            <Tooltip title={t("common:action.delete")}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => onDelete(halftime)}
+                  aria-label={t("points:history.deleteHalfTime")}
+                  color="error"
+                  disabled={isDeleting}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
         </Box>
         <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
           <Chip label={t("points:history.halfTime")} color="warning" size="small" />

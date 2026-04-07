@@ -1,4 +1,4 @@
-import type { AppCapabilities, AppRole } from "./types";
+import type { AppCapabilities, AppRole, AuthEnforcementMode } from "./types";
 
 export const ROLE_HIERARCHY: readonly AppRole[] = [
   "public",
@@ -52,4 +52,11 @@ export function getCapabilitiesForRole(role: AppRole): AppCapabilities {
 
 export function hasMinimumRole(role: AppRole, minimumRole: AppRole): boolean {
   return ROLE_HIERARCHY.indexOf(role) >= ROLE_HIERARCHY.indexOf(minimumRole);
+}
+
+export function shouldEnforcePermissions(
+  enforcementMode: AuthEnforcementMode,
+  isLoading = false
+): boolean {
+  return isLoading || enforcementMode === "enforced";
 }
