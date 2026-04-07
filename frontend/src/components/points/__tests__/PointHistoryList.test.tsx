@@ -109,7 +109,7 @@ describe("PointHistoryList", () => {
     expect(await screen.findByText(/point start in offense - left side/i)).toBeInTheDocument();
   });
 
-  it("renders total turns summary on completed point cards", () => {
+  it("renders our turns summary on completed point cards", () => {
     const points: PointWithPlayers[] = [
       createPoint(1, 1, "2024-01-01T10:00:00Z", null, { our: 2, opponent: 1 }),
     ];
@@ -124,7 +124,7 @@ describe("PointHistoryList", () => {
       />
     );
 
-    expect(screen.getByText("3 turns")).toBeInTheDocument();
+    expect(screen.getByText("2 turns")).toBeInTheDocument();
   });
 
   it("renders zero-turn summary when no turns happened", () => {
