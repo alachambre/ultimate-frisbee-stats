@@ -16,13 +16,18 @@ from app.logging_config import get_logger
 logger = get_logger("auth.dependencies")
 
 
-def get_request_access_context(
+def _resolve_request_access_context(
     request: Request,
     db: Session = Depends(get_db),
     settings: AuthSettings = Depends(get_auth_settings),
     token_verifier: SupabaseTokenVerifier | None = Depends(get_token_verifier),
+    *,
+    ignore_rollout_mode: bool = False,
 ) -> AccessContext:
-    if settings.auth_enforcement_mode is AuthEnforcementMode.OFF:
+    if (
+        not ignore_rollout_mode
+        and settings.auth_enforcement_mode is AuthEnforcementMode.OFF
+    ):
         return build_access_context(
             enforcement_mode=settings.auth_enforcement_mode,
         )
@@ -67,13 +72,53 @@ def get_request_access_context(
     )
 
 
-def require_minimum_role(minimum_role: AppRole) -> Callable[[AccessContext], AccessContext]:
+def get_request_access_context(
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: AuthSettings = Depends(get_auth_settings),
+    token_verifier: SupabaseTokenVerifier | None = Depends(get_token_verifier),
+) -> AccessContext:
+    return _resolve_request_access_context(
+        request,
+        db=db,
+        settings=settings,
+        token_verifier=token_verifier,
+    )
+
+
+def get_strict_request_access_context(
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: AuthSettings = Depends(get_auth_settings),
+    token_verifier: SupabaseTokenVerifier | None = Depends(get_token_verifier),
+) -> AccessContext:
+    return _resolve_request_access_context(
+        request,
+        db=db,
+        settings=settings,
+        token_verifier=token_verifier,
+        ignore_rollout_mode=True,
+    )
+
+
+def require_minimum_role(
+    minimum_role: AppRole,
+    *,
+    always_enforce: bool = False,
+) -> Callable[[AccessContext], AccessContext]:
     def dependency(
         request: Request,
-        access_context: AccessContext = Depends(get_request_access_context),
+        access_context: AccessContext = Depends(
+            get_strict_request_access_context
+            if always_enforce
+            else get_request_access_context
+        ),
         settings: AuthSettings = Depends(get_auth_settings),
     ) -> AccessContext:
-        if settings.auth_enforcement_mode is not AuthEnforcementMode.ENFORCED:
+        if (
+            not always_enforce
+            and settings.auth_enforcement_mode is not AuthEnforcementMode.ENFORCED
+        ):
             if (
                 settings.auth_enforcement_mode is AuthEnforcementMode.SHADOW
                 and not has_minimum_role(access_context.role, minimum_role)
@@ -113,3 +158,4 @@ def require_minimum_role(minimum_role: AppRole) -> Callable[[AccessContext], Acc
 require_team_member = require_minimum_role(AppRole.TEAM_MEMBER)
 require_team_analyst = require_minimum_role(AppRole.TEAM_ANALYST)
 require_admin = require_minimum_role(AppRole.ADMIN)
+require_admin_strict = require_minimum_role(AppRole.ADMIN, always_enforce=True)

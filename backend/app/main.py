@@ -8,7 +8,7 @@ from app.auth.bootstrap import bootstrap_initial_admin
 from app.auth.settings import get_auth_settings
 from app.database import init_db
 from app.database import SessionLocal
-from app.routers import auth, teams, players, games, points, competitions, lines, strategies, stoppages, turnovers, statistics, exports, halftimes
+from app.routers import auth, teams, players, games, points, competitions, lines, strategies, stoppages, turnovers, statistics, exports, halftimes, users
 from app.logging_config import setup_logging, get_logger
 
 # Initialize logging
@@ -94,6 +94,7 @@ def root():
 
 # Include all routers
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(teams.router)
 app.include_router(competitions.router)
 app.include_router(players.router)

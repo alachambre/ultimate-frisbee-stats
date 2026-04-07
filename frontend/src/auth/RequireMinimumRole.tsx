@@ -12,12 +12,14 @@ interface RequireMinimumRoleProps {
   minimumRole: AppRole;
   redirectTo?: string;
   children?: React.ReactNode;
+  alwaysEnforce?: boolean;
 }
 
 export function RequireMinimumRole({
   minimumRole,
   redirectTo = "/competitions",
   children,
+  alwaysEnforce = false,
 }: RequireMinimumRoleProps) {
   const auth = useAuth();
   const { t } = useTranslation("common");
@@ -26,7 +28,7 @@ export function RequireMinimumRole({
     return <LoadingState showColdStartHint={false} />;
   }
 
-  if (!shouldEnforcePermissions(auth.enforcementMode)) {
+  if (!alwaysEnforce && !shouldEnforcePermissions(auth.enforcementMode)) {
     return children ?? <Outlet />;
   }
 

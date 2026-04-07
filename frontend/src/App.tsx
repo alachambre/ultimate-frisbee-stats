@@ -15,6 +15,7 @@ import GameDetailPage from "./pages/GameDetailPage";
 import LineDetailPage from "./pages/LineDetailPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import StatisticsPage from "./pages/StatisticsPage";
+import AdminUsersPage from "./pages/AdminUsersPage";
 
 const theme = createTheme({
   palette: {
@@ -123,6 +124,14 @@ function App() {
                     element={
                       <RequireMinimumRole minimumRole="team_analyst">
                         <StatisticsPage />
+                      </RequireMinimumRole>
+                    }
+                  />
+                  <Route
+                    path="admin/users"
+                    element={
+                      <RequireMinimumRole minimumRole="admin" alwaysEnforce>
+                        <AdminUsersPage />
                       </RequireMinimumRole>
                     }
                   />

@@ -100,6 +100,7 @@ from app.crud.turnovers import (
 )
 
 from app.crud.users import (
+    count_active_admin_users,
     create_user,
     get_user,
     get_user_by_auth_user_id,
@@ -188,6 +189,7 @@ __all__ = [
     "update_turnover",
     "delete_turnover",
     # Users
+    "count_active_admin_users",
     "create_user",
     "get_user",
     "get_user_by_auth_user_id",

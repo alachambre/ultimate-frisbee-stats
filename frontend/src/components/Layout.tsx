@@ -38,6 +38,7 @@ export default function Layout() {
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const canAccessTeamAreas = !shouldProtectUi || auth.capabilities.canEditData;
   const canAccessStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
+  const canAccessAdmin = auth.capabilities.canManageUsers;
 
   const menuItems = [
     ...(canAccessTeamAreas
@@ -49,6 +50,9 @@ export default function Layout() {
     { label: t("navigation:menu.competitions"), path: "/competitions" },
     ...(canAccessStatistics
       ? [{ label: t("navigation:menu.statistics"), path: "/statistics" }]
+      : []),
+    ...(canAccessAdmin
+      ? [{ label: t("navigation:menu.users"), path: "/admin/users" }]
       : []),
   ];
 

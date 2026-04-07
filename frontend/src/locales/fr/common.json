@@ -135,6 +135,41 @@
       "admin": "admin"
     }
   },
+  "adminUsers": {
+    "title": "Comptes utilisateurs",
+    "addUser": "Nouveau compte",
+    "noticeTitle": "Espace admin",
+    "noticeDescription": "Creez ici les comptes partages de l'equipe, changez les roles et desactivez les acces si besoin.",
+    "empty": "Aucun compte utilisateur n'a encore ete cree.",
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "currentAccount": "Compte actuel"
+    },
+    "meta": {
+      "created": "Cree le {{date}}",
+      "updated": "Mis a jour le {{date}}"
+    },
+    "fields": {
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "passwordHelp": "Utilisez au moins 8 caracteres.",
+      "newPasswordHelp": "Laissez vide pour conserver le mot de passe actuel.",
+      "role": "Role",
+      "active": "Compte actif"
+    },
+    "createDialog": {
+      "title": "Creer un compte",
+      "description": "Creez un nouveau compte partage et choisissez son role applicatif.",
+      "submit": "Creer le compte"
+    },
+    "editDialog": {
+      "title": "Modifier le compte",
+      "description": "Mettez a jour l'adresse e-mail, le mot de passe, le role ou l'etat d'activation de ce compte.",
+      "submit": "Enregistrer le compte"
+    }
+  },
   "home": {
     "title": "Monkey Statistics",
     "subtitle": "Suivez les performances de votre équipe, match par match, point par point",

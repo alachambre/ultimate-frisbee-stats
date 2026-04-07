@@ -14,3 +14,4 @@ export * from "./stoppages";
 export * from "./turnovers";
 export * from "./halftimes";
 export * from "./statistics";
+export * from "./users";

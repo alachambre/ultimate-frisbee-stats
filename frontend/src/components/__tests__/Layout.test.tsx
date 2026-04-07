@@ -68,6 +68,7 @@ describe("Layout", () => {
     expect(screen.getByRole("link", { name: /^strategies$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^competitions$/i })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /^statistics$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^users$/i })).not.toBeInTheDocument();
   });
 
   it("shows statistics for analysts when permissions are enforced", () => {
@@ -79,6 +80,18 @@ describe("Layout", () => {
     });
 
     expect(screen.getByRole("link", { name: /^statistics$/i })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^users$/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+  });
+
+  it("shows user management navigation for admins", () => {
+    renderLayout({
+      role: "admin",
+      enforcementMode: "enforced",
+      isAuthenticated: true,
+      hasAppAccess: true,
+    });
+
+    expect(screen.getByRole("link", { name: /^users$/i })).toBeInTheDocument();
   });
 });

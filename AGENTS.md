@@ -33,6 +33,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Frontend session bootstrap now flows through `AuthProvider` + Supabase Auth + `/auth/me`; keep `AuthProvider` inside `QueryClientProvider` so auth changes can invalidate React Query caches safely
 - UI permission gating must respect rollout mode: only hide or block restricted surfaces when backend `enforcement_mode` is `enforced`; `off`/`shadow` should remain safe for incremental deploys
 - In enforced mode, protected frontend routes should render an in-app permission notice instead of silently redirecting; use that pattern for future gated screens so users understand whether they need login, a higher role, or app provisioning
+- Admin account management lives on `frontend/src/pages/AdminUsersPage.tsx` at `/admin/users`; keep that route strictly admin-only in the UI even before global enforcement is enabled so it matches the backend contract
 - On public or `team_member` surfaces, avoid protected statistics queries when UI enforcement is active; gate those requests before they fire instead of relying on 401/403 handling in the page
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
 - Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (query-driven workflow: `teamId`, `mode=competition|player`, `competitionId`, `gameId`, `playerId` + multi-select `playerIds`)
@@ -59,6 +60,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Backend auth rollout is controlled by `AUTH_ENFORCEMENT_MODE` with modes `off`, `shadow`, and `enforced`; prefer incremental deploys with `shadow` before enabling enforcement
 - Public spectator payload redaction is centralized in `backend/app/auth/redaction.py`; when exposing anonymous-safe game/point/stoppage/turnover/halftime reads, reuse those serializers instead of hand-redacting fields in routers
 - Backend route authorization uses `require_team_member` for operational/team-management surfaces and `require_team_analyst` for `/statistics` and `/exports`; keep only the approved spectator reads public
+- Backend user management endpoints live under `/users`, use `require_admin_strict`, and rely on Supabase Auth admin APIs through the service role key; keep those flows rollout-independent and backend-enforced
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`

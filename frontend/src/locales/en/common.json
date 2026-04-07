@@ -135,6 +135,41 @@
       "admin": "admin"
     }
   },
+  "adminUsers": {
+    "title": "User accounts",
+    "addUser": "New account",
+    "noticeTitle": "Admin-only area",
+    "noticeDescription": "Create shared team accounts here, update roles, and disable access when needed.",
+    "empty": "No user accounts have been created yet.",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "currentAccount": "Current account"
+    },
+    "meta": {
+      "created": "Created {{date}}",
+      "updated": "Updated {{date}}"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "passwordHelp": "Use at least 8 characters.",
+      "newPasswordHelp": "Leave this blank to keep the current password.",
+      "role": "Role",
+      "active": "Account active"
+    },
+    "createDialog": {
+      "title": "Create account",
+      "description": "Create a new shared team account and choose its app role.",
+      "submit": "Create account"
+    },
+    "editDialog": {
+      "title": "Edit account",
+      "description": "Update the email, password, role, or activation status for this account.",
+      "submit": "Save account"
+    }
+  },
   "home": {
     "title": "Monkey Statistics",
     "subtitle": "Track your team's performance, game by game, point by point",

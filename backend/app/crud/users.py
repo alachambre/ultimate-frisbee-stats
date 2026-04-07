@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app import models, schemas
+from app.auth.permissions import AppRole
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
@@ -29,7 +30,24 @@ def get_user_by_email(db: Session, email: str) -> models.User | None:
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[models.User]:
-    return db.query(models.User).offset(skip).limit(limit).all()
+    return (
+        db.query(models.User)
+        .order_by(models.User.email.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def count_active_admin_users(db: Session) -> int:
+    return (
+        db.query(models.User)
+        .filter(
+            models.User.role == AppRole.ADMIN.value,
+            models.User.is_active.is_(True),
+        )
+        .count()
+    )
 
 
 def update_user(

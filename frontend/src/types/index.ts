@@ -8,6 +8,7 @@ export type GameStatus = "ready" | "started" | "ended";
 export type PointStatus = "ready" | "running" | "scored" | "completed";
 export type StrategyCategory = "offense" | "defense";
 export type FieldSide = "table_left" | "table_right";
+export type ManagedUserRole = "team_member" | "team_analyst" | "admin";
 
 // ============================================
 // Team Types
@@ -28,6 +29,34 @@ export interface Team extends TeamBase {
 
 export interface TeamWithPlayers extends Team {
   players: Player[];
+}
+
+// ============================================
+// User Types
+// ============================================
+
+export interface ManagedUser {
+  id: number;
+  auth_user_id: string;
+  email: string;
+  role: ManagedUserRole;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ManagedUserCreate {
+  email: string;
+  password: string;
+  role: ManagedUserRole;
+  is_active: boolean;
+}
+
+export interface ManagedUserUpdate {
+  email?: string;
+  password?: string;
+  role?: ManagedUserRole;
+  is_active?: boolean;
 }
 
 // ============================================

@@ -17,7 +17,7 @@ from .strategy import Strategy, StrategyCreate, StrategyUpdate
 from .stoppage import Stoppage, StoppageCreate, StoppageUpdate
 from .halftime import Halftime, HalftimeCreate, HalftimeUpdate
 from .turnover import Turnover, TurnoverCreate, TurnoverUpdate, TurnoverWithPlayer
-from .user import User, UserCreate, UserUpdate
+from .user import User, UserCreate, UserUpdate, AdminUserCreate, AdminUserUpdate
 from .auth import AuthMe, CapabilityFlags
 
 # Rebuild models with forward references after all models are imported
@@ -90,6 +90,8 @@ __all__ = [
     "User",
     "UserCreate",
     "UserUpdate",
+    "AdminUserCreate",
+    "AdminUserUpdate",
     # Auth
     "AuthMe",
     "CapabilityFlags",
