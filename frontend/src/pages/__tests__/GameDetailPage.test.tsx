@@ -67,6 +67,31 @@ describe("GameDetailPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows spectator guidance and hides editing actions for public users when permissions are enforced", async () => {
+    render(<GameDetailPage />, {
+      auth: {
+        role: "public",
+        enforcementMode: "enforced",
+        isAuthenticated: false,
+        hasAppAccess: false,
+        isConfigured: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Test Team vs Rival Team/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/spectator mode/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/you can follow the score and point history here/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /roster/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /start game/i })).not.toBeInTheDocument();
+  });
+
   it("edits game successfully", async () => {
     const user = userEvent.setup();
     render(<GameDetailPage />);

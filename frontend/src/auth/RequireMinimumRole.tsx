@@ -1,5 +1,8 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Box } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { Outlet } from "react-router-dom";
 
+import PermissionNotice from "../components/shared/PermissionNotice";
 import LoadingState from "../components/shared/LoadingState";
 import { hasMinimumRole, shouldEnforcePermissions } from "./capabilities";
 import { useAuth } from "./AuthProvider";
@@ -17,7 +20,7 @@ export function RequireMinimumRole({
   children,
 }: RequireMinimumRoleProps) {
   const auth = useAuth();
-  const location = useLocation();
+  const { t } = useTranslation("common");
 
   if (auth.isLoading) {
     return <LoadingState showColdStartHint={false} />;
@@ -31,11 +34,29 @@ export function RequireMinimumRole({
     return children ?? <Outlet />;
   }
 
+  let title = t("access.insufficientPermissionsTitle");
+  let description = t("access.insufficientPermissionsDescription", {
+    role: t(`access.roles.${minimumRole}`),
+  });
+
+  if (!auth.isAuthenticated) {
+    title = t("access.signInRequiredTitle");
+    description = auth.isConfigured
+      ? t("access.signInRequiredDescription")
+      : t("access.signInUnavailableDescription");
+  } else if (!auth.hasAppAccess) {
+    title = t("access.noAppAccessTitle");
+    description = t("access.noAppAccessDescription");
+  }
+
   return (
-    <Navigate
-      to={redirectTo}
-      replace
-      state={{ from: location.pathname + location.search }}
-    />
+    <Box sx={{ maxWidth: 720, mx: "auto", px: { xs: 2, sm: 3 }, py: 4 }}>
+      <PermissionNotice
+        title={title}
+        description={description}
+        actionLabel={t("access.backToCompetitions")}
+        actionTo={redirectTo}
+      />
+    </Box>
   );
 }

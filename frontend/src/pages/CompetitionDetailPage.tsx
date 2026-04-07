@@ -29,6 +29,7 @@ import {
 } from "../services";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
+import PermissionNotice from "../components/shared/PermissionNotice";
 import RosterSummaryHeader from "../components/players/RosterSummaryHeader";
 import EmptyPlayersState from "../components/players/EmptyPlayersState";
 import PlayerSelectionList from "../components/shared/PlayerSelectionList";
@@ -58,6 +59,7 @@ export default function CompetitionDetailPage() {
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
   const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
+  const showSpectatorNotice = shouldProtectUi && !canEditData;
 
   const {
     data: competition,
@@ -216,6 +218,14 @@ export default function CompetitionDetailPage() {
           </Box>
         </Box>
       </Box>
+
+      {showSpectatorNotice && (
+        <PermissionNotice
+          title={t("common:access.spectatorModeTitle")}
+          description={t("common:access.competitionSpectatorDescription")}
+          sx={{ mb: 3 }}
+        />
+      )}
 
       {/* Roster Section */}
       <Paper sx={{ mb: 3 }}>

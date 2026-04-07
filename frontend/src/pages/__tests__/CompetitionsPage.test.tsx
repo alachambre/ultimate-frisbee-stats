@@ -20,6 +20,32 @@ describe("CompetitionsPage", () => {
     expect(screen.getByText(/create your first competition/i)).toBeInTheDocument();
   });
 
+  it("shows spectator guidance and hides creation actions for public users when permissions are enforced", async () => {
+    render(<CompetitionsPage />, {
+      auth: {
+        role: "public",
+        enforcementMode: "enforced",
+        isAuthenticated: false,
+        hasAppAccess: false,
+        isConfigured: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/spectator mode/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/you can follow competitions and games here/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /new competition/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /create your first competition/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("creates new competition successfully", async () => {
     const user = userEvent.setup();
     render(<CompetitionsPage />);

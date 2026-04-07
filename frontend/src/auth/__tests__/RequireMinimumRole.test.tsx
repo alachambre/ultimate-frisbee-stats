@@ -41,8 +41,14 @@ describe("RequireMinimumRole", () => {
       hasAppAccess: false,
     });
 
-    expect(screen.getByText("Competitions page")).toBeInTheDocument();
+    expect(screen.getByText(/sign in required/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/use the sign in button in the header to access this area/i)
+    ).toBeInTheDocument();
     expect(screen.queryByText("Statistics page")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /back to competitions/i })
+    ).toBeInTheDocument();
   });
 
   it("keeps protected routes accessible while rollout mode is off", () => {
@@ -65,5 +71,20 @@ describe("RequireMinimumRole", () => {
     });
 
     expect(screen.getByText("Statistics page")).toBeInTheDocument();
+  });
+
+  it("shows a role-specific notice for team members on analyst-only routes", () => {
+    renderProtectedRoute({
+      role: "team_member",
+      enforcementMode: "enforced",
+      isAuthenticated: true,
+      hasAppAccess: true,
+    });
+
+    expect(screen.getByText(/access restricted/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/this page requires team analyst access/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Statistics page")).not.toBeInTheDocument();
   });
 });

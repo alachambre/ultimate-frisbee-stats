@@ -6,6 +6,7 @@ import { getCompetitions, getTeams } from "../services";
 import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import ErrorState from "../components/shared/ErrorState";
+import PermissionNotice from "../components/shared/PermissionNotice";
 import CompetitionsGrid from "../components/competitions/CompetitionsGrid";
 import EmptyCompetitionsState from "../components/competitions/EmptyCompetitionsState";
 import CreateCompetitionModal from "../components/modals/CreateCompetitionModal";
@@ -19,6 +20,7 @@ export default function CompetitionsPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | "all">("all");
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
+  const showSpectatorNotice = shouldProtectUi && !canEditData;
 
   const {
     data: competitions,
@@ -63,6 +65,14 @@ export default function CompetitionsPage() {
         actionLabel={canEditData ? t("competitions:page.newCompetition") : undefined}
         onActionClick={canEditData ? () => setIsCreateModalOpen(true) : undefined}
       />
+
+      {showSpectatorNotice && (
+        <PermissionNotice
+          title={t("common:access.spectatorModeTitle")}
+          description={t("common:access.competitionsSpectatorDescription")}
+          sx={{ mb: 3 }}
+        />
+      )}
 
       {/* Team Filter */}
       {teams && teams.length > 0 && (

@@ -65,6 +65,36 @@ describe("CompetitionDetailPage", () => {
     expect(screen.getByText("Games (0)")).toBeInTheDocument();
   });
 
+  it("shows spectator guidance and hides management actions for public users when permissions are enforced", async () => {
+    const user = userEvent.setup();
+
+    render(<CompetitionDetailPage />, {
+      auth: {
+        role: "public",
+        enforcementMode: "enforced",
+        isAuthenticated: false,
+        hasAppAccess: false,
+        isConfigured: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Competition")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/spectator mode/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/you can follow this competition here/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /add game/i })).not.toBeInTheDocument();
+
+    const expandRosterButton = screen.getByRole("button", { name: /show roster/i });
+    await user.click(expandRosterButton);
+    expect(screen.queryByRole("button", { name: /manage roster/i })).not.toBeInTheDocument();
+  });
+
   it("allows editing competition details", async () => {
     const user = userEvent.setup();
     render(<CompetitionDetailPage />);

@@ -116,6 +116,25 @@
     "notConfigured": "L'authentification n'est pas configuree pour cet environnement.",
     "genericError": "Connexion impossible. Veuillez reessayer."
   },
+  "access": {
+    "backToCompetitions": "Retour aux competitions",
+    "signInRequiredTitle": "Connexion requise",
+    "signInRequiredDescription": "Utilisez le bouton Connexion dans l'entete pour acceder a cet espace.",
+    "signInUnavailableDescription": "L'authentification n'est pas configuree pour cet environnement.",
+    "noAppAccessTitle": "Aucun acces applicatif",
+    "noAppAccessDescription": "Ce compte est authentifie, mais il n'a pas encore d'acces a Monkey Statistics.",
+    "insufficientPermissionsTitle": "Acces restreint",
+    "insufficientPermissionsDescription": "Cette page requiert le role {{role}}.",
+    "spectatorModeTitle": "Mode spectateur",
+    "competitionsSpectatorDescription": "Vous pouvez suivre les competitions et les matchs ici. Connectez-vous avec un compte equipe pour creer des competitions ou gerer les effectifs.",
+    "competitionSpectatorDescription": "Vous pouvez suivre cette competition ici. Connectez-vous avec un compte equipe pour la modifier, gerer l'effectif ou creer des matchs.",
+    "gameSpectatorDescription": "Vous pouvez suivre le score et l'historique des points ici. Connectez-vous avec un compte equipe pour gerer l'effectif, suivre le live tracker ou modifier l'historique.",
+    "roles": {
+      "team_member": "membre equipe",
+      "team_analyst": "analyste equipe",
+      "admin": "admin"
+    }
+  },
   "home": {
     "title": "Monkey Statistics",
     "subtitle": "Suivez les performances de votre équipe, match par match, point par point",

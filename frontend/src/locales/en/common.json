@@ -116,6 +116,25 @@
     "notConfigured": "Authentication is not configured for this environment.",
     "genericError": "Unable to sign in. Please try again."
   },
+  "access": {
+    "backToCompetitions": "Back to competitions",
+    "signInRequiredTitle": "Sign in required",
+    "signInRequiredDescription": "Use the Sign In button in the header to access this area.",
+    "signInUnavailableDescription": "Authentication is not configured in this environment yet.",
+    "noAppAccessTitle": "No app access",
+    "noAppAccessDescription": "This account is authenticated, but it has not been granted access to Monkey Statistics yet.",
+    "insufficientPermissionsTitle": "Access restricted",
+    "insufficientPermissionsDescription": "This page requires {{role}} access.",
+    "spectatorModeTitle": "Spectator mode",
+    "competitionsSpectatorDescription": "You can follow competitions and games here. Sign in with a team account to create competitions or manage rosters.",
+    "competitionSpectatorDescription": "You can follow this competition here. Sign in with a team account to edit it, manage the roster, or create games.",
+    "gameSpectatorDescription": "You can follow the score and point history here. Sign in with a team account to manage the roster, track live points, or edit game history.",
+    "roles": {
+      "team_member": "team member",
+      "team_analyst": "team analyst",
+      "admin": "admin"
+    }
+  },
   "home": {
     "title": "Monkey Statistics",
     "subtitle": "Track your team's performance, game by game, point by point",

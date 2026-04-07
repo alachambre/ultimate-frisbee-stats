@@ -32,6 +32,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Frontend auth API bootstrap entrypoint is `GET /auth/me`; auth consumption should build on that contract rather than duplicating role resolution logic client-side
 - Frontend session bootstrap now flows through `AuthProvider` + Supabase Auth + `/auth/me`; keep `AuthProvider` inside `QueryClientProvider` so auth changes can invalidate React Query caches safely
 - UI permission gating must respect rollout mode: only hide or block restricted surfaces when backend `enforcement_mode` is `enforced`; `off`/`shadow` should remain safe for incremental deploys
+- In enforced mode, protected frontend routes should render an in-app permission notice instead of silently redirecting; use that pattern for future gated screens so users understand whether they need login, a higher role, or app provisioning
 - On public or `team_member` surfaces, avoid protected statistics queries when UI enforcement is active; gate those requests before they fire instead of relying on 401/403 handling in the page
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
 - Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (query-driven workflow: `teamId`, `mode=competition|player`, `competitionId`, `gameId`, `playerId` + multi-select `playerIds`)

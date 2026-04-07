@@ -24,6 +24,7 @@ import EditPointDialog from "../components/modals/EditPointDialog";
 import LivePointTracker from "../components/points/LivePointTracker";
 import ErrorState from "../components/shared/ErrorState";
 import LoadingState from "../components/shared/LoadingState";
+import PermissionNotice from "../components/shared/PermissionNotice";
 import type { Halftime, PointWithPlayers } from "../types";
 import { shouldEnforcePermissions, useAuth } from "../auth";
 import { queryKeys } from "../utils/queryKeys";
@@ -46,6 +47,7 @@ export default function GameDetailPage() {
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
   const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
+  const showSpectatorNotice = shouldProtectUi && !canEditData;
 
   const {
     gameIdNumber,
@@ -158,6 +160,14 @@ export default function GameDetailPage() {
         isStartPending={startMutation.isPending}
         gameStatus={game.status}
       />
+
+      {showSpectatorNotice && (
+        <PermissionNotice
+          title={t("common:access.spectatorModeTitle")}
+          description={t("common:access.gameSpectatorDescription")}
+          sx={{ mb: 3 }}
+        />
+      )}
 
       <GameScorePanel
         teamName={game.team_name}
