@@ -8,11 +8,12 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTranslation } from "react-i18next";
 import type { StrategyStatsBase } from "../../types";
 import {
-  BREAK_RATE_VALUE_MIDPOINT,
-  HOLD_RATE_VALUE_MIDPOINT,
-  TURNOVER_RATE_VALUE_MIDPOINT,
+  BREAK_RATE_VALUE_STOPS,
+  HOLD_RATE_VALUE_STOPS,
+  TURNOVER_RATE_VALUE_STOPS,
   getValueGradientColor,
   getValueGradientTrackColor,
+  type ValueGradientStops,
 } from "./statValueColors";
 
 interface StrategyStatisticsProps {
@@ -28,7 +29,7 @@ interface StrategyBarProps {
   percentage: number;
   count: number;
   total: number;
-  valueGradientMidpoint?: number;
+  valueGradientStops?: ValueGradientStops;
 }
 
 function StrategyBar({
@@ -36,11 +37,11 @@ function StrategyBar({
   percentage,
   count,
   total,
-  valueGradientMidpoint,
+  valueGradientStops,
 }: StrategyBarProps) {
   const theme = useTheme();
   const hasData = total > 0;
-  const barColor = getValueGradientColor(theme, percentage, hasData, valueGradientMidpoint);
+  const barColor = getValueGradientColor(theme, percentage, hasData, valueGradientStops);
   const percentLabel = hasData ? formatPercent(percentage) : "-";
 
   return (
@@ -63,7 +64,7 @@ function StrategyBar({
             theme,
             percentage,
             hasData,
-            valueGradientMidpoint
+            valueGradientStops
           ),
           "& .MuiLinearProgress-bar": {
             backgroundColor: barColor,
@@ -190,7 +191,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       percentage={strategy.hold_rate}
                       count={strategy.points_won}
                       total={strategy.points_played}
-                      valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
+                      valueGradientStops={HOLD_RATE_VALUE_STOPS}
                     />
 
                     {/* Expanded details */}
@@ -266,7 +267,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                       percentage={strategy.turnover_rate}
                       count={strategy.points_with_turnover}
                       total={strategy.points_played}
-                      valueGradientMidpoint={TURNOVER_RATE_VALUE_MIDPOINT}
+                      valueGradientStops={TURNOVER_RATE_VALUE_STOPS}
                     />
 
                     {/* Expanded details */}
@@ -277,7 +278,7 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           percentage={strategy.break_rate}
                           count={strategy.points_won}
                           total={strategy.points_played}
-                          valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
+                          valueGradientStops={BREAK_RATE_VALUE_STOPS}
                         />
                       </Box>
                     </Collapse>

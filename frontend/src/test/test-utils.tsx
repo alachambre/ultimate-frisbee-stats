@@ -56,6 +56,13 @@ const theme = createTheme({
     pull: {
       main: "#2d7a3e",
     },
+    performance: {
+      veryLow: "#d92d20",
+      low: "#f79009",
+      medium: "#fdb022",
+      high: "#84cc16",
+      veryHigh: "#16a34a",
+    },
   },
 });
 

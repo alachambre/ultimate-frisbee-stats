@@ -1,7 +1,7 @@
 import { Box, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
 import { alpha, type Theme, useTheme } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { getValueGradientColor } from "./statValueColors";
+import { getValueGradientColor, type ValueGradientStops } from "./statValueColors";
 
 interface CircularStatProps {
   label: string;
@@ -11,7 +11,7 @@ interface CircularStatProps {
   color?: string | ((theme: Theme) => string);
   tooltip?: string;
   useValueGradient?: boolean;
-  valueGradientMidpoint?: number;
+  valueGradientStops?: ValueGradientStops;
 }
 
 export default function CircularStat({
@@ -22,7 +22,7 @@ export default function CircularStat({
   color,
   tooltip,
   useValueGradient = false,
-  valueGradientMidpoint,
+  valueGradientStops,
 }: CircularStatProps) {
   const theme = useTheme();
   const displayPercentage = Math.round(percentage * 100);
@@ -30,7 +30,7 @@ export default function CircularStat({
   const resolvedAccentColor =
     typeof color === "function" ? color(theme) : color ?? theme.palette.primary.main;
   const statColor = useValueGradient
-    ? getValueGradientColor(theme, percentage, !hasNoData, valueGradientMidpoint)
+    ? getValueGradientColor(theme, percentage, !hasNoData, valueGradientStops)
     : resolvedAccentColor;
   const centerValueLabel = hasNoData ? "\u2014" : `${displayPercentage}%`;
 

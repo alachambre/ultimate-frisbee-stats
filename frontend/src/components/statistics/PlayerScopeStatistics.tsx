@@ -7,10 +7,10 @@ import { useTranslation } from "react-i18next";
 import type { PlayerGameStats } from "../../types";
 import CircularStat from "./CircularStat";
 import {
-  BREAK_RATE_VALUE_MIDPOINT,
-  CLEAN_BREAK_RATE_VALUE_MIDPOINT,
-  HOLD_RATE_VALUE_MIDPOINT,
-  TURNOVER_RATE_VALUE_MIDPOINT,
+  BREAK_RATE_VALUE_STOPS,
+  CLEAN_BREAK_RATE_VALUE_STOPS,
+  HOLD_RATE_VALUE_STOPS,
+  TURNOVER_RATE_VALUE_STOPS,
 } from "./statValueColors";
 import TurnoverCountSummary from "./TurnoverCountSummary";
 
@@ -132,7 +132,7 @@ export default function PlayerScopeStatistics({
               count={stats.offense.points_won}
               total={stats.offense.points_played}
               useValueGradient
-              valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
+              valueGradientStops={HOLD_RATE_VALUE_STOPS}
               tooltip={t("tooltips.holdRate")}
             />
           </Grid>
@@ -167,7 +167,7 @@ export default function PlayerScopeStatistics({
               count={stats.defense.points_with_turnover}
               total={stats.defense.points_played}
               useValueGradient
-              valueGradientMidpoint={TURNOVER_RATE_VALUE_MIDPOINT}
+              valueGradientStops={TURNOVER_RATE_VALUE_STOPS}
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
@@ -178,7 +178,7 @@ export default function PlayerScopeStatistics({
               count={stats.defense.points_won}
               total={stats.defense.points_played}
               useValueGradient
-              valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
+              valueGradientStops={BREAK_RATE_VALUE_STOPS}
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
@@ -189,7 +189,7 @@ export default function PlayerScopeStatistics({
               count={stats.defense.points_won_no_turnover}
               total={stats.defense.points_played}
               useValueGradient
-              valueGradientMidpoint={CLEAN_BREAK_RATE_VALUE_MIDPOINT}
+              valueGradientStops={CLEAN_BREAK_RATE_VALUE_STOPS}
               tooltip={t("tooltips.cleanBreakRate")}
             />
           </Grid>

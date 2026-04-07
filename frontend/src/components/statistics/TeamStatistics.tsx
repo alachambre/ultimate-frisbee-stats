@@ -17,12 +17,13 @@ import { useTranslation } from "react-i18next";
 import type { TeamStatsBase } from "../../types";
 import CircularStat from "./CircularStat";
 import {
-  BREAK_RATE_VALUE_MIDPOINT,
-  CLEAN_BREAK_RATE_VALUE_MIDPOINT,
-  HOLD_RATE_VALUE_MIDPOINT,
-  TURNOVER_RATE_VALUE_MIDPOINT,
+  BREAK_RATE_VALUE_STOPS,
+  CLEAN_BREAK_RATE_VALUE_STOPS,
+  HOLD_RATE_VALUE_STOPS,
+  TURNOVER_RATE_VALUE_STOPS,
   getValueGradientColor,
   getValueGradientTrackColor,
+  type ValueGradientStops,
 } from "./statValueColors";
 import TurnoverCountSummary from "./TurnoverCountSummary";
 
@@ -52,7 +53,7 @@ interface FieldSideProgressRowProps {
   percentage: number;
   count: number;
   total: number;
-  valueGradientMidpoint?: number;
+  valueGradientStops?: ValueGradientStops;
 }
 
 function FieldSideProgressRow({
@@ -60,12 +61,12 @@ function FieldSideProgressRow({
   percentage,
   count,
   total,
-  valueGradientMidpoint,
+  valueGradientStops,
 }: FieldSideProgressRowProps) {
   const theme = useTheme();
   const hasData = total > 0;
   const percentLabel = hasData ? `${Math.round(percentage * 100)}%` : "-";
-  const barColor = getValueGradientColor(theme, percentage, hasData, valueGradientMidpoint);
+  const barColor = getValueGradientColor(theme, percentage, hasData, valueGradientStops);
 
   return (
     <Box>
@@ -91,7 +92,7 @@ function FieldSideProgressRow({
         sx={{
           height: 8,
           borderRadius: 999,
-          bgcolor: getValueGradientTrackColor(theme, percentage, hasData, valueGradientMidpoint),
+          bgcolor: getValueGradientTrackColor(theme, percentage, hasData, valueGradientStops),
           "& .MuiLinearProgress-bar": {
             borderRadius: 999,
             backgroundColor: barColor,
@@ -110,7 +111,7 @@ interface FieldSideMetricSummaryProps {
   rightPercentage: number;
   rightCount: number;
   rightTotal: number;
-  valueGradientMidpoint?: number;
+  valueGradientStops?: ValueGradientStops;
 }
 
 function FieldSideMetricSummary({
@@ -121,7 +122,7 @@ function FieldSideMetricSummary({
   rightPercentage,
   rightCount,
   rightTotal,
-  valueGradientMidpoint,
+  valueGradientStops,
 }: FieldSideMetricSummaryProps) {
   const { t } = useTranslation("statistics");
   const theme = useTheme();
@@ -176,14 +177,14 @@ function FieldSideMetricSummary({
             percentage={leftPercentage}
             count={leftCount}
             total={leftTotal}
-            valueGradientMidpoint={valueGradientMidpoint}
+            valueGradientStops={valueGradientStops}
           />
           <FieldSideProgressRow
             label={t("teamStats.rightSide")}
             percentage={rightPercentage}
             count={rightCount}
             total={rightTotal}
-            valueGradientMidpoint={valueGradientMidpoint}
+            valueGradientStops={valueGradientStops}
           />
         </Stack>
       </AccordionDetails>
@@ -241,7 +242,7 @@ export default function TeamStatistics({
               count={teamStats.offense.points_won}
               total={teamStats.offense.points_started}
               useValueGradient
-              valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
+              valueGradientStops={HOLD_RATE_VALUE_STOPS}
               tooltip={t("tooltips.holdRate")}
             />
           </Grid>
@@ -269,7 +270,7 @@ export default function TeamStatistics({
             rightPercentage={teamStats.field_side_stats.table_right.offense.hold_rate}
             rightCount={teamStats.field_side_stats.table_right.offense.points_won}
             rightTotal={teamStats.field_side_stats.table_right.offense.points_started}
-            valueGradientMidpoint={HOLD_RATE_VALUE_MIDPOINT}
+            valueGradientStops={HOLD_RATE_VALUE_STOPS}
           />
         )}
       </Box>
@@ -289,7 +290,7 @@ export default function TeamStatistics({
               count={teamStats.defense.points_with_turnover}
               total={teamStats.defense.points_started}
               useValueGradient
-              valueGradientMidpoint={TURNOVER_RATE_VALUE_MIDPOINT}
+              valueGradientStops={TURNOVER_RATE_VALUE_STOPS}
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
@@ -300,7 +301,7 @@ export default function TeamStatistics({
               count={teamStats.defense.points_won}
               total={teamStats.defense.points_started}
               useValueGradient
-              valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
+              valueGradientStops={BREAK_RATE_VALUE_STOPS}
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
@@ -311,7 +312,7 @@ export default function TeamStatistics({
               count={teamStats.defense.points_won_no_turnover}
               total={teamStats.defense.points_started}
               useValueGradient
-              valueGradientMidpoint={CLEAN_BREAK_RATE_VALUE_MIDPOINT}
+              valueGradientStops={CLEAN_BREAK_RATE_VALUE_STOPS}
               tooltip={t("tooltips.cleanBreakRate")}
             />
           </Grid>
@@ -339,7 +340,7 @@ export default function TeamStatistics({
             rightPercentage={teamStats.field_side_stats.table_right.defense.break_rate}
             rightCount={teamStats.field_side_stats.table_right.defense.points_won}
             rightTotal={teamStats.field_side_stats.table_right.defense.points_started}
-            valueGradientMidpoint={BREAK_RATE_VALUE_MIDPOINT}
+            valueGradientStops={BREAK_RATE_VALUE_STOPS}
           />
         )}
       </Box>

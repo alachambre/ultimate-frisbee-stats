@@ -29,6 +29,13 @@ declare module "@mui/material/styles" {
       pull: {
         main: string;
       };
+      performance: {
+        veryLow: string;
+        low: string;
+        medium: string;
+        high: string;
+        veryHigh: string;
+      };
     };
   }
   interface ThemeOptions {
@@ -57,6 +64,13 @@ declare module "@mui/material/styles" {
       };
       pull?: {
         main?: string;
+      };
+      performance?: {
+        veryLow?: string;
+        low?: string;
+        medium?: string;
+        high?: string;
+        veryHigh?: string;
       };
     };
   }
@@ -90,6 +104,13 @@ declare module "@mui/system" {
       };
       pull: {
         main: string;
+      };
+      performance: {
+        veryLow: string;
+        low: string;
+        medium: string;
+        high: string;
+        veryHigh: string;
       };
     };
   }
