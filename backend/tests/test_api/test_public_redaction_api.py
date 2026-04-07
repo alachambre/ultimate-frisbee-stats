@@ -151,6 +151,46 @@ def test_team_member_public_reads_keep_full_payloads(client, db_session):
     assert halftime_response.json()["comments"] == "Discuss matchups"
 
 
+def test_authenticated_without_app_access_still_gets_redacted_payloads(client, db_session):
+    scenario = _build_redaction_scenario(db_session)
+    tokens_to_claims = _configure_shadow_auth(client)
+    tokens_to_claims["unprovisioned-token"] = VerifiedTokenClaims(
+        sub="unprovisioned-user-1",
+        email="spectator@example.com",
+    )
+    headers = {"Authorization": "Bearer unprovisioned-token"}
+
+    game_response = client.get(f"/games/{scenario['game'].id}", headers=headers)
+    stoppage_response = client.get(
+        f"/stoppages/{scenario['stoppage'].id}",
+        headers=headers,
+    )
+    turnover_response = client.get(
+        f"/turnovers/{scenario['turnover'].id}",
+        headers=headers,
+    )
+    halftime_response = client.get(
+        f"/halftimes/games/{scenario['game'].id}/halftime",
+        headers=headers,
+    )
+
+    assert game_response.status_code == 200
+    game_data = game_response.json()
+    assert game_data["comments"] is None
+    assert game_data["points"][0]["comments"] is None
+    assert game_data["points"][0]["strategy_id"] is None
+    assert game_data["points"][0]["strategy"] is None
+
+    assert stoppage_response.status_code == 200
+    assert stoppage_response.json()["comments"] is None
+
+    assert turnover_response.status_code == 200
+    assert turnover_response.json()["comments"] is None
+
+    assert halftime_response.status_code == 200
+    assert halftime_response.json()["comments"] is None
+
+
 def _configure_shadow_auth(client):
     tokens_to_claims = {}
     app = client.app

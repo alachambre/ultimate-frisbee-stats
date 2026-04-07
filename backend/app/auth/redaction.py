@@ -82,14 +82,20 @@ def _redact_comments(payload: dict[str, Any], access_context: AccessContext) -> 
 def _should_redact_comments(access_context: AccessContext) -> bool:
     return (
         access_context.enforcement_mode is not AuthEnforcementMode.OFF
-        and not access_context.capabilities.can_view_comments
+        and (
+            not access_context.has_app_access
+            or not access_context.capabilities.can_view_comments
+        )
     )
 
 
 def _should_redact_strategies(access_context: AccessContext) -> bool:
     return (
         access_context.enforcement_mode is not AuthEnforcementMode.OFF
-        and not access_context.capabilities.can_view_strategies
+        and (
+            not access_context.has_app_access
+            or not access_context.capabilities.can_view_strategies
+        )
     )
 
 
