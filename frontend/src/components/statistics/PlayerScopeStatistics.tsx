@@ -184,16 +184,6 @@ export default function PlayerScopeStatistics({
           </Grid>
           <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
-              label={t("teamStats.conversion")}
-              percentage={stats.defense.conversion_rate}
-              count={stats.defense.points_won}
-              total={stats.defense.points_with_turnover}
-              useValueGradient
-              tooltip={t("tooltips.conversionRate")}
-            />
-          </Grid>
-          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
-            <CircularStat
               label={t("teamStats.cleanBreak")}
               percentage={stats.defense.clean_break_rate}
               count={stats.defense.points_won_no_turnover}
@@ -201,6 +191,16 @@ export default function PlayerScopeStatistics({
               useValueGradient
               valueGradientStops={CLEAN_BREAK_RATE_VALUE_STOPS}
               tooltip={t("tooltips.cleanBreakRate")}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
+            <CircularStat
+              label={t("teamStats.conversion")}
+              percentage={stats.defense.conversion_rate}
+              count={stats.defense.points_won}
+              total={stats.defense.points_with_turnover}
+              useValueGradient
+              tooltip={t("tooltips.conversionRate")}
             />
           </Grid>
           <Grid size={{ xs: 6, sm: 4, md: 4 }}>
