@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { createTeam, createCompetition, createGame, createPlayer, finishGame } from "../../services";
+import { createTeam, createCompetition, createGame, createPlayer, finishGame, updateGame } from "../../services";
 import { addPlayersToRoster } from "../../services/competitions";
 import { addPlayersToGame } from "../../services/games";
 import GameDetailPage from "../GameDetailPage";
@@ -90,6 +90,30 @@ describe("GameDetailPage", () => {
     expect(screen.queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /start game/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the live tracker in read-only mode for public users on started games", async () => {
+    await updateGame(1, { status: "started" });
+
+    render(<GameDetailPage />, {
+      auth: {
+        role: "public",
+        enforcementMode: "enforced",
+        isAuthenticated: false,
+        hasAppAccess: false,
+        isConfigured: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/live point tracking/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/no live point is currently active/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /start point/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /half time/i })).not.toBeInTheDocument();
   });
 
   it("edits game successfully", async () => {

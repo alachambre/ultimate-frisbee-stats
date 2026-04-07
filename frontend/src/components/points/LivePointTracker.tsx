@@ -52,6 +52,7 @@ interface LivePointTrackerProps {
   players: Player[];
   teamId: number;
   onPointUpdated?: () => void;
+  readOnly?: boolean;
 }
 
 export default function LivePointTracker({
@@ -60,6 +61,7 @@ export default function LivePointTracker({
   players,
   teamId,
   onPointUpdated,
+  readOnly = false,
 }: LivePointTrackerProps) {
   const { t } = useTranslation(["points", "common"]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
@@ -145,39 +147,46 @@ export default function LivePointTracker({
           // No active or scored point - show start button
           <Box textAlign="center" py={2}>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              {t("points:empty.noPoints")}
+              {readOnly
+                ? t(
+                    "points:tracker.spectatorIdle",
+                    "No live point is currently active. The tracker will update here when play starts."
+                  )
+                : t("points:empty.noPoints")}
             </Typography>
             {expectedGenderRatio && (
               <Box mb={2} display="flex" justifyContent="center">
                 <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
               </Box>
             )}
-            {createHalftimeMutation.isError && (
+            {!readOnly && createHalftimeMutation.isError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {t("common:error.generic")}
               </Alert>
             )}
-            <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap">
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setIsStartDialogOpen(true)}
-                size="large"
-              >
-                {t("points:tracker.newPoint")}
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<AccessTimeFilledIcon />}
-                onClick={() => setIsHalftimeConfirmOpen(true)}
-                disabled={hasHalftime || createHalftimeMutation.isPending}
-                size="large"
-              >
-                {createHalftimeMutation.isPending
-                  ? t("points:tracker.recordingHalftime", "Recording...")
-                  : t("points:tracker.halfTime", "Half time")}
-              </Button>
-            </Box>
+            {!readOnly && (
+              <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap">
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setIsStartDialogOpen(true)}
+                  size="large"
+                >
+                  {t("points:tracker.newPoint")}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AccessTimeFilledIcon />}
+                  onClick={() => setIsHalftimeConfirmOpen(true)}
+                  disabled={hasHalftime || createHalftimeMutation.isPending}
+                  size="large"
+                >
+                  {createHalftimeMutation.isPending
+                    ? t("points:tracker.recordingHalftime", "Recording...")
+                    : t("points:tracker.halfTime", "Half time")}
+                </Button>
+              </Box>
+            )}
           </Box>
         ) : (
           // Active or scored point - show appropriate button
@@ -188,7 +197,8 @@ export default function LivePointTracker({
             />
 
             {/* Pull tracking - only for running defensive points */}
-            {activePoint &&
+            {!readOnly &&
+             activePoint &&
              activePoint.status === "running" &&
              !activePoint.starting_on_offense &&
              activePoint.pull === null && (
@@ -216,7 +226,7 @@ export default function LivePointTracker({
             )}
 
             {/* Configuration buttons - Select Strategy and Select Players (when not set) */}
-            {(!currentPoint.strategy || !hasValidPlayerComposition) && (
+            {!readOnly && (!currentPoint.strategy || !hasValidPlayerComposition) && (
               <Box display="flex" justifyContent="center" gap={2} mt={2} flexWrap="wrap">
                 {!currentPoint.strategy && (
                   <Button
@@ -312,20 +322,22 @@ export default function LivePointTracker({
               ].filter(Boolean)}
             </Menu>
 
-            <LivePointActionBar
-              currentPoint={currentPoint}
-              hasPendingStoppage={hasPendingStoppage}
-              isLaunchPullPending={launchPullMutation.isPending}
-              onLaunchPull={() => launchPullMutation.mutate()}
-              isRestartPending={restartPointMutation.isPending}
-              onRestartPoint={() => restartPointMutation.mutate()}
-              onOpenFinish={() => setIsFinishDialogOpen(true)}
-              onOpenRecordStoppage={() => setIsCallDialogOpen(true)}
-              onOpenRecordTurnover={() => setIsTurnoverDialogOpen(true)}
-              onOpenResume={() => setIsResumeDialogOpen(true)}
-              onOpenComplete={() => setIsCompleteDialogOpen(true)}
-              onOpenMoreActions={(event) => setMoreActionsAnchor(event.currentTarget)}
-            />
+            {!readOnly && (
+              <LivePointActionBar
+                currentPoint={currentPoint}
+                hasPendingStoppage={hasPendingStoppage}
+                isLaunchPullPending={launchPullMutation.isPending}
+                onLaunchPull={() => launchPullMutation.mutate()}
+                isRestartPending={restartPointMutation.isPending}
+                onRestartPoint={() => restartPointMutation.mutate()}
+                onOpenFinish={() => setIsFinishDialogOpen(true)}
+                onOpenRecordStoppage={() => setIsCallDialogOpen(true)}
+                onOpenRecordTurnover={() => setIsTurnoverDialogOpen(true)}
+                onOpenResume={() => setIsResumeDialogOpen(true)}
+                onOpenComplete={() => setIsCompleteDialogOpen(true)}
+                onOpenMoreActions={(event) => setMoreActionsAnchor(event.currentTarget)}
+              />
+            )}
 
             <LivePointContextCards currentPoint={currentPoint} />
 
@@ -351,14 +363,16 @@ export default function LivePointTracker({
       </Paper>
 
       {/* Dialogs */}
-      <StartPointDialog
-        open={isStartDialogOpen}
-        onClose={() => setIsStartDialogOpen(false)}
-        gameId={game.id}
-        onSuccess={onPointUpdated}
-      />
+      {!readOnly && (
+        <StartPointDialog
+          open={isStartDialogOpen}
+          onClose={() => setIsStartDialogOpen(false)}
+          gameId={game.id}
+          onSuccess={onPointUpdated}
+        />
+      )}
 
-      {currentPoint && (
+      {!readOnly && currentPoint && (
         <ManagePlayersDialog
           open={isManagePlayersDialogOpen}
           onClose={() => setIsManagePlayersDialogOpen(false)}
@@ -369,7 +383,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {activePoint && (
+      {!readOnly && activePoint && (
         <FinishPointDialog
           open={isFinishDialogOpen}
           onClose={() => setIsFinishDialogOpen(false)}
@@ -378,7 +392,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {scoredPoint && (
+      {!readOnly && scoredPoint && (
         <CompletePointDialog
           open={isCompleteDialogOpen}
           onClose={() => setIsCompleteDialogOpen(false)}
@@ -387,7 +401,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {currentPoint && (
+      {!readOnly && currentPoint && (
         <AddCommentDialog
           key={`comment-${currentPoint.id}`}
           open={isCommentDialogOpen}
@@ -398,7 +412,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {currentPoint && (
+      {!readOnly && currentPoint && (
         <SelectStrategyDialog
           key={`strategy-${currentPoint.id}`}
           open={isStrategyDialogOpen}
@@ -409,7 +423,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {activePoint && (
+      {!readOnly && activePoint && (
         <RecordStoppageDialog
           open={isCallDialogOpen}
           onClose={() => setIsCallDialogOpen(false)}
@@ -417,7 +431,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {activePoint && (
+      {!readOnly && activePoint && (
         <RecordTurnoverDialog
           open={isTurnoverDialogOpen}
           onClose={() => setIsTurnoverDialogOpen(false)}
@@ -426,7 +440,7 @@ export default function LivePointTracker({
         />
       )}
 
-      {pendingStoppage && (
+      {!readOnly && pendingStoppage && (
         <ResumeFromStoppageDialog
           open={isResumeDialogOpen}
           onClose={() => setIsResumeDialogOpen(false)}
@@ -434,51 +448,53 @@ export default function LivePointTracker({
         />
       )}
 
-      <Dialog
-        open={isHalftimeConfirmOpen}
-        onClose={() => {
-          if (!createHalftimeMutation.isPending) {
-            setIsHalftimeConfirmOpen(false);
-          }
-        }}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>
-          {t("points:tracker.halfTimeConfirmTitle", "Record half time?")}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            {t(
-              "points:tracker.halfTimeConfirmDescription",
-              "This will add a halftime marker in the game history."
+      {!readOnly && (
+        <Dialog
+          open={isHalftimeConfirmOpen}
+          onClose={() => {
+            if (!createHalftimeMutation.isPending) {
+              setIsHalftimeConfirmOpen(false);
+            }
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>
+            {t("points:tracker.halfTimeConfirmTitle", "Record half time?")}
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary">
+              {t(
+                "points:tracker.halfTimeConfirmDescription",
+                "This will add a halftime marker in the game history."
+              )}
+            </Typography>
+            {createHalftimeMutation.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {(createHalftimeMutation.error as { response?: { data?: { detail?: string } } })?.response?.data
+                  ?.detail || t("common:error.generic")}
+              </Alert>
             )}
-          </Typography>
-          {createHalftimeMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {(createHalftimeMutation.error as { response?: { data?: { detail?: string } } })?.response?.data
-                ?.detail || t("common:error.generic")}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setIsHalftimeConfirmOpen(false)}
-            disabled={createHalftimeMutation.isPending}
-          >
-            {t("common:action.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => createHalftimeMutation.mutate()}
-            disabled={createHalftimeMutation.isPending}
-          >
-            {createHalftimeMutation.isPending
-              ? t("points:tracker.recordingHalftime", "Recording...")
-              : t("common:action.confirm")}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setIsHalftimeConfirmOpen(false)}
+              disabled={createHalftimeMutation.isPending}
+            >
+              {t("common:action.cancel")}
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => createHalftimeMutation.mutate()}
+              disabled={createHalftimeMutation.isPending}
+            >
+              {createHalftimeMutation.isPending
+                ? t("points:tracker.recordingHalftime", "Recording...")
+                : t("common:action.confirm")}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   );
 }

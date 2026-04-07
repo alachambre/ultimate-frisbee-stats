@@ -24,6 +24,7 @@
     "recordingHalftime": "Enregistrement...",
     "halfTimeConfirmTitle": "Enregistrer la mi-temps ?",
     "halfTimeConfirmDescription": "Cela ajoutera un marqueur de mi-temps dans l'historique du match.",
+    "spectatorIdle": "Aucun point en direct pour le moment. Le suivi s'affichera ici quand le jeu commencera.",
     "addComment": "Ajouter un commentaire",
     "editComment": "Modifier le commentaire",
     "comment": "Commentaire",

@@ -24,6 +24,7 @@
     "recordingHalftime": "Recording...",
     "halfTimeConfirmTitle": "Record half time?",
     "halfTimeConfirmDescription": "This will add a halftime marker in the game history.",
+    "spectatorIdle": "No live point is currently active. The tracker will update here when play starts.",
     "addComment": "Add Comment",
     "editComment": "Edit Comment",
     "comment": "Comment",

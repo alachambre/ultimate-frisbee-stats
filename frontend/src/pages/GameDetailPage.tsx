@@ -192,13 +192,14 @@ export default function GameDetailPage() {
         />
       )}
 
-      {competition && canEditData && (
+      {competition && (
         <LivePointTracker
           game={game}
           activePoint={activePoint || null}
           players={game.players}
           teamId={competition.team_id}
           onPointUpdated={handlePointUpdated}
+          readOnly={!canEditData}
         />
       )}
 
