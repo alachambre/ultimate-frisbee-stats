@@ -15,6 +15,7 @@ import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../auth";
+import { APP_MONKEY_EMOJI } from "../constants/branding";
 
 export default function HomePage() {
   const auth = useAuth();
@@ -72,7 +73,7 @@ export default function HomePage() {
             fontSize: { xs: "2rem", sm: "3rem" },
           }}
         >
-          ðŸ’ {t("app.name")}
+          {APP_MONKEY_EMOJI} {t("app.name")}
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
           {t("home.subtitle")}

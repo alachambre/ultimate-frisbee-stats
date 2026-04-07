@@ -22,6 +22,11 @@ import { alpha } from "@mui/material/styles";
 
 import LoginDialog from "./auth/LoginDialog";
 import { shouldEnforcePermissions, useAuth } from "../auth";
+import {
+  APP_MONKEY_EMOJI,
+  ENGLISH_FLAG_EMOJI,
+  FRENCH_FLAG_EMOJI,
+} from "../constants/branding";
 
 export default function Layout() {
   const location = useLocation();
@@ -110,7 +115,7 @@ export default function Layout() {
               letterSpacing: "0.5px",
             }}
           >
-            ðŸ’ {t("common:app.name")}
+            {APP_MONKEY_EMOJI} {t("common:app.name")}
           </Typography>
 
           {auth.isConfigured && auth.isAuthenticated && auth.email && (
@@ -149,13 +154,13 @@ export default function Layout() {
               onClick={() => handleLanguageChange("en")}
               selected={i18n.language === "en"}
             >
-              ðŸ‡¬ðŸ‡§ {t("navigation:language.english")}
+              {ENGLISH_FLAG_EMOJI} {t("navigation:language.english")}
             </MenuItem>
             <MenuItem
               onClick={() => handleLanguageChange("fr")}
               selected={i18n.language === "fr"}
             >
-              ðŸ‡«ðŸ‡· {t("navigation:language.french")}
+              {FRENCH_FLAG_EMOJI} {t("navigation:language.french")}
             </MenuItem>
           </Menu>
 
