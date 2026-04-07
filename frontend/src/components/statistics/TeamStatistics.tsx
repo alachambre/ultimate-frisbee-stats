@@ -20,6 +20,7 @@ import {
   BREAK_RATE_VALUE_STOPS,
   CLEAN_BREAK_RATE_VALUE_STOPS,
   HOLD_RATE_VALUE_STOPS,
+  PULL_INBOUND_RATE_VALUE_STOPS,
   TURNOVER_RATE_VALUE_STOPS,
   getValueGradientColor,
   getValueGradientTrackColor,
@@ -323,6 +324,7 @@ export default function TeamStatistics({
               count={teamStats.defense.pull_stats.inbound_pulls}
               total={teamStats.defense.pull_stats.total_pulls}
               useValueGradient
+              valueGradientStops={PULL_INBOUND_RATE_VALUE_STOPS}
               tooltip={t("tooltips.pullRate")}
             />
           </Grid>

@@ -7,6 +7,7 @@ export const HOLD_RATE_VALUE_STOPS: ValueGradientStops = [0, 0.5, 0.7, 0.85, 1];
 export const TURNOVER_RATE_VALUE_STOPS: ValueGradientStops = [0, 0, 0.15, 0.4, 1];
 export const BREAK_RATE_VALUE_STOPS: ValueGradientStops = [0, 0, 0.1, 0.2, 1];
 export const CLEAN_BREAK_RATE_VALUE_STOPS: ValueGradientStops = [0, 0, 0.1, 0.2, 1];
+export const PULL_INBOUND_RATE_VALUE_STOPS: ValueGradientStops = [0, 0.4, 0.7, 0.85, 1];
 
 const PERFORMANCE_COLOR_KEYS = [
   "veryLow",
