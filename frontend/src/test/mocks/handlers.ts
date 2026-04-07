@@ -77,8 +77,10 @@ function buildEmptyPlayerStatsForPlayers(playersList: Player[]) {
       break_rate: 0.0,
       points_with_turnover: 0,
       turnover_rate: 0.0,
+      conversion_rate: 0.0,
       points_won_no_turnover: 0,
       clean_break_rate: 0.0,
+      clean_conversion_rate: 0.0,
       points_lost_no_turnover: 0,
     },
   }));
@@ -106,8 +108,10 @@ function buildEmptyTeamStats(
       break_rate: 0.0,
       points_with_turnover: 0,
       turnover_rate: 0.0,
+      conversion_rate: 0.0,
       points_won_no_turnover: 0,
       clean_break_rate: 0.0,
+      clean_conversion_rate: 0.0,
       points_lost_no_turnover: 0,
       pull_stats: {
         total_pulls: 0,

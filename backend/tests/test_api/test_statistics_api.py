@@ -419,6 +419,86 @@ def test_get_live_game_statistics_defense_turnovers(client: TestClient, sample_g
     assert player_stats["defense"]["opponent_turnovers"] == 1
 
 
+def test_get_live_game_statistics_defense_conversion_rates(
+    client: TestClient,
+    sample_game: models.Game,
+    sample_player: models.Player,
+    db_session: Session,
+):
+    """Test that defense conversion metrics use turnovers and breaks as denominators"""
+    sample_game.players.append(sample_player)
+    db_session.commit()
+
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 3, 0, tzinfo=timezone.utc),
+    )
+    point1.players.append(sample_player)
+    db_session.add(point1)
+    db_session.flush()
+    db_session.add(
+        models.Turnover(
+            point_id=point1.id,
+            timestamp=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+        )
+    )
+
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 8, 0, tzinfo=timezone.utc),
+    )
+    point2.players.append(sample_player)
+    db_session.add(point2)
+    db_session.flush()
+    db_session.add_all([
+        models.Turnover(
+            point_id=point2.id,
+            timestamp=datetime(2024, 1, 1, 10, 6, 0, tzinfo=timezone.utc),
+        ),
+        models.Turnover(
+            point_id=point2.id,
+            timestamp=datetime(2024, 1, 1, 10, 7, 0, tzinfo=timezone.utc),
+        ),
+    ])
+
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 10, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 12, 0, tzinfo=timezone.utc),
+    )
+    point3.players.append(sample_player)
+    db_session.add(point3)
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/live")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+
+    player_stats = data[0]
+    assert player_stats["defense"]["points_played"] == 3
+    assert player_stats["defense"]["points_with_turnover"] == 2
+    assert player_stats["defense"]["points_won"] == 2
+    assert player_stats["defense"]["points_won_no_turnover"] == 1
+    assert player_stats["defense"]["conversion_rate"] == pytest.approx(1.0, rel=1e-6)
+    assert player_stats["defense"]["clean_conversion_rate"] == pytest.approx(0.5, rel=1e-6)
+
+
 # Tests for team statistics endpoint
 
 
@@ -578,6 +658,70 @@ def test_get_game_team_statistics_with_turnovers(client: TestClient, sample_game
     assert data["defense"]["turnover_rate"] == 1.0
     assert data["defense"]["our_turnovers"] == 0
     assert data["defense"]["opponent_turnovers"] == 1
+
+
+def test_get_game_team_statistics_defense_conversion_rates(
+    client: TestClient,
+    sample_game: models.Game,
+    db_session: Session,
+):
+    """Team defense conversion metrics should use turnovers and breaks as denominators"""
+    defense1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(defense1)
+    db_session.flush()
+    db_session.add(
+        models.Turnover(
+            point_id=defense1.id,
+            timestamp=datetime(2024, 1, 1, 11, 1, 0, tzinfo=timezone.utc),
+        )
+    )
+
+    defense2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=True,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(defense2)
+    db_session.flush()
+    db_session.add_all([
+        models.Turnover(
+            point_id=defense2.id,
+            timestamp=datetime(2024, 1, 1, 11, 5, 0, tzinfo=timezone.utc),
+        ),
+        models.Turnover(
+            point_id=defense2.id,
+            timestamp=datetime(2024, 1, 1, 11, 6, 0, tzinfo=timezone.utc),
+        ),
+    ])
+
+    defense3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(defense3)
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["defense"]["points_started"] == 3
+    assert data["defense"]["points_with_turnover"] == 2
+    assert data["defense"]["points_won"] == 2
+    assert data["defense"]["points_won_no_turnover"] == 1
+    assert data["defense"]["conversion_rate"] == pytest.approx(1.0, rel=1e-6)
+    assert data["defense"]["clean_conversion_rate"] == pytest.approx(0.5, rel=1e-6)
 
 
 def test_get_game_team_statistics_ignores_non_completed(client: TestClient, sample_game: models.Game, db_session: Session):

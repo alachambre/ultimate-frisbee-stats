@@ -22,6 +22,10 @@ class PointFacts:
     opponent_turnovers: int
 
 
+def calculate_rate(numerator: int, denominator: int) -> float:
+    return numerator / denominator if denominator > 0 else 0.0
+
+
 def calculate_point_duration_seconds(point: Point) -> int:
     return int((point.end_datetime - point.start_datetime).total_seconds())
 
@@ -180,8 +184,10 @@ def build_live_player_stats(
                     "break_rate": 0.0,
                     "points_with_turnover": 0,
                     "turnover_rate": 0.0,
+                    "conversion_rate": 0.0,
                     "points_won_no_turnover": 0,
                     "clean_break_rate": 0.0,
+                    "clean_conversion_rate": 0.0,
                     "points_lost_no_turnover": 0,
                     "our_turnovers": 0,
                     "opponent_turnovers": 0,
@@ -260,22 +266,27 @@ def build_live_player_stats(
 
     result = []
     for stats in player_stats.values():
-        hold_rate = stats["offense_won"] / stats["offense_played"] if stats["offense_played"] > 0 else 0.0
-        clean_hold_rate = (
-            stats["offense_won_no_turnover"] / stats["offense_played"]
-            if stats["offense_played"] > 0
-            else 0.0
+        hold_rate = calculate_rate(stats["offense_won"], stats["offense_played"])
+        clean_hold_rate = calculate_rate(
+            stats["offense_won_no_turnover"],
+            stats["offense_played"],
         )
-        break_rate = stats["defense_won"] / stats["defense_played"] if stats["defense_played"] > 0 else 0.0
-        turnover_rate = (
-            stats["defense_with_turnover"] / stats["defense_played"]
-            if stats["defense_played"] > 0
-            else 0.0
+        break_rate = calculate_rate(stats["defense_won"], stats["defense_played"])
+        turnover_rate = calculate_rate(
+            stats["defense_with_turnover"],
+            stats["defense_played"],
         )
-        clean_break_rate = (
-            stats["defense_won_no_turnover"] / stats["defense_played"]
-            if stats["defense_played"] > 0
-            else 0.0
+        conversion_rate = calculate_rate(
+            stats["defense_won"],
+            stats["defense_with_turnover"],
+        )
+        clean_break_rate = calculate_rate(
+            stats["defense_won_no_turnover"],
+            stats["defense_played"],
+        )
+        clean_conversion_rate = calculate_rate(
+            stats["defense_won_no_turnover"],
+            stats["defense_won"],
         )
 
         result.append({
@@ -301,8 +312,10 @@ def build_live_player_stats(
                 "break_rate": break_rate,
                 "points_with_turnover": stats["defense_with_turnover"],
                 "turnover_rate": turnover_rate,
+                "conversion_rate": conversion_rate,
                 "points_won_no_turnover": stats["defense_won_no_turnover"],
                 "clean_break_rate": clean_break_rate,
+                "clean_conversion_rate": clean_conversion_rate,
                 "points_lost_no_turnover": stats["defense_lost_no_turnover"],
                 "our_turnovers": stats["defense_our_turnovers"],
                 "opponent_turnovers": stats["defense_opponent_turnovers"],
@@ -358,13 +371,15 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
             if total_turnovers > 0:
                 defense_points_with_turnover += 1
 
-    offense_hold_rate = offense_won / offense_started if offense_started > 0 else 0.0
-    offense_clean_hold_rate = offense_won_no_turnover / offense_started if offense_started > 0 else 0.0
-    offense_broken_rate = offense_lost / offense_started if offense_started > 0 else 0.0
+    offense_hold_rate = calculate_rate(offense_won, offense_started)
+    offense_clean_hold_rate = calculate_rate(offense_won_no_turnover, offense_started)
+    offense_broken_rate = calculate_rate(offense_lost, offense_started)
 
-    defense_break_rate = defense_won / defense_started if defense_started > 0 else 0.0
-    defense_turnover_rate = defense_points_with_turnover / defense_started if defense_started > 0 else 0.0
-    defense_clean_break_rate = defense_won_no_turnover / defense_started if defense_started > 0 else 0.0
+    defense_break_rate = calculate_rate(defense_won, defense_started)
+    defense_turnover_rate = calculate_rate(defense_points_with_turnover, defense_started)
+    defense_conversion_rate = calculate_rate(defense_won, defense_points_with_turnover)
+    defense_clean_break_rate = calculate_rate(defense_won_no_turnover, defense_started)
+    defense_clean_conversion_rate = calculate_rate(defense_won_no_turnover, defense_won)
 
     defense_points_with_pull = [
         point for point in point_facts if (not point.starting_on_offense and point.pull is not None)
@@ -395,8 +410,10 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
             "break_rate": defense_break_rate,
             "points_with_turnover": defense_points_with_turnover,
             "turnover_rate": defense_turnover_rate,
+            "conversion_rate": defense_conversion_rate,
             "points_won_no_turnover": defense_won_no_turnover,
             "clean_break_rate": defense_clean_break_rate,
+            "clean_conversion_rate": defense_clean_conversion_rate,
             "points_lost_no_turnover": defense_lost_no_turnover,
             "our_turnovers": defense_our_turnovers,
             "opponent_turnovers": defense_opponent_turnovers,

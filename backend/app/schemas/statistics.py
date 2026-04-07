@@ -28,8 +28,10 @@ class PlayerDefenseStats(BaseModel):
     break_rate: float
     points_with_turnover: int
     turnover_rate: float  # points_with_turnover / points_played
+    conversion_rate: float  # points_won / points_with_turnover
     points_won_no_turnover: int
     clean_break_rate: float  # points_won_no_turnover / points_played
+    clean_conversion_rate: float  # points_won_no_turnover / points_won
     points_lost_no_turnover: int
     our_turnovers: int
     opponent_turnovers: int
@@ -87,8 +89,10 @@ class DefenseStats(BaseModel):
     break_rate: float
     points_with_turnover: int
     turnover_rate: float
+    conversion_rate: float
     points_won_no_turnover: int
     clean_break_rate: float
+    clean_conversion_rate: float
     points_lost_no_turnover: int  # opponent scored without turnover
     our_turnovers: int
     opponent_turnovers: int

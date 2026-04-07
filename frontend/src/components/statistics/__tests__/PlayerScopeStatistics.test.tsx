@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "../../../test/test-utils";
+import { render, screen, within } from "../../../test/test-utils";
 import PlayerScopeStatistics from "../PlayerScopeStatistics";
 import type { PlayerGameStats } from "../../../types";
 
@@ -26,8 +26,10 @@ describe("PlayerScopeStatistics", () => {
         break_rate: 0.4,
         points_with_turnover: 3,
         turnover_rate: 0.6,
+        conversion_rate: 2 / 3,
         points_won_no_turnover: 1,
         clean_break_rate: 0.2,
+        clean_conversion_rate: 0.5,
         points_lost_no_turnover: 1,
       },
     };
@@ -43,9 +45,10 @@ describe("PlayerScopeStatistics", () => {
       />
     );
 
-    expect(screen.getByText("33%")).toBeInTheDocument();
-    expect(screen.getByText("1/3")).toBeInTheDocument();
-    expect(screen.queryByText("1/2")).not.toBeInTheDocument();
+    const cleanHoldStat = screen.getByRole("group", { name: "Clean Hold" });
+    expect(within(cleanHoldStat).getByText("33%")).toBeInTheDocument();
+    expect(within(cleanHoldStat).getByText("1/3")).toBeInTheDocument();
+    expect(within(cleanHoldStat).queryByText("1/2")).not.toBeInTheDocument();
   });
 
   it("uses all defense points as clean break count denominator", () => {
@@ -70,8 +73,10 @@ describe("PlayerScopeStatistics", () => {
         break_rate: 0.4,
         points_with_turnover: 3,
         turnover_rate: 0.6,
+        conversion_rate: 2 / 3,
         points_won_no_turnover: 1,
         clean_break_rate: 0.2,
+        clean_conversion_rate: 0.5,
         points_lost_no_turnover: 1,
       },
     };
@@ -87,9 +92,104 @@ describe("PlayerScopeStatistics", () => {
       />
     );
 
-    expect(screen.getByText("20%")).toBeInTheDocument();
-    expect(screen.getByText("1/5")).toBeInTheDocument();
-    expect(screen.queryByText("1/2")).not.toBeInTheDocument();
+    const cleanBreakStat = screen.getByRole("group", { name: "Clean Break" });
+    expect(within(cleanBreakStat).getByText("20%")).toBeInTheDocument();
+    expect(within(cleanBreakStat).getByText("1/5")).toBeInTheDocument();
+    expect(within(cleanBreakStat).queryByText("1/2")).not.toBeInTheDocument();
+  });
+
+  it("uses defensive turnover points as conversion denominator", () => {
+    const stats: PlayerGameStats = {
+      player_id: 7,
+      player_name: "Jane Doe",
+      player_number: 12,
+      points_played: 8,
+      effective_time_seconds: 420,
+      offense: {
+        points_played: 3,
+        points_won: 2,
+        points_lost: 1,
+        hold_rate: 0.667,
+        points_won_no_turnover: 0,
+        clean_hold_rate: 0,
+      },
+      defense: {
+        points_played: 5,
+        points_won: 2,
+        points_lost: 3,
+        break_rate: 0.4,
+        points_with_turnover: 3,
+        turnover_rate: 0.6,
+        conversion_rate: 2 / 3,
+        points_won_no_turnover: 1,
+        clean_break_rate: 0.2,
+        clean_conversion_rate: 0.5,
+        points_lost_no_turnover: 1,
+      },
+    };
+
+    render(
+      <PlayerScopeStatistics
+        playerName="Jane Doe"
+        playerNumber={12}
+        teamName="Monkey"
+        scopeLabel="Team"
+        contextLabel="Monkey"
+        stats={stats}
+      />
+    );
+
+    const conversionStat = screen.getByRole("group", { name: "Conversion" });
+    expect(within(conversionStat).getByText("67%")).toBeInTheDocument();
+    expect(within(conversionStat).getByText("2/3")).toBeInTheDocument();
+    expect(within(conversionStat).queryByText("2/5")).not.toBeInTheDocument();
+  });
+
+  it("uses breaks as clean conversion denominator", () => {
+    const stats: PlayerGameStats = {
+      player_id: 7,
+      player_name: "Jane Doe",
+      player_number: 12,
+      points_played: 8,
+      effective_time_seconds: 420,
+      offense: {
+        points_played: 3,
+        points_won: 2,
+        points_lost: 1,
+        hold_rate: 0.667,
+        points_won_no_turnover: 0,
+        clean_hold_rate: 0,
+      },
+      defense: {
+        points_played: 5,
+        points_won: 2,
+        points_lost: 3,
+        break_rate: 0.4,
+        points_with_turnover: 3,
+        turnover_rate: 0.6,
+        conversion_rate: 2 / 3,
+        points_won_no_turnover: 1,
+        clean_break_rate: 0.2,
+        clean_conversion_rate: 0.5,
+        points_lost_no_turnover: 1,
+      },
+    };
+
+    render(
+      <PlayerScopeStatistics
+        playerName="Jane Doe"
+        playerNumber={12}
+        teamName="Monkey"
+        scopeLabel="Team"
+        contextLabel="Monkey"
+        stats={stats}
+      />
+    );
+
+    const cleanConversionStat = screen.getByRole("group", { name: "Clean Conversion" });
+    expect(within(cleanConversionStat).getByText("50%")).toBeInTheDocument();
+    expect(within(cleanConversionStat).getByText("1/2")).toBeInTheDocument();
+    expect(within(cleanConversionStat).queryByText("1/5")).not.toBeInTheDocument();
   });
 
   it("shows selected players and cohort explanation in multi-player mode", () => {
@@ -114,8 +214,10 @@ describe("PlayerScopeStatistics", () => {
         break_rate: 0.4,
         points_with_turnover: 3,
         turnover_rate: 0.6,
+        conversion_rate: 2 / 3,
         points_won_no_turnover: 1,
         clean_break_rate: 0.2,
+        clean_conversion_rate: 0.5,
         points_lost_no_turnover: 1,
       },
     };
@@ -163,8 +265,10 @@ describe("PlayerScopeStatistics", () => {
         break_rate: 0.4,
         points_with_turnover: 3,
         turnover_rate: 0.6,
+        conversion_rate: 2 / 3,
         points_won_no_turnover: 1,
         clean_break_rate: 0.2,
+        clean_conversion_rate: 0.5,
         points_lost_no_turnover: 1,
         our_turnovers: 1,
         opponent_turnovers: 4,

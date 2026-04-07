@@ -284,7 +284,7 @@ export default function TeamStatistics({
           <Typography variant="h6">{t("teamStats.defense")}</Typography>
         </Box>
         <Grid container spacing={3} justifyContent="center">
-          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.turnover")}
               percentage={teamStats.defense.turnover_rate}
@@ -295,7 +295,7 @@ export default function TeamStatistics({
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
-          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.break")}
               percentage={teamStats.defense.break_rate}
@@ -306,7 +306,17 @@ export default function TeamStatistics({
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
-          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
+            <CircularStat
+              label={t("teamStats.conversion")}
+              percentage={teamStats.defense.conversion_rate}
+              count={teamStats.defense.points_won}
+              total={teamStats.defense.points_with_turnover}
+              useValueGradient
+              tooltip={t("tooltips.conversionRate")}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.cleanBreak")}
               percentage={teamStats.defense.clean_break_rate}
@@ -317,7 +327,17 @@ export default function TeamStatistics({
               tooltip={t("tooltips.cleanBreakRate")}
             />
           </Grid>
-          <Grid size={{ xs: 6, sm: 4, md: 3 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
+            <CircularStat
+              label={t("teamStats.cleanConversion")}
+              percentage={teamStats.defense.clean_conversion_rate}
+              count={teamStats.defense.points_won_no_turnover}
+              total={teamStats.defense.points_won}
+              useValueGradient
+              tooltip={t("tooltips.cleanConversionRate")}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.pullInbound")}
               percentage={teamStats.defense.pull_stats.inbound_rate}

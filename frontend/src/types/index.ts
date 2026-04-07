@@ -395,8 +395,10 @@ export interface PlayerDefenseStats {
   break_rate: number;
   points_with_turnover: number;
   turnover_rate: number;
+  conversion_rate: number;
   points_won_no_turnover: number;
   clean_break_rate: number;
+  clean_conversion_rate: number;
   points_lost_no_turnover: number;
   our_turnovers?: number;
   opponent_turnovers?: number;
@@ -438,8 +440,10 @@ export interface DefenseStats {
   break_rate: number;
   points_with_turnover: number;
   turnover_rate: number;
+  conversion_rate: number;
   points_won_no_turnover: number;
   clean_break_rate: number;
+  clean_conversion_rate: number;
   points_lost_no_turnover: number;
   our_turnovers?: number;
   opponent_turnovers?: number;

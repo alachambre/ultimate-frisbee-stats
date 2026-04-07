@@ -160,7 +160,7 @@ export default function PlayerScopeStatistics({
         </Box>
 
         <Grid container spacing={3} justifyContent="center">
-          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.turnover")}
               percentage={stats.defense.turnover_rate}
@@ -171,7 +171,7 @@ export default function PlayerScopeStatistics({
               tooltip={t("tooltips.turnoverRate")}
             />
           </Grid>
-          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.break")}
               percentage={stats.defense.break_rate}
@@ -182,7 +182,17 @@ export default function PlayerScopeStatistics({
               tooltip={t("tooltips.breakRate")}
             />
           </Grid>
-          <Grid size={{ xs: 6, sm: 6, lg: 4 }}>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
+            <CircularStat
+              label={t("teamStats.conversion")}
+              percentage={stats.defense.conversion_rate}
+              count={stats.defense.points_won}
+              total={stats.defense.points_with_turnover}
+              useValueGradient
+              tooltip={t("tooltips.conversionRate")}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <CircularStat
               label={t("teamStats.cleanBreak")}
               percentage={stats.defense.clean_break_rate}
@@ -191,6 +201,16 @@ export default function PlayerScopeStatistics({
               useValueGradient
               valueGradientStops={CLEAN_BREAK_RATE_VALUE_STOPS}
               tooltip={t("tooltips.cleanBreakRate")}
+            />
+          </Grid>
+          <Grid size={{ xs: 6, sm: 4, md: 4 }}>
+            <CircularStat
+              label={t("teamStats.cleanConversion")}
+              percentage={stats.defense.clean_conversion_rate}
+              count={stats.defense.points_won_no_turnover}
+              total={stats.defense.points_won}
+              useValueGradient
+              tooltip={t("tooltips.cleanConversionRate")}
             />
           </Grid>
         </Grid>

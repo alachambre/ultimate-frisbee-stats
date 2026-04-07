@@ -35,7 +35,7 @@ export default function CircularStat({
   const centerValueLabel = hasNoData ? "\u2014" : `${displayPercentage}%`;
 
   return (
-    <Box sx={{ textAlign: "center" }}>
+    <Box role="group" aria-label={label} sx={{ textAlign: "center" }}>
       <Box
         sx={{
           position: "relative",

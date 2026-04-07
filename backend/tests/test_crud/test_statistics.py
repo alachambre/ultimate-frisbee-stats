@@ -212,6 +212,35 @@ def test_get_team_team_stats_aggregates_turnover_totals(db_session):
     assert stats["defense"]["opponent_turnovers"] == 1
 
 
+def test_get_team_team_stats_calculates_defense_conversion_rates(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).defense().won().with_turnover(10).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won().with_turnover(10).with_turnover(20).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(3).defense().lost().complete()
+
+    stats = get_team_team_stats(db_session, scenario.team.id)
+
+    assert stats is not None
+    assert stats["defense"]["points_started"] == 3
+    assert stats["defense"]["points_with_turnover"] == 2
+    assert stats["defense"]["points_won"] == 2
+    assert stats["defense"]["points_won_no_turnover"] == 1
+    assert stats["defense"]["conversion_rate"] == pytest.approx(1.0, rel=1e-6)
+    assert stats["defense"]["clean_conversion_rate"] == pytest.approx(0.5, rel=1e-6)
+
+
 def test_get_team_player_stats_aggregates_only_selected_team(db_session):
     scenario = GameScenarioBuilder(db_session) \
         .with_team("Team A") \
@@ -277,6 +306,36 @@ def test_get_team_player_stats_counts_turnovers_while_player_is_on_field(db_sess
     assert first_player["offense"]["opponent_turnovers"] == 1
     assert first_player["defense"]["our_turnovers"] == 0
     assert first_player["defense"]["opponent_turnovers"] == 1
+
+
+def test_get_team_player_stats_calculates_defense_conversion_rates_on_field(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).defense().won().with_turnover(10).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won().with_turnover(10).with_turnover(20).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(3).defense().lost().complete()
+
+    stats = get_team_player_stats(db_session, scenario.team.id)
+
+    assert stats is not None
+    first_player = stats[0]
+    assert first_player["defense"]["points_played"] == 3
+    assert first_player["defense"]["points_with_turnover"] == 2
+    assert first_player["defense"]["points_won"] == 2
+    assert first_player["defense"]["points_won_no_turnover"] == 1
+    assert first_player["defense"]["conversion_rate"] == pytest.approx(1.0, rel=1e-6)
+    assert first_player["defense"]["clean_conversion_rate"] == pytest.approx(0.5, rel=1e-6)
 
 
 def test_get_team_strategy_stats_aggregates_only_selected_team(db_session):
