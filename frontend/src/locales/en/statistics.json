@@ -67,6 +67,7 @@
     "playerNotFound": "Selected player was not found in this team."
   },
   "view": {
+    "all": "All",
     "offense": "Offense",
     "defense": "Defense"
   },
@@ -130,9 +131,10 @@
     "cleanBreak": "Clean Break",
     "forcedTurnovers": "Turnover",
     "sortBy": "Sort by",
-    "sortByPoints": "Points (most first)",
     "sortByTime": "Time (most first)",
     "sortByName": "Name (A-Z)",
+    "sortByOffensePoints": "O Points (most first)",
+    "sortByDefensePoints": "D Points (most first)",
     "sortByHold": "Hold (highest first)",
     "sortByCleanHold": "Clean Hold (highest first)",
     "sortByTurnover": "Turnover (highest first)",

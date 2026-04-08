@@ -25,29 +25,78 @@ import {
 import { alpha } from "@mui/material/styles";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import ShieldIcon from "@mui/icons-material/Shield";
+import AppsIcon from "@mui/icons-material/Apps";
 import { useTranslation } from "react-i18next";
 import type { PlayerGameStats } from "../../types";
 import PlayerStatsCard from "./PlayerStatsCard";
 
-type SortColumn = "name" | "points" | "time" | "winRate" | "cleanPoints" | "forcedTurnovers";
+type SortColumn =
+  | "name"
+  | "time"
+  | "offensePoints"
+  | "holdRate"
+  | "cleanHoldRate"
+  | "defensePoints"
+  | "turnoverRate"
+  | "breakRate"
+  | "cleanBreakRate";
 type SortDirection = "asc" | "desc";
-type TabValue = "offense" | "defense";
+type TabValue = "offense" | "defense" | "all";
 
 interface PlayerStatisticsProps {
   playerStats: PlayerGameStats[];
   onPlayerClick?: (playerId: number) => void;
 }
 
-// Helper function to format time (seconds to MM:SS)
+interface SortOption {
+  column: SortColumn;
+  direction: SortDirection;
+  label: string;
+}
+
+interface TableColumn {
+  key: SortColumn;
+  label: string;
+  tooltip?: string;
+  align?: "left" | "center";
+  render: (stat: PlayerGameStats) => string | number;
+}
+
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-// Helper function to format percentage
 function formatPercent(value: number): string {
   return `${(value * 100).toFixed(0)}%`;
+}
+
+function formatRateStat(count: number, rate: number, enabled: boolean): string {
+  return enabled ? `${count} (${formatPercent(rate)})` : "-";
+}
+
+function getValueForSort(stat: PlayerGameStats, column: SortColumn): number | string {
+  switch (column) {
+    case "name":
+      return stat.player_name;
+    case "time":
+      return stat.effective_time_seconds;
+    case "offensePoints":
+      return stat.offense.points_played;
+    case "holdRate":
+      return stat.offense.hold_rate;
+    case "cleanHoldRate":
+      return stat.offense.clean_hold_rate;
+    case "defensePoints":
+      return stat.defense.points_played;
+    case "turnoverRate":
+      return stat.defense.turnover_rate;
+    case "breakRate":
+      return stat.defense.break_rate;
+    case "cleanBreakRate":
+      return stat.defense.clean_break_rate;
+  }
 }
 
 export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerStatisticsProps) {
@@ -58,66 +107,302 @@ export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerS
   const [sortColumn, setSortColumn] = useState<SortColumn>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  // Sort player stats
+  const sortOptionsByTab = useMemo<Record<TabValue, SortOption[]>>(
+    () => ({
+      offense: [
+        { column: "name", direction: "asc", label: t("playerStats.sortByName") },
+        { column: "time", direction: "desc", label: t("playerStats.sortByTime") },
+        {
+          column: "offensePoints",
+          direction: "desc",
+          label: t("playerStats.sortByOffensePoints"),
+        },
+        { column: "holdRate", direction: "desc", label: t("playerStats.sortByHold") },
+        {
+          column: "cleanHoldRate",
+          direction: "desc",
+          label: t("playerStats.sortByCleanHold"),
+        },
+      ],
+      defense: [
+        { column: "name", direction: "asc", label: t("playerStats.sortByName") },
+        { column: "time", direction: "desc", label: t("playerStats.sortByTime") },
+        {
+          column: "defensePoints",
+          direction: "desc",
+          label: t("playerStats.sortByDefensePoints"),
+        },
+        {
+          column: "turnoverRate",
+          direction: "desc",
+          label: t("playerStats.sortByTurnover"),
+        },
+        { column: "breakRate", direction: "desc", label: t("playerStats.sortByBreak") },
+        {
+          column: "cleanBreakRate",
+          direction: "desc",
+          label: t("playerStats.sortByCleanBreak"),
+        },
+      ],
+      all: [
+        { column: "name", direction: "asc", label: t("playerStats.sortByName") },
+        { column: "time", direction: "desc", label: t("playerStats.sortByTime") },
+        {
+          column: "offensePoints",
+          direction: "desc",
+          label: t("playerStats.sortByOffensePoints"),
+        },
+        { column: "holdRate", direction: "desc", label: t("playerStats.sortByHold") },
+        {
+          column: "cleanHoldRate",
+          direction: "desc",
+          label: t("playerStats.sortByCleanHold"),
+        },
+        {
+          column: "defensePoints",
+          direction: "desc",
+          label: t("playerStats.sortByDefensePoints"),
+        },
+        {
+          column: "turnoverRate",
+          direction: "desc",
+          label: t("playerStats.sortByTurnover"),
+        },
+        { column: "breakRate", direction: "desc", label: t("playerStats.sortByBreak") },
+        {
+          column: "cleanBreakRate",
+          direction: "desc",
+          label: t("playerStats.sortByCleanBreak"),
+        },
+      ],
+    }),
+    [t]
+  );
+
+  const sortOptions = sortOptionsByTab[activeTab];
+
+  const tableColumnsByTab = useMemo<Record<TabValue, TableColumn[]>>(
+    () => ({
+      offense: [
+        {
+          key: "time",
+          label: t("playerStats.playingTime"),
+          align: "center",
+          render: (stat) => formatTime(stat.effective_time_seconds),
+        },
+        {
+          key: "offensePoints",
+          label: t("playerStats.offensePoints"),
+          align: "center",
+          render: (stat) => stat.offense.points_played,
+        },
+        {
+          key: "holdRate",
+          label: t("playerStats.offenseWinRate"),
+          tooltip: t("tooltips.holdRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.offense.points_won,
+              stat.offense.hold_rate,
+              stat.offense.points_played > 0
+            ),
+        },
+        {
+          key: "cleanHoldRate",
+          label: t("playerStats.cleanPoints"),
+          tooltip: t("tooltips.cleanPointRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.offense.points_won_no_turnover,
+              stat.offense.clean_hold_rate,
+              stat.offense.points_won > 0
+            ),
+        },
+      ],
+      defense: [
+        {
+          key: "time",
+          label: t("playerStats.playingTime"),
+          align: "center",
+          render: (stat) => formatTime(stat.effective_time_seconds),
+        },
+        {
+          key: "defensePoints",
+          label: t("playerStats.defensePoints"),
+          align: "center",
+          render: (stat) => stat.defense.points_played,
+        },
+        {
+          key: "turnoverRate",
+          label: t("playerStats.forcedTurnovers"),
+          tooltip: t("tooltips.turnoverRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.defense.points_with_turnover,
+              stat.defense.turnover_rate,
+              stat.defense.points_played > 0
+            ),
+        },
+        {
+          key: "breakRate",
+          label: t("playerStats.defenseWinRate"),
+          tooltip: t("tooltips.breakRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.defense.points_won,
+              stat.defense.break_rate,
+              stat.defense.points_played > 0
+            ),
+        },
+        {
+          key: "cleanBreakRate",
+          label: t("playerStats.cleanBreak"),
+          tooltip: t("tooltips.cleanBreakRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.defense.points_won_no_turnover,
+              stat.defense.clean_break_rate,
+              stat.defense.points_won > 0
+            ),
+        },
+      ],
+      all: [
+        {
+          key: "time",
+          label: t("playerStats.playingTime"),
+          align: "center",
+          render: (stat) => formatTime(stat.effective_time_seconds),
+        },
+        {
+          key: "offensePoints",
+          label: t("playerStats.offensePoints"),
+          tooltip: t("tooltips.offensePoints"),
+          align: "center",
+          render: (stat) => stat.offense.points_played,
+        },
+        {
+          key: "holdRate",
+          label: t("playerStats.offenseWinRate"),
+          tooltip: t("tooltips.holdRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.offense.points_won,
+              stat.offense.hold_rate,
+              stat.offense.points_played > 0
+            ),
+        },
+        {
+          key: "cleanHoldRate",
+          label: t("playerStats.cleanPoints"),
+          tooltip: t("tooltips.cleanPointRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.offense.points_won_no_turnover,
+              stat.offense.clean_hold_rate,
+              stat.offense.points_won > 0
+            ),
+        },
+        {
+          key: "defensePoints",
+          label: t("playerStats.defensePoints"),
+          tooltip: t("tooltips.defensePoints"),
+          align: "center",
+          render: (stat) => stat.defense.points_played,
+        },
+        {
+          key: "turnoverRate",
+          label: t("playerStats.forcedTurnovers"),
+          tooltip: t("tooltips.turnoverRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.defense.points_with_turnover,
+              stat.defense.turnover_rate,
+              stat.defense.points_played > 0
+            ),
+        },
+        {
+          key: "breakRate",
+          label: t("playerStats.defenseWinRate"),
+          tooltip: t("tooltips.breakRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.defense.points_won,
+              stat.defense.break_rate,
+              stat.defense.points_played > 0
+            ),
+        },
+        {
+          key: "cleanBreakRate",
+          label: t("playerStats.cleanBreak"),
+          tooltip: t("tooltips.cleanBreakRate"),
+          align: "center",
+          render: (stat) =>
+            formatRateStat(
+              stat.defense.points_won_no_turnover,
+              stat.defense.clean_break_rate,
+              stat.defense.points_won > 0
+            ),
+        },
+      ],
+    }),
+    [t]
+  );
+
+  const tableColumns = tableColumnsByTab[activeTab];
+
   const sortedPlayerStats = useMemo(() => {
     if (!playerStats) return [];
 
     const sorted = [...playerStats];
     sorted.sort((a, b) => {
-      let comparison = 0;
+      const aValue = getValueForSort(a, sortColumn);
+      const bValue = getValueForSort(b, sortColumn);
 
-      switch (sortColumn) {
-        case "name":
-          comparison = a.player_name.localeCompare(b.player_name);
-          break;
-        case "points":
-          if (activeTab === "offense") {
-            comparison = a.offense.points_played - b.offense.points_played;
-          } else {
-            comparison = a.defense.points_played - b.defense.points_played;
-          }
-          break;
-        case "time":
-          comparison = a.effective_time_seconds - b.effective_time_seconds;
-          break;
-        case "winRate":
-          if (activeTab === "offense") {
-            comparison = a.offense.hold_rate - b.offense.hold_rate;
-          } else {
-            comparison = a.defense.break_rate - b.defense.break_rate;
-          }
-          break;
-        case "cleanPoints":
-          if (activeTab === "offense") {
-            comparison = a.offense.clean_hold_rate - b.offense.clean_hold_rate;
-          } else {
-            comparison = a.defense.clean_break_rate - b.defense.clean_break_rate;
-          }
-          break;
-        case "forcedTurnovers":
-          comparison = a.defense.turnover_rate - b.defense.turnover_rate;
-          break;
-      }
+      const comparison =
+        typeof aValue === "string" && typeof bValue === "string"
+          ? aValue.localeCompare(bValue)
+          : Number(aValue) - Number(bValue);
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
 
     return sorted;
-  }, [playerStats, sortColumn, sortDirection, activeTab]);
+  }, [playerStats, sortColumn, sortDirection]);
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
-      // Toggle direction if same column
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      // Set new column with default ascending
-      setSortColumn(column);
-      setSortDirection("asc");
+      return;
     }
+
+    const matchingOption = sortOptions.find((option) => option.column === column);
+    setSortColumn(column);
+    setSortDirection(matchingOption?.direction ?? "asc");
+  };
+
+  const renderColumnLabel = (column: TableColumn) => {
+    if (!column.tooltip) {
+      return <span>{column.label}</span>;
+    }
+
+    return (
+      <Tooltip title={column.tooltip} arrow>
+        <span>{column.label}</span>
+      </Tooltip>
+    );
   };
 
   const renderPlayerIdentity = (stat: PlayerGameStats) => {
-    const numberLabel = stat.player_number != null ? `#${stat.player_number}` : "—";
+    const numberLabel = stat.player_number != null ? `#${stat.player_number}` : "-";
     const content = (
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Chip label={numberLabel} size="small" sx={{ width: 45 }} />
@@ -203,15 +488,16 @@ export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerS
         {playerStats.length} {t("playerStats.playersCount")}
       </Typography>
 
-      {/* Tabs for Offense/Defense */}
       <Tabs
         value={activeTab}
-        onChange={(_, newValue) => {
+        onChange={(_, newValue: TabValue) => {
           setActiveTab(newValue);
-          // Reset sort if switching to offense with defense-only sort
-          if (newValue === "offense" && sortColumn === "forcedTurnovers") {
-            setSortColumn("name");
-            setSortDirection("asc");
+
+          const nextSortOptions = sortOptionsByTab[newValue];
+          const sortStillAvailable = nextSortOptions.some((option) => option.column === sortColumn);
+          if (!sortStillAvailable) {
+            setSortColumn(nextSortOptions[0].column);
+            setSortDirection(nextSortOptions[0].direction);
           }
         }}
         sx={{
@@ -255,260 +541,109 @@ export default function PlayerStatistics({ playerStats, onPlayerClick }: PlayerS
             },
           }}
         />
+        <Tab
+          label={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AppsIcon fontSize="small" />
+              {t("view.all")}
+            </Box>
+          }
+          value="all"
+          sx={{
+            textTransform: "none",
+            "&.Mui-selected": {
+              backgroundColor: (theme) => theme.palette.primary.main,
+              color: (theme) => theme.palette.common.white,
+            },
+          }}
+        />
       </Tabs>
 
-      {/* Mobile Sort Dropdown */}
-      {isMobile && (
-        <Box sx={{ mb: 2 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="sort-select-label">{t("playerStats.sortBy")}</InputLabel>
-            <Select
-              labelId="sort-select-label"
-              label={t("playerStats.sortBy")}
-              value={`${sortColumn}-${sortDirection}`}
-              onChange={(e) => {
-                const [column, direction] = e.target.value.split("-") as [
-                  SortColumn,
-                  SortDirection
-                ];
-                setSortColumn(column);
-                setSortDirection(direction);
-              }}
-            >
-              <MenuItem value="name-asc">{t("playerStats.sortByName")}</MenuItem>
-              <MenuItem value="time-desc">{t("playerStats.sortByTime")}</MenuItem>
-              <MenuItem value="points-desc">{t("playerStats.sortByPoints")}</MenuItem>
-              {activeTab === "offense" && [
-                <MenuItem key="hold" value="winRate-desc">{t("playerStats.sortByHold")}</MenuItem>,
-                <MenuItem key="cleanHold" value="cleanPoints-desc">{t("playerStats.sortByCleanHold")}</MenuItem>,
-              ]}
-              {activeTab === "defense" && [
-                <MenuItem key="turnover" value="forcedTurnovers-desc">{t("playerStats.sortByTurnover")}</MenuItem>,
-                <MenuItem key="break" value="winRate-desc">{t("playerStats.sortByBreak")}</MenuItem>,
-                <MenuItem key="cleanBreak" value="cleanPoints-desc">{t("playerStats.sortByCleanBreak")}</MenuItem>,
-              ]}
-            </Select>
-          </FormControl>
-        </Box>
-      )}
-
-      {/* Offense View */}
-      {activeTab === "offense" && (
+      {isMobile ? (
         <>
-          {isMobile ? (
-            <Grid container spacing={2}>
-              {sortedPlayerStats.map((stat) => (
-                <Grid key={stat.player_id} size={{ xs: 12 }}>
-                  <PlayerStatsCard
-                    stats={stat}
-                    view="offense"
-                    onClick={onPlayerClick ? () => onPlayerClick(stat.player_id) : undefined}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === "name"}
-                        direction={sortColumn === "name" ? sortDirection : "asc"}
-                        onClick={() => handleSort("name")}
-                        hideSortIcon={sortColumn !== "name"}
-                      >
-                        {t("playerStats.playerName")}
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "time"}
-                        direction={sortColumn === "time" ? sortDirection : "asc"}
-                        onClick={() => handleSort("time")}
-                        hideSortIcon={sortColumn !== "time"}
-                      >
-                        {t("playerStats.playingTime")}
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "points"}
-                        direction={sortColumn === "points" ? sortDirection : "asc"}
-                        onClick={() => handleSort("points")}
-                        hideSortIcon={sortColumn !== "points"}
-                      >
-                        {t("playerStats.offensePoints")}
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "winRate"}
-                        direction={sortColumn === "winRate" ? sortDirection : "asc"}
-                        onClick={() => handleSort("winRate")}
-                        hideSortIcon={sortColumn !== "winRate"}
-                      >
-                        <Tooltip title={t("tooltips.holdRate")} arrow>
-                          <span>{t("playerStats.offenseWinRate")}</span>
-                        </Tooltip>
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "cleanPoints"}
-                        direction={sortColumn === "cleanPoints" ? sortDirection : "asc"}
-                        onClick={() => handleSort("cleanPoints")}
-                        hideSortIcon={sortColumn !== "cleanPoints"}
-                      >
-                        <Tooltip title={t("tooltips.cleanPointRate")} arrow>
-                          <span>{t("playerStats.cleanPoints")}</span>
-                        </Tooltip>
-                      </TableSortLabel>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sortedPlayerStats.map((stat) => (
-                    <TableRow key={stat.player_id} hover>
-                      <TableCell>{renderPlayerIdentity(stat)}</TableCell>
-                      <TableCell align="center">{formatTime(stat.effective_time_seconds)}</TableCell>
-                      <TableCell align="center">{stat.offense.points_played}</TableCell>
-                      <TableCell align="center">
-                        {stat.offense.points_played > 0
-                          ? `${stat.offense.points_won} (${formatPercent(stat.offense.hold_rate)})`
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        {stat.offense.points_won > 0
-                          ? `${stat.offense.points_won_no_turnover} (${formatPercent(stat.offense.clean_hold_rate)})`
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </>
-      )}
+          <Box sx={{ mb: 2 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="sort-select-label">{t("playerStats.sortBy")}</InputLabel>
+              <Select
+                labelId="sort-select-label"
+                label={t("playerStats.sortBy")}
+                value={`${sortColumn}-${sortDirection}`}
+                onChange={(e) => {
+                  const [column, direction] = e.target.value.split("-") as [
+                    SortColumn,
+                    SortDirection
+                  ];
+                  setSortColumn(column);
+                  setSortDirection(direction);
+                }}
+              >
+                {sortOptions.map((option) => (
+                  <MenuItem
+                    key={`${option.column}-${option.direction}`}
+                    value={`${option.column}-${option.direction}`}
+                  >
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
-      {/* Defense View */}
-      {activeTab === "defense" && (
-        <>
-          {isMobile ? (
-            <Grid container spacing={2}>
-              {sortedPlayerStats.map((stat) => (
-                <Grid key={stat.player_id} size={{ xs: 12 }}>
-                  <PlayerStatsCard
-                    stats={stat}
-                    view="defense"
-                    onClick={onPlayerClick ? () => onPlayerClick(stat.player_id) : undefined}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>
-                      <TableSortLabel
-                        active={sortColumn === "name"}
-                        direction={sortColumn === "name" ? sortDirection : "asc"}
-                        onClick={() => handleSort("name")}
-                        hideSortIcon={sortColumn !== "name"}
-                      >
-                        {t("playerStats.playerName")}
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "time"}
-                        direction={sortColumn === "time" ? sortDirection : "asc"}
-                        onClick={() => handleSort("time")}
-                        hideSortIcon={sortColumn !== "time"}
-                      >
-                        {t("playerStats.playingTime")}
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "points"}
-                        direction={sortColumn === "points" ? sortDirection : "asc"}
-                        onClick={() => handleSort("points")}
-                        hideSortIcon={sortColumn !== "points"}
-                      >
-                        {t("playerStats.defensePoints")}
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "forcedTurnovers"}
-                        direction={sortColumn === "forcedTurnovers" ? sortDirection : "asc"}
-                        onClick={() => handleSort("forcedTurnovers")}
-                        hideSortIcon={sortColumn !== "forcedTurnovers"}
-                      >
-                        <Tooltip title={t("tooltips.turnoverRate")} arrow>
-                          <span>{t("playerStats.forcedTurnovers")}</span>
-                        </Tooltip>
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "winRate"}
-                        direction={sortColumn === "winRate" ? sortDirection : "asc"}
-                        onClick={() => handleSort("winRate")}
-                        hideSortIcon={sortColumn !== "winRate"}
-                      >
-                        <Tooltip title={t("tooltips.breakRate")} arrow>
-                          <span>{t("playerStats.defenseWinRate")}</span>
-                        </Tooltip>
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">
-                      <TableSortLabel
-                        active={sortColumn === "cleanPoints"}
-                        direction={sortColumn === "cleanPoints" ? sortDirection : "asc"}
-                        onClick={() => handleSort("cleanPoints")}
-                        hideSortIcon={sortColumn !== "cleanPoints"}
-                      >
-                        <Tooltip title={t("tooltips.cleanBreakRate")} arrow>
-                          <span>{t("playerStats.cleanBreak")}</span>
-                        </Tooltip>
-                      </TableSortLabel>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sortedPlayerStats.map((stat) => (
-                    <TableRow key={stat.player_id} hover>
-                      <TableCell>{renderPlayerIdentity(stat)}</TableCell>
-                      <TableCell align="center">{formatTime(stat.effective_time_seconds)}</TableCell>
-                      <TableCell align="center">{stat.defense.points_played}</TableCell>
-                      <TableCell align="center">
-                        {stat.defense.points_played > 0
-                          ? `${stat.defense.points_with_turnover} (${formatPercent(stat.defense.turnover_rate)})`
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        {stat.defense.points_played > 0
-                          ? `${stat.defense.points_won} (${formatPercent(stat.defense.break_rate)})`
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        {stat.defense.points_won > 0
-                          ? `${stat.defense.points_won_no_turnover} (${formatPercent(stat.defense.clean_break_rate)})`
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+          <Grid container spacing={2}>
+            {sortedPlayerStats.map((stat) => (
+              <Grid key={stat.player_id} size={{ xs: 12 }}>
+                <PlayerStatsCard
+                  stats={stat}
+                  view={activeTab}
+                  onClick={onPlayerClick ? () => onPlayerClick(stat.player_id) : undefined}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </>
+      ) : (
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <TableSortLabel
+                    active={sortColumn === "name"}
+                    direction={sortColumn === "name" ? sortDirection : "asc"}
+                    onClick={() => handleSort("name")}
+                    hideSortIcon={sortColumn !== "name"}
+                  >
+                    {t("playerStats.playerName")}
+                  </TableSortLabel>
+                </TableCell>
+                {tableColumns.map((column) => (
+                  <TableCell key={column.key} align={column.align ?? "center"}>
+                    <TableSortLabel
+                      active={sortColumn === column.key}
+                      direction={sortColumn === column.key ? sortDirection : "asc"}
+                      onClick={() => handleSort(column.key)}
+                      hideSortIcon={sortColumn !== column.key}
+                    >
+                      {renderColumnLabel(column)}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedPlayerStats.map((stat) => (
+                <TableRow key={stat.player_id} hover>
+                  <TableCell>{renderPlayerIdentity(stat)}</TableCell>
+                  {tableColumns.map((column) => (
+                    <TableCell key={column.key} align={column.align ?? "center"}>
+                      {column.render(stat)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
     </Box>
   );
