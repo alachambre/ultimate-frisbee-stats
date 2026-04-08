@@ -1,6 +1,7 @@
 import { render, screen } from "../../../test/test-utils";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
+import { within } from "@testing-library/react";
 import PointHistoryList from "../PointHistoryList";
 import type { PointWithPlayers, Halftime } from "../../../types";
 
@@ -61,6 +62,37 @@ describe("PointHistoryList", () => {
     ).toEqual(["Point #2", "Half time", "Point #1"]);
   });
 
+  it("renders game end summary above halftime and points when the game is finished", () => {
+    const points: PointWithPlayers[] = [
+      createPoint(1, 1, "2024-01-01T10:00:00Z"),
+      createPoint(2, 2, "2024-01-01T11:00:00Z"),
+    ];
+
+    const halftime: Halftime = {
+      id: 1,
+      game_id: 1,
+      halftime_timestamp: "2024-01-01T10:30:00Z",
+      comments: null,
+      created_at: "2024-01-01T10:30:00Z",
+    };
+
+    render(
+      <PointHistoryList
+        points={points}
+        halftime={halftime}
+        gameEndedAt="2024-01-01T11:15:00Z"
+        onEditPoint={vi.fn()}
+        onDeletePoint={vi.fn()}
+        onDeleteHalftime={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getAllByRole("heading", { level: 6 }).map((heading) => heading.textContent)
+    ).toEqual(["End of game", "Point #2", "Half time", "Point #1"]);
+    expect(screen.getByText("Finished")).toBeInTheDocument();
+  });
+
   it("calls delete halftime handler from history item", async () => {
     const user = userEvent.setup();
     const onDeleteHalftime = vi.fn();
@@ -86,6 +118,52 @@ describe("PointHistoryList", () => {
     await user.click(screen.getByRole("button", { name: /delete halftime/i }));
 
     expect(onDeleteHalftime).toHaveBeenCalledWith(halftime);
+  });
+
+  it("renders halftime overview snapshot from points before halftime", () => {
+    const points: PointWithPlayers[] = [
+      createPoint(1, 1, "2024-01-01T10:00:00Z", "table_left", { our: 1, opponent: 0 }),
+      {
+        ...createPoint(2, 2, "2024-01-01T10:20:00Z", "table_right", { our: 0, opponent: 2 }),
+        starting_on_offense: false,
+        won: false,
+      },
+      createPoint(3, 3, "2024-01-01T11:00:00Z", "table_left", { our: 3, opponent: 1 }),
+    ];
+
+    const halftime: Halftime = {
+      id: 1,
+      game_id: 1,
+      halftime_timestamp: "2024-01-01T10:30:00Z",
+      comments: null,
+      created_at: "2024-01-01T10:30:00Z",
+    };
+
+    render(
+      <PointHistoryList
+        points={points}
+        halftime={halftime}
+        onEditPoint={vi.fn()}
+        onDeletePoint={vi.fn()}
+        onDeleteHalftime={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("1 - 1")).toBeInTheDocument();
+    expect(screen.getByText("30:00")).toBeInTheDocument();
+    expect(screen.getByText("Hold by field side")).toBeInTheDocument();
+    expect(screen.getByText("Break by field side")).toBeInTheDocument();
+    expect(screen.getByText("100% (1/1)")).toBeInTheDocument();
+    expect(screen.getByText("0% (0/1)")).toBeInTheDocument();
+
+    const offenseSection = screen.getByText("Offense").closest("div");
+    expect(offenseSection).not.toBeNull();
+    expect(within(offenseSection as HTMLElement).getByText("1")).toBeInTheDocument();
+    expect(within(offenseSection as HTMLElement).getByText("0")).toBeInTheDocument();
+
+    const defenseSection = screen.getByText("Defense").closest("div");
+    expect(defenseSection).not.toBeNull();
+    expect(within(defenseSection as HTMLElement).getByText("2")).toBeInTheDocument();
   });
 
   it("renders field side in chronology when available", async () => {
@@ -143,5 +221,24 @@ describe("PointHistoryList", () => {
     );
 
     expect(screen.getByText("0 turn")).toBeInTheDocument();
+  });
+
+  it("renders point duration next to the point title", () => {
+    const points: PointWithPlayers[] = [
+      createPoint(1, 1, "2024-01-01T10:00:00Z"),
+    ];
+
+    render(
+      <PointHistoryList
+        points={points}
+        halftime={null}
+        onEditPoint={vi.fn()}
+        onDeletePoint={vi.fn()}
+        onDeleteHalftime={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("heading", { level: 6, name: "Point #1" })).toBeInTheDocument();
+    expect(screen.getByText("5:00")).toBeInTheDocument();
   });
 });

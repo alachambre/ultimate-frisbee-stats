@@ -31,6 +31,18 @@ interface PointHistoryItemProps {
   onDelete?: (point: PointWithPlayers) => void;
 }
 
+function formatDuration(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 export default function PointHistoryItem({
   point,
   onEdit,
@@ -46,6 +58,8 @@ export default function PointHistoryItem({
   const isScored = point.status === "scored";
   const isReady = point.status === "ready";
   const ourTurnovers = point.our_turnovers ?? 0;
+  const pointDurationLabel =
+    point.duration_seconds != null ? formatDuration(point.duration_seconds) : null;
   const shouldShowTurnoverSummary = isCompleted || ourTurnovers > 0;
   const turnoverSummaryLabel =
     ourTurnovers === 0
@@ -94,9 +108,20 @@ export default function PointHistoryItem({
             ) : (
               <ShieldIcon sx={{ color: (theme) => theme.colors.defense.main }} />
             )}
-            <Typography variant="h6" fontWeight="bold">
-              {t("points:history.point")} #{point.point_number}
-            </Typography>
+            <Box display="flex" alignItems="baseline" gap={1}>
+              <Typography variant="h6" fontWeight="bold">
+                {t("points:history.point")} #{point.point_number}
+              </Typography>
+              {pointDurationLabel && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontFamily: "monospace", fontWeight: 500 }}
+                >
+                  {pointDurationLabel}
+                </Typography>
+              )}
+            </Box>
           </Box>
           <Box display="flex" alignItems="center" gap={0.5}>
             {onEdit && (

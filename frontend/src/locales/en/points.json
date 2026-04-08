@@ -120,6 +120,7 @@
   "history": {
     "title": "Point History",
     "point": "Point",
+    "gameEnd": "End of game",
     "break": "Break!",
     "broken": "Broken",
     "zeroTurn": "0 turn",

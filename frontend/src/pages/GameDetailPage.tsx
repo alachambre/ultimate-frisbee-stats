@@ -206,6 +206,7 @@ export default function GameDetailPage() {
       <GameHistorySection
         points={game.points}
         halftime={game.halftime}
+        gameEndedAt={game.end_datetime}
         onEditPoint={canEditData ? (point) => setEditingPoint(point) : undefined}
         onDeletePoint={canEditData ? handleDeletePoint : undefined}
         onDeleteHalftime={canEditData ? handleDeleteHalftime : undefined}

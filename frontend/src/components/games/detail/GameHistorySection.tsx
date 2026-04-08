@@ -6,6 +6,7 @@ import PointHistoryList from "../../points/PointHistoryList";
 interface GameHistorySectionProps {
   points: PointWithPlayers[];
   halftime?: Halftime | null;
+  gameEndedAt?: string | null;
   onEditPoint?: (point: PointWithPlayers) => void;
   onDeletePoint?: (point: PointWithPlayers) => void;
   onDeleteHalftime?: (halftime: Halftime) => void;
@@ -16,6 +17,7 @@ interface GameHistorySectionProps {
 export function GameHistorySection({
   points,
   halftime,
+  gameEndedAt,
   onEditPoint,
   onDeletePoint,
   onDeleteHalftime,
@@ -36,6 +38,7 @@ export function GameHistorySection({
         <PointHistoryList
           points={points}
           halftime={halftime}
+          gameEndedAt={gameEndedAt}
           onEditPoint={onEditPoint}
           onDeletePoint={onDeletePoint}
           onDeleteHalftime={onDeleteHalftime}
