@@ -86,6 +86,136 @@ function buildEmptyPlayerStatsForPlayers(playersList: Player[]) {
   }));
 }
 
+function parseRepeatedIds(requestUrl: string, key: string): number[] {
+  const url = new URL(requestUrl);
+  return url.searchParams
+    .getAll(key)
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+}
+
+function getTeamCompetitionIds(teamId: number): number[] {
+  return competitions
+    .filter((competition) => competition.team_id === teamId)
+    .map((competition) => competition.id);
+}
+
+function getScopedTeamGames(
+  teamId: number,
+  competitionIds: number[],
+  gameIds: number[]
+): Game[] {
+  const teamCompetitionIds = new Set(getTeamCompetitionIds(teamId));
+
+  return games.filter((game) => {
+    if (!teamCompetitionIds.has(game.competition_id)) {
+      return false;
+    }
+
+    if (competitionIds.length > 0 && !competitionIds.includes(game.competition_id)) {
+      return false;
+    }
+
+    if (gameIds.length > 0 && !gameIds.includes(game.id)) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function getScopedRosterPlayers(
+  teamId: number,
+  competitionIds: number[],
+  gameIds: number[]
+): Player[] {
+  if (gameIds.length > 0) {
+    const scopedGameIds = new Set(
+      getScopedTeamGames(teamId, competitionIds, gameIds).map((game) => game.id)
+    );
+    const rosterIds = new Set<number>();
+    for (const gameId of scopedGameIds) {
+      for (const playerId of gamePlayers.get(gameId) ?? []) {
+        rosterIds.add(playerId);
+      }
+    }
+    return players.filter((player) => rosterIds.has(player.id));
+  }
+
+  if (competitionIds.length > 0) {
+    const teamCompetitionIds = new Set(getTeamCompetitionIds(teamId));
+    const scopedCompetitionIds = competitionIds.filter((competitionId) =>
+      teamCompetitionIds.has(competitionId)
+    );
+    const rosterIds = new Set<number>();
+    for (const competitionId of scopedCompetitionIds) {
+      for (const playerId of competitionPlayers.get(competitionId) ?? []) {
+        rosterIds.add(playerId);
+      }
+    }
+    return players.filter((player) => rosterIds.has(player.id));
+  }
+
+  return players.filter((player) => player.team_id === teamId);
+}
+
+function filterCompletedPointsByRequiredPlayers(
+  scopedGames: Game[],
+  requiredPlayerIds: number[]
+): PointWithPlayers[] {
+  const scopedGameIds = new Set(scopedGames.map((game) => game.id));
+
+  return points.filter((point) => {
+    if (point.status !== "completed" || !scopedGameIds.has(point.game_id)) {
+      return false;
+    }
+
+    if (requiredPlayerIds.length === 0) {
+      return true;
+    }
+
+    const pointPlayerIds = new Set(point.players.map((player) => player.id));
+    return requiredPlayerIds.every((playerId) => pointPlayerIds.has(playerId));
+  });
+}
+
+function buildTeamPlayerStatsForScope(
+  teamId: number,
+  competitionIds: number[],
+  gameIds: number[],
+  requiredPlayerIds: number[]
+) {
+  const scopedRosterPlayers = getScopedRosterPlayers(teamId, competitionIds, gameIds);
+  const scopedPoints = filterCompletedPointsByRequiredPlayers(
+    getScopedTeamGames(teamId, competitionIds, gameIds),
+    requiredPlayerIds
+  );
+  const stats = buildEmptyPlayerStatsForPlayers(scopedRosterPlayers);
+  const statsByPlayerId = new Map(stats.map((playerStat) => [playerStat.player_id, playerStat]));
+
+  for (const point of scopedPoints) {
+    for (const player of point.players) {
+      const playerStat = statsByPlayerId.get(player.id);
+      if (!playerStat) {
+        continue;
+      }
+
+      playerStat.points_played += 1;
+
+      const scopedUnit = point.starting_on_offense ? playerStat.offense : playerStat.defense;
+      scopedUnit.points_played += 1;
+
+      if (point.won) {
+        scopedUnit.points_won += 1;
+      } else {
+        scopedUnit.points_lost += 1;
+      }
+    }
+  }
+
+  return stats;
+}
+
 function buildEmptyTeamStats(
   scope: { game_id: number } | { competition_id: number } | { team_id: number }
 ) {
@@ -1489,7 +1619,7 @@ export const handlers = [
   }),
 
   // GET /statistics/teams/:teamId/players - Get team player statistics
-  http.get(`${BASE_URL}/statistics/teams/:teamId/players`, ({ params }) => {
+  http.get(`${BASE_URL}/statistics/teams/:teamId/players`, ({ params, request }) => {
     const teamId = Number(params.teamId);
     const team = teams.find((t) => t.id === teamId);
 
@@ -1497,8 +1627,13 @@ export const handlers = [
       return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
     }
 
-    const teamPlayers = players.filter((player) => player.team_id === teamId);
-    return HttpResponse.json(buildEmptyPlayerStatsForPlayers(teamPlayers));
+    const competitionIds = parseRepeatedIds(request.url, "competition_ids");
+    const gameIds = parseRepeatedIds(request.url, "game_ids");
+    const requiredPlayerIds = parseRepeatedIds(request.url, "player_ids");
+
+    return HttpResponse.json(
+      buildTeamPlayerStatsForScope(teamId, competitionIds, gameIds, requiredPlayerIds)
+    );
   }),
 
   // GET /statistics/competitions/:competitionId/team - Get competition team statistics

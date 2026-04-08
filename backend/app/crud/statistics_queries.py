@@ -3,7 +3,7 @@ Query helpers for statistics calculations.
 """
 from collections import defaultdict
 from typing import Dict, List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Query, Session
 
 from app.models.game import Game
 from app.models.point import Point
@@ -26,6 +26,23 @@ def get_competition(db: Session, competition_id: int) -> Optional[Competition]:
 
 def get_team(db: Session, team_id: int) -> Optional[Team]:
     return db.query(Team).filter(Team.id == team_id).first()
+
+
+def _apply_team_dataset_filters(
+    query: Query,
+    team_id: int,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
+) -> Query:
+    query = query.join(Game).join(Competition).filter(Competition.team_id == team_id)
+
+    if competition_ids:
+        query = query.filter(Game.competition_id.in_(competition_ids))
+
+    if game_ids:
+        query = query.filter(Game.id.in_(game_ids))
+
+    return query
 
 
 def get_completed_points(
@@ -66,9 +83,15 @@ def get_completed_points_for_team(
     db: Session,
     team_id: int,
     require_timestamps: bool = False,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
 ) -> List[Point]:
-    query = db.query(Point).join(Game).join(Competition).filter(
-        Competition.team_id == team_id,
+    query = _apply_team_dataset_filters(
+        db.query(Point),
+        team_id,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+    ).filter(
         Point.status == PointStatusEnum.completed,
     )
     if require_timestamps:
@@ -90,7 +113,40 @@ def get_competition_players(db: Session, competition_id: int) -> List[Player]:
     return list(competition.players)
 
 
-def get_team_players(db: Session, team_id: int) -> List[Player]:
+def get_team_players(
+    db: Session,
+    team_id: int,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
+) -> List[Player]:
+    if game_ids:
+        query = (
+            db.query(Player)
+            .join(Player.games)
+            .join(Game.competition)
+            .filter(
+                Player.team_id == team_id,
+                Competition.team_id == team_id,
+                Game.id.in_(game_ids),
+            )
+        )
+        if competition_ids:
+            query = query.filter(Game.competition_id.in_(competition_ids))
+        return query.distinct().all()
+
+    if competition_ids:
+        return (
+            db.query(Player)
+            .join(Player.competitions)
+            .filter(
+                Player.team_id == team_id,
+                Competition.team_id == team_id,
+                Competition.id.in_(competition_ids),
+            )
+            .distinct()
+            .all()
+        )
+
     return db.query(Player).filter(Player.team_id == team_id).all()
 
 

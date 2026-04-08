@@ -227,6 +227,38 @@ def test_export_team_statistics_csv_success(client: TestClient, db_session: Sess
     assert "POINTS DETAIL" not in content
 
 
+def test_export_team_statistics_csv_filters_by_competition_ids(
+    client: TestClient,
+    db_session: Session,
+):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+    PointBuilder(db_session, scenario.game.id, player_ids).offense().won().complete()
+
+    other_competition = CompetitionBuilder(db_session, scenario.team).with_name("Comp B").build()
+    other_game = GameBuilder(db_session, other_competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, other_game.id, player_ids).offense().lost().complete()
+
+    response = client.get(
+        f"/exports/teams/{scenario.team.id}/csv",
+        params=[("competition_ids", scenario.competition.id)],
+    )
+
+    assert response.status_code == 200
+    content = response.text
+    assert "Comp A" in content
+    assert "Opponent 1" in content
+    assert "Comp B" not in content
+    assert "Opponent 2" not in content
+
+
 def test_export_team_statistics_csv_not_found(client: TestClient):
     response = client.get("/exports/teams/99999/csv")
 

@@ -156,7 +156,7 @@ export default function CompetitionDetailPage() {
                 startIcon={<BarChartIcon />}
                 onClick={() =>
                   navigate(
-                    `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}`
+                        `/statistics?teamId=${competition.team_id}&competitionIds=${competition.id}`
                   )
                 }
                 aria-label={t("competitions:detail.viewStatistics")}

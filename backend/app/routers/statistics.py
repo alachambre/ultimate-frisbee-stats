@@ -25,6 +25,12 @@ def _normalize_player_ids(player_ids: Optional[List[int]]) -> Optional[List[int]
     return sorted(set(player_ids))
 
 
+def _normalize_ids(values: Optional[List[int]]) -> Optional[List[int]]:
+    if not values:
+        return None
+    return sorted(set(values))
+
+
 @router.get("/games/{game_id}/live", response_model=List[schemas.PlayerGameStats])
 def get_live_game_statistics(
     game_id: int,
@@ -75,6 +81,8 @@ def get_competition_player_statistics(
 def get_team_player_statistics(
     team_id: int,
     player_ids: Optional[List[int]] = Query(default=None),
+    competition_ids: Optional[List[int]] = Query(default=None),
+    game_ids: Optional[List[int]] = Query(default=None),
     db: Session = Depends(get_db)
 ):
     """
@@ -84,6 +92,8 @@ def get_team_player_statistics(
         db,
         team_id,
         required_player_ids=_normalize_player_ids(player_ids),
+        competition_ids=_normalize_ids(competition_ids),
+        game_ids=_normalize_ids(game_ids),
     )
     if stats is None:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -141,6 +151,8 @@ def get_competition_team_statistics(
 def get_team_team_statistics(
     team_id: int,
     player_ids: Optional[List[int]] = Query(default=None),
+    competition_ids: Optional[List[int]] = Query(default=None),
+    game_ids: Optional[List[int]] = Query(default=None),
     db: Session = Depends(get_db)
 ):
     """
@@ -151,6 +163,8 @@ def get_team_team_statistics(
         db,
         team_id,
         required_player_ids=_normalize_player_ids(player_ids),
+        competition_ids=_normalize_ids(competition_ids),
+        game_ids=_normalize_ids(game_ids),
     )
     if not stats:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -183,6 +197,8 @@ def get_competition_strategy_statistics(
 def get_team_strategy_statistics(
     team_id: int,
     player_ids: Optional[List[int]] = Query(default=None),
+    competition_ids: Optional[List[int]] = Query(default=None),
+    game_ids: Optional[List[int]] = Query(default=None),
     db: Session = Depends(get_db)
 ):
     """
@@ -193,6 +209,8 @@ def get_team_strategy_statistics(
         db,
         team_id,
         required_player_ids=_normalize_player_ids(player_ids),
+        competition_ids=_normalize_ids(competition_ids),
+        game_ids=_normalize_ids(game_ids),
     )
     if not stats:
         raise HTTPException(status_code=404, detail="Team not found")

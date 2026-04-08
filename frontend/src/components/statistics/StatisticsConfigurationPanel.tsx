@@ -1,129 +1,81 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
-  Chip,
+  Checkbox,
   Collapse,
-  Grid,
+  ListItemText,
   Paper,
   Stack,
-  Tab,
-  Tabs,
+  TextField,
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import PersonIcon from "@mui/icons-material/Person";
-import MaleIcon from "@mui/icons-material/Male";
-import FemaleIcon from "@mui/icons-material/Female";
-import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import EventIcon from "@mui/icons-material/Event";
-import TuneIcon from "@mui/icons-material/Tune";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import FemaleIcon from "@mui/icons-material/Female";
+import MaleIcon from "@mui/icons-material/Male";
+import TuneIcon from "@mui/icons-material/Tune";
 import { useTranslation } from "react-i18next";
-import type {
-  CompetitionWithTeam,
-  GameWithScore,
-  Player,
-  PlayerGameStats,
-  TeamWithPlayers,
-} from "../../types";
-import StatisticsSelectionCard from "./StatisticsSelectionCard";
+import type { CompetitionWithTeam, GameWithScore, Player, TeamWithPlayers } from "../../types";
 import { formatDate } from "../../utils/dateFormatting";
 
-type StatisticsMode = "competition" | "player";
-type PlayerGenderTab = "men" | "women";
+const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkboxCheckedIcon = <CheckBoxIcon fontSize="small" />;
 
 interface StatisticsConfigurationPanelProps {
   isConfigurationExpanded: boolean;
   onToggleConfigurationExpanded: () => void;
-  mode: StatisticsMode;
   teamId?: number;
-  competitionId?: number;
-  gameId?: number;
   selectedPlayerIds: number[];
   sortedTeams: TeamWithPlayers[];
   competitionsForTeam: CompetitionWithTeam[];
-  gamesForCompetition: GameWithScore[];
+  selectedCompetitions: CompetitionWithTeam[];
+  availableGames: GameWithScore[];
+  selectedGames: GameWithScore[];
   playersForTeam: Player[];
-  playerStatsById: Map<number, PlayerGameStats>;
+  selectedPlayers: Player[];
   controlsLoading: boolean;
+  isPlayerOptionsLoading: boolean;
   hasControlsError: boolean;
-  competitionFlowDisabled: boolean;
-  playerFlowDisabled: boolean;
-  onSelectMode: (mode: StatisticsMode) => void;
-  onSelectTeam: (teamId: number) => void;
-  onSelectCompetition: (competitionId: number) => void;
-  onSelectGame: (gameId: number) => void;
-  onTogglePlayer: (playerId: number) => void;
+  onSelectTeam: (teamId?: number) => void;
+  onSelectCompetitionIds: (competitionIds: number[]) => void;
+  onSelectGameIds: (gameIds: number[]) => void;
+  onSelectPlayerIds: (playerIds: number[]) => void;
   onClearPlayersSelection: () => void;
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 export default function StatisticsConfigurationPanel({
   isConfigurationExpanded,
   onToggleConfigurationExpanded,
-  mode,
   teamId,
-  competitionId,
-  gameId,
   selectedPlayerIds,
   sortedTeams,
   competitionsForTeam,
-  gamesForCompetition,
+  selectedCompetitions,
+  availableGames,
+  selectedGames,
   playersForTeam,
-  playerStatsById,
+  selectedPlayers,
   controlsLoading,
+  isPlayerOptionsLoading,
   hasControlsError,
-  competitionFlowDisabled,
-  playerFlowDisabled,
-  onSelectMode,
   onSelectTeam,
-  onSelectCompetition,
-  onSelectGame,
-  onTogglePlayer,
+  onSelectCompetitionIds,
+  onSelectGameIds,
+  onSelectPlayerIds,
   onClearPlayersSelection,
 }: StatisticsConfigurationPanelProps) {
   const { t, i18n } = useTranslation(["statistics", "games", "common"]);
-  const [playerGenderTab, setPlayerGenderTab] = useState<PlayerGenderTab>("men");
 
-  const menPlayersForTeam = useMemo(
-    () => playersForTeam.filter((player) => player.gender === "M"),
-    [playersForTeam]
+  const selectedTeam = useMemo(
+    () => sortedTeams.find((team) => team.id === teamId) ?? null,
+    [sortedTeams, teamId]
   );
-  const womenPlayersForTeam = useMemo(
-    () => playersForTeam.filter((player) => player.gender === "W"),
-    [playersForTeam]
-  );
-
-  const activePlayerGenderTab = useMemo<PlayerGenderTab>(() => {
-    if (mode !== "player" || teamId === undefined) {
-      return playerGenderTab;
-    }
-
-    if (playerGenderTab === "men" && menPlayersForTeam.length === 0 && womenPlayersForTeam.length > 0) {
-      return "women";
-    }
-
-    if (playerGenderTab === "women" && womenPlayersForTeam.length === 0 && menPlayersForTeam.length > 0) {
-      return "men";
-    }
-
-    return playerGenderTab;
-  }, [
-    mode,
-    teamId,
-    playerGenderTab,
-    menPlayersForTeam.length,
-    womenPlayersForTeam.length,
-  ]);
 
   return (
     <Paper
@@ -169,276 +121,198 @@ export default function StatisticsConfigurationPanel({
             borderColor: "divider",
           }}
         >
-          <Box mb={2}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ display: "block", mb: 0.75 }}>
-              1. {t("statistics:workflow.mode")}
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip
-                icon={<BarChartIcon fontSize="small" />}
-                label={t("statistics:workflow.modeCompetitionShort")}
-                color={mode === "competition" ? "primary" : "default"}
-                variant={mode === "competition" ? "filled" : "outlined"}
-                onClick={() => {
-                  if (competitionFlowDisabled) return;
-                  onSelectMode("competition");
-                }}
-                clickable={!competitionFlowDisabled}
-                disabled={competitionFlowDisabled}
-              />
-              <Chip
-                icon={<PersonIcon fontSize="small" />}
-                label={t("statistics:workflow.modePlayerShort")}
-                color={mode === "player" ? "primary" : "default"}
-                variant={mode === "player" ? "filled" : "outlined"}
-                onClick={() => {
-                  if (playerFlowDisabled) return;
-                  onSelectMode("player");
-                }}
-                clickable={!playerFlowDisabled}
-                disabled={playerFlowDisabled}
-              />
-            </Stack>
-          </Box>
-
-          {selectedPlayerIds.length > 0 && (
-            <Alert
-              severity="info"
-              sx={{ mb: 2 }}
-              action={
-                <Button color="inherit" size="small" onClick={onClearPlayersSelection}>
-                  {t("common:action.clear")}
-                </Button>
-              }
-            >
-              {t("statistics:workflow.cohortFilterActive", { count: selectedPlayerIds.length })}
-            </Alert>
-          )}
-
-          <Box mb={2}>
-            <Typography variant="subtitle2" fontWeight="bold" sx={{ display: "block", mb: 0.75 }}>
-              2. {t("statistics:workflow.team")}
-            </Typography>
-            {sortedTeams.length === 0 ? (
-              <Alert severity="info">{t("common:messages.noData")}</Alert>
-            ) : (
-              <Grid container spacing={1.5}>
-                {sortedTeams.map((team: TeamWithPlayers) => (
-                  <Grid key={team.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <StatisticsSelectionCard
-                      title={team.name}
-                      subtitle={`${team.players.length} ${t("common:players")}`}
-                      selected={team.id === teamId}
-                      onClick={() => onSelectTeam(team.id)}
-                      badge={team.id === teamId ? t("common:status.active") : undefined}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+          <Stack spacing={2}>
+            {selectedPlayerIds.length > 0 && (
+              <Alert
+                severity="info"
+                action={
+                  <Button color="inherit" size="small" onClick={onClearPlayersSelection}>
+                    {t("common:action.clear")}
+                  </Button>
+                }
+              >
+                {t("statistics:workflow.cohortFilterActive", { count: selectedPlayerIds.length })}
+              </Alert>
             )}
-          </Box>
 
-          {!controlsLoading && !hasControlsError && teamId === undefined && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              {t("statistics:workflow.selectTeamPrompt")}
-            </Alert>
-          )}
-
-          {teamId !== undefined && mode === "competition" && !controlsLoading && !hasControlsError && (
-            <Box
-              sx={{
-                mt: 2,
-                pt: 2,
-                borderTop: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight="bold" mb={2}>
-                3. {t("statistics:workflow.competition")}
-              </Typography>
-
-              {competitionsForTeam.length === 0 ? (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  {t("statistics:workflow.noCompetitions")}
-                </Alert>
-              ) : (
-                <Grid container spacing={1.5}>
-                  {competitionsForTeam.map((competition: CompetitionWithTeam) => (
-                    <Grid key={competition.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-                        <StatisticsSelectionCard
-                          title={competition.name}
-                          subtitle={`${formatDate(competition.start_date, i18n.resolvedLanguage)} - ${formatDate(
-                            competition.end_date,
-                            i18n.resolvedLanguage
-                          )}`}
-                          selected={competition.id === competitionId}
-                          onClick={() => onSelectCompetition(competition.id)}
-                        badge={competition.id === competitionsForTeam[0]?.id ? t("statistics:workflow.latest") : undefined}
-                        icon={<EventIcon sx={{ fontSize: 16, color: "text.secondary" }} />}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
+            <Autocomplete
+              options={sortedTeams}
+              value={selectedTeam}
+              onChange={(_, team) => onSelectTeam(team?.id)}
+              getOptionLabel={(team) => team.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={`1. ${t("statistics:workflow.team")}`}
+                  placeholder={t("statistics:workflow.selectTeam")}
+                  helperText={
+                    selectedTeam
+                      ? t("statistics:workflow.stickyTeam", { teamName: selectedTeam.name })
+                      : t("statistics:workflow.selectTeamPrompt")
+                  }
+                />
               )}
+              noOptionsText={t("common:messages.noData")}
+            />
 
-              {competitionId !== undefined && (
-                <Box mt={3}>
-                  <Typography variant="subtitle2" fontWeight="bold" mb={2}>
-                    4. {t("statistics:workflow.game")}
-                  </Typography>
-
-                  {gamesForCompetition.length === 0 ? (
-                    <Alert severity="info">{t("statistics:workflow.noGames")}</Alert>
-                  ) : (
-                    <Grid container spacing={1.5}>
-                      {gamesForCompetition.map((game: GameWithScore) => (
-                        <Grid key={game.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-                          <StatisticsSelectionCard
-                            title={`${game.team_name} vs ${game.opponent_name}`}
-                            subtitle={formatDate(game.date, i18n.resolvedLanguage)}
-                            details={`${game.our_score} - ${game.opponent_score}`}
-                            selected={game.id === gameId}
-                            onClick={() => onSelectGame(game.id)}
-                            badge={
-                              game.status !== "ended"
-                                ? t("games:status.started")
-                                : game.our_score > game.opponent_score
-                                  ? t("games:status.won")
-                                  : game.our_score < game.opponent_score
-                                    ? t("games:status.lost")
-                                    : t("games:status.draw")
-                            }
-                            badgeColor={
-                              game.status !== "ended"
-                                ? "primary"
-                                : game.our_score > game.opponent_score
-                                  ? "success"
-                                  : game.our_score < game.opponent_score
-                                    ? "error"
-                                    : "default"
-                            }
-                            icon={<SportsScoreIcon sx={{ fontSize: 16, color: "text.secondary" }} />}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  )}
-                </Box>
-              )}
-            </Box>
-          )}
-
-          {teamId !== undefined && mode === "player" && !controlsLoading && !hasControlsError && (
-            <Box
-              sx={{
-                mt: 2,
-                pt: 2,
-                borderTop: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight="bold" mb={2}>
-                3. {t("statistics:workflow.player")}
-              </Typography>
-
-              {playersForTeam.length === 0 ? (
-                <Alert severity="info">{t("statistics:workflow.noPlayers")}</Alert>
-              ) : (
-                <>
-                  <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-                    <Tabs
-                      value={activePlayerGenderTab}
-                      onChange={(_, nextTab: PlayerGenderTab) => setPlayerGenderTab(nextTab)}
-                      variant="fullWidth"
-                      TabIndicatorProps={{
-                        sx: {
-                          height: 3,
-                          backgroundColor:
-                            activePlayerGenderTab === "men"
-                              ? (theme) => theme.colors.men.main
-                              : (theme) => theme.colors.women.main,
-                        },
-                      }}
-                    >
-                      <Tab
-                        value="men"
-                        icon={<MaleIcon />}
-                        iconPosition="start"
-                        label={`${t("common:labels.men")} (${menPlayersForTeam.length})`}
-                        sx={{
-                          color: (theme) => theme.colors.men.main,
-                          fontWeight: "medium",
-                          "&.Mui-selected": {
-                            color: (theme) => theme.colors.men.main,
-                            fontWeight: "bold",
-                            backgroundColor: (theme) => alpha(theme.colors.men.main, 0.08),
-                          },
-                        }}
-                      />
-                      <Tab
-                        value="women"
-                        icon={<FemaleIcon />}
-                        iconPosition="start"
-                        label={`${t("common:labels.women")} (${womenPlayersForTeam.length})`}
-                        sx={{
-                          color: (theme) => theme.colors.women.main,
-                          fontWeight: "medium",
-                          "&.Mui-selected": {
-                            color: (theme) => theme.colors.women.main,
-                            fontWeight: "bold",
-                            backgroundColor: (theme) => alpha(theme.colors.women.main, 0.08),
-                          },
-                        }}
-                      />
-                    </Tabs>
+            <Autocomplete
+              multiple
+              disableCloseOnSelect
+              options={competitionsForTeam}
+              value={selectedCompetitions}
+              onChange={(_, competitions) =>
+                onSelectCompetitionIds(competitions.map((competition) => competition.id))
+              }
+              disabled={teamId === undefined || controlsLoading || hasControlsError}
+              getOptionLabel={(competition) => competition.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              limitTags={2}
+              renderOption={(props, competition, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <Box component="li" key={key} {...optionProps}>
+                    <Checkbox
+                      icon={checkboxIcon}
+                      checkedIcon={checkboxCheckedIcon}
+                      checked={selected}
+                      sx={{ mr: 1 }}
+                    />
+                    <ListItemText
+                      primary={competition.name}
+                      secondary={`${formatDate(
+                        competition.start_date,
+                        i18n.resolvedLanguage
+                      )} - ${formatDate(competition.end_date, i18n.resolvedLanguage)}`}
+                    />
                   </Box>
-
-                  {(activePlayerGenderTab === "men" ? menPlayersForTeam : womenPlayersForTeam).length === 0 ? (
-                    <Alert severity="info">{t("common:messages.noData")}</Alert>
-                  ) : (
-                    <Grid container spacing={1.5}>
-                      {(activePlayerGenderTab === "men" ? menPlayersForTeam : womenPlayersForTeam).map(
-                        (player: Player) => {
-                          const playerStats = playerStatsById.get(player.id);
-                          return (
-                            <Grid key={player.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-                              <StatisticsSelectionCard
-                                title={player.name}
-                                subtitle={
-                                  playerStats
-                                    ? `${playerStats.points_played} ${t("statistics:playerStats.pointsPlayed")}`
-                                    : t("statistics:playerStats.noDataForScope")
-                                }
-                                details={
-                                  playerStats
-                                    ? `${t("statistics:playerStats.playingTime")}: ${formatDuration(playerStats.effective_time_seconds)}`
-                                    : undefined
-                                }
-                                selected={selectedPlayerIds.includes(player.id)}
-                                onClick={() => onTogglePlayer(player.id)}
-                                badge={player.number != null ? `#${player.number}` : "-"}
-                                icon={
-                                  player.gender === "M" ? (
-                                    <MaleIcon
-                                      sx={{ fontSize: 16, color: (theme) => theme.colors.men.main }}
-                                    />
-                                  ) : (
-                                    <FemaleIcon
-                                      sx={{ fontSize: 16, color: (theme) => theme.colors.women.main }}
-                                    />
-                                  )
-                                }
-                              />
-                            </Grid>
-                          );
-                        }
-                      )}
-                    </Grid>
-                  )}
-                </>
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={`2. ${t("statistics:workflow.competition")}`}
+                  placeholder={t("statistics:workflow.selectCompetition")}
+                  helperText={
+                    teamId === undefined
+                      ? t("statistics:workflow.selectTeamFirst")
+                      : t("statistics:workflow.competitionsCount", {
+                          count: competitionsForTeam.length,
+                        })
+                  }
+                />
               )}
-            </Box>
-          )}
+              noOptionsText={t("statistics:workflow.noCompetitions")}
+            />
+
+            <Autocomplete
+              multiple
+              disableCloseOnSelect
+              options={availableGames}
+              value={selectedGames}
+              onChange={(_, games) => onSelectGameIds(games.map((game) => game.id))}
+              disabled={teamId === undefined || controlsLoading || hasControlsError}
+              getOptionLabel={(game) => game.opponent_name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              limitTags={2}
+              renderOption={(props, game, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <Box component="li" key={key} {...optionProps}>
+                    <Checkbox
+                      icon={checkboxIcon}
+                      checkedIcon={checkboxCheckedIcon}
+                      checked={selected}
+                      sx={{ mr: 1 }}
+                    />
+                    <ListItemText
+                      primary={game.opponent_name}
+                      secondary={`${game.competition_name} - ${formatDate(
+                        game.date,
+                        i18n.resolvedLanguage
+                      )} - ${game.our_score}-${game.opponent_score}`}
+                    />
+                  </Box>
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={`3. ${t("statistics:workflow.game")}`}
+                  placeholder={t("statistics:workflow.selectGame")}
+                  helperText={
+                    teamId === undefined
+                      ? t("statistics:workflow.selectTeamFirst")
+                      : t("statistics:workflow.gamesCount", { count: availableGames.length })
+                  }
+                />
+              )}
+              noOptionsText={t("statistics:workflow.noGames")}
+            />
+
+            <Autocomplete
+              multiple
+              disableCloseOnSelect
+              options={playersForTeam}
+              value={selectedPlayers}
+              onChange={(_, players) => onSelectPlayerIds(players.map((player) => player.id))}
+              disabled={
+                teamId === undefined ||
+                controlsLoading ||
+                isPlayerOptionsLoading ||
+                hasControlsError
+              }
+              loading={isPlayerOptionsLoading}
+              getOptionLabel={(player) => player.name}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              limitTags={2}
+              renderOption={(props, player, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <Box component="li" key={key} {...optionProps}>
+                    <Checkbox
+                      icon={checkboxIcon}
+                      checkedIcon={checkboxCheckedIcon}
+                      checked={selected}
+                      sx={{ mr: 1 }}
+                    />
+                    {player.gender === "M" ? (
+                      <MaleIcon
+                        sx={{
+                          mr: 1,
+                          fontSize: 18,
+                          color: (theme) => theme.colors.men.main,
+                        }}
+                      />
+                    ) : (
+                      <FemaleIcon
+                        sx={{
+                          mr: 1,
+                          fontSize: 18,
+                          color: (theme) => theme.colors.women.main,
+                        }}
+                      />
+                    )}
+                    <ListItemText primary={player.name} />
+                  </Box>
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={`4. ${t("statistics:workflow.playerCohort")}`}
+                  placeholder={t("statistics:workflow.selectPlayer")}
+                  helperText={
+                    teamId === undefined
+                      ? t("statistics:workflow.selectTeamFirst")
+                      : t("statistics:workflow.playersCount", { count: playersForTeam.length })
+                  }
+                />
+              )}
+              noOptionsText={t("statistics:workflow.noPlayers")}
+              loadingText={t("common:action.loading")}
+            />
+          </Stack>
         </Box>
       </Collapse>
     </Paper>

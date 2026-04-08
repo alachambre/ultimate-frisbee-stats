@@ -149,7 +149,7 @@ export default function GameDetailPage() {
         onViewStatistics={() => {
           if (!competition) return;
           navigate(
-            `/statistics?teamId=${competition.team_id}&mode=competition&competitionId=${competition.id}&gameId=${game.id}`
+                      `/statistics?teamId=${competition.team_id}&competitionIds=${competition.id}&gameIds=${game.id}`
           );
         }}
         onOpenRoster={() => setIsRosterDialogOpen(true)}

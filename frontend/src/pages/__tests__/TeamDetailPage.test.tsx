@@ -256,6 +256,6 @@ describe("TeamDetailPage - Player Management", () => {
     const statsButton = await screen.findByRole("button", { name: /view statistics/i });
     await user.click(statsButton);
 
-    expect(mockUseNavigate).toHaveBeenCalledWith("/statistics?teamId=1&mode=player&playerId=1");
+    expect(mockUseNavigate).toHaveBeenCalledWith("/statistics?teamId=1&playerIds=1");
   });
 });

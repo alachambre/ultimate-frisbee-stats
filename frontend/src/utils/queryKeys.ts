@@ -1,9 +1,9 @@
-function normalizePlayerIds(playerIds?: number[]): string {
-  if (!playerIds || playerIds.length === 0) {
+function normalizeIds(ids?: number[]): string {
+  if (!ids || ids.length === 0) {
     return "all";
   }
 
-  return Array.from(new Set(playerIds))
+  return Array.from(new Set(ids))
     .sort((a, b) => a - b)
     .join(",");
 }
@@ -20,23 +20,56 @@ export const queryKeys = {
   halftime: (gameId: number) => ["halftime", gameId] as const,
   activePoint: (gameId: number) => ["activePoint", gameId] as const,
   liveStats: (gameId: number, playerIds?: number[]) =>
-    ["liveStats", gameId, normalizePlayerIds(playerIds)] as const,
+    ["liveStats", gameId, normalizeIds(playerIds)] as const,
   gameTeamStatistics: (gameId: number, playerIds?: number[]) =>
-    ["gameTeamStatistics", gameId, normalizePlayerIds(playerIds)] as const,
+    ["gameTeamStatistics", gameId, normalizeIds(playerIds)] as const,
   gameStrategyStatistics: (gameId: number, playerIds?: number[]) =>
-    ["gameStrategyStatistics", gameId, normalizePlayerIds(playerIds)] as const,
+    ["gameStrategyStatistics", gameId, normalizeIds(playerIds)] as const,
   competitionPlayerStatistics: (competitionId: number, playerIds?: number[]) =>
-    ["competitionPlayerStatistics", competitionId, normalizePlayerIds(playerIds)] as const,
+    ["competitionPlayerStatistics", competitionId, normalizeIds(playerIds)] as const,
   competitionTeamStatistics: (competitionId: number, playerIds?: number[]) =>
-    ["competitionTeamStatistics", competitionId, normalizePlayerIds(playerIds)] as const,
+    ["competitionTeamStatistics", competitionId, normalizeIds(playerIds)] as const,
   competitionStrategyStatistics: (competitionId: number, playerIds?: number[]) =>
-    ["competitionStrategyStatistics", competitionId, normalizePlayerIds(playerIds)] as const,
-  teamPlayerStatistics: (teamId: number, playerIds?: number[]) =>
-    ["teamPlayerStatistics", teamId, normalizePlayerIds(playerIds)] as const,
-  teamTeamStatistics: (teamId: number, playerIds?: number[]) =>
-    ["teamTeamStatistics", teamId, normalizePlayerIds(playerIds)] as const,
-  teamStrategyStatistics: (teamId: number, playerIds?: number[]) =>
-    ["teamStrategyStatistics", teamId, normalizePlayerIds(playerIds)] as const,
+    ["competitionStrategyStatistics", competitionId, normalizeIds(playerIds)] as const,
+  teamPlayerStatistics: (
+    teamId: number,
+    competitionIds?: number[],
+    gameIds?: number[],
+    playerIds?: number[]
+  ) =>
+    [
+      "teamPlayerStatistics",
+      teamId,
+      normalizeIds(competitionIds),
+      normalizeIds(gameIds),
+      normalizeIds(playerIds),
+    ] as const,
+  teamTeamStatistics: (
+    teamId: number,
+    competitionIds?: number[],
+    gameIds?: number[],
+    playerIds?: number[]
+  ) =>
+    [
+      "teamTeamStatistics",
+      teamId,
+      normalizeIds(competitionIds),
+      normalizeIds(gameIds),
+      normalizeIds(playerIds),
+    ] as const,
+  teamStrategyStatistics: (
+    teamId: number,
+    competitionIds?: number[],
+    gameIds?: number[],
+    playerIds?: number[]
+  ) =>
+    [
+      "teamStrategyStatistics",
+      teamId,
+      normalizeIds(competitionIds),
+      normalizeIds(gameIds),
+      normalizeIds(playerIds),
+    ] as const,
   teams: ["teams"] as const,
   team: (teamId: number) => ["team", teamId] as const,
   users: ["users"] as const,

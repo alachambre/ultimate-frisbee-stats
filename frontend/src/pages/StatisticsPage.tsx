@@ -7,21 +7,32 @@ import LoadingState from "../components/shared/LoadingState";
 import GameTimer from "../components/games/GameTimer";
 import StatisticsConfigurationPanel from "../components/statistics/StatisticsConfigurationPanel";
 import CompetitionStatisticsTabs from "../components/statistics/CompetitionStatisticsTabs";
-import PlayerScopeStatistics from "../components/statistics/PlayerScopeStatistics";
 import StatisticsSectionContainer from "../components/statistics/StatisticsSectionContainer";
 import type { GameWithScore } from "../types";
 import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
+
+function buildScopeOverview(games: GameWithScore[]) {
+  const endedGames = games.filter((game) => game.status === "ended");
+  const wins = endedGames.filter((game) => game.our_score > game.opponent_score).length;
+  const losses = endedGames.filter((game) => game.our_score < game.opponent_score).length;
+  const draws = endedGames.filter((game) => game.our_score === game.opponent_score).length;
+  const decidedGames = wins + losses;
+
+  return {
+    gamesCount: games.length,
+    wins,
+    losses,
+    draws,
+    winRate: decidedGames > 0 ? wins / decidedGames : 0,
+  };
+}
 
 export default function StatisticsPage() {
   const { t } = useTranslation(["statistics", "games", "common"]);
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
   const {
-    mode,
     teamId,
-    competitionId,
-    gameId,
     playerIds,
-    activeScope,
     updateSelection,
     isExporting,
     handleExportCSV,
@@ -33,62 +44,49 @@ export default function StatisticsPage() {
     sortedTeams,
 
     competitionsForTeam,
-    teamGames,
-    selectedCompetition,
-    gamesForCompetition,
-    selectedGame,
+    selectedCompetitions,
+    availableGames,
+    selectedGames,
+    selectedDatasetGames,
     playersForTeam,
     selectedPlayers,
-    selectedPlayer,
-    selectedCohortStats,
-    playerStatsById,
-    statisticsPathItems,
 
     controlsLoading,
+    isPlayerOptionsLoading,
     controlsError,
     isScopeLoading,
     scopeError,
     canExport,
-    competitionFlowDisabled,
-    playerFlowDisabled,
+    shouldShowFieldSideStats,
 
     teamStats,
     teamPlayerStats,
     teamStrategyStats,
-    competitionTeamStats,
-    competitionPlayerStats,
-    competitionStrategyStats,
-    gameTeamStats,
-    gamePlayerStats,
-    gameStrategyStats,
   } = useStatisticsPageData();
 
-  const buildScopeOverview = (games: GameWithScore[]) => {
-    const endedGames = games.filter((game) => game.status === "ended");
-    const wins = endedGames.filter((game) => game.our_score > game.opponent_score).length;
-    const losses = endedGames.filter((game) => game.our_score < game.opponent_score).length;
-    const draws = endedGames.filter((game) => game.our_score === game.opponent_score).length;
-    const decidedGames = wins + losses;
+  const datasetOverview = buildScopeOverview(selectedDatasetGames);
+  const selectedSingleGame = selectedGames.length === 1 ? selectedGames[0] : undefined;
+  const selectedSingleCompetition =
+    selectedCompetitions.length === 1 ? selectedCompetitions[0] : undefined;
 
-    return {
-      gamesCount: games.length,
-      wins,
-      losses,
-      draws,
-      winRate: decidedGames > 0 ? wins / decidedGames : 0,
-    };
-  };
-
-  const teamScopeOverview = buildScopeOverview(teamGames);
-  const competitionScopeOverview = buildScopeOverview(gamesForCompetition);
-  const cohortDisplayName =
-    selectedPlayer?.name ??
-    t("statistics:workflow.playersCount", { count: selectedPlayers.length });
-
-  const isMobileViewport =
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(max-width:600px)").matches;
+  const statisticsContextItems = [
+    selectedTeam?.name,
+    selectedCompetitions.length === 1
+      ? selectedCompetitions[0].name
+      : selectedCompetitions.length > 1
+        ? t("statistics:workflow.competitionsCount", { count: selectedCompetitions.length })
+        : undefined,
+    selectedGames.length === 1
+      ? selectedGames[0].opponent_name
+      : selectedGames.length > 1
+        ? t("statistics:workflow.gamesCount", { count: selectedGames.length })
+        : undefined,
+    selectedPlayers.length === 1
+      ? selectedPlayers[0].name
+      : selectedPlayers.length > 1
+        ? t("statistics:workflow.playersCount", { count: selectedPlayers.length })
+        : undefined,
+  ].filter((value): value is string => Boolean(value));
 
   if (isLoadingTeams) {
     return <LoadingState message={t("common:action.loading")} />;
@@ -113,60 +111,36 @@ export default function StatisticsPage() {
         onToggleConfigurationExpanded={() =>
           setIsConfigurationExpanded((prev) => !prev)
         }
-        mode={mode}
         teamId={teamId}
-        competitionId={competitionId}
-        gameId={gameId}
         selectedPlayerIds={playerIds}
         sortedTeams={sortedTeams}
         competitionsForTeam={competitionsForTeam}
-        gamesForCompetition={gamesForCompetition}
+        selectedCompetitions={selectedCompetitions}
+        availableGames={availableGames}
+        selectedGames={selectedGames}
         playersForTeam={playersForTeam}
-        playerStatsById={playerStatsById}
+        selectedPlayers={selectedPlayers}
         controlsLoading={controlsLoading}
+        isPlayerOptionsLoading={isPlayerOptionsLoading}
         hasControlsError={Boolean(controlsError)}
-        competitionFlowDisabled={competitionFlowDisabled}
-        playerFlowDisabled={playerFlowDisabled}
-        onSelectMode={(nextMode) => {
-          if (nextMode === "competition") {
-            updateSelection({
-              mode: "competition",
-            });
-            return;
-          }
-
-          updateSelection({
-            mode: "player",
-            competitionId: undefined,
-            gameId: undefined,
-          });
-        }}
         onSelectTeam={(nextTeamId) => {
           updateSelection({
             teamId: nextTeamId,
-            competitionId: undefined,
-            gameId: undefined,
+            competitionIds: [],
+            gameIds: [],
             playerIds: [],
           });
         }}
-        onSelectCompetition={(nextCompetitionId) => {
+        onSelectCompetitionIds={(nextCompetitionIds) => {
           updateSelection({
-            competitionId: nextCompetitionId,
-            gameId: undefined,
+            competitionIds: nextCompetitionIds,
           });
         }}
-        onSelectGame={(nextGameId) => {
-          updateSelection({ gameId: nextGameId });
+        onSelectGameIds={(nextGameIds) => {
+          updateSelection({ gameIds: nextGameIds });
         }}
-        onTogglePlayer={(nextPlayerId) => {
-          const nextPlayerIds = playerIds.includes(nextPlayerId)
-            ? playerIds.filter((playerId) => playerId !== nextPlayerId)
-            : [...playerIds, nextPlayerId];
+        onSelectPlayerIds={(nextPlayerIds) => {
           updateSelection({ playerIds: nextPlayerIds });
-
-          if (mode === "player" && isMobileViewport && nextPlayerIds.length > 0) {
-            setIsConfigurationExpanded(false);
-          }
         }}
         onClearPlayersSelection={() => updateSelection({ playerIds: [] })}
       />
@@ -178,6 +152,10 @@ export default function StatisticsPage() {
           <Alert severity="error" sx={{ mb: 3 }}>
             {t("common:messages.error")}: {controlsError.message}
           </Alert>
+        )}
+
+        {!controlsLoading && !controlsError && teamId === undefined && (
+          <Alert severity="info">{t("statistics:workflow.selectTeamPrompt")}</Alert>
         )}
 
         {!controlsLoading && !controlsError && teamId !== undefined && isScopeLoading && (
@@ -194,232 +172,88 @@ export default function StatisticsPage() {
           !controlsError &&
           teamId !== undefined &&
           !isScopeLoading &&
-          !scopeError &&
-          activeScope === "team" && (
+          !scopeError && (
             <StatisticsSectionContainer
-              pathItems={statisticsPathItems}
+              pathItems={statisticsContextItems}
               canExport={canExport}
               isExporting={isExporting}
               onExport={handleExportCSV}
             >
               <>
                 <Paper sx={{ mb: 3 }}>
-                  <Box p={4} textAlign="center">
-                    <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
-                      <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedTeam?.name || "-"}
+                  {selectedSingleGame ? (
+                    <Box p={4} textAlign="center">
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+                        <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {selectedSingleGame.competition_name}
+                        </Typography>
+                      </Box>
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        {selectedSingleGame.status === "ended"
+                          ? t("games:detail.finalScore")
+                          : t("games:detail.score")}
                       </Typography>
-                    </Box>
+                      <Typography variant="h2" fontWeight="bold">
+                        {selectedSingleGame.our_score} - {selectedSingleGame.opponent_score}
+                      </Typography>
 
-                    <Box display="flex" justifyContent="center" gap={4}>
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {t("statistics:teamStats.gamesCount")}
-                        </Typography>
-                        <Typography variant="h3" fontWeight="bold">
-                          {teamScopeOverview.gamesCount}
+                      {selectedSingleGame.start_datetime && (
+                        <Box mt={2}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t("games:detail.gameDuration")}
+                          </Typography>
+                          <GameTimer
+                            startDatetime={selectedSingleGame.start_datetime}
+                            endDatetime={selectedSingleGame.end_datetime}
+                          />
+                        </Box>
+                      )}
+                    </Box>
+                  ) : (
+                    <Box p={4} textAlign="center">
+                      <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+                        <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {selectedSingleCompetition?.name ?? selectedTeam?.name ?? "-"}
                         </Typography>
                       </Box>
-                      <Divider orientation="vertical" flexItem />
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {t("statistics:teamStats.winLossRatio")}
-                        </Typography>
-                        <Typography variant="h3" fontWeight="bold">
-                          {teamScopeOverview.wins}/{teamScopeOverview.losses}
-                        </Typography>
-                        {teamScopeOverview.draws > 0 && (
-                          <Typography variant="caption" color="text.secondary">
-                            {t("games:status.draw")}: {teamScopeOverview.draws}
+
+                      <Box display="flex" justifyContent="center" gap={4}>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t("statistics:teamStats.gamesCount")}
                           </Typography>
-                        )}
+                          <Typography variant="h3" fontWeight="bold">
+                            {datasetOverview.gamesCount}
+                          </Typography>
+                        </Box>
+                        <Divider orientation="vertical" flexItem />
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t("statistics:teamStats.winLossRatio")}
+                          </Typography>
+                          <Typography variant="h3" fontWeight="bold">
+                            {datasetOverview.wins}/{datasetOverview.losses}
+                          </Typography>
+                          {datasetOverview.draws > 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                              {t("games:status.draw")}: {datasetOverview.draws}
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
                     </Box>
-                  </Box>
+                  )}
                 </Paper>
 
                 <CompetitionStatisticsTabs
                   teamStats={teamStats}
                   strategyStats={teamStrategyStats}
                   playerStats={teamPlayerStats}
-                  teamStatsScope="team"
+                  teamStatsScope={shouldShowFieldSideStats ? "game" : "team"}
                 />
               </>
-            </StatisticsSectionContainer>
-          )}
-
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError &&
-          activeScope === "competition" && (
-            <StatisticsSectionContainer
-              pathItems={statisticsPathItems}
-              canExport={canExport}
-              isExporting={isExporting}
-              onExport={handleExportCSV}
-            >
-              <>
-                <Paper sx={{ mb: 3 }}>
-                  <Box p={4} textAlign="center">
-                    <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
-                      <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedCompetition?.name || "-"}
-                      </Typography>
-                    </Box>
-
-                    <Box display="flex" justifyContent="center" gap={4}>
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {t("statistics:teamStats.gamesCount")}
-                        </Typography>
-                        <Typography variant="h3" fontWeight="bold">
-                          {competitionScopeOverview.gamesCount}
-                        </Typography>
-                      </Box>
-                      <Divider orientation="vertical" flexItem />
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {t("statistics:teamStats.winLossRatio")}
-                        </Typography>
-                        <Typography variant="h3" fontWeight="bold">
-                          {competitionScopeOverview.wins}/{competitionScopeOverview.losses}
-                        </Typography>
-                        {competitionScopeOverview.draws > 0 && (
-                          <Typography variant="caption" color="text.secondary">
-                            {t("games:status.draw")}: {competitionScopeOverview.draws}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </Box>
-                </Paper>
-
-                <CompetitionStatisticsTabs
-                  teamStats={competitionTeamStats}
-                  strategyStats={competitionStrategyStats}
-                  playerStats={competitionPlayerStats}
-                  teamStatsScope="competition"
-                />
-              </>
-            </StatisticsSectionContainer>
-          )}
-
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError &&
-          activeScope === "game" &&
-          selectedGame && (
-            <StatisticsSectionContainer
-              pathItems={statisticsPathItems}
-              canExport={canExport}
-              isExporting={isExporting}
-              onExport={handleExportCSV}
-            >
-              <>
-                <Paper sx={{ mb: 3 }}>
-                  <Box p={4} textAlign="center">
-                    <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
-                      <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedCompetition?.name || "-"}
-                      </Typography>
-                    </Box>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                      {selectedGame.status === "ended"
-                        ? t("games:detail.finalScore")
-                        : t("games:detail.score")}
-                    </Typography>
-                    <Typography variant="h2" fontWeight="bold">
-                      {selectedGame.our_score} - {selectedGame.opponent_score}
-                    </Typography>
-
-                    {selectedGame.start_datetime && (
-                      <Box mt={2}>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {t("games:detail.gameDuration")}
-                        </Typography>
-                        <GameTimer
-                          startDatetime={selectedGame.start_datetime}
-                          endDatetime={selectedGame.end_datetime}
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                </Paper>
-
-                <CompetitionStatisticsTabs
-                  teamStats={gameTeamStats}
-                  strategyStats={gameStrategyStats}
-                  playerStats={gamePlayerStats}
-                  teamStatsScope="game"
-                />
-              </>
-            </StatisticsSectionContainer>
-          )}
-
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError &&
-          mode === "player" &&
-          playerIds.length === 0 && (
-            <Alert severity="info">{t("statistics:workflow.choosePlayerPrompt")}</Alert>
-          )}
-
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError &&
-          activeScope === "player" &&
-          selectedPlayers.length !== playerIds.length && (
-            <Alert severity="info">{t("statistics:workflow.playerNotFound")}</Alert>
-          )}
-
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError &&
-          activeScope === "player" &&
-          playerIds.length > 0 &&
-          selectedPlayers.length === playerIds.length &&
-          !selectedCohortStats && (
-            <Alert severity="info">{t("statistics:playerStats.noDataForScope")}</Alert>
-          )}
-
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError &&
-          activeScope === "player" &&
-          playerIds.length > 0 &&
-          selectedPlayers.length === playerIds.length &&
-          selectedCohortStats &&
-          selectedPlayers.length > 0 && (
-            <StatisticsSectionContainer
-              pathItems={statisticsPathItems}
-              canExport={canExport}
-              isExporting={isExporting}
-              onExport={handleExportCSV}
-            >
-              <PlayerScopeStatistics
-                playerName={cohortDisplayName}
-                playerNumber={selectedPlayer?.number}
-                teamName={selectedTeam?.name}
-                scopeLabel={t("statistics:playerScope.team")}
-                contextLabel={selectedTeam?.name}
-                cohortPlayerNames={selectedPlayers.map((player) => player.name)}
-                stats={selectedCohortStats}
-              />
             </StatisticsSectionContainer>
           )}
       </Box>

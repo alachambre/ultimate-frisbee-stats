@@ -1,33 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getAllGames, getCompetitionGames, getCompetitions, getTeams } from "../../services";
+import { getAllGames, getCompetitions, getTeams } from "../../services";
 import {
-  downloadCompetitionStatisticsCSV,
-  downloadGameStatisticsCSV,
   downloadTeamStatisticsCSV,
-  getCompetitionPlayerStatistics,
-  getCompetitionStrategyStatistics,
-  getCompetitionTeamStatistics,
-  getGameStrategyStatistics,
-  getGameTeamStatistics,
-  getLiveGameStatistics,
   getTeamPlayerStatistics,
   getTeamStrategyStatistics,
   getTeamTeamStatistics,
+  type StatisticsDatasetFilters,
   type StatisticsExportDetailMode,
 } from "../../services/statistics";
-import type { PlayerGameStats } from "../../types";
+import type { Player, PlayerGameStats } from "../../types";
 import { queryKeys } from "../../utils/queryKeys";
-
-export type StatisticsMode = "competition" | "player";
-export type StatisticsScope = "team" | "competition" | "game" | "player";
 
 interface StatisticsSelection {
   teamId?: number;
-  mode: StatisticsMode;
-  competitionId?: number;
-  gameId?: number;
+  competitionIds: number[];
+  gameIds: number[];
   playerIds: number[];
 }
 
@@ -39,14 +28,16 @@ function parseOptionalId(value: string | null): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function normalizePlayerIds(playerIds: number[]): number[] {
-  return Array.from(new Set(playerIds)).sort((a, b) => a - b);
+function normalizeIds(ids: number[]): number[] {
+  return Array.from(new Set(ids)).sort((a, b) => a - b);
 }
 
-function parsePlayerIds(value: string | null): number[] {
-  if (!value) return [];
+function parseIds(value: string | null): number[] {
+  if (!value) {
+    return [];
+  }
 
-  return normalizePlayerIds(
+  return normalizeIds(
     value
       .split(",")
       .map((entry) => Number(entry.trim()))
@@ -61,22 +52,17 @@ function buildSearchParams(selection: StatisticsSelection): URLSearchParams {
     params.set("teamId", String(selection.teamId));
   }
 
-  params.set("mode", selection.mode);
+  if (selection.competitionIds.length > 0) {
+    params.set("competitionIds", selection.competitionIds.join(","));
+  }
 
-  if (selection.mode === "competition") {
-    if (selection.competitionId !== undefined) {
-      params.set("competitionId", String(selection.competitionId));
-    }
-
-    if (selection.gameId !== undefined) {
-      params.set("gameId", String(selection.gameId));
-    }
+  if (selection.gameIds.length > 0) {
+    params.set("gameIds", selection.gameIds.join(","));
   }
 
   if (selection.playerIds.length > 0) {
     params.set("playerIds", selection.playerIds.join(","));
 
-    // Keep legacy deep links valid for a single selected player.
     if (selection.playerIds.length === 1) {
       params.set("playerId", String(selection.playerIds[0]));
     }
@@ -85,57 +71,70 @@ function buildSearchParams(selection: StatisticsSelection): URLSearchParams {
   return params;
 }
 
+function buildDatasetFilters(selection: StatisticsSelection): StatisticsDatasetFilters {
+  return {
+    competitionIds: selection.competitionIds,
+    gameIds: selection.gameIds,
+    playerIds: selection.playerIds,
+  };
+}
+
 export function useStatisticsPageData() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isExporting, setIsExporting] = useState(false);
 
-  const rawMode = searchParams.get("mode");
-  const rawPlayerIds = parsePlayerIds(searchParams.get("playerIds"));
+  const legacyCompetitionId = parseOptionalId(searchParams.get("competitionId"));
+  const legacyGameId = parseOptionalId(searchParams.get("gameId"));
+  const rawPlayerIds = parseIds(searchParams.get("playerIds"));
   const legacyPlayerId = parseOptionalId(searchParams.get("playerId"));
-  const selectedPlayerIds =
-    rawPlayerIds.length > 0
-      ? rawPlayerIds
-      : legacyPlayerId !== undefined
-        ? [legacyPlayerId]
-        : [];
 
   const selection: StatisticsSelection = {
     teamId: parseOptionalId(searchParams.get("teamId")),
-    mode: rawMode === "player" || (rawMode == null && selectedPlayerIds.length > 0)
-      ? "player"
-      : "competition",
-    competitionId: parseOptionalId(searchParams.get("competitionId")),
-    gameId: parseOptionalId(searchParams.get("gameId")),
-    playerIds: selectedPlayerIds,
+    competitionIds: (() => {
+      const ids = parseIds(searchParams.get("competitionIds"));
+      if (ids.length > 0) {
+        return ids;
+      }
+      return legacyCompetitionId !== undefined ? [legacyCompetitionId] : [];
+    })(),
+    gameIds: (() => {
+      const ids = parseIds(searchParams.get("gameIds"));
+      if (ids.length > 0) {
+        return ids;
+      }
+      return legacyGameId !== undefined ? [legacyGameId] : [];
+    })(),
+    playerIds:
+      rawPlayerIds.length > 0
+        ? rawPlayerIds
+        : legacyPlayerId !== undefined
+          ? [legacyPlayerId]
+          : [],
   };
 
-  const mode: StatisticsMode = selection.mode;
   const teamId = selection.teamId;
-  const competitionId = mode === "competition" ? selection.competitionId : undefined;
-  const gameId = mode === "competition" ? selection.gameId : undefined;
+  const competitionIds = selection.competitionIds;
+  const gameIds = selection.gameIds;
   const playerIds = selection.playerIds;
+  const statisticsFilters = buildDatasetFilters(selection);
 
   const updateSelection = useCallback(
     (updates: Partial<StatisticsSelection>, options?: { replace?: boolean }) => {
       const merged: StatisticsSelection = {
         teamId,
-        mode,
-        competitionId,
-        gameId,
+        competitionIds,
+        gameIds,
         playerIds,
         ...updates,
       };
 
-      merged.playerIds = normalizePlayerIds(merged.playerIds ?? []);
-
-      if (merged.mode === "player") {
-        merged.competitionId = undefined;
-        merged.gameId = undefined;
-      }
+      merged.competitionIds = normalizeIds(merged.competitionIds ?? []);
+      merged.gameIds = normalizeIds(merged.gameIds ?? []);
+      merged.playerIds = normalizeIds(merged.playerIds ?? []);
 
       if (merged.teamId === undefined) {
-        merged.competitionId = undefined;
-        merged.gameId = undefined;
+        merged.competitionIds = [];
+        merged.gameIds = [];
         merged.playerIds = [];
       }
 
@@ -143,7 +142,7 @@ export function useStatisticsPageData() {
         replace: options?.replace,
       });
     },
-    [competitionId, gameId, mode, playerIds, setSearchParams, teamId]
+    [competitionIds, gameIds, playerIds, setSearchParams, teamId]
   );
 
   const {
@@ -166,124 +165,13 @@ export function useStatisticsPageData() {
   });
 
   const {
-    data: games,
-    isLoading: isLoadingGames,
-    error: gamesError,
+    data: allGames,
+    isLoading: isLoadingAllGames,
+    error: allGamesError,
   } = useQuery({
-    queryKey: queryKeys.competitionGames(competitionId ?? 0),
-    queryFn: () => getCompetitionGames(competitionId as number),
-    enabled: mode === "competition" && competitionId !== undefined,
-  });
-
-  const { data: allGames } = useQuery({
     queryKey: queryKeys.games,
     queryFn: getAllGames,
     enabled: teamId !== undefined,
-  });
-
-  const activeScope: StatisticsScope | undefined = useMemo(() => {
-    if (teamId === undefined) return undefined;
-
-    if (mode === "player") {
-      return playerIds.length > 0 ? "player" : undefined;
-    }
-
-    if (gameId !== undefined) return "game";
-    if (competitionId !== undefined) return "competition";
-
-    return "team";
-  }, [competitionId, gameId, mode, playerIds.length, teamId]);
-
-  const {
-    data: teamStats,
-    isLoading: isLoadingTeamStats,
-    error: teamStatsError,
-  } = useQuery({
-    queryKey: queryKeys.teamTeamStatistics(teamId ?? 0, playerIds),
-    queryFn: () => getTeamTeamStatistics(teamId as number, playerIds),
-    enabled: activeScope === "team" && teamId !== undefined,
-  });
-
-  const {
-    data: teamPlayerStats,
-    isLoading: isLoadingTeamPlayerStats,
-    error: teamPlayerStatsError,
-  } = useQuery({
-    queryKey: queryKeys.teamPlayerStatistics(teamId ?? 0, playerIds),
-    queryFn: () => getTeamPlayerStatistics(teamId as number, playerIds),
-    enabled:
-      teamId !== undefined &&
-      (mode === "player" || activeScope === "team" || activeScope === "player"),
-  });
-
-  const {
-    data: teamStrategyStats,
-    isLoading: isLoadingTeamStrategyStats,
-    error: teamStrategyStatsError,
-  } = useQuery({
-    queryKey: queryKeys.teamStrategyStatistics(teamId ?? 0, playerIds),
-    queryFn: () => getTeamStrategyStatistics(teamId as number, playerIds),
-    enabled: activeScope === "team" && teamId !== undefined,
-  });
-
-  const {
-    data: competitionTeamStats,
-    isLoading: isLoadingCompetitionTeamStats,
-    error: competitionTeamStatsError,
-  } = useQuery({
-    queryKey: queryKeys.competitionTeamStatistics(competitionId ?? 0, playerIds),
-    queryFn: () => getCompetitionTeamStatistics(competitionId as number, playerIds),
-    enabled: activeScope === "competition" && competitionId !== undefined,
-  });
-
-  const {
-    data: competitionPlayerStats,
-    isLoading: isLoadingCompetitionPlayerStats,
-    error: competitionPlayerStatsError,
-  } = useQuery({
-    queryKey: queryKeys.competitionPlayerStatistics(competitionId ?? 0, playerIds),
-    queryFn: () => getCompetitionPlayerStatistics(competitionId as number, playerIds),
-    enabled: activeScope === "competition" && competitionId !== undefined,
-  });
-
-  const {
-    data: competitionStrategyStats,
-    isLoading: isLoadingCompetitionStrategyStats,
-    error: competitionStrategyStatsError,
-  } = useQuery({
-    queryKey: queryKeys.competitionStrategyStatistics(competitionId ?? 0, playerIds),
-    queryFn: () => getCompetitionStrategyStatistics(competitionId as number, playerIds),
-    enabled: activeScope === "competition" && competitionId !== undefined,
-  });
-
-  const {
-    data: gameTeamStats,
-    isLoading: isLoadingGameTeamStats,
-    error: gameTeamStatsError,
-  } = useQuery({
-    queryKey: queryKeys.gameTeamStatistics(gameId ?? 0, playerIds),
-    queryFn: () => getGameTeamStatistics(gameId as number, playerIds),
-    enabled: activeScope === "game" && gameId !== undefined,
-  });
-
-  const {
-    data: gamePlayerStats,
-    isLoading: isLoadingGamePlayerStats,
-    error: gamePlayerStatsError,
-  } = useQuery({
-    queryKey: queryKeys.liveStats(gameId ?? 0, playerIds),
-    queryFn: () => getLiveGameStatistics(gameId as number, playerIds),
-    enabled: activeScope === "game" && gameId !== undefined,
-  });
-
-  const {
-    data: gameStrategyStats,
-    isLoading: isLoadingGameStrategyStats,
-    error: gameStrategyStatsError,
-  } = useQuery({
-    queryKey: queryKeys.gameStrategyStatistics(gameId ?? 0, playerIds),
-    queryFn: () => getGameStrategyStatistics(gameId as number, playerIds),
-    enabled: activeScope === "game" && gameId !== undefined,
   });
 
   const sortedTeams = useMemo(
@@ -303,41 +191,92 @@ export function useStatisticsPageData() {
     [competitions]
   );
 
-  const selectedCompetition = competitionsForTeam.find(
-    (competition) => competition.id === competitionId
-  );
-
-  const gamesForCompetition = useMemo(
-    () =>
-      (games ?? []).slice().sort((a, b) => {
-        const dateA = a.date ? new Date(a.date).getTime() : 0;
-        const dateB = b.date ? new Date(b.date).getTime() : 0;
-        return dateB - dateA;
-      }),
-    [games]
+  const competitionIdsForTeam = useMemo(
+    () => new Set(competitionsForTeam.map((competition) => competition.id)),
+    [competitionsForTeam]
   );
 
   const teamGames = useMemo(() => {
-    if (!allGames || competitionsForTeam.length === 0) {
+    if (!allGames || competitionIdsForTeam.size === 0) {
       return [];
     }
 
-    const competitionIds = new Set(competitionsForTeam.map((competition) => competition.id));
-    return allGames.filter((game) => competitionIds.has(game.competition_id));
-  }, [allGames, competitionsForTeam]);
+    return allGames
+      .filter((game) => competitionIdsForTeam.has(game.competition_id))
+      .slice()
+      .sort((a, b) => {
+        const dateA = a.date ? new Date(a.date).getTime() : 0;
+        const dateB = b.date ? new Date(b.date).getTime() : 0;
+        return dateB - dateA;
+      });
+  }, [allGames, competitionIdsForTeam]);
 
-  const selectedGame = gamesForCompetition.find((game) => game.id === gameId);
-
-  const playersForTeam = useMemo(
-    () => (selectedTeam?.players ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)),
-    [selectedTeam?.players]
-  );
+  const selectedCompetitionIdsSet = useMemo(() => new Set(competitionIds), [competitionIds]);
+  const selectedGameIdsSet = useMemo(() => new Set(gameIds), [gameIds]);
   const selectedPlayerIdsSet = useMemo(() => new Set(playerIds), [playerIds]);
-  const selectedPlayers = useMemo(
-    () => playersForTeam.filter((player) => selectedPlayerIdsSet.has(player.id)),
-    [playersForTeam, selectedPlayerIdsSet]
+
+  const availableGames = useMemo(() => {
+    if (competitionIds.length === 0) {
+      return teamGames;
+    }
+
+    return teamGames.filter((game) => selectedCompetitionIdsSet.has(game.competition_id));
+  }, [competitionIds.length, selectedCompetitionIdsSet, teamGames]);
+
+  const selectedCompetitions = useMemo(
+    () => competitionsForTeam.filter((competition) => selectedCompetitionIdsSet.has(competition.id)),
+    [competitionsForTeam, selectedCompetitionIdsSet]
   );
-  const selectedPlayer = selectedPlayers.length === 1 ? selectedPlayers[0] : undefined;
+
+  const selectedGames = useMemo(
+    () => teamGames.filter((game) => selectedGameIdsSet.has(game.id)),
+    [selectedGameIdsSet, teamGames]
+  );
+
+  const selectedGame = selectedGames.length === 1 ? selectedGames[0] : undefined;
+  const selectedCompetition = selectedCompetitions.length === 1 ? selectedCompetitions[0] : undefined;
+
+  const selectedDatasetGames = useMemo(() => {
+    if (selectedGames.length > 0) {
+      return selectedGames;
+    }
+
+    if (competitionIds.length > 0) {
+      return teamGames.filter((game) => selectedCompetitionIdsSet.has(game.competition_id));
+    }
+
+    return teamGames;
+  }, [competitionIds.length, selectedCompetitionIdsSet, selectedGames, teamGames]);
+
+  const {
+    data: teamStats,
+    isLoading: isLoadingTeamStats,
+    error: teamStatsError,
+  } = useQuery({
+    queryKey: queryKeys.teamTeamStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryFn: () => getTeamTeamStatistics(teamId as number, statisticsFilters),
+    enabled: teamId !== undefined,
+  });
+
+  const {
+    data: teamPlayerStats,
+    isLoading: isLoadingTeamPlayerStats,
+    error: teamPlayerStatsError,
+  } = useQuery({
+    queryKey: queryKeys.teamPlayerStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryFn: () => getTeamPlayerStatistics(teamId as number, statisticsFilters),
+    enabled: teamId !== undefined,
+  });
+
+  const {
+    data: teamStrategyStats,
+    isLoading: isLoadingTeamStrategyStats,
+    error: teamStrategyStatsError,
+  } = useQuery({
+    queryKey: queryKeys.teamStrategyStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryFn: () => getTeamStrategyStatistics(teamId as number, statisticsFilters),
+    enabled: teamId !== undefined,
+  });
 
   const playerStatsById = useMemo(() => {
     const map = new Map<number, PlayerGameStats>();
@@ -347,70 +286,66 @@ export function useStatisticsPageData() {
     return map;
   }, [teamPlayerStats]);
 
-  const selectedCohortStats = useMemo(() => {
-    if (!teamPlayerStats || playerIds.length === 0) {
-      return undefined;
+  const teamPlayersById = useMemo(
+    () => new Map((selectedTeam?.players ?? []).map((player) => [player.id, player])),
+    [selectedTeam?.players]
+  );
+
+  const filteredPlayerIdsFromStats = useMemo(() => {
+    const shouldScopePlayerOptions =
+      competitionIds.length > 0 || gameIds.length > 0 || playerIds.length > 0;
+
+    if (!shouldScopePlayerOptions || !teamPlayerStats) {
+      return null;
     }
 
-    const anchorPlayerId = playerIds[0];
-    return teamPlayerStats.find((stats) => stats.player_id === anchorPlayerId);
-  }, [teamPlayerStats, playerIds]);
+    return teamPlayerStats
+      .filter((playerStat) => {
+        if (playerIds.length === 0) {
+          return true;
+        }
 
-  const controlsError = competitionsError || gamesError;
+        return (
+          playerStat.points_played > 0 || selectedPlayerIdsSet.has(playerStat.player_id)
+        );
+      })
+      .map((playerStat) => playerStat.player_id);
+  }, [competitionIds.length, gameIds.length, playerIds.length, selectedPlayerIdsSet, teamPlayerStats]);
+
+  const playersForTeam = useMemo(() => {
+    const sourcePlayers =
+      filteredPlayerIdsFromStats === null
+        ? selectedTeam?.players ?? []
+        : filteredPlayerIdsFromStats
+            .map((playerId) => teamPlayersById.get(playerId))
+            .filter((player): player is Player => player !== undefined);
+
+    return sourcePlayers.slice().sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredPlayerIdsFromStats, selectedTeam?.players, teamPlayersById]);
+
+  const selectedPlayers = useMemo(
+    () => playersForTeam.filter((player) => selectedPlayerIdsSet.has(player.id)),
+    [playersForTeam, selectedPlayerIdsSet]
+  );
+
+  const selectedPlayer = selectedPlayers.length === 1 ? selectedPlayers[0] : undefined;
+
+  const controlsError = competitionsError || allGamesError;
   const controlsLoading =
-    (teamId !== undefined && isLoadingCompetitions) ||
-    (competitionId !== undefined && isLoadingGames);
+    teamId !== undefined && (isLoadingCompetitions || isLoadingAllGames);
+  const isPlayerOptionsLoading =
+    teamId !== undefined &&
+    isLoadingTeamPlayerStats &&
+    (competitionIds.length > 0 || gameIds.length > 0 || playerIds.length > 0);
 
   const isScopeLoading =
-    (activeScope === "team" &&
-      (isLoadingTeamStats || isLoadingTeamPlayerStats || isLoadingTeamStrategyStats)) ||
-    (activeScope === "competition" &&
-      (isLoadingCompetitionTeamStats ||
-        isLoadingCompetitionPlayerStats ||
-        isLoadingCompetitionStrategyStats)) ||
-    (activeScope === "game" &&
-      (isLoadingGameTeamStats || isLoadingGamePlayerStats || isLoadingGameStrategyStats)) ||
-    (activeScope === "player" && isLoadingTeamPlayerStats);
+    teamId !== undefined &&
+    (isLoadingTeamStats || isLoadingTeamPlayerStats || isLoadingTeamStrategyStats);
 
-  const scopeError =
-    (activeScope === "team" &&
-      (teamStatsError || teamPlayerStatsError || teamStrategyStatsError)) ||
-    (activeScope === "competition" &&
-      (competitionTeamStatsError ||
-        competitionPlayerStatsError ||
-        competitionStrategyStatsError)) ||
-    (activeScope === "game" &&
-      (gameTeamStatsError || gamePlayerStatsError || gameStrategyStatsError)) ||
-    (activeScope === "player" && teamPlayerStatsError);
+  const scopeError = teamStatsError || teamPlayerStatsError || teamStrategyStatsError;
 
-  const canExport =
-    (activeScope === "team" || activeScope === "competition" || activeScope === "game") &&
-    playerIds.length === 0;
-
-  const competitionFlowDisabled =
-    teamId !== undefined && !controlsLoading && competitionsForTeam.length === 0;
-  const playerFlowDisabled = teamId !== undefined && playersForTeam.length === 0;
-
-  const statisticsPathItems = useMemo(() => {
-    const items: string[] = [];
-
-    if (selectedTeam) {
-      items.push(selectedTeam.name);
-    }
-
-    if (mode === "competition") {
-      if (selectedCompetition) {
-        items.push(selectedCompetition.name);
-      }
-      if (selectedGame) {
-        items.push(`${selectedGame.team_name} vs ${selectedGame.opponent_name}`);
-      }
-    } else if (selectedPlayers.length === 1) {
-      items.push(selectedPlayers[0].name);
-    }
-
-    return items;
-  }, [mode, selectedCompetition, selectedGame, selectedPlayers, selectedTeam]);
+  const canExport = teamId !== undefined;
+  const shouldShowFieldSideStats = selectedGames.length === 1;
 
   useEffect(() => {
     if (!teams || teamId !== undefined) {
@@ -439,68 +374,63 @@ export function useStatisticsPageData() {
       return;
     }
 
-    if (mode === "competition" && competitionsForTeam.length === 0 && playersForTeam.length > 0) {
-      updateSelection(
-        {
-          mode: "player",
-          competitionId: undefined,
-          gameId: undefined,
-        },
-        { replace: true }
-      );
-      return;
-    }
+    const validCompetitionIds = competitionIds.filter((id) => competitionIdsForTeam.has(id));
+    const validGameIds = gameIds.filter((id) => availableGames.some((game) => game.id === id));
+    const validPlayerIds = playerIds.filter((id) =>
+      playersForTeam.some((player) => player.id === id)
+    );
 
-    if (mode === "player" && playersForTeam.length === 0 && competitionsForTeam.length > 0) {
+    if (
+      validCompetitionIds.length !== competitionIds.length ||
+      validGameIds.length !== gameIds.length ||
+      validPlayerIds.length !== playerIds.length
+    ) {
       updateSelection(
         {
-          mode: "competition",
-          playerIds: [],
+          competitionIds: validCompetitionIds,
+          gameIds: validGameIds,
+          playerIds: validPlayerIds,
         },
         { replace: true }
       );
     }
   }, [
-    teamId,
-    controlsLoading,
+    availableGames,
+    competitionIds,
+    competitionIdsForTeam,
     controlsError,
-    mode,
-    competitionsForTeam.length,
-    playersForTeam.length,
+    controlsLoading,
+    gameIds,
+    playerIds,
+    playersForTeam,
+    teamId,
     updateSelection,
   ]);
 
   const handleExportCSV = useCallback(
     async (detailMode: StatisticsExportDetailMode) => {
-      if (!canExport) {
+      if (!teamId) {
         return;
       }
 
       setIsExporting(true);
       try {
-        if (activeScope === "team" && teamId !== undefined) {
-          await downloadTeamStatisticsCSV(teamId, detailMode);
-        } else if (activeScope === "competition" && competitionId !== undefined) {
-          await downloadCompetitionStatisticsCSV(competitionId, detailMode);
-        } else if (activeScope === "game" && gameId !== undefined) {
-          await downloadGameStatisticsCSV(gameId, detailMode);
-        }
+        await downloadTeamStatisticsCSV(teamId, detailMode, statisticsFilters);
       } catch (error) {
         console.error("Error exporting CSV:", error);
       } finally {
         setIsExporting(false);
       }
     },
-    [activeScope, canExport, competitionId, gameId, teamId]
+    [statisticsFilters, teamId]
   );
 
   return {
-    mode,
     teamId,
-    competitionId,
-    gameId,
+    competitionIds,
+    gameIds,
     playerIds,
-    activeScope,
+    statisticsFilters,
     updateSelection,
     isExporting,
     handleExportCSV,
@@ -512,33 +442,28 @@ export function useStatisticsPageData() {
     sortedTeams,
 
     competitionsForTeam,
-    teamGames,
+    selectedCompetitions,
     selectedCompetition,
-    gamesForCompetition,
+    teamGames,
+    availableGames,
+    selectedGames,
     selectedGame,
+    selectedDatasetGames,
     playersForTeam,
     selectedPlayers,
     selectedPlayer,
-    selectedCohortStats,
     playerStatsById,
-    statisticsPathItems,
 
     controlsLoading,
+    isPlayerOptionsLoading,
     controlsError,
     isScopeLoading,
     scopeError,
     canExport,
-    competitionFlowDisabled,
-    playerFlowDisabled,
+    shouldShowFieldSideStats,
 
     teamStats,
     teamPlayerStats,
     teamStrategyStats,
-    competitionTeamStats,
-    competitionPlayerStats,
-    competitionStrategyStats,
-    gameTeamStats,
-    gamePlayerStats,
-    gameStrategyStats,
   };
 }

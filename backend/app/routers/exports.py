@@ -1,9 +1,9 @@
 """
 CSV export endpoints for statistics.
 """
-from typing import Literal
+from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -24,6 +24,12 @@ def _csv_response(content: str, filename: str) -> Response:
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+def _normalize_ids(values: Optional[List[int]]) -> Optional[List[int]]:
+    if not values:
+        return None
+    return sorted(set(values))
 
 
 @router.get("/games/{game_id}/csv")
@@ -64,12 +70,22 @@ def export_competition_statistics_csv(
 def export_team_statistics_csv(
     team_id: int,
     detail: Literal["summary", "full"] = "summary",
+    player_ids: Optional[List[int]] = Query(default=None),
+    competition_ids: Optional[List[int]] = Query(default=None),
+    game_ids: Optional[List[int]] = Query(default=None),
     db: Session = Depends(get_db),
 ):
     """
     Export team statistics as a CSV file.
     """
-    result = crud.get_team_statistics_csv(db, team_id, detail_mode=detail)
+    result = crud.get_team_statistics_csv(
+        db,
+        team_id,
+        detail_mode=detail,
+        required_player_ids=_normalize_ids(player_ids),
+        competition_ids=_normalize_ids(competition_ids),
+        game_ids=_normalize_ids(game_ids),
+    )
     if not result:
         raise HTTPException(status_code=404, detail="Team not found")
 

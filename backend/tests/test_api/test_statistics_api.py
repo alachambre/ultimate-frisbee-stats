@@ -1007,6 +1007,42 @@ def test_get_team_team_statistics_filters_points_by_selected_players(client: Tes
     assert data["defense"]["points_won"] == 1
 
 
+def test_get_team_team_statistics_filters_dataset_by_competition_ids(
+    client: TestClient,
+    db_session: Session,
+):
+    """Team stats should aggregate only the selected competitions when requested."""
+    from tests.builders import CompetitionBuilder, GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids).number(1).offense().won().complete()
+
+    other_competition = CompetitionBuilder(db_session, scenario.team).with_name("Comp B").build()
+    other_game = GameBuilder(db_session, other_competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, other_game.id, player_ids).number(1).defense().won().complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/team",
+        params=[("competition_ids", scenario.competition.id)],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_completed_points"] == 1
+    assert data["offense"]["points_started"] == 1
+    assert data["offense"]["points_won"] == 1
+    assert data["defense"]["points_started"] == 0
+
+
 # Competition and Team Player Statistics API Tests
 
 
@@ -1147,6 +1183,52 @@ def test_get_team_player_statistics_filters_points_by_selected_players(client: T
 
     bench_stats = next(player for player in data if player["player_id"] == bench_player.id)
     assert bench_stats["points_played"] == 0
+
+
+def test_get_team_player_statistics_limits_roster_to_selected_games(
+    client: TestClient,
+    db_session: Session,
+):
+    """Filtered team player stats should use the selected game roster instead of the full team."""
+    from tests.builders import GameBuilder, GameScenarioBuilder, PlayerBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+    PointBuilder(db_session, scenario.game.id, player_ids).number(1).offense().won().complete()
+
+    bench_player = (
+        PlayerBuilder(db_session, scenario.team)
+        .with_name("Bench Player")
+        .with_number(99)
+        .male()
+        .build()
+    )
+    other_game = GameBuilder(db_session, scenario.competition).with_opponent("Opponent 2").build()
+    other_game.players.extend([bench_player, *scenario.players[:6]])
+    db_session.commit()
+    PointBuilder(
+        db_session,
+        other_game.id,
+        [bench_player.id] + [player.id for player in scenario.players[:6]],
+    ).number(1).offense().won().complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/players",
+        params=[("game_ids", scenario.game.id)],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 7
+    assert all(player["player_id"] != bench_player.id for player in data)
+    assert all(player["points_played"] == 1 for player in data)
 
 
 # Competition and Team Strategy Statistics API Tests
@@ -1298,6 +1380,43 @@ def test_get_team_strategy_statistics_filters_points_by_selected_players(
     assert len(data["defense_strategies"]) == 1
     assert data["offense_strategies"][0]["points_played"] == 1
     assert data["defense_strategies"][0]["points_played"] == 1
+
+
+def test_get_team_strategy_statistics_filters_dataset_by_game_ids(
+    client: TestClient,
+    db_session: Session,
+):
+    """Strategy stats should aggregate only the selected games when requested."""
+    from tests.builders import GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .with_offense_strategy("Vertical Stack")
+        .build()
+    )
+
+    strategy_id = scenario.offense_strategies[0].id
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids).number(1).offense().with_strategy(strategy_id).won().complete()
+
+    other_game = GameBuilder(db_session, scenario.competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, other_game.id, player_ids).number(1).offense().with_strategy(strategy_id).lost().complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/strategies",
+        params=[("game_ids", scenario.game.id)],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["offense_strategies"]) == 1
+    assert data["offense_strategies"][0]["points_played"] == 1
+    assert data["offense_strategies"][0]["points_won"] == 1
 
 
 # Strategy Statistics API Tests

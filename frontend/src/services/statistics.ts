@@ -10,27 +10,42 @@ import type {
 } from "../types";
 
 export type StatisticsExportDetailMode = "summary" | "full";
+export interface StatisticsDatasetFilters {
+  competitionIds?: number[];
+  gameIds?: number[];
+  playerIds?: number[];
+}
 
-function normalizePlayerIds(playerIds?: number[]): number[] {
-  if (!playerIds || playerIds.length === 0) {
+function normalizeIds(ids?: number[]): number[] {
+  if (!ids || ids.length === 0) {
     return [];
   }
 
-  return Array.from(new Set(playerIds)).sort((a, b) => a - b);
+  return Array.from(new Set(ids)).sort((a, b) => a - b);
 }
 
-function appendPlayerIds(path: string, playerIds?: number[]): string {
-  const normalized = normalizePlayerIds(playerIds);
-  if (normalized.length === 0) {
+function appendStatisticsFilters(path: string, filters?: StatisticsDatasetFilters): string {
+  const competitionIds = normalizeIds(filters?.competitionIds);
+  const gameIds = normalizeIds(filters?.gameIds);
+  const playerIds = normalizeIds(filters?.playerIds);
+
+  if (competitionIds.length === 0 && gameIds.length === 0 && playerIds.length === 0) {
     return path;
   }
 
-  const params = new URLSearchParams();
-  normalized.forEach((playerId) => {
+  const [basePath, existingQuery = ""] = path.split("?", 2);
+  const params = new URLSearchParams(existingQuery);
+  competitionIds.forEach((competitionId) => {
+    params.append("competition_ids", String(competitionId));
+  });
+  gameIds.forEach((gameId) => {
+    params.append("game_ids", String(gameId));
+  });
+  playerIds.forEach((playerId) => {
     params.append("player_ids", String(playerId));
   });
 
-  return `${path}?${params.toString()}`;
+  return `${basePath}?${params.toString()}`;
 }
 
 function parseFilename(contentDisposition: string | undefined, fallback: string): string {
@@ -74,7 +89,9 @@ export async function getLiveGameStatistics(
   gameId: number,
   playerIds?: number[]
 ): Promise<PlayerGameStats[]> {
-  const response = await apiClient.get(appendPlayerIds(`/statistics/games/${gameId}/live`, playerIds));
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/games/${gameId}/live`, { playerIds })
+  );
   return response.data;
 }
 
@@ -82,7 +99,9 @@ export async function getGameTeamStatistics(
   gameId: number,
   playerIds?: number[]
 ): Promise<GameTeamStats> {
-  const response = await apiClient.get(appendPlayerIds(`/statistics/games/${gameId}/team`, playerIds));
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/games/${gameId}/team`, { playerIds })
+  );
   return response.data;
 }
 
@@ -91,7 +110,7 @@ export async function getGameStrategyStatistics(
   playerIds?: number[]
 ): Promise<GameStrategyStats> {
   const response = await apiClient.get(
-    appendPlayerIds(`/statistics/games/${gameId}/strategies`, playerIds)
+    appendStatisticsFilters(`/statistics/games/${gameId}/strategies`, { playerIds })
   );
   return response.data;
 }
@@ -101,16 +120,18 @@ export async function getCompetitionPlayerStatistics(
   playerIds?: number[]
 ): Promise<PlayerGameStats[]> {
   const response = await apiClient.get(
-    appendPlayerIds(`/statistics/competitions/${competitionId}/players`, playerIds)
+    appendStatisticsFilters(`/statistics/competitions/${competitionId}/players`, { playerIds })
   );
   return response.data;
 }
 
 export async function getTeamPlayerStatistics(
   teamId: number,
-  playerIds?: number[]
+  filters?: StatisticsDatasetFilters
 ): Promise<PlayerGameStats[]> {
-  const response = await apiClient.get(appendPlayerIds(`/statistics/teams/${teamId}/players`, playerIds));
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/teams/${teamId}/players`, filters)
+  );
   return response.data;
 }
 
@@ -119,16 +140,18 @@ export async function getCompetitionTeamStatistics(
   playerIds?: number[]
 ): Promise<CompetitionTeamStats> {
   const response = await apiClient.get(
-    appendPlayerIds(`/statistics/competitions/${competitionId}/team`, playerIds)
+    appendStatisticsFilters(`/statistics/competitions/${competitionId}/team`, { playerIds })
   );
   return response.data;
 }
 
 export async function getTeamTeamStatistics(
   teamId: number,
-  playerIds?: number[]
+  filters?: StatisticsDatasetFilters
 ): Promise<TeamTeamStats> {
-  const response = await apiClient.get(appendPlayerIds(`/statistics/teams/${teamId}/team`, playerIds));
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/teams/${teamId}/team`, filters)
+  );
   return response.data;
 }
 
@@ -137,16 +160,18 @@ export async function getCompetitionStrategyStatistics(
   playerIds?: number[]
 ): Promise<CompetitionStrategyStats> {
   const response = await apiClient.get(
-    appendPlayerIds(`/statistics/competitions/${competitionId}/strategies`, playerIds)
+    appendStatisticsFilters(`/statistics/competitions/${competitionId}/strategies`, { playerIds })
   );
   return response.data;
 }
 
 export async function getTeamStrategyStatistics(
   teamId: number,
-  playerIds?: number[]
+  filters?: StatisticsDatasetFilters
 ): Promise<TeamStrategyStats> {
-  const response = await apiClient.get(appendPlayerIds(`/statistics/teams/${teamId}/strategies`, playerIds));
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/teams/${teamId}/strategies`, filters)
+  );
   return response.data;
 }
 
@@ -172,10 +197,11 @@ export async function downloadCompetitionStatisticsCSV(
 
 export async function downloadTeamStatisticsCSV(
   teamId: number,
-  detailMode: StatisticsExportDetailMode = "summary"
+  detailMode: StatisticsExportDetailMode = "summary",
+  filters?: StatisticsDatasetFilters
 ): Promise<void> {
   await downloadStatisticsCsv(
-    `/exports/teams/${teamId}/csv?detail=${detailMode}`,
+    appendStatisticsFilters(`/exports/teams/${teamId}/csv?detail=${detailMode}`, filters),
     `team-${teamId}-statistics.csv`
   );
 }

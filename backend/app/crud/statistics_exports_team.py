@@ -19,6 +19,7 @@ from app.crud.statistics_exports_sections import (
     append_team_statistics,
 )
 from app.crud.statistics_queries import (
+    filter_points_by_player_ids,
     get_completed_points_for_team,
     get_stoppages_for_points,
     get_team,
@@ -30,23 +31,82 @@ def get_team_statistics_csv(
     db: Session,
     team_id: int,
     detail_mode: Literal["summary", "full"] = "summary",
+    required_player_ids: Optional[List[int]] = None,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
 ) -> Optional[Tuple[str, str]]:
     team = get_team(db, team_id)
     if not team:
         return None
 
-    team_stats = statistics_crud.get_team_team_stats(db, team_id)
-    player_stats = statistics_crud.get_team_player_stats(db, team_id) or []
-    strategy_stats = statistics_crud.get_team_strategy_stats(db, team_id)
-    completed_points = get_completed_points_for_team(db, team_id)
+    team_stats = statistics_crud.get_team_team_stats(
+        db,
+        team_id,
+        required_player_ids=required_player_ids,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+    )
+    player_stats = (
+        statistics_crud.get_team_player_stats(
+            db,
+            team_id,
+            required_player_ids=required_player_ids,
+            competition_ids=competition_ids,
+            game_ids=game_ids,
+        )
+        or []
+    )
+    strategy_stats = statistics_crud.get_team_strategy_stats(
+        db,
+        team_id,
+        required_player_ids=required_player_ids,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+    )
+    completed_points = filter_points_by_player_ids(
+        get_completed_points_for_team(
+            db,
+            team_id,
+            competition_ids=competition_ids,
+            game_ids=game_ids,
+        ),
+        required_player_ids,
+    )
     point_ids = [point.id for point in completed_points]
     stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
-    competitions = sorted(
+    all_competitions = sorted(
         competitions_crud.get_competitions(db, team_id=team_id, skip=0, limit=10000),
         key=lambda competition: competition.start_date,
     )
+    filtered_games = sorted(games_crud.get_games_by_team(db, team_id), key=lambda item: item.date)
+    if competition_ids:
+        competition_ids_set = set(competition_ids)
+        filtered_games = [
+            game for game in filtered_games if game.competition_id in competition_ids_set
+        ]
+    if game_ids:
+        game_ids_set = set(game_ids)
+        filtered_games = [game for game in filtered_games if game.id in game_ids_set]
+
+    if game_ids:
+        represented_competition_ids = {game.competition_id for game in filtered_games}
+        competitions = [
+            competition
+            for competition in all_competitions
+            if competition.id in represented_competition_ids
+        ]
+    elif competition_ids:
+        competition_ids_set = set(competition_ids)
+        competitions = [
+            competition
+            for competition in all_competitions
+            if competition.id in competition_ids_set
+        ]
+    else:
+        competitions = all_competitions
+
     competition_summary: List[Dict] = [
         {
             "name": competition.name,
@@ -58,7 +118,7 @@ def get_team_statistics_csv(
     ]
 
     team_games: List[Dict] = []
-    for game in sorted(games_crud.get_games_by_team(db, team_id), key=lambda item: item.date):
+    for game in filtered_games:
         our_score, opponent_score = games_crud.get_game_score(db, game.id)
         team_games.append(
             {

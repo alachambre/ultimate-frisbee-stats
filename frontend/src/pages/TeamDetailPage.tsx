@@ -113,7 +113,7 @@ export default function TeamDetailPage() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const handleViewPlayerStats = (player: Player) => {
-    navigate(`/statistics?teamId=${team.id}&mode=player&playerId=${player.id}`);
+    navigate(`/statistics?teamId=${team.id}&playerIds=${player.id}`);
   };
   const rosterPlayers = [...menPlayers, ...womenPlayers];
   const handlePlayerCardClick = (playerId: number) => {
@@ -159,7 +159,7 @@ export default function TeamDetailPage() {
               <Button
                 variant="outlined"
                 startIcon={<BarChartIcon />}
-                onClick={() => navigate(`/statistics?teamId=${team.id}&mode=competition`)}
+                onClick={() => navigate(`/statistics?teamId=${team.id}`)}
                 aria-label={t("teams:detail.viewStatistics")}
                 sx={{
                   minWidth: { xs: 40, sm: "auto" },

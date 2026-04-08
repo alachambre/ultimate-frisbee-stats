@@ -37,14 +37,15 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Admin account management lives on `frontend/src/pages/AdminUsersPage.tsx` at `/admin/users`; keep that route strictly admin-only in the UI even before global enforcement is enabled so it matches the backend contract
 - On public or `team_member` surfaces, avoid protected statistics queries when UI enforcement is active; gate those requests before they fire instead of relying on 401/403 handling in the page
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
-- Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (query-driven workflow: `teamId`, `mode=competition|player`, `competitionId`, `gameId`, `playerId` + multi-select `playerIds`)
+- Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (filter-driven workflow: `teamId`, multi-select `competitionIds`, multi-select `gameIds`, multi-select `playerIds`; keep legacy single-value `competitionId`, `gameId`, and `playerId` links backward-compatible when parsing)
 - Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
-- Statistics page layout is split into dedicated components: `StatisticsConfigurationPanel`, `StatisticsSectionContainer`, and `StatisticsSelectionCard` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
+- Statistics page layout is split into dedicated components such as `StatisticsConfigurationPanel` and `StatisticsSectionContainer` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
 - Statistics data/query orchestration lives in `frontend/src/pages/hooks/useStatisticsPageData.ts`; keep `StatisticsPage.tsx` focused on composition/rendering
-- Statistics supports cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
+- Statistics supports dataset filtering by competitions/games plus cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
+- Statistics player filter options are scope-aware: selected competitions/games restrict the list to the union of their rosters, and selected cohort players further narrow options to teammates who shared at least one completed point in the current dataset
 - Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
-- Statistics UX pattern is progressive: sticky team context + branch switch + selectable cards (competition/game/player) + clickable breadcrumb chips for upward navigation
+- Statistics UX pattern is filter-based: sticky team context + multi-select competition/game/player filters + active dataset summary chips; avoid reintroducing the old branch-navigation model
 - Team roster cards on `TeamDetailPage` are click-to-edit; player statistics access is available from `EditPlayerModal` (team scope)
 - Statistics export UI should expose CSV mode selection (`summary` vs `full`) and pass it to backend `detail` query param
 - Live point interruption flow uses stoppages (`call`, `injury`, `timeout`, `other`) with type selection in the record dialog and type display in chronology/cards
@@ -73,7 +74,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable
 - Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
-- Stats endpoints accept optional repeated `player_ids` query params to filter points to cohorts where all selected players were on the point
+- Team stats endpoints accept optional repeated `competition_ids`, `game_ids`, and `player_ids` query params so the statistics page can build filtered datasets without switching endpoint families
 - `crud/games.py:get_game_detail` must return explicit contract fields (no `__dict__` passthrough)
 - Supabase schema changes are SQL-migration-based (`supabase/migrations/`), not `create_all()` based
 
