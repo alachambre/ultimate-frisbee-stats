@@ -17,6 +17,7 @@ import {
   LinearScale,
   PointElement,
   Tooltip,
+  type ChartEvent,
   type ChartDataset,
   type ChartData,
   type ChartOptions,
@@ -115,6 +116,98 @@ function buildSeriesPoints(xValues: number[], yValues: number[]) {
   }));
 }
 
+function getDistanceToSegmentSquared(
+  pointX: number,
+  pointY: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number
+) {
+  const deltaX = endX - startX;
+  const deltaY = endY - startY;
+  const segmentLengthSquared = deltaX * deltaX + deltaY * deltaY;
+
+  if (segmentLengthSquared === 0) {
+    const distanceX = pointX - startX;
+    const distanceY = pointY - startY;
+    return distanceX * distanceX + distanceY * distanceY;
+  }
+
+  const projection = Math.max(
+    0,
+    Math.min(
+      1,
+      ((pointX - startX) * deltaX + (pointY - startY) * deltaY) / segmentLengthSquared
+    )
+  );
+  const projectedX = startX + projection * deltaX;
+  const projectedY = startY + projection * deltaY;
+  const distanceX = pointX - projectedX;
+  const distanceY = pointY - projectedY;
+
+  return distanceX * distanceX + distanceY * distanceY;
+}
+
+function getHoveredDatasetIndex(
+  chart: ChartJS<"line">,
+  event: ChartEvent,
+  datasets: TrendDataset[],
+  thresholdPx = 18
+) {
+  const pointerX = event.x;
+  const pointerY = event.y;
+
+  if (typeof pointerX !== "number" || typeof pointerY !== "number") {
+    return null;
+  }
+
+  const { left, right, top, bottom } = chart.chartArea;
+  if (pointerX < left || pointerX > right || pointerY < top || pointerY > bottom) {
+    return null;
+  }
+
+  const xScale = chart.scales.x;
+  const yScale = chart.scales.y;
+  const thresholdSquared = thresholdPx * thresholdPx;
+  let bestDatasetIndex: number | null = null;
+  let bestDistanceSquared = Number.POSITIVE_INFINITY;
+
+  datasets.forEach((dataset, datasetIndex) => {
+    const points = dataset.data;
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const start = points[index];
+      const end = points[index + 1];
+
+      if (
+        typeof start?.x !== "number" ||
+        typeof start?.y !== "number" ||
+        typeof end?.x !== "number" ||
+        typeof end?.y !== "number"
+      ) {
+        continue;
+      }
+
+      const distanceSquared = getDistanceToSegmentSquared(
+        pointerX,
+        pointerY,
+        xScale.getPixelForValue(start.x),
+        yScale.getPixelForValue(start.y),
+        xScale.getPixelForValue(end.x),
+        yScale.getPixelForValue(end.y)
+      );
+
+      if (distanceSquared < bestDistanceSquared) {
+        bestDistanceSquared = distanceSquared;
+        bestDatasetIndex = datasetIndex;
+      }
+    }
+  });
+
+  return bestDistanceSquared <= thresholdSquared ? bestDatasetIndex : null;
+}
+
 export default function GameTrendsSection({
   timeline,
   isLoading,
@@ -126,6 +219,7 @@ export default function GameTrendsSection({
   const { t, i18n } = useTranslation("statistics");
   const theme = useTheme();
   const chartRef = useRef<ChartJS<"line"> | null>(null);
+  const hoveredDatasetIndexRef = useRef<number | null>(null);
   const [metric, setMetric] = useState<GameTrendMetric>("score");
   const outerSx = embedded ? { p: { xs: 2, sm: 3 } } : { mb: 3, p: { xs: 2, sm: 3 } };
   const isFrench = i18n.language.startsWith("fr");
@@ -171,44 +265,127 @@ export default function GameTrendsSection({
   const pointCount = pointNumbers.length;
   const tickStep = getGameTrendsTickStep(pointCount);
   const maxX = pointNumbers[pointNumbers.length - 1];
+  const xAxisMax = maxX + 0.4;
   const ourSeriesColor = theme.colors.offense.main;
   const opponentSeriesColor = theme.colors.performance.veryLow;
   const breakMarkerFlags = getBreakMarkerFlags(timeline.points);
-  const buildMarkerRadii = (flags: boolean[]) => flags.map((isMarked) => (isMarked ? 7 : 0));
-  const buildMarkerBorders = (flags: boolean[]) => flags.map((isMarked) => (isMarked ? 3 : 0));
-  const buildMarkerColors = (flags: boolean[], color: string) =>
-    flags.map((isMarked) => (isMarked ? color : "transparent"));
+  const subtleOurPointFill = alpha(ourSeriesColor, 0.14);
+  const subtleOpponentPointFill = alpha(opponentSeriesColor, 0.14);
+  const subtleOurPointBorder = alpha(ourSeriesColor, 0.72);
+  const subtleOpponentPointBorder = alpha(opponentSeriesColor, 0.72);
+  const buildMarkerRadii = (flags: boolean[], baseRadius: number) =>
+    flags.map((isMarked, index) => {
+      if (index === 0) {
+        return 0;
+      }
 
-  const breakMarkerRadii = buildMarkerRadii(breakMarkerFlags.ourBreaks);
-  const brokenMarkerRadii = buildMarkerRadii(breakMarkerFlags.opponentBreaks);
-  const breakMarkerBorders = buildMarkerBorders(breakMarkerFlags.ourBreaks);
-  const brokenMarkerBorders = buildMarkerBorders(breakMarkerFlags.opponentBreaks);
-  const breakMarkerBackgrounds = buildMarkerColors(breakMarkerFlags.ourBreaks, ourSeriesColor);
+      return isMarked ? 7 : baseRadius;
+    });
+  const buildMarkerBorders = (flags: boolean[], baseBorderWidth: number) =>
+    flags.map((isMarked, index) => {
+      if (index === 0) {
+        return 0;
+      }
+
+      return isMarked ? 3 : baseBorderWidth;
+    });
+  const buildMarkerColors = (flags: boolean[], highlightedColor: string, baseColor: string) =>
+    flags.map((isMarked, index) => {
+      if (index === 0) {
+        return "transparent";
+      }
+
+      return isMarked ? highlightedColor : baseColor;
+    });
+
+  const breakMarkerRadii = buildMarkerRadii(breakMarkerFlags.ourBreaks, 0);
+  const brokenMarkerRadii = buildMarkerRadii(breakMarkerFlags.opponentBreaks, 0);
+  const breakMarkerBorders = buildMarkerBorders(breakMarkerFlags.ourBreaks, 0);
+  const brokenMarkerBorders = buildMarkerBorders(breakMarkerFlags.opponentBreaks, 0);
+  const breakMarkerBackgrounds = buildMarkerColors(
+    breakMarkerFlags.ourBreaks,
+    ourSeriesColor,
+    "transparent"
+  );
   const brokenMarkerBackgrounds = buildMarkerColors(
     breakMarkerFlags.opponentBreaks,
-    opponentSeriesColor
+    opponentSeriesColor,
+    "transparent"
   );
   const breakMarkerBorderColors = buildMarkerColors(
     breakMarkerFlags.ourBreaks,
-    theme.palette.background.paper
+    theme.palette.background.paper,
+    "transparent"
   );
   const brokenMarkerBorderColors = buildMarkerColors(
     breakMarkerFlags.opponentBreaks,
-    theme.palette.background.paper
+    theme.palette.background.paper,
+    "transparent"
+  );
+  const breakMarkerHoverRadii = buildMarkerRadii(breakMarkerFlags.ourBreaks, 4);
+  const brokenMarkerHoverRadii = buildMarkerRadii(breakMarkerFlags.opponentBreaks, 4);
+  const breakMarkerHoverBorders = buildMarkerBorders(breakMarkerFlags.ourBreaks, 2);
+  const brokenMarkerHoverBorders = buildMarkerBorders(breakMarkerFlags.opponentBreaks, 2);
+  const breakMarkerHoverBackgrounds = buildMarkerColors(
+    breakMarkerFlags.ourBreaks,
+    ourSeriesColor,
+    subtleOurPointFill
+  );
+  const brokenMarkerHoverBackgrounds = buildMarkerColors(
+    breakMarkerFlags.opponentBreaks,
+    opponentSeriesColor,
+    subtleOpponentPointFill
+  );
+  const breakMarkerHoverBorderColors = buildMarkerColors(
+    breakMarkerFlags.ourBreaks,
+    theme.palette.background.paper,
+    subtleOurPointBorder
+  );
+  const brokenMarkerHoverBorderColors = buildMarkerColors(
+    breakMarkerFlags.opponentBreaks,
+    theme.palette.background.paper,
+    subtleOpponentPointBorder
   );
 
   const durationMarkerRadii = pointNumbers.map((_, index) =>
-    breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index] ? 7 : 0
+    index === 0
+      ? 0
+      : breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index]
+        ? 7
+        : 0
   );
   const durationMarkerBorders = pointNumbers.map((_, index) =>
-    breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index] ? 3 : 0
+    breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index]
+      ? 3
+      : 0
   );
   const durationMarkerBackgrounds = pointNumbers.map((_, index) =>
-    breakMarkerFlags.ourBreaks[index]
+    index === 0
+      ? "transparent"
+      : breakMarkerFlags.ourBreaks[index]
       ? ourSeriesColor
       : breakMarkerFlags.opponentBreaks[index]
         ? opponentSeriesColor
         : "transparent"
+  );
+  const durationMarkerHoverRadii = pointNumbers.map((_, index) =>
+    index === 0
+      ? 0
+      : breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index]
+        ? 7
+        : 4
+  );
+  const durationMarkerHoverBorders = pointNumbers.map((_, index) =>
+    breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index] ? 3 : 2
+  );
+  const durationMarkerHoverBackgrounds = pointNumbers.map((_, index) =>
+    index === 0
+      ? "transparent"
+      : breakMarkerFlags.ourBreaks[index]
+      ? ourSeriesColor
+      : breakMarkerFlags.opponentBreaks[index]
+        ? opponentSeriesColor
+        : subtleOurPointFill
   );
   const durationMarkerBorderColors = pointNumbers.map((_, index) => {
     if (breakMarkerFlags.ourBreaks[index]) {
@@ -220,6 +397,17 @@ export default function GameTrendsSection({
     }
 
     return "transparent";
+  });
+  const durationMarkerHoverBorderColors = pointNumbers.map((_, index) => {
+    if (breakMarkerFlags.ourBreaks[index]) {
+      return theme.palette.background.paper;
+    }
+
+    if (breakMarkerFlags.opponentBreaks[index]) {
+      return theme.palette.background.paper;
+    }
+
+    return subtleOurPointBorder;
   });
 
   const chartByMetric: Record<
@@ -249,9 +437,13 @@ export default function GameTrendsSection({
           tension: 0.22,
           pointStyle: "circle",
           pointRadius: durationMarkerRadii,
+          pointHoverRadius: durationMarkerHoverRadii,
           pointBorderWidth: durationMarkerBorders,
+          pointHoverBorderWidth: durationMarkerHoverBorders,
           pointBackgroundColor: durationMarkerBackgrounds,
+          pointHoverBackgroundColor: durationMarkerHoverBackgrounds,
           pointBorderColor: durationMarkerBorderColors,
+          pointHoverBorderColor: durationMarkerHoverBorderColors,
         },
       ],
     },
@@ -273,9 +465,13 @@ export default function GameTrendsSection({
           cubicInterpolationMode: "monotone" as const,
           pointStyle: "circle",
           pointRadius: breakMarkerRadii,
+          pointHoverRadius: breakMarkerHoverRadii,
           pointBorderWidth: breakMarkerBorders,
+          pointHoverBorderWidth: breakMarkerHoverBorders,
           pointBackgroundColor: breakMarkerBackgrounds,
+          pointHoverBackgroundColor: breakMarkerHoverBackgrounds,
           pointBorderColor: breakMarkerBorderColors,
+          pointHoverBorderColor: breakMarkerHoverBorderColors,
         },
         {
           label: opponentSeriesLabel,
@@ -289,9 +485,13 @@ export default function GameTrendsSection({
           cubicInterpolationMode: "monotone" as const,
           pointStyle: "circle",
           pointRadius: brokenMarkerRadii,
+          pointHoverRadius: brokenMarkerHoverRadii,
           pointBorderWidth: brokenMarkerBorders,
+          pointHoverBorderWidth: brokenMarkerHoverBorders,
           pointBackgroundColor: brokenMarkerBackgrounds,
+          pointHoverBackgroundColor: brokenMarkerHoverBackgrounds,
           pointBorderColor: brokenMarkerBorderColors,
+          pointHoverBorderColor: brokenMarkerHoverBorderColors,
         },
       ],
     },
@@ -312,9 +512,13 @@ export default function GameTrendsSection({
           tension: 0.2,
           pointStyle: "circle",
           pointRadius: breakMarkerRadii,
+          pointHoverRadius: breakMarkerHoverRadii,
           pointBorderWidth: breakMarkerBorders,
+          pointHoverBorderWidth: breakMarkerHoverBorders,
           pointBackgroundColor: breakMarkerBackgrounds,
+          pointHoverBackgroundColor: breakMarkerHoverBackgrounds,
           pointBorderColor: breakMarkerBorderColors,
+          pointHoverBorderColor: breakMarkerHoverBorderColors,
         },
         {
           label: opponentSeriesLabel,
@@ -327,15 +531,28 @@ export default function GameTrendsSection({
           tension: 0.2,
           pointStyle: "circle",
           pointRadius: brokenMarkerRadii,
+          pointHoverRadius: brokenMarkerHoverRadii,
           pointBorderWidth: brokenMarkerBorders,
+          pointHoverBorderWidth: brokenMarkerHoverBorders,
           pointBackgroundColor: brokenMarkerBackgrounds,
+          pointHoverBackgroundColor: brokenMarkerHoverBackgrounds,
           pointBorderColor: brokenMarkerBorderColors,
+          pointHoverBorderColor: brokenMarkerHoverBorderColors,
         },
       ],
     },
   } as const;
 
   const selectedChart = chartByMetric[metric];
+  const maxYValue = Math.max(
+    0,
+    ...selectedChart.datasets.flatMap((dataset) =>
+      dataset.data.map((point) => (typeof point?.y === "number" ? point.y : 0))
+    )
+  );
+  const yAxisSuggestedMax = selectedChart.integerYAxis
+    ? maxYValue + 0.6
+    : maxYValue + Math.max(maxYValue * 0.08, 5);
 
   const chartData: ChartData<"line"> = {
     datasets: selectedChart.datasets.map((dataset) => ({
@@ -343,21 +560,108 @@ export default function GameTrendsSection({
       borderWidth: 3,
       pointStyle: dataset.pointStyle ?? "circle",
       pointRadius: dataset.pointRadius ?? 0,
-      pointHoverRadius: 5,
-      pointHitRadius: 14,
+      pointHoverRadius: dataset.pointHoverRadius ?? 5,
+      pointHitRadius: 8,
       pointBorderWidth: dataset.pointBorderWidth ?? 0,
+      pointHoverBorderWidth: dataset.pointHoverBorderWidth ?? dataset.pointBorderWidth ?? 0,
       pointBackgroundColor: dataset.pointBackgroundColor ?? "transparent",
+      pointHoverBackgroundColor:
+        dataset.pointHoverBackgroundColor ?? dataset.pointBackgroundColor ?? "transparent",
       pointBorderColor: dataset.pointBorderColor ?? dataset.borderColor,
+      pointHoverBorderColor:
+        dataset.pointHoverBorderColor ?? dataset.pointBorderColor ?? dataset.borderColor,
       fill: false,
     })),
+  };
+
+  const applyPointVisibility = (chart: ChartJS<"line">, hoveredDatasetIndex: number | null) => {
+    selectedChart.datasets.forEach((_datasetConfig, datasetIndex) => {
+      const dataset = chart.data.datasets[datasetIndex];
+      if (!dataset) {
+        return;
+      }
+
+      const isHoveredDataset = hoveredDatasetIndex === datasetIndex;
+      const showRegularPoints =
+        selectedChart.datasets.length === 1 ? isHoveredDataset : isHoveredDataset;
+
+      const pointRadius =
+        datasetIndex === 0
+          ? showRegularPoints
+            ? breakMarkerHoverRadii
+            : breakMarkerRadii
+          : showRegularPoints
+            ? brokenMarkerHoverRadii
+            : brokenMarkerRadii;
+      const pointBorderWidth =
+        datasetIndex === 0
+          ? showRegularPoints
+            ? breakMarkerHoverBorders
+            : breakMarkerBorders
+          : showRegularPoints
+            ? brokenMarkerHoverBorders
+            : brokenMarkerBorders;
+      const pointBackgroundColor =
+        datasetIndex === 0
+          ? showRegularPoints
+            ? breakMarkerHoverBackgrounds
+            : breakMarkerBackgrounds
+          : showRegularPoints
+            ? brokenMarkerHoverBackgrounds
+            : brokenMarkerBackgrounds;
+      const pointBorderColor =
+        datasetIndex === 0
+          ? showRegularPoints
+            ? breakMarkerHoverBorderColors
+            : breakMarkerBorderColors
+          : showRegularPoints
+            ? brokenMarkerHoverBorderColors
+            : brokenMarkerBorderColors;
+
+      if (selectedChart.datasets.length === 1) {
+        dataset.pointRadius = isHoveredDataset ? durationMarkerHoverRadii : durationMarkerRadii;
+        dataset.pointBorderWidth = isHoveredDataset
+          ? durationMarkerHoverBorders
+          : durationMarkerBorders;
+        dataset.pointBackgroundColor = isHoveredDataset
+          ? durationMarkerHoverBackgrounds
+          : durationMarkerBackgrounds;
+        dataset.pointBorderColor = isHoveredDataset
+          ? durationMarkerHoverBorderColors
+          : durationMarkerBorderColors;
+        return;
+      }
+
+      dataset.pointRadius = pointRadius;
+      dataset.pointBorderWidth = pointBorderWidth;
+      dataset.pointBackgroundColor = pointBackgroundColor;
+      dataset.pointBorderColor = pointBorderColor;
+    });
+
+    chart.update("none");
   };
 
   const chartOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
+    onHover: (event, _elements, chart) => {
+      const nextHoveredDatasetIndex = getHoveredDatasetIndex(
+        chart as ChartJS<"line">,
+        event,
+        selectedChart.datasets
+      );
+      chart.canvas.style.cursor = nextHoveredDatasetIndex !== null ? "pointer" : "default";
+      if (hoveredDatasetIndexRef.current === nextHoveredDatasetIndex) {
+        return;
+      }
+
+      hoveredDatasetIndexRef.current = nextHoveredDatasetIndex;
+      applyPointVisibility(chart as ChartJS<"line">, nextHoveredDatasetIndex);
+    },
     interaction: {
-      mode: "index",
-      intersect: false,
+      mode: "nearest",
+      axis: "x",
+      intersect: true,
     },
     animation: false,
     normalized: true,
@@ -365,7 +669,7 @@ export default function GameTrendsSection({
       x: {
         type: "linear",
         min: 0,
-        max: maxX,
+        max: xAxisMax,
         title: {
           display: true,
           text: t("charts.xAxis"),
@@ -390,6 +694,7 @@ export default function GameTrendsSection({
       },
       y: {
         beginAtZero: true,
+        suggestedMax: yAxisSuggestedMax,
         title: {
           display: true,
           text: selectedChart.yAxisLabel,
@@ -420,7 +725,8 @@ export default function GameTrendsSection({
       },
       tooltip: {
         mode: "index",
-        intersect: false,
+        intersect: true,
+        position: "nearest",
         usePointStyle: true,
         backgroundColor: alpha(theme.palette.background.paper, 0.96),
         titleColor: theme.palette.text.primary,
@@ -460,7 +766,7 @@ export default function GameTrendsSection({
       },
       zoom: {
         limits: {
-          x: { min: 0, max: maxX, minRange: 3 },
+          x: { min: 0, max: xAxisMax, minRange: 3 },
         },
         zoom: {
           wheel: { enabled: true },
@@ -510,6 +816,7 @@ export default function GameTrendsSection({
           onChange={(_event, nextMetric: GameTrendMetric | null) => {
             if (nextMetric) {
               setMetric(nextMetric);
+              hoveredDatasetIndexRef.current = null;
               handleResetZoom();
             }
           }}
