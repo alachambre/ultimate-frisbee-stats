@@ -17,6 +17,8 @@ export interface HistorySummarySnapshot {
   ourScore: number;
   opponentScore: number;
   elapsedSeconds: number | null;
+  offenseElapsedSeconds: number;
+  defenseElapsedSeconds: number;
   offenseTurnovers: TurnoverSplitSnapshot;
   defenseTurnovers: TurnoverSplitSnapshot;
   holdByFieldSide: Record<FieldSideKey, FieldSideMetricSnapshot>;
@@ -35,6 +37,25 @@ function createEmptyMetricSnapshot(): FieldSideMetricSnapshot {
     pointsStarted: 0,
     rate: 0,
   };
+}
+
+function getPointDurationSeconds(point: PointWithPlayers): number {
+  if (typeof point.duration_seconds === "number" && Number.isFinite(point.duration_seconds)) {
+    return Math.max(0, Math.floor(point.duration_seconds));
+  }
+
+  if (!point.start_datetime || !point.end_datetime) {
+    return 0;
+  }
+
+  const startMs = new Date(point.start_datetime).getTime();
+  const endMs = new Date(point.end_datetime).getTime();
+
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor((endMs - startMs) / 1000));
 }
 
 export function buildHistorySummarySnapshot(
@@ -66,6 +87,8 @@ export function buildHistorySummarySnapshot(
 
   let ourScore = 0;
   let opponentScore = 0;
+  let offenseElapsedSeconds = 0;
+  let defenseElapsedSeconds = 0;
   const offenseTurnovers: TurnoverSplitSnapshot = {
     ourTurnovers: 0,
     opponentTurnovers: 0,
@@ -82,9 +105,17 @@ export function buildHistorySummarySnapshot(
       opponentScore += 1;
     }
 
+    const pointDurationSeconds = getPointDurationSeconds(point);
+
     const targetTurnovers = point.starting_on_offense ? offenseTurnovers : defenseTurnovers;
     targetTurnovers.ourTurnovers += point.our_turnovers ?? 0;
     targetTurnovers.opponentTurnovers += point.opponent_turnovers ?? 0;
+
+    if (point.starting_on_offense) {
+      offenseElapsedSeconds += pointDurationSeconds;
+    } else {
+      defenseElapsedSeconds += pointDurationSeconds;
+    }
 
     if (!point.field_side) {
       return;
@@ -115,6 +146,8 @@ export function buildHistorySummarySnapshot(
       completedPoints.length > 0 && Number.isFinite(earliestPointMs)
         ? Math.max(0, Math.floor((snapshotMs - earliestPointMs) / 1000))
         : null,
+    offenseElapsedSeconds,
+    defenseElapsedSeconds,
     offenseTurnovers,
     defenseTurnovers,
     holdByFieldSide,

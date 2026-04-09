@@ -150,18 +150,25 @@ describe("PointHistoryList", () => {
     );
 
     expect(screen.getByText("1 - 1")).toBeInTheDocument();
-    expect(screen.getByText("30:00")).toBeInTheDocument();
-    expect(screen.getByText("Hold by field side")).toBeInTheDocument();
-    expect(screen.getByText("Break by field side")).toBeInTheDocument();
-    expect(screen.getByText("100% (1/1)")).toBeInTheDocument();
-    expect(screen.getByText("0% (0/1)")).toBeInTheDocument();
+    const halftimeCard = screen.getByRole("heading", { level: 6, name: "Half time" }).closest(".MuiCard-root");
+    expect(halftimeCard).not.toBeNull();
 
-    const offenseSection = screen.getByText("Offense").closest("div");
+    const halftimeWithin = within(halftimeCard as HTMLElement);
+    expect(halftimeWithin.getByText("30:00")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("Offense time")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("Defense time")).toBeInTheDocument();
+    expect(halftimeWithin.getAllByText("5:00")).toHaveLength(2);
+    expect(halftimeWithin.getByText("Hold by field side")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("Break by field side")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("100% (1/1)")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("0% (0/1)")).toBeInTheDocument();
+
+    const offenseSection = halftimeWithin.getByText("Offense").closest("div");
     expect(offenseSection).not.toBeNull();
     expect(within(offenseSection as HTMLElement).getByText("1")).toBeInTheDocument();
     expect(within(offenseSection as HTMLElement).getByText("0")).toBeInTheDocument();
 
-    const defenseSection = screen.getByText("Defense").closest("div");
+    const defenseSection = halftimeWithin.getByText("Defense").closest("div");
     expect(defenseSection).not.toBeNull();
     expect(within(defenseSection as HTMLElement).getByText("2")).toBeInTheDocument();
   });

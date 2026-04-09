@@ -134,6 +134,8 @@
     "theyScored": "They scored",
     "startedOn": "Started on",
     "halfTime": "Half time",
+    "offenseTime": "Offense time",
+    "defenseTime": "Defense time",
     "deleteHalfTime": "Delete halftime"
   },
   "status": {

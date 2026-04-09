@@ -223,7 +223,7 @@ export default function HistorySummaryItem<TActionPayload = never>({
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "repeat(2, minmax(0, 1fr))",
-                  sm: "repeat(3, minmax(0, 1fr))",
+                  sm: "repeat(4, minmax(0, 1fr))",
                 },
                 gap: 2,
               }}
@@ -238,6 +238,14 @@ export default function HistorySummaryItem<TActionPayload = never>({
                   value={formatDuration(snapshot.elapsedSeconds)}
                 />
               )}
+              <SummaryMetric
+                label={t("points:history.offenseTime")}
+                value={formatDuration(snapshot.offenseElapsedSeconds)}
+              />
+              <SummaryMetric
+                label={t("points:history.defenseTime")}
+                value={formatDuration(snapshot.defenseElapsedSeconds)}
+              />
             </Box>
 
             <Stack spacing={1.5} sx={{ mt: 2 }}>

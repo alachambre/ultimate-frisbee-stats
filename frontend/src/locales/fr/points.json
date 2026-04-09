@@ -134,6 +134,8 @@
     "theyScored": "Ils ont marqué",
     "startedOn": "Commencé en",
     "halfTime": "Mi-temps",
+    "offenseTime": "Temps en attaque",
+    "defenseTime": "Temps en défense",
     "deleteHalfTime": "Supprimer la mi-temps"
   },
   "status": {
