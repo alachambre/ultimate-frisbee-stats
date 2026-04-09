@@ -37,3 +37,14 @@ class StoppageType(str, Enum):
     injury = "injury"
     timeout = "timeout"
     other = "other"
+
+
+class TurnoverType(str, Enum):
+    defended_pass = "defended_pass"
+    missed_pass = "missed_pass"
+    defended_huck = "defended_huck"
+    missed_huck = "missed_huck"
+    drop = "drop"
+    stall_out = "stall_out"
+    wind = "wind"
+    other = "other"

@@ -25,6 +25,7 @@ def create_turnover(db: Session, turnover: schemas.TurnoverCreate) -> models.Tur
             point_id=turnover.point_id,
             player_id=turnover.player_id,
             timestamp=turnover.timestamp,
+            turnover_type=turnover.turnover_type.value,
             comments=turnover.comments
         )
         db.add(db_turnover)
@@ -76,6 +77,9 @@ def update_turnover(db: Session, turnover_id: int, turnover_update: schemas.Turn
 
             if turnover_update.timestamp is not None:
                 db_turnover.timestamp = turnover_update.timestamp
+
+            if turnover_update.turnover_type is not None:
+                db_turnover.turnover_type = turnover_update.turnover_type.value
 
             if turnover_update.comments is not None:
                 db_turnover.comments = turnover_update.comments

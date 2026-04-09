@@ -11,6 +11,7 @@ def test_create_turnover_with_player(db_session: Session, sample_point: models.P
         point_id=sample_point.id,
         player_id=sample_player.id,
         timestamp=datetime(2024, 1, 15, 10, 5, 0, tzinfo=timezone.utc),
+        turnover_type=schemas.TurnoverType.drop,
         comments="Drop"
     )
     turnover = crud.create_turnover(db_session, turnover_data)
@@ -20,12 +21,13 @@ def test_create_turnover_with_player(db_session: Session, sample_point: models.P
     assert turnover.player_id == sample_player.id
     # SQLite returns naive datetime, compare by replacing tzinfo
     assert turnover.timestamp.replace(tzinfo=timezone.utc) == turnover_data.timestamp
+    assert turnover.turnover_type == "drop"
     assert turnover.comments == "Drop"
     assert turnover.created_at is not None
 
 
-def test_create_turnover_without_player(db_session: Session, sample_point: models.Point):
-    """Test creating a turnover without a player (player_id=None)."""
+def test_create_turnover_without_player_defaults_type_to_other(db_session: Session, sample_point: models.Point):
+    """Test creating a turnover without a player defaults turnover type to other."""
     turnover_data = schemas.TurnoverCreate(
         point_id=sample_point.id,
         player_id=None,
@@ -37,6 +39,7 @@ def test_create_turnover_without_player(db_session: Session, sample_point: model
     assert turnover.id is not None
     assert turnover.point_id == sample_point.id
     assert turnover.player_id is None
+    assert turnover.turnover_type == "other"
     assert turnover.comments == "Team turnover"
 
 
@@ -228,6 +231,23 @@ def test_update_turnover_change_comments(db_session: Session, sample_point: mode
 
     assert updated_turnover is not None
     assert updated_turnover.comments == "Updated comment"
+
+
+def test_update_turnover_change_type(db_session: Session, sample_point: models.Point, sample_player: models.Player):
+    """Test updating a turnover type."""
+    turnover_data = schemas.TurnoverCreate(
+        point_id=sample_point.id,
+        player_id=sample_player.id,
+        timestamp=datetime(2024, 1, 15, 10, 5, 0, tzinfo=timezone.utc),
+        turnover_type=schemas.TurnoverType.missed_pass,
+    )
+    turnover = crud.create_turnover(db_session, turnover_data)
+
+    update_data = schemas.TurnoverUpdate(turnover_type=schemas.TurnoverType.defended_huck)
+    updated_turnover = crud.update_turnover(db_session, turnover.id, update_data)
+
+    assert updated_turnover is not None
+    assert updated_turnover.turnover_type == "defended_huck"
 
 
 def test_update_turnover_invalid_player(db_session: Session, sample_point: models.Point, sample_player: models.Player):

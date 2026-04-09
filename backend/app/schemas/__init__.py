@@ -6,7 +6,15 @@ All schemas are re-exported here for backward compatibility with existing import
     from app import schemas
 """
 
-from .enums import Gender, CompetitionStatus, GameStatus, PointStatus, StrategyCategory, StoppageType
+from .enums import (
+    Gender,
+    CompetitionStatus,
+    GameStatus,
+    PointStatus,
+    StrategyCategory,
+    StoppageType,
+    TurnoverType,
+)
 from .team import Team, TeamCreate, TeamUpdate, TeamWithPlayers
 from .competition import Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, CompetitionWithTeam
 from .player import Player, PlayerCreate, PlayerUpdate
@@ -37,6 +45,7 @@ __all__ = [
     "PointStatus",
     "StrategyCategory",
     "StoppageType",
+    "TurnoverType",
     # Teams
     "Team",
     "TeamCreate",

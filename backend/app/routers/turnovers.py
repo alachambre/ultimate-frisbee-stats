@@ -28,7 +28,7 @@ def create_turnover(
         created_turnover = crud.create_turnover(db, turnover)
         logger.info(
             f"Turnover created: id={created_turnover.id}, point={turnover.point_id}, "
-            f"player={turnover.player_id or 'unassigned'}"
+            f"player={turnover.player_id or 'unassigned'}, type={turnover.turnover_type.value}"
         )
         return created_turnover
     except ValueError as e:

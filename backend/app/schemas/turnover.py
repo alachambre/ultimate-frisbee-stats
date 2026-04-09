@@ -2,9 +2,12 @@ from pydantic import BaseModel, field_serializer
 from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
 
+from .enums import TurnoverType
+
 
 class TurnoverBase(BaseModel):
     player_id: Optional[int] = None  # Optional - may not know who
+    turnover_type: TurnoverType = TurnoverType.other
     comments: Optional[str] = None
 
 
@@ -16,6 +19,7 @@ class TurnoverCreate(TurnoverBase):
 class TurnoverUpdate(BaseModel):
     player_id: Optional[int] = None
     timestamp: Optional[datetime] = None
+    turnover_type: Optional[TurnoverType] = None
     comments: Optional[str] = None
 
 

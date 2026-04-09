@@ -12,6 +12,7 @@ def test_create_turnover_with_player(client: TestClient, sample_point: models.Po
         "point_id": sample_point.id,
         "player_id": sample_player.id,
         "timestamp": "2024-01-15T10:05:00Z",
+        "turnover_type": "drop",
         "comments": "Drop"
     }
 
@@ -22,6 +23,7 @@ def test_create_turnover_with_player(client: TestClient, sample_point: models.Po
     assert data["point_id"] == sample_point.id
     assert data["player_id"] == sample_player.id
     assert data["timestamp"] == "2024-01-15T10:05:00Z"
+    assert data["turnover_type"] == "drop"
     assert data["comments"] == "Drop"
     assert "id" in data
     assert "created_at" in data
@@ -43,7 +45,21 @@ def test_create_turnover_without_player(client: TestClient, sample_point: models
     assert response.status_code == 201
     data = response.json()
     assert data["player_id"] is None
+    assert data["turnover_type"] == "other"
     assert data["comments"] == "Team turnover"
+
+
+def test_create_turnover_invalid_type(client: TestClient, sample_point: models.Point):
+    """Test POST /turnovers with invalid turnover type returns validation error."""
+    turnover_data = {
+        "point_id": sample_point.id,
+        "timestamp": "2024-01-15T10:05:00Z",
+        "turnover_type": "banana",
+    }
+
+    response = client.post("/turnovers", json=turnover_data)
+
+    assert response.status_code == 422
 
 
 def test_create_turnover_invalid_point(client: TestClient):
@@ -169,6 +185,27 @@ def test_update_turnover_change_comments(client: TestClient, sample_point: model
     assert response.status_code == 200
     data = response.json()
     assert data["comments"] == "Updated comment"
+
+
+def test_update_turnover_change_type(client: TestClient, sample_point: models.Point, sample_player: models.Player, db_session: Session):
+    """Test PUT /turnovers/{id} to update turnover type."""
+    turnover_data = schemas.TurnoverCreate(
+        point_id=sample_point.id,
+        player_id=sample_player.id,
+        timestamp=datetime(2024, 1, 15, 10, 5, 0, tzinfo=timezone.utc),
+        turnover_type=schemas.TurnoverType.missed_pass,
+    )
+    turnover = crud.create_turnover(db_session, turnover_data)
+
+    update_data = {
+        "turnover_type": "defended_huck"
+    }
+
+    response = client.put(f"/turnovers/{turnover.id}", json=update_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["turnover_type"] == "defended_huck"
 
 
 def test_update_turnover_invalid_player(client: TestClient, sample_point: models.Point, sample_player: models.Player, db_session: Session):
