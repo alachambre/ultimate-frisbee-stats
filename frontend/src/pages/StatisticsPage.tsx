@@ -224,6 +224,8 @@ export default function StatisticsPage() {
                           isLoading={isLoadingGamePointTimeline}
                           error={gamePointTimelineError}
                           embedded
+                          teamName={selectedSingleGame.team_name}
+                          opponentName={selectedSingleGame.opponent_name}
                         />
                       </Suspense>
                     </>

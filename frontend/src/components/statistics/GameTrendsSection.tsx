@@ -17,6 +17,7 @@ import {
   LinearScale,
   PointElement,
   Tooltip,
+  type ChartDataset,
   type ChartData,
   type ChartOptions,
   type TooltipItem,
@@ -26,7 +27,11 @@ import { Line } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
 import type { GamePointTimeline } from "../../types";
 import LoadingState from "../shared/LoadingState";
-import { getGameTrendsTickStep, prependChartOrigin } from "./gameTrendsLayout";
+import {
+  getBreakMarkerFlags,
+  getGameTrendsTickStep,
+  prependChartOrigin,
+} from "./gameTrendsLayout";
 
 ChartJS.register(LineElement, PointElement, LinearScale, Tooltip, Legend, zoomPlugin);
 
@@ -37,6 +42,57 @@ interface GameTrendsSectionProps {
   isLoading: boolean;
   error?: Error | null;
   embedded?: boolean;
+  teamName?: string;
+  opponentName?: string;
+}
+
+type TrendDataset = ChartDataset<"line", { x: number; y: number }[]>;
+
+interface MarkerLegendItemProps {
+  label: string;
+  color: string;
+}
+
+function SeriesLegendItem({ label, color }: MarkerLegendItemProps) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+      <Box
+        aria-hidden="true"
+        sx={{
+          width: 18,
+          height: 0,
+          borderTop: "3px solid",
+          borderColor: color,
+          borderRadius: 999,
+        }}
+      />
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+    </Box>
+  );
+}
+
+function MarkerLegendItem({ label, color }: MarkerLegendItemProps) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+      <Box
+        aria-hidden="true"
+        sx={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          bgcolor: color,
+          border: "2px solid",
+          borderColor: "background.paper",
+          boxSizing: "content-box",
+        }}
+      />
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+    </Box>
+  );
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -64,12 +120,23 @@ export default function GameTrendsSection({
   isLoading,
   error,
   embedded = false,
+  teamName,
+  opponentName,
 }: GameTrendsSectionProps) {
-  const { t } = useTranslation("statistics");
+  const { t, i18n } = useTranslation("statistics");
   const theme = useTheme();
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const [metric, setMetric] = useState<GameTrendMetric>("score");
   const outerSx = embedded ? { p: { xs: 2, sm: 3 } } : { mb: 3, p: { xs: 2, sm: 3 } };
+  const isFrench = i18n.language.startsWith("fr");
+  const ourSeriesLabel = teamName?.trim() || t("charts.ourScore");
+  const opponentSeriesLabel = opponentName?.trim() || t("charts.opponentScore");
+  const breakMarkerLabel = t("charts.breakMarker", {
+    defaultValue: isFrench ? "Point de break" : "Break point",
+  });
+  const brokenMarkerLabel = t("charts.brokenMarker", {
+    defaultValue: isFrench ? "Point breaké" : "Broken point",
+  });
 
   if (isLoading) {
     return (
@@ -106,8 +173,65 @@ export default function GameTrendsSection({
   const maxX = pointNumbers[pointNumbers.length - 1];
   const ourSeriesColor = theme.colors.offense.main;
   const opponentSeriesColor = theme.colors.performance.veryLow;
+  const breakMarkerFlags = getBreakMarkerFlags(timeline.points);
+  const buildMarkerRadii = (flags: boolean[]) => flags.map((isMarked) => (isMarked ? 7 : 0));
+  const buildMarkerBorders = (flags: boolean[]) => flags.map((isMarked) => (isMarked ? 3 : 0));
+  const buildMarkerColors = (flags: boolean[], color: string) =>
+    flags.map((isMarked) => (isMarked ? color : "transparent"));
 
-  const chartByMetric = {
+  const breakMarkerRadii = buildMarkerRadii(breakMarkerFlags.ourBreaks);
+  const brokenMarkerRadii = buildMarkerRadii(breakMarkerFlags.opponentBreaks);
+  const breakMarkerBorders = buildMarkerBorders(breakMarkerFlags.ourBreaks);
+  const brokenMarkerBorders = buildMarkerBorders(breakMarkerFlags.opponentBreaks);
+  const breakMarkerBackgrounds = buildMarkerColors(breakMarkerFlags.ourBreaks, ourSeriesColor);
+  const brokenMarkerBackgrounds = buildMarkerColors(
+    breakMarkerFlags.opponentBreaks,
+    opponentSeriesColor
+  );
+  const breakMarkerBorderColors = buildMarkerColors(
+    breakMarkerFlags.ourBreaks,
+    theme.palette.background.paper
+  );
+  const brokenMarkerBorderColors = buildMarkerColors(
+    breakMarkerFlags.opponentBreaks,
+    theme.palette.background.paper
+  );
+
+  const durationMarkerRadii = pointNumbers.map((_, index) =>
+    breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index] ? 7 : 0
+  );
+  const durationMarkerBorders = pointNumbers.map((_, index) =>
+    breakMarkerFlags.ourBreaks[index] || breakMarkerFlags.opponentBreaks[index] ? 3 : 0
+  );
+  const durationMarkerBackgrounds = pointNumbers.map((_, index) =>
+    breakMarkerFlags.ourBreaks[index]
+      ? ourSeriesColor
+      : breakMarkerFlags.opponentBreaks[index]
+        ? opponentSeriesColor
+        : "transparent"
+  );
+  const durationMarkerBorderColors = pointNumbers.map((_, index) => {
+    if (breakMarkerFlags.ourBreaks[index]) {
+      return theme.palette.background.paper;
+    }
+
+    if (breakMarkerFlags.opponentBreaks[index]) {
+      return theme.palette.background.paper;
+    }
+
+    return "transparent";
+  });
+
+  const chartByMetric: Record<
+    GameTrendMetric,
+    {
+      title: string;
+      yAxisLabel: string;
+      formatValue: (value: number) => string;
+      integerYAxis: boolean;
+      datasets: TrendDataset[];
+    }
+  > = {
     duration: {
       title: t("charts.duration"),
       yAxisLabel: t("charts.durationYAxis"),
@@ -123,6 +247,11 @@ export default function GameTrendsSection({
             prependChartOrigin(timeline.points.map((point) => point.duration_seconds))
           ),
           tension: 0.22,
+          pointStyle: "circle",
+          pointRadius: durationMarkerRadii,
+          pointBorderWidth: durationMarkerBorders,
+          pointBackgroundColor: durationMarkerBackgrounds,
+          pointBorderColor: durationMarkerBorderColors,
         },
       ],
     },
@@ -133,7 +262,7 @@ export default function GameTrendsSection({
       integerYAxis: true,
       datasets: [
         {
-          label: t("charts.ourScore"),
+          label: ourSeriesLabel,
           borderColor: ourSeriesColor,
           backgroundColor: alpha(ourSeriesColor, 0.16),
           data: buildSeriesPoints(
@@ -142,9 +271,14 @@ export default function GameTrendsSection({
           ),
           tension: 0.28,
           cubicInterpolationMode: "monotone" as const,
+          pointStyle: "circle",
+          pointRadius: breakMarkerRadii,
+          pointBorderWidth: breakMarkerBorders,
+          pointBackgroundColor: breakMarkerBackgrounds,
+          pointBorderColor: breakMarkerBorderColors,
         },
         {
-          label: t("charts.opponentScore"),
+          label: opponentSeriesLabel,
           borderColor: opponentSeriesColor,
           backgroundColor: alpha(opponentSeriesColor, 0.16),
           data: buildSeriesPoints(
@@ -153,6 +287,11 @@ export default function GameTrendsSection({
           ),
           tension: 0.28,
           cubicInterpolationMode: "monotone" as const,
+          pointStyle: "circle",
+          pointRadius: brokenMarkerRadii,
+          pointBorderWidth: brokenMarkerBorders,
+          pointBackgroundColor: brokenMarkerBackgrounds,
+          pointBorderColor: brokenMarkerBorderColors,
         },
       ],
     },
@@ -163,7 +302,7 @@ export default function GameTrendsSection({
       integerYAxis: true,
       datasets: [
         {
-          label: t("charts.ourTurns"),
+          label: ourSeriesLabel,
           borderColor: ourSeriesColor,
           backgroundColor: alpha(ourSeriesColor, 0.16),
           data: buildSeriesPoints(
@@ -171,9 +310,14 @@ export default function GameTrendsSection({
             prependChartOrigin(timeline.points.map((point) => point.our_turnovers))
           ),
           tension: 0.2,
+          pointStyle: "circle",
+          pointRadius: breakMarkerRadii,
+          pointBorderWidth: breakMarkerBorders,
+          pointBackgroundColor: breakMarkerBackgrounds,
+          pointBorderColor: breakMarkerBorderColors,
         },
         {
-          label: t("charts.opponentTurns"),
+          label: opponentSeriesLabel,
           borderColor: opponentSeriesColor,
           backgroundColor: alpha(opponentSeriesColor, 0.16),
           data: buildSeriesPoints(
@@ -181,6 +325,11 @@ export default function GameTrendsSection({
             prependChartOrigin(timeline.points.map((point) => point.opponent_turnovers))
           ),
           tension: 0.2,
+          pointStyle: "circle",
+          pointRadius: brokenMarkerRadii,
+          pointBorderWidth: brokenMarkerBorders,
+          pointBackgroundColor: brokenMarkerBackgrounds,
+          pointBorderColor: brokenMarkerBorderColors,
         },
       ],
     },
@@ -192,9 +341,13 @@ export default function GameTrendsSection({
     datasets: selectedChart.datasets.map((dataset) => ({
       ...dataset,
       borderWidth: 3,
-      pointRadius: 0,
+      pointStyle: dataset.pointStyle ?? "circle",
+      pointRadius: dataset.pointRadius ?? 0,
       pointHoverRadius: 5,
       pointHitRadius: 14,
+      pointBorderWidth: dataset.pointBorderWidth ?? 0,
+      pointBackgroundColor: dataset.pointBackgroundColor ?? "transparent",
+      pointBorderColor: dataset.pointBorderColor ?? dataset.borderColor,
       fill: false,
     })),
   };
@@ -255,7 +408,7 @@ export default function GameTrendsSection({
     },
     plugins: {
       legend: {
-        display: selectedChart.datasets.length > 1,
+        display: false,
         position: "top",
         labels: {
           usePointStyle: true,
@@ -268,6 +421,14 @@ export default function GameTrendsSection({
       tooltip: {
         mode: "index",
         intersect: false,
+        usePointStyle: true,
+        backgroundColor: alpha(theme.palette.background.paper, 0.96),
+        titleColor: theme.palette.text.primary,
+        bodyColor: theme.palette.text.primary,
+        borderColor: alpha(theme.palette.text.primary, 0.12),
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 10,
         callbacks: {
           title: (items: TooltipItem<"line">[]) => {
             const pointValue = items[0]?.parsed.x ?? 0;
@@ -275,6 +436,26 @@ export default function GameTrendsSection({
           },
           label: (item: TooltipItem<"line">) =>
             `${item.dataset.label}: ${selectedChart.formatValue(item.parsed.y ?? 0)}`,
+          labelColor: (item: TooltipItem<"line">) => {
+            const datasetBorderColor = item.dataset.borderColor;
+            const seriesColor =
+              typeof datasetBorderColor === "string"
+                ? datasetBorderColor
+                : Array.isArray(datasetBorderColor) && typeof datasetBorderColor[0] === "string"
+                  ? datasetBorderColor[0]
+                  : theme.palette.text.primary;
+
+            return {
+              borderColor: seriesColor,
+              backgroundColor: seriesColor,
+              borderWidth: 1,
+              borderRadius: 2,
+            };
+          },
+          labelPointStyle: () => ({
+            pointStyle: "line",
+            rotation: 0,
+          }),
         },
       },
       zoom: {
@@ -375,6 +556,32 @@ export default function GameTrendsSection({
           <Button size="small" onClick={handleResetZoom}>
             {t("charts.resetZoom")}
           </Button>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 2.5,
+            mb: 1.5,
+          }}
+        >
+          {selectedChart.datasets.map((dataset) => (
+            <SeriesLegendItem
+              key={dataset.label ?? "series"}
+              label={dataset.label ?? ""}
+              color={typeof dataset.borderColor === "string" ? dataset.borderColor : ourSeriesColor}
+            />
+          ))}
+          <MarkerLegendItem
+            label={breakMarkerLabel}
+            color={ourSeriesColor}
+          />
+          <MarkerLegendItem
+            label={brokenMarkerLabel}
+            color={opponentSeriesColor}
+          />
         </Box>
 
         <Box sx={{ height: 320 }}>

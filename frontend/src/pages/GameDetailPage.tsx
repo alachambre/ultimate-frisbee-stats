@@ -213,6 +213,8 @@ export default function GameDetailPage() {
                 timeline={completedGameTimeline}
                 isLoading={false}
                 embedded
+                teamName={game.team_name}
+                opponentName={game.opponent_name}
               />
             </AccordionDetails>
           </Accordion>
