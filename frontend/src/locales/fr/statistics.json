@@ -89,6 +89,7 @@
     "scoreYAxis": "Score",
     "turnoversYAxis": "Turns",
     "halftime": "Mi-temps",
+    "resetZoom": "R\u00e9initialiser le zoom",
     "empty": "Aucun point complété n'est disponible pour le graphique."
   },
   "teamStats": {

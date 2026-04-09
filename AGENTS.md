@@ -9,7 +9,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Tech Stack
 - Backend: FastAPI + SQLAlchemy + PostgreSQL (Supabase in production, SQLite locally)
-- Frontend: React + TypeScript + Material UI + TanStack Query
+- Frontend: React + TypeScript + Material UI + TanStack Query + Chart.js (game trends)
 - Testing: Pytest (backend), Vitest + MSW + React Testing Library (frontend)
 - Deployment: Render (backend) + Vercel (frontend) + Supabase (database)
 
@@ -44,6 +44,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Statistics supports dataset filtering by competitions/games plus cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
 - Statistics player filter options are scope-aware: selected competitions/games restrict the list to the union of their rosters, and selected cohort players further narrow options to teammates who shared at least one completed point in the current dataset
 - Single-game statistics now include a lazy-loaded `Game trends` chart section fed by `/statistics/games/{game_id}/timeline`; keep chart-specific shaping in that timeline contract instead of piggybacking on game detail payloads
+- `Game trends` charts now render through Chart.js + `react-chartjs-2` with the zoom plugin; keep that charting stack isolated to `frontend/src/components/statistics/GameTrendsSection.tsx` unless there is a deliberate broader charting decision
 - Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
 - Statistics UX pattern is filter-based: sticky team context + multi-select competition/game/player filters + active dataset summary chips; avoid reintroducing the old branch-navigation model

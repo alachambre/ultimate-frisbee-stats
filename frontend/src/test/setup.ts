@@ -1,9 +1,20 @@
-import { afterEach, beforeAll, afterAll } from "vitest";
+import { afterEach, beforeAll, afterAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { setupServer } from "msw/node";
+import { createElement, forwardRef } from "react";
 import { handlers, resetMockData } from "./mocks/handlers";
 import i18n from "../locales";
+
+vi.mock("react-chartjs-2", () => ({
+  Line: forwardRef(function MockLine() {
+    return createElement("div", {
+      "data-testid": "chartjs-line",
+      role: "img",
+      "aria-label": "Chart preview",
+    });
+  }),
+}));
 
 // Set up MSW server
 const server = setupServer(...handlers);

@@ -1,11 +1,11 @@
 const DENSE_TIMELINE_POINT_THRESHOLD = 12;
 
-export function usesScrollableGameTrendsLayout(pointCount: number): boolean {
-  return pointCount > DENSE_TIMELINE_POINT_THRESHOLD;
+export function prependChartOrigin(values: number[], originValue = 0): number[] {
+  return [originValue, ...values];
 }
 
 export function getGameTrendsTickStep(pointCount: number): number {
-  if (pointCount <= 12) {
+  if (pointCount <= DENSE_TIMELINE_POINT_THRESHOLD) {
     return 1;
   }
 
@@ -22,22 +22,4 @@ export function getGameTrendsTickStep(pointCount: number): number {
   }
 
   return 5;
-}
-
-export function getGameTrendsChartWidth(pointCount: number): number | null {
-  if (!usesScrollableGameTrendsLayout(pointCount)) {
-    return null;
-  }
-
-  return Math.max(560, pointCount * 36);
-}
-
-export function shouldShowGameTrendMark(index: number, pointCount: number): boolean {
-  if (!usesScrollableGameTrendsLayout(pointCount)) {
-    return true;
-  }
-
-  const tickStep = getGameTrendsTickStep(pointCount);
-
-  return index === 0 || index === pointCount - 1 || index % tickStep === 0;
 }

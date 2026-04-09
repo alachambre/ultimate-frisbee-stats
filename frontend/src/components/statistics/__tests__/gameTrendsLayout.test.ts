@@ -1,33 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
-  getGameTrendsChartWidth,
   getGameTrendsTickStep,
-  shouldShowGameTrendMark,
-  usesScrollableGameTrendsLayout,
+  prependChartOrigin,
 } from "../gameTrendsLayout";
 
 describe("gameTrendsLayout", () => {
-  it("keeps short timelines in the normal layout", () => {
-    expect(usesScrollableGameTrendsLayout(12)).toBe(false);
-    expect(getGameTrendsChartWidth(12)).toBeNull();
+  it("keeps short timelines on single-step ticks", () => {
     expect(getGameTrendsTickStep(12)).toBe(1);
   });
 
-  it("switches dense timelines to a scrollable wider chart", () => {
-    expect(usesScrollableGameTrendsLayout(18)).toBe(true);
-    expect(getGameTrendsChartWidth(18)).toBe(648);
+  it("increases tick thinning once timelines get denser", () => {
     expect(getGameTrendsTickStep(18)).toBe(2);
   });
 
-  it("reduces visible marks for dense timelines while keeping endpoints", () => {
-    expect(shouldShowGameTrendMark(0, 25)).toBe(true);
-    expect(shouldShowGameTrendMark(24, 25)).toBe(true);
-    expect(shouldShowGameTrendMark(3, 25)).toBe(true);
-    expect(shouldShowGameTrendMark(1, 25)).toBe(false);
+  it("increases tick thinning as point counts grow", () => {
+    expect(getGameTrendsTickStep(25)).toBe(3);
+    expect(getGameTrendsTickStep(40)).toBe(4);
+    expect(getGameTrendsTickStep(60)).toBe(5);
   });
 
-  it("keeps marks visible for shorter timelines", () => {
-    expect(shouldShowGameTrendMark(1, 8)).toBe(true);
-    expect(shouldShowGameTrendMark(6, 8)).toBe(true);
+  it("can prepend a zero origin to cumulative series", () => {
+    expect(prependChartOrigin([1, 3, 4])).toEqual([0, 1, 3, 4]);
+    expect(prependChartOrigin([2, 5], 7)).toEqual([7, 2, 5]);
   });
 });
