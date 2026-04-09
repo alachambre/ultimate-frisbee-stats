@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Button,
   Container,
@@ -12,6 +15,7 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { deleteGame, deleteHalftime, finishGame, updateGame } from "../services";
 import { deletePoint } from "../services/points";
 import { GameHeaderActions } from "../components/games/detail/GameHeaderActions";
@@ -34,7 +38,7 @@ import { useGameDetailPageData } from "./hooks/useGameDetailPageData";
 
 export default function GameDetailPage() {
   const auth = useAuth();
-  const { t } = useTranslation(["games", "players", "common"]);
+  const { t } = useTranslation(["games", "players", "common", "statistics"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -186,11 +190,32 @@ export default function GameDetailPage() {
         comments={game.comments}
       >
         {completedGameTimeline && completedGameTimeline.points.length > 0 && (
-          <GameTrendsSection
-            timeline={completedGameTimeline}
-            isLoading={false}
-            embedded
-          />
+          <Accordion
+            disableGutters
+            elevation={0}
+            square
+            sx={{
+              "&::before": { display: "none" },
+              bgcolor: "transparent",
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="game-trends-content"
+              id="game-trends-header"
+            >
+              <Typography variant="subtitle2" fontWeight="bold">
+                {t("statistics:charts.title")}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 0, pt: 0, pb: 0 }}>
+              <GameTrendsSection
+                timeline={completedGameTimeline}
+                isLoading={false}
+                embedded
+              />
+            </AccordionDetails>
+          </Accordion>
         )}
       </GameScorePanel>
 

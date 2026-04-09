@@ -117,6 +117,7 @@ describe("GameDetailPage", () => {
   });
 
   it("shows game trends in the score overview for completed public games", async () => {
+    const user = userEvent.setup();
     await updateGame(1, { status: "started" });
 
     const point = await startPoint({
@@ -146,7 +147,14 @@ describe("GameDetailPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/game trends/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /game trends/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole("button", { name: /score progression/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /game trends/i }));
+
+    await waitFor(() => {
       expect(screen.getByRole("button", { name: /score progression/i })).toHaveAttribute(
         "aria-pressed",
         "true"

@@ -13,6 +13,12 @@ import { ChartsReferenceLine, LineChart } from "@mui/x-charts";
 import { useTranslation } from "react-i18next";
 import type { GamePointTimeline } from "../../types";
 import LoadingState from "../shared/LoadingState";
+import {
+  getGameTrendsChartWidth,
+  getGameTrendsTickStep,
+  shouldShowGameTrendMark,
+  usesScrollableGameTrendsLayout,
+} from "./gameTrendsLayout";
 
 type GameTrendMetric = "duration" | "score" | "turnovers";
 
@@ -77,16 +83,22 @@ export default function GameTrendsSection({
   }
 
   const xValues = timeline.points.map((point) => point.point_number);
+  const pointCount = timeline.points.length;
+  const usesScrollableLayout = usesScrollableGameTrendsLayout(pointCount);
+  const tickStep = getGameTrendsTickStep(pointCount);
+  const chartWidth = getGameTrendsChartWidth(pointCount);
   const halftimeMarkerX =
     timeline.halftime_after_point_number != null &&
     timeline.halftime_after_point_number < timeline.points[timeline.points.length - 1].point_number
       ? timeline.halftime_after_point_number + 0.5
       : null;
   const ourSeriesColor = theme.colors.offense.main;
-  const opponentSeriesColor = theme.palette.secondary.main;
+  const opponentSeriesColor = theme.colors.performance.veryLow;
+  const showTickLabel = (_value: number, index: number) =>
+    index === 0 || index === pointCount - 1 || index % tickStep === 0;
 
   const commonSeriesConfig = {
-    showMark: true,
+    showMark: ({ index }: { index: number }) => shouldShowGameTrendMark(index, pointCount),
   };
 
   const chartByMetric = {
@@ -170,31 +182,40 @@ export default function GameTrendsSection({
           </Typography>
         </Box>
 
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={metric}
-          onChange={(_event, nextMetric: GameTrendMetric | null) => {
-            if (nextMetric) {
-              setMetric(nextMetric);
-            }
-          }}
-          aria-label={t("charts.metricLabel")}
+        <Box
           sx={{
-            flexWrap: "wrap",
-            gap: 1,
-            "& .MuiToggleButtonGroup-grouped": {
-              borderRadius: 999,
-              border: "1px solid",
-              borderColor: "divider",
-              px: 1.5,
-            },
+            width: { xs: "100%", sm: "auto" },
+            overflowX: { xs: "auto", sm: "visible" },
+            overflowY: "hidden",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          <ToggleButton value="score">{t("charts.score")}</ToggleButton>
-          <ToggleButton value="duration">{t("charts.duration")}</ToggleButton>
-          <ToggleButton value="turnovers">{t("charts.turnovers")}</ToggleButton>
-        </ToggleButtonGroup>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={metric}
+            onChange={(_event, nextMetric: GameTrendMetric | null) => {
+              if (nextMetric) {
+                setMetric(nextMetric);
+              }
+            }}
+            aria-label={t("charts.metricLabel")}
+            sx={{
+              flexWrap: { xs: "nowrap", sm: "wrap" },
+              "& .MuiToggleButtonGroup-grouped": {
+                borderRadius: 999,
+                border: "1px solid",
+                borderColor: "divider",
+                px: 1.5,
+                whiteSpace: "nowrap",
+              },
+            }}
+          >
+            <ToggleButton value="score">{t("charts.score")}</ToggleButton>
+            <ToggleButton value="duration">{t("charts.duration")}</ToggleButton>
+            <ToggleButton value="turnovers">{t("charts.turnovers")}</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
 
       <Box
@@ -209,52 +230,65 @@ export default function GameTrendsSection({
         <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1.5 }}>
           {selectedChart.title}
         </Typography>
-        <LineChart
-          height={320}
-          margin={{ left: 56, right: 20, top: 20, bottom: 42 }}
-          grid={{ horizontal: true, vertical: false }}
-          xAxis={[
-            {
-              data: xValues,
-              scaleType: "linear",
-              label: t("charts.xAxis"),
-              tickMinStep: 1,
-              valueFormatter: (value: number) => String(value),
-              min: Math.max(0.5, xValues[0] - 0.5),
-              max: xValues[xValues.length - 1] + 0.5,
-            },
-          ]}
-          yAxis={[ 
-            {
-              label: selectedChart.yAxisLabel,
-              valueFormatter:
-                metric === "duration"
-                  ? (value: number) => formatDuration(Math.round(value))
-                  : (value: number) => String(Math.round(value)),
-            },
-          ]}
-          series={selectedChart.series}
-          hideLegend={selectedChart.series.length === 1}
+        <Box
           sx={{
-            "& .MuiChartsAxis-label": {
-              fill: theme.palette.text.secondary,
-            },
+            overflowX: usesScrollableLayout ? "auto" : "visible",
+            overflowY: "hidden",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          {halftimeMarkerX != null && (
-            <ChartsReferenceLine
-              x={halftimeMarkerX}
-              label={t("charts.halftime")}
-              lineStyle={{
-                stroke: theme.palette.divider,
-                strokeDasharray: "6 4",
+          <Box sx={{ minWidth: chartWidth ?? "100%" }}>
+            <LineChart
+              {...(chartWidth ? { width: chartWidth } : {})}
+              height={320}
+              margin={{ left: 56, right: 20, top: 20, bottom: 42 }}
+              grid={{ horizontal: true, vertical: false }}
+              xAxis={[
+                {
+                  data: xValues,
+                  scaleType: "linear",
+                  label: t("charts.xAxis"),
+                  tickMinStep: 1,
+                  tickInterval: showTickLabel,
+                  tickLabelInterval: showTickLabel,
+                  valueFormatter: (value: number) => String(value),
+                  min: Math.max(0.5, xValues[0] - 0.5),
+                  max: xValues[xValues.length - 1] + 0.5,
+                },
+              ]}
+              yAxis={[
+                {
+                  label: selectedChart.yAxisLabel,
+                  valueFormatter:
+                    metric === "duration"
+                      ? (value: number) => formatDuration(Math.round(value))
+                      : (value: number) => String(Math.round(value)),
+                },
+              ]}
+              series={selectedChart.series}
+              hideLegend={selectedChart.series.length === 1}
+              sx={{
+                "& .MuiChartsAxis-label": {
+                  fill: theme.palette.text.secondary,
+                },
               }}
-              labelStyle={{
-                fill: theme.palette.text.secondary,
-              }}
-            />
-          )}
-        </LineChart>
+            >
+              {halftimeMarkerX != null && (
+                <ChartsReferenceLine
+                  x={halftimeMarkerX}
+                  label={t("charts.halftime")}
+                  lineStyle={{
+                    stroke: theme.palette.divider,
+                    strokeDasharray: "6 4",
+                  }}
+                  labelStyle={{
+                    fill: theme.palette.text.secondary,
+                  }}
+                />
+              )}
+            </LineChart>
+          </Box>
+        </Box>
       </Box>
     </Paper>
   );
