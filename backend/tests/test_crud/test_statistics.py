@@ -2,11 +2,14 @@
 Tests for statistics CRUD operations.
 """
 import pytest
+from datetime import datetime, timezone
+from app import models
 
 from app.crud.statistics import (
     get_competition_player_stats,
     get_competition_team_stats,
     get_competition_strategy_stats,
+    get_game_point_timeline,
     get_team_player_stats,
     get_team_team_stats,
     get_team_strategy_stats,
@@ -18,6 +21,50 @@ from tests.builders import (
     PointBuilder,
     PlayerBuilder,
 )
+
+
+def test_get_game_point_timeline_returns_cumulative_score_and_halftime_marker(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+    base_time = datetime(2024, 1, 1, 10, 0, tzinfo=timezone.utc)
+
+    point1 = PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).start_at(base_time).offense().won().with_duration(45).with_turnover(20).complete()
+    point2 = PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).start_at(base_time.replace(minute=5)).defense().lost().with_duration(80).with_turnover(40).complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(3).start_at(base_time.replace(minute=10)).offense().won().with_duration(60).complete()
+
+    halftime_timestamp = datetime(2024, 1, 1, 10, 3, tzinfo=timezone.utc)
+    db_session.add(
+        models.Halftime(
+            game_id=scenario.game.id,
+            halftime_timestamp=halftime_timestamp,
+        )
+    )
+    db_session.commit()
+
+    timeline = get_game_point_timeline(db_session, scenario.game.id)
+
+    assert timeline is not None
+    assert timeline["game_id"] == scenario.game.id
+    assert timeline["halftime_after_point_number"] == 1
+    assert [point["point_number"] for point in timeline["points"]] == [1, 2, 3]
+    assert [(point["our_score_after"], point["opponent_score_after"]) for point in timeline["points"]] == [
+        (1, 0),
+        (1, 1),
+        (2, 1),
+    ]
+    assert timeline["points"][0]["duration_seconds"] == 45
+    assert timeline["points"][0]["our_turnovers"] == 1
+    assert timeline["points"][1]["opponent_turnovers"] == 1
 
 
 def test_get_competition_team_stats_not_found(db_session):

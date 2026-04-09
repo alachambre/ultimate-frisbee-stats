@@ -49,6 +49,168 @@ def test_get_live_game_statistics_game_not_found(client: TestClient):
     assert response.json()["detail"] == "Game not found"
 
 
+def test_get_game_point_timeline_success(
+    client: TestClient,
+    sample_game: models.Game,
+    sample_players: list[models.Player],
+    db_session: Session,
+):
+    """Game timeline should expose completed points with cumulative score and halftime marker."""
+    sample_game.players.extend(sample_players)
+    db_session.commit()
+
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 1, 30, tzinfo=timezone.utc),
+        field_side="table_left",
+    )
+    point1.players.extend(sample_players[:7])
+    db_session.add(point1)
+    db_session.flush()
+    db_session.add(
+        models.Turnover(
+            point_id=point1.id,
+            timestamp=datetime(2024, 1, 1, 10, 0, 45, tzinfo=timezone.utc),
+        )
+    )
+
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 4, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+        field_side="table_right",
+    )
+    point2.players.extend(sample_players[:7])
+    db_session.add(point2)
+    db_session.flush()
+    db_session.add(
+        models.Turnover(
+            point_id=point2.id,
+            timestamp=datetime(2024, 1, 1, 10, 4, 30, tzinfo=timezone.utc),
+        )
+    )
+
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 8, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 9, 0, tzinfo=timezone.utc),
+        field_side="table_left",
+    )
+    point3.players.extend(sample_players[:7])
+    db_session.add(point3)
+
+    db_session.add(
+        models.Halftime(
+            game_id=sample_game.id,
+            halftime_timestamp=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
+        )
+    )
+    db_session.commit()
+
+    response = client.get(f"/statistics/games/{sample_game.id}/timeline")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["game_id"] == sample_game.id
+    assert data["halftime_after_point_number"] == 1
+    assert [point["point_number"] for point in data["points"]] == [1, 2, 3]
+    assert data["points"][0]["duration_seconds"] == 90
+    assert data["points"][0]["our_turnovers"] == 1
+    assert data["points"][0]["opponent_turnovers"] == 0
+    assert data["points"][1]["our_turnovers"] == 0
+    assert data["points"][1]["opponent_turnovers"] == 1
+    assert [(point["our_score_after"], point["opponent_score_after"]) for point in data["points"]] == [
+        (1, 0),
+        (1, 1),
+        (2, 1),
+    ]
+
+
+def test_get_game_point_timeline_filters_visible_points_by_selected_players(
+    client: TestClient,
+    sample_game: models.Game,
+    sample_team: models.Team,
+    db_session: Session,
+):
+    """Filtered timeline should keep only matching points while preserving real game score after each point."""
+    players = [
+        models.Player(name=f"Player {index}", number=index, gender="M" if index <= 4 else "W", team_id=sample_team.id)
+        for index in range(1, 9)
+    ]
+    db_session.add_all(players)
+    db_session.commit()
+    sample_game.players.extend(players)
+    db_session.commit()
+
+    point1 = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+    )
+    point1.players.extend(players[:7])
+    db_session.add(point1)
+
+    point2 = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 3, 0, tzinfo=timezone.utc),
+    )
+    point2.players.extend([players[0], *players[2:8]])
+    db_session.add(point2)
+
+    point3 = models.Point(
+        game_id=sample_game.id,
+        point_number=3,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 4, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 5, 0, tzinfo=timezone.utc),
+    )
+    point3.players.extend([players[0], players[1], *players[3:8]])
+    db_session.add(point3)
+    db_session.commit()
+
+    response = client.get(
+        f"/statistics/games/{sample_game.id}/timeline",
+        params=[("player_ids", players[0].id), ("player_ids", players[1].id)],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert [point["point_number"] for point in data["points"]] == [1, 3]
+    assert data["points"][1]["our_score_after"] == 2
+    assert data["points"][1]["opponent_score_after"] == 1
+
+
+def test_get_game_point_timeline_game_not_found(client: TestClient):
+    response = client.get("/statistics/games/99999/timeline")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Game not found"
+
+
 def test_get_live_game_statistics_empty_game(client: TestClient, sample_game: models.Game, sample_player: models.Player, db_session: Session):
     """Test game with players but no completed points"""
     # Add player to game but don't create any points

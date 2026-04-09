@@ -71,6 +71,26 @@
     "offense": "Attaque",
     "defense": "Défense"
   },
+  "charts": {
+    "title": "Tendances du match",
+    "description": "Explorez l'évolution point par point du match sélectionné.",
+    "loading": "Chargement du graphique...",
+    "metricLabel": "Métrique du graphique",
+    "duration": "Durée du point",
+    "score": "Progression du score",
+    "turnovers": "Turns par point",
+    "durationSeries": "Durée du point",
+    "ourScore": "Notre score",
+    "opponentScore": "Score adverse",
+    "ourTurns": "Nos turns",
+    "opponentTurns": "Turns adverses",
+    "xAxis": "Point",
+    "durationYAxis": "Durée",
+    "scoreYAxis": "Score",
+    "turnoversYAxis": "Turns",
+    "halftime": "Mi-temps",
+    "empty": "Aucun point complété n'est disponible pour le graphique."
+  },
   "teamStats": {
     "title": "Statistiques d'équipe",
     "overview": "Vue d'ensemble",

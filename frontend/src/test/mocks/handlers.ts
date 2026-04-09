@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate, GamePointTimeline } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -301,6 +301,123 @@ function buildCsvExportResponse(
       "Content-Disposition": `attachment; filename="${scope}-${id}-statistics.csv"`,
     },
   });
+}
+
+function countTurnoversByPossession(
+  startingOnOffense: boolean,
+  pointTurnovers: TurnoverWithPlayer[]
+) {
+  let ourTurnovers = 0;
+  let opponentTurnovers = 0;
+
+  pointTurnovers.forEach((_turnover, index) => {
+    const turnoverNumber = index + 1;
+    if (startingOnOffense) {
+      if (turnoverNumber % 2 === 1) {
+        ourTurnovers += 1;
+      } else {
+        opponentTurnovers += 1;
+      }
+      return;
+    }
+
+    if (turnoverNumber % 2 === 1) {
+      opponentTurnovers += 1;
+    } else {
+      ourTurnovers += 1;
+    }
+  });
+
+  return { ourTurnovers, opponentTurnovers };
+}
+
+function getPointTimestamp(point: PointWithPlayers): number {
+  const reference = point.end_datetime ?? point.start_datetime ?? point.created_at;
+  const parsed = new Date(reference).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getPointDurationSeconds(point: PointWithPlayers): number {
+  if (typeof point.duration_seconds === "number") {
+    return point.duration_seconds;
+  }
+
+  if (!point.start_datetime || !point.end_datetime) {
+    return 0;
+  }
+
+  const startMs = new Date(point.start_datetime).getTime();
+  const endMs = new Date(point.end_datetime).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor((endMs - startMs) / 1000));
+}
+
+function buildGamePointTimelineResponse(gameId: number, requiredPlayerIds: number[]): GamePointTimeline {
+  const completedPoints = points
+    .filter((point) => point.game_id === gameId && point.status === "completed")
+    .slice()
+    .sort((left, right) => left.point_number - right.point_number || getPointTimestamp(left) - getPointTimestamp(right));
+
+  const visiblePoints = completedPoints.filter((point) => {
+    if (requiredPlayerIds.length === 0) {
+      return true;
+    }
+
+    const pointPlayerIds = new Set(point.players.map((player) => player.id));
+    return requiredPlayerIds.every((playerId) => pointPlayerIds.has(playerId));
+  });
+
+  let ourScore = 0;
+  let opponentScore = 0;
+  const scoreAfterByPointId = new Map<number, { our: number; opponent: number }>();
+  completedPoints.forEach((point) => {
+    if (point.won) {
+      ourScore += 1;
+    } else {
+      opponentScore += 1;
+    }
+    scoreAfterByPointId.set(point.id, { our: ourScore, opponent: opponentScore });
+  });
+
+  const halftime = halftimes.find((entry) => entry.game_id === gameId);
+  const halftimeTimestamp = halftime ? new Date(halftime.halftime_timestamp).getTime() : null;
+  const pointsBeforeHalftime =
+    halftimeTimestamp == null
+      ? []
+      : completedPoints.filter((point) => getPointTimestamp(point) <= halftimeTimestamp);
+  const halftimeAfterPointNumber =
+    pointsBeforeHalftime.length > 0
+      ? pointsBeforeHalftime[pointsBeforeHalftime.length - 1].point_number
+      : null;
+
+  return {
+    game_id: gameId,
+    halftime_after_point_number: halftimeAfterPointNumber,
+    points: visiblePoints.map((point) => {
+      const pointTurnovers = turnovers
+        .filter((turnover) => turnover.point_id === point.id)
+        .slice()
+        .sort((left, right) => new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime());
+      const turnoverCounts = countTurnoversByPossession(point.starting_on_offense, pointTurnovers);
+      const scoreAfter = scoreAfterByPointId.get(point.id) ?? { our: 0, opponent: 0 };
+
+      return {
+        point_id: point.id,
+        point_number: point.point_number,
+        starting_on_offense: point.starting_on_offense,
+        won: point.won ?? false,
+        field_side: point.field_side ?? null,
+        duration_seconds: getPointDurationSeconds(point),
+        our_turnovers: turnoverCounts.ourTurnovers,
+        opponent_turnovers: turnoverCounts.opponentTurnovers,
+        our_score_after: scoreAfter.our,
+        opponent_score_after: scoreAfter.opponent,
+      };
+    }),
+  };
 }
 
 export const handlers = [
@@ -1578,6 +1695,19 @@ export const handlers = [
     const gamePlayerIds = gamePlayers.get(gameId) || [];
     const gamePlayers_list = players.filter((p) => gamePlayerIds.includes(p.id));
     return HttpResponse.json(buildEmptyPlayerStatsForPlayers(gamePlayers_list));
+  }),
+
+  // GET /statistics/games/:gameId/timeline - Get point timeline for charts
+  http.get(`${BASE_URL}/statistics/games/:gameId/timeline`, ({ params, request }) => {
+    const gameId = Number(params.gameId);
+    const game = games.find((entry) => entry.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    const requiredPlayerIds = parseRepeatedIds(request.url, "player_ids");
+    return HttpResponse.json(buildGamePointTimelineResponse(gameId, requiredPlayerIds));
   }),
 
   // GET /statistics/games/:gameId/team - Get team statistics

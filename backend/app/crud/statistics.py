@@ -2,6 +2,7 @@
 Statistics CRUD operations (facade).
 """
 
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 from sqlalchemy.orm import Session
@@ -11,6 +12,8 @@ from app.crud.statistics_calculations import (
     build_game_strategy_stats,
     build_game_team_stats,
     build_live_player_stats,
+    calculate_point_duration_seconds,
+    count_turnovers_by_possession,
     build_team_team_stats,
 )
 from app.crud.statistics_queries import (
@@ -63,6 +66,42 @@ def _get_scope_turnovers(db: Session, points: List) -> Dict[int, List]:
 
 def _get_scope_stoppages(db: Session, points: List) -> Dict[int, List]:
     return get_stoppages_for_points(db, _get_point_ids(points))
+
+
+def _sort_points_for_timeline(points: List) -> List:
+    def point_sort_key(point) -> tuple:
+        timestamp = point.end_datetime or point.start_datetime or point.created_at
+        return (
+            point.point_number,
+            timestamp or datetime.min,
+            point.id,
+        )
+
+    return sorted(points, key=point_sort_key)
+
+
+def _get_point_reference_timestamp(point) -> Optional[datetime]:
+    return point.end_datetime or point.start_datetime or point.created_at
+
+
+def _get_halftime_after_point_number(all_completed_points: List, halftime) -> Optional[int]:
+    if halftime is None:
+        return None
+
+    halftime_timestamp = halftime.halftime_timestamp
+    points_before_halftime = [
+        point.point_number
+        for point in all_completed_points
+        if (
+            (reference_timestamp := _get_point_reference_timestamp(point)) is not None
+            and reference_timestamp <= halftime_timestamp
+        )
+    ]
+
+    if not points_before_halftime:
+        return 0
+
+    return max(points_before_halftime)
 
 
 def _build_scope_player_stats(
@@ -204,6 +243,66 @@ def get_live_game_player_stats(
         required_player_ids=required_player_ids,
     )
     return player_stats or []
+
+
+def get_game_point_timeline(
+    db: Session,
+    game_id: int,
+    required_player_ids: Optional[List[int]] = None,
+) -> Optional[Dict]:
+    """Return a point-by-point timeline payload for a single game."""
+    game = get_game(db, game_id)
+    if not game:
+        return None
+
+    all_completed_points = _sort_points_for_timeline(get_completed_points(db, game_id))
+    filtered_points = filter_points_by_player_ids(all_completed_points, required_player_ids)
+    filtered_turnovers_by_point = _get_scope_turnovers(db, filtered_points)
+
+    cumulative_scores_by_point_id: Dict[int, tuple[int, int]] = {}
+    our_score = 0
+    opponent_score = 0
+    for point in all_completed_points:
+        if point.won is True:
+            our_score += 1
+        else:
+            opponent_score += 1
+        cumulative_scores_by_point_id[point.id] = (our_score, opponent_score)
+
+    timeline_points = []
+    for point in filtered_points:
+        turnovers = filtered_turnovers_by_point.get(point.id, [])
+        our_turnovers, opponent_turnovers = count_turnovers_by_possession(
+            point.starting_on_offense,
+            turnovers,
+        )
+        score_after = cumulative_scores_by_point_id.get(point.id, (0, 0))
+        duration_seconds = (
+            calculate_point_duration_seconds(point)
+            if point.start_datetime and point.end_datetime
+            else 0
+        )
+        timeline_points.append({
+            "point_id": point.id,
+            "point_number": point.point_number,
+            "starting_on_offense": point.starting_on_offense,
+            "won": point.won is True,
+            "field_side": point.field_side,
+            "duration_seconds": duration_seconds,
+            "our_turnovers": our_turnovers,
+            "opponent_turnovers": opponent_turnovers,
+            "our_score_after": score_after[0],
+            "opponent_score_after": score_after[1],
+        })
+
+    return {
+        "game_id": game_id,
+        "halftime_after_point_number": _get_halftime_after_point_number(
+            all_completed_points,
+            game.halftime,
+        ),
+        "points": timeline_points,
+    }
 
 
 def get_competition_player_stats(

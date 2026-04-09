@@ -220,3 +220,30 @@ class CompetitionStrategyStats(StrategyStatsBase):
 class TeamStrategyStats(StrategyStatsBase):
     """Strategy statistics for a team across all competitions"""
     team_id: int
+
+
+class GamePointTimelinePoint(BaseModel):
+    """Point-level timeline entry for a game trends chart."""
+    point_id: int
+    point_number: int
+    starting_on_offense: bool
+    won: bool
+    field_side: Optional[str]
+    duration_seconds: int
+    our_turnovers: int
+    opponent_turnovers: int
+    our_score_after: int
+    opponent_score_after: int
+
+    class Config:
+        from_attributes = True
+
+
+class GamePointTimeline(BaseModel):
+    """Point-by-point timeline payload for a single game."""
+    game_id: int
+    halftime_after_point_number: Optional[int]
+    points: list[GamePointTimelinePoint]
+
+    class Config:
+        from_attributes = True

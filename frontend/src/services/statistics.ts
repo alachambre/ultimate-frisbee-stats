@@ -1,5 +1,6 @@
 import { apiClient } from "./api";
 import type {
+  GamePointTimeline,
   PlayerGameStats,
   GameTeamStats,
   CompetitionTeamStats,
@@ -111,6 +112,16 @@ export async function getGameStrategyStatistics(
 ): Promise<GameStrategyStats> {
   const response = await apiClient.get(
     appendStatisticsFilters(`/statistics/games/${gameId}/strategies`, { playerIds })
+  );
+  return response.data;
+}
+
+export async function getGamePointTimeline(
+  gameId: number,
+  playerIds?: number[]
+): Promise<GamePointTimeline> {
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/games/${gameId}/timeline`, { playerIds })
   );
   return response.data;
 }

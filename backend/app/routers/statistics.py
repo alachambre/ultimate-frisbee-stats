@@ -126,6 +126,29 @@ def get_game_team_statistics(
     return stats
 
 
+@router.get("/games/{game_id}/timeline", response_model=schemas.GamePointTimeline)
+def get_game_point_timeline(
+    game_id: int,
+    player_ids: Optional[List[int]] = Query(default=None),
+    db: Session = Depends(get_db)
+):
+    """
+    Get point-by-point timeline data for a game.
+    Returns completed points ordered by point number, with duration, turnovers,
+    and cumulative score after each point. Player filters limit the visible
+    points to those where all selected players were on the line together.
+    """
+    timeline = crud.get_game_point_timeline(
+        db,
+        game_id,
+        required_player_ids=_normalize_player_ids(player_ids),
+    )
+    if not timeline:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    return timeline
+
+
 @router.get("/competitions/{competition_id}/team", response_model=schemas.CompetitionTeamStats)
 def get_competition_team_statistics(
     competition_id: int,

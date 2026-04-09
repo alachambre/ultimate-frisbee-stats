@@ -43,6 +43,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Statistics data/query orchestration lives in `frontend/src/pages/hooks/useStatisticsPageData.ts`; keep `StatisticsPage.tsx` focused on composition/rendering
 - Statistics supports dataset filtering by competitions/games plus cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
 - Statistics player filter options are scope-aware: selected competitions/games restrict the list to the union of their rosters, and selected cohort players further narrow options to teammates who shared at least one completed point in the current dataset
+- Single-game statistics now include a lazy-loaded `Game trends` chart section fed by `/statistics/games/{game_id}/timeline`; keep chart-specific shaping in that timeline contract instead of piggybacking on game detail payloads
 - Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
 - Statistics UX pattern is filter-based: sticky team context + multi-select competition/game/player filters + active dataset summary chips; avoid reintroducing the old branch-navigation model
@@ -75,6 +76,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
 - Team stats endpoints accept optional repeated `competition_ids`, `game_ids`, and `player_ids` query params so the statistics page can build filtered datasets without switching endpoint families
+- Stats endpoints expose a single-game point timeline (`/statistics/games/{game_id}/timeline`) for chart visualizations such as point duration, score progression, and turns per point
 - `crud/games.py:get_game_detail` must return explicit contract fields (no `__dict__` passthrough)
 - Supabase schema changes are SQL-migration-based (`supabase/migrations/`), not `create_all()` based
 

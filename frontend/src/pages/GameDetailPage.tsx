@@ -18,6 +18,7 @@ import { GameHeaderActions } from "../components/games/detail/GameHeaderActions"
 import { GameHistorySection } from "../components/games/detail/GameHistorySection";
 import { GameRosterDialog } from "../components/games/detail/GameRosterDialog";
 import { GameScorePanel } from "../components/games/detail/GameScorePanel";
+import GameTrendsSection from "../components/statistics/GameTrendsSection";
 import AddPlayersToGameModal from "../components/modals/AddPlayersToGameModal";
 import EditGameModal from "../components/modals/EditGameModal";
 import EditPointDialog from "../components/modals/EditPointDialog";
@@ -28,6 +29,7 @@ import PermissionNotice from "../components/shared/PermissionNotice";
 import type { Halftime, PointWithPlayers } from "../types";
 import { shouldEnforcePermissions, useAuth } from "../auth";
 import { queryKeys } from "../utils/queryKeys";
+import { buildGamePointTimelineFromPoints } from "../utils/gameTimeline";
 import { useGameDetailPageData } from "./hooks/useGameDetailPageData";
 
 export default function GameDetailPage() {
@@ -138,6 +140,11 @@ export default function GameDetailPage() {
     deleteHalftimeMutation.mutate(halftime.id);
   };
 
+  const completedGameTimeline =
+    game.status === "ended"
+      ? buildGamePointTimelineFromPoints(game.id, game.points, game.halftime)
+      : undefined;
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <GameHeaderActions
@@ -177,7 +184,15 @@ export default function GameDetailPage() {
         startDatetime={game.start_datetime}
         endDatetime={game.end_datetime}
         comments={game.comments}
-      />
+      >
+        {completedGameTimeline && completedGameTimeline.points.length > 0 && (
+          <GameTrendsSection
+            timeline={completedGameTimeline}
+            isLoading={false}
+            embedded
+          />
+        )}
+      </GameScorePanel>
 
       {competition && (
         <GameRosterDialog

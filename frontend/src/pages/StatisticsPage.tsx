@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Alert, Box, Container, Divider, Paper, Typography } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,8 @@ import CompetitionStatisticsTabs from "../components/statistics/CompetitionStati
 import StatisticsSectionContainer from "../components/statistics/StatisticsSectionContainer";
 import type { GameWithScore } from "../types";
 import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
+
+const GameTrendsSection = lazy(() => import("../components/statistics/GameTrendsSection"));
 
 function buildScopeOverview(games: GameWithScore[]) {
   const endedGames = games.filter((game) => game.status === "ended");
@@ -58,6 +60,9 @@ export default function StatisticsPage() {
     scopeError,
     canExport,
     shouldShowFieldSideStats,
+    gamePointTimeline,
+    isLoadingGamePointTimeline,
+    gamePointTimelineError,
 
     teamStats,
     teamPlayerStats,
@@ -182,34 +187,46 @@ export default function StatisticsPage() {
               <>
                 <Paper sx={{ mb: 3 }}>
                   {selectedSingleGame ? (
-                    <Box p={4} textAlign="center">
-                      <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
-                        <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {selectedSingleGame.competition_name}
-                        </Typography>
-                      </Box>
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
-                        {selectedSingleGame.status === "ended"
-                          ? t("games:detail.finalScore")
-                          : t("games:detail.score")}
-                      </Typography>
-                      <Typography variant="h2" fontWeight="bold">
-                        {selectedSingleGame.our_score} - {selectedSingleGame.opponent_score}
-                      </Typography>
-
-                      {selectedSingleGame.start_datetime && (
-                        <Box mt={2}>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
-                            {t("games:detail.gameDuration")}
+                    <>
+                      <Box p={4} textAlign="center">
+                        <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+                          <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {selectedSingleGame.competition_name}
                           </Typography>
-                          <GameTimer
-                            startDatetime={selectedSingleGame.start_datetime}
-                            endDatetime={selectedSingleGame.end_datetime}
-                          />
                         </Box>
-                      )}
-                    </Box>
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                          {selectedSingleGame.status === "ended"
+                            ? t("games:detail.finalScore")
+                            : t("games:detail.score")}
+                        </Typography>
+                        <Typography variant="h2" fontWeight="bold">
+                          {selectedSingleGame.our_score} - {selectedSingleGame.opponent_score}
+                        </Typography>
+
+                        {selectedSingleGame.start_datetime && (
+                          <Box mt={2}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              {t("games:detail.gameDuration")}
+                            </Typography>
+                            <GameTimer
+                              startDatetime={selectedSingleGame.start_datetime}
+                              endDatetime={selectedSingleGame.end_datetime}
+                            />
+                          </Box>
+                        )}
+                      </Box>
+
+                      <Divider />
+                      <Suspense fallback={<LoadingState showColdStartHint={false} />}>
+                        <GameTrendsSection
+                          timeline={gamePointTimeline}
+                          isLoading={isLoadingGamePointTimeline}
+                          error={gamePointTimelineError}
+                          embedded
+                        />
+                      </Suspense>
+                    </>
                   ) : (
                     <Box p={4} textAlign="center">
                       <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>

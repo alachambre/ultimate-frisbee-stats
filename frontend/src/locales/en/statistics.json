@@ -71,6 +71,26 @@
     "offense": "Offense",
     "defense": "Defense"
   },
+  "charts": {
+    "title": "Game trends",
+    "description": "Explore the point-by-point evolution of the selected game.",
+    "loading": "Loading chart data...",
+    "metricLabel": "Chart metric",
+    "duration": "Point duration",
+    "score": "Score progression",
+    "turnovers": "Turns per point",
+    "durationSeries": "Point duration",
+    "ourScore": "Our score",
+    "opponentScore": "Opponent score",
+    "ourTurns": "Our turns",
+    "opponentTurns": "Opponent turns",
+    "xAxis": "Point",
+    "durationYAxis": "Duration",
+    "scoreYAxis": "Score",
+    "turnoversYAxis": "Turns",
+    "halftime": "Half time",
+    "empty": "No completed points are available for charting yet."
+  },
   "teamStats": {
     "title": "Team statistics",
     "overview": "Overview",

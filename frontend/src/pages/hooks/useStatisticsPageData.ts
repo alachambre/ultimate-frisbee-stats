@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllGames, getCompetitions, getTeams } from "../../services";
 import {
   downloadTeamStatisticsCSV,
+  getGamePointTimeline,
   getTeamPlayerStatistics,
   getTeamStrategyStatistics,
   getTeamTeamStatistics,
@@ -278,6 +279,16 @@ export function useStatisticsPageData() {
     enabled: teamId !== undefined,
   });
 
+  const {
+    data: gamePointTimeline,
+    isLoading: isLoadingGamePointTimeline,
+    error: gamePointTimelineError,
+  } = useQuery({
+    queryKey: queryKeys.gamePointTimeline(selectedGame?.id ?? 0, playerIds),
+    queryFn: () => getGamePointTimeline(selectedGame!.id, playerIds),
+    enabled: selectedGame !== undefined,
+  });
+
   const playerStatsById = useMemo(() => {
     const map = new Map<number, PlayerGameStats>();
     for (const playerStat of teamPlayerStats ?? []) {
@@ -465,5 +476,8 @@ export function useStatisticsPageData() {
     teamStats,
     teamPlayerStats,
     teamStrategyStats,
+    gamePointTimeline,
+    isLoadingGamePointTimeline,
+    gamePointTimelineError,
   };
 }

@@ -21,6 +21,8 @@ export const queryKeys = {
   activePoint: (gameId: number) => ["activePoint", gameId] as const,
   liveStats: (gameId: number, playerIds?: number[]) =>
     ["liveStats", gameId, normalizeIds(playerIds)] as const,
+  gamePointTimeline: (gameId: number, playerIds?: number[]) =>
+    ["gamePointTimeline", gameId, normalizeIds(playerIds)] as const,
   gameTeamStatistics: (gameId: number, playerIds?: number[]) =>
     ["gameTeamStatistics", gameId, normalizeIds(playerIds)] as const,
   gameStrategyStatistics: (gameId: number, playerIds?: number[]) =>

@@ -531,3 +531,22 @@ export interface CompetitionStrategyStats extends StrategyStatsBase {
 export interface TeamStrategyStats extends StrategyStatsBase {
   team_id: number;
 }
+
+export interface GamePointTimelinePoint {
+  point_id: number;
+  point_number: number;
+  starting_on_offense: boolean;
+  won: boolean;
+  field_side?: FieldSide | null;
+  duration_seconds: number;
+  our_turnovers: number;
+  opponent_turnovers: number;
+  our_score_after: number;
+  opponent_score_after: number;
+}
+
+export interface GamePointTimeline {
+  game_id: number;
+  halftime_after_point_number?: number | null;
+  points: GamePointTimelinePoint[];
+}

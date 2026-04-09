@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { createTeam, createCompetition, createGame, createPlayer, finishGame, updateGame } from "../../services";
+import { createTeam, createCompetition, createGame, createPlayer, createTurnover, finishGame, finishPoint, startPoint, updateGame, updatePoint } from "../../services";
 import { addPlayersToRoster } from "../../services/competitions";
 import { addPlayersToGame } from "../../services/games";
 import GameDetailPage from "../GameDetailPage";
@@ -114,6 +114,44 @@ describe("GameDetailPage", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /start point/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /half time/i })).not.toBeInTheDocument();
+  });
+
+  it("shows game trends in the score overview for completed public games", async () => {
+    await updateGame(1, { status: "started" });
+
+    const point = await startPoint({
+      game_id: 1,
+      starting_on_offense: true,
+      start_datetime: "2024-01-15T10:00:00Z",
+    });
+    await updatePoint(point.id, { status: "running" });
+    await createTurnover({
+      point_id: point.id,
+      timestamp: "2024-01-15T10:00:25Z",
+    });
+    await finishPoint(point.id, {
+      won: true,
+      end_datetime: "2024-01-15T10:01:10Z",
+    });
+    await finishGame(1);
+
+    render(<GameDetailPage />, {
+      auth: {
+        role: "public",
+        enforcementMode: "enforced",
+        isAuthenticated: false,
+        hasAppAccess: false,
+        isConfigured: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/game trends/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /score progression/i })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+    });
   });
 
   it("edits game successfully", async () => {

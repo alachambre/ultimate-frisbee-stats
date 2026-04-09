@@ -1,4 +1,5 @@
 import CommentIcon from "@mui/icons-material/Comment";
+import type { ReactNode } from "react";
 import { Box, Divider, Paper, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import GameTimer from "../GameTimer";
@@ -11,6 +12,7 @@ interface GameScorePanelProps {
   startDatetime?: string | null;
   endDatetime?: string | null;
   comments?: string | null;
+  children?: ReactNode;
 }
 
 export function GameScorePanel({
@@ -21,6 +23,7 @@ export function GameScorePanel({
   startDatetime,
   endDatetime,
   comments,
+  children,
 }: GameScorePanelProps) {
   const { t } = useTranslation(["games"]);
 
@@ -81,6 +84,13 @@ export function GameScorePanel({
           </Box>
         )}
       </Box>
+
+      {children && (
+        <>
+          <Divider />
+          {children}
+        </>
+      )}
     </Paper>
   );
 }
