@@ -403,7 +403,7 @@ export default function LivePointTracker({
 
       {!readOnly && currentPoint && (
         <AddCommentDialog
-          key={`comment-${currentPoint.id}`}
+          key={`comment-${currentPoint.id}-${currentPoint.comments ?? "empty"}`}
           open={isCommentDialogOpen}
           onClose={() => setIsCommentDialogOpen(false)}
           point={currentPoint}

@@ -49,7 +49,7 @@ export default function AddCommentDialog({
   });
 
   const handleClose = () => {
-    setComments("");
+    setComments(point.comments || "");
     updateMutation.reset();
     onClose();
   };
