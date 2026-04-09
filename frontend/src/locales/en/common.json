@@ -174,6 +174,12 @@
     "title": "Monkey Statistics",
     "subtitle": "Track your team's performance, game by game, point by point",
     "byline": "Developped by Monkey Grenoble",
+    "serverStatus": {
+      "wakingTitle": "Waking up the server",
+      "wakingDescription": "The backend is starting up. This can take a little while on the free plan, but opening the home page has already triggered the wake-up request.",
+      "unavailableTitle": "Server unavailable",
+      "unavailableDescription": "The backend did not respond yet. Please wait a moment and refresh if needed."
+    },
     "cards": {
       "teams": {
         "title": "Manage Teams",

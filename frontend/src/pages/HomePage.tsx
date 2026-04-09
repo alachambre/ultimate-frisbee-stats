@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
+  Alert,
+  AlertTitle,
   Container,
   Typography,
   Grid,
@@ -16,11 +20,38 @@ import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../auth";
 import { APP_MONKEY_EMOJI } from "../constants/branding";
+import { getApiHealthStatus } from "../services";
+import { queryKeys } from "../utils/queryKeys";
+
+const SERVER_WAKE_NOTICE_DELAY_MS = 1200;
 
 export default function HomePage() {
   const auth = useAuth();
   const { t } = useTranslation("common");
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const [showServerWakeNotice, setShowServerWakeNotice] = useState(false);
+  const healthCheckQuery = useQuery({
+    queryKey: queryKeys.health,
+    queryFn: getApiHealthStatus,
+    retry: false,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (!healthCheckQuery.isPending) {
+      setShowServerWakeNotice(false);
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShowServerWakeNotice(true);
+    }, SERVER_WAKE_NOTICE_DELAY_MS);
+
+    return () => window.clearTimeout(timerId);
+  }, [healthCheckQuery.isPending]);
+
+  const showWakingAlert = healthCheckQuery.isPending && showServerWakeNotice;
+  const showUnavailableAlert = healthCheckQuery.isError;
   const cards = [
     ...((!shouldProtectUi || auth.capabilities.canEditData)
       ? [
@@ -82,6 +113,20 @@ export default function HomePage() {
           {t("home.byline")}
         </Typography>
       </Box>
+
+      {showWakingAlert && (
+        <Alert severity="info" sx={{ mb: 4 }} data-testid="home-server-wakeup-alert">
+          <AlertTitle>{t("home.serverStatus.wakingTitle")}</AlertTitle>
+          {t("home.serverStatus.wakingDescription")}
+        </Alert>
+      )}
+
+      {showUnavailableAlert && (
+        <Alert severity="warning" sx={{ mb: 4 }} data-testid="home-server-unavailable-alert">
+          <AlertTitle>{t("home.serverStatus.unavailableTitle")}</AlertTitle>
+          {t("home.serverStatus.unavailableDescription")}
+        </Alert>
+      )}
 
       <Grid
         container

@@ -29,6 +29,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
 - Route pages outside the landing shell are lazy-loaded from `frontend/src/App.tsx`; preserve route-level code splitting for heavier screens instead of reintroducing eager page imports
+- Home page proactively pings backend `GET /health` to wake the Render free-tier service and show a cold-start/unavailable notice; preserve that lightweight check when refining landing-page UX
 - Auth foundation lives under `frontend/src/auth/`; use the shared roles `public`, `team_member`, `team_analyst`, `admin` and capability helpers there instead of ad hoc UI checks
 - Frontend auth API bootstrap entrypoint is `GET /auth/me`; auth consumption should build on that contract rather than duplicating role resolution logic client-side
 - Frontend session bootstrap now flows through `AuthProvider` + Supabase Auth + `/auth/me`; keep `AuthProvider` inside `QueryClientProvider` so auth changes can invalidate React Query caches safely
@@ -68,6 +69,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Backend user management endpoints live under `/users`, use `require_admin_strict`, and rely on Supabase Auth admin APIs through the service role key; keep those flows rollout-independent and backend-enforced
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
+- Backend exposes public `GET /health` for lightweight readiness checks and frontend cold-start wake-up behavior; keep it fast and unauthenticated
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`
 - Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)

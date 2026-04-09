@@ -11,6 +11,8 @@ from app.database import SessionLocal
 from app.routers import auth, teams, players, games, points, competitions, lines, strategies, stoppages, turnovers, statistics, exports, halftimes, users
 from app.logging_config import setup_logging, get_logger
 
+APP_VERSION = "1.0.0"
+
 # Initialize logging
 setup_logging()
 logger = get_logger("main")
@@ -18,7 +20,7 @@ logger = get_logger("main")
 app = FastAPI(
     title="Ultimate Frisbee Stats API",
     description="API for tracking ultimate frisbee team statistics",
-    version="1.0.0"
+    version=APP_VERSION
 )
 
 # CORS middleware to allow frontend to communicate with backend
@@ -89,7 +91,16 @@ def shutdown_event():
 
 @app.get("/")
 def root():
-    return {"message": "Ultimate Frisbee Stats API", "version": "1.0.0"}
+    return {"message": "Ultimate Frisbee Stats API", "version": APP_VERSION}
+
+
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "service": "ultimate-frisbee-stats-api",
+        "version": APP_VERSION,
+    }
 
 
 # Include all routers

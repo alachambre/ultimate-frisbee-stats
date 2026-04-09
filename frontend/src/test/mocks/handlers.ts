@@ -421,6 +421,14 @@ function buildGamePointTimelineResponse(gameId: number, requiredPlayerIds: numbe
 }
 
 export const handlers = [
+  http.get(`${BASE_URL}/health`, () =>
+    HttpResponse.json({
+      status: "ok",
+      service: "ultimate-frisbee-stats-api",
+      version: "1.0.0",
+    })
+  ),
+
   // GET /teams - List all teams
   http.get(`${BASE_URL}/teams`, () => {
     // Include players for each team

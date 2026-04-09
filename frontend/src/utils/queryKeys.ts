@@ -9,6 +9,7 @@ function normalizeIds(ids?: number[]): string {
 }
 
 export const queryKeys = {
+  health: ["health"] as const,
   competitions: ["competitions"] as const,
   competition: (competitionId: number) => ["competition", competitionId] as const,
   competitionPlayers: (competitionId: number) =>
