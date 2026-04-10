@@ -13,6 +13,7 @@ import {
   TURNOVER_RATE_VALUE_STOPS,
 } from "./statValueColors";
 import TurnoverCountSummary from "./TurnoverCountSummary";
+import TurnoverTypeStatsSection from "./TurnoverTypeStatsSection";
 
 interface PlayerScopeStatisticsProps {
   playerName: string;
@@ -255,6 +256,10 @@ export default function PlayerScopeStatistics({
             </Typography>
           </Grid>
         </Grid>
+      </Paper>
+
+      <Paper sx={{ p: 3, mt: 3 }}>
+        <TurnoverTypeStatsSection turnoverTypeStats={stats.turnover_type_stats} />
       </Paper>
     </Box>
   );

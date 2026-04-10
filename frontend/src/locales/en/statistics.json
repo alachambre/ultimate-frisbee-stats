@@ -125,6 +125,17 @@
     "leftSide": "Left side",
     "rightSide": "Right side"
   },
+  "turnoverTypeStats": {
+    "title": "Turnover types",
+    "allPoints": "All points",
+    "startedOnOffense": "Started on offense",
+    "startedOnDefense": "Started on defense",
+    "ourPossessionTurnovers": "We lost possession",
+    "opponentPossessionTurnovers": "Opponent lost possession",
+    "turnoverCountSingle": "1 turnover",
+    "turnoverCountPlural": "{{count}} turnovers",
+    "emptyBucket": "No turnovers recorded in this bucket."
+  },
   "strategyStats": {
     "title": "Strategies statistics",
     "offenseStrategies": "Offense Strategies",

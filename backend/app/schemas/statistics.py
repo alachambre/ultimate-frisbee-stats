@@ -5,6 +5,58 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+class TurnoverTypeCount(BaseModel):
+    """Count and percentage for one turnover type inside a bucket."""
+    count: int
+    percentage: float
+
+    class Config:
+        from_attributes = True
+
+
+class TurnoverTypeDistribution(BaseModel):
+    """Turnover-type counts for all supported turnover categories."""
+    defended_pass: TurnoverTypeCount
+    missed_pass: TurnoverTypeCount
+    defended_huck: TurnoverTypeCount
+    missed_huck: TurnoverTypeCount
+    drop: TurnoverTypeCount
+    stall_out: TurnoverTypeCount
+    miscommunication: TurnoverTypeCount
+    other: TurnoverTypeCount
+
+    class Config:
+        from_attributes = True
+
+
+class TurnoverTypeBucket(BaseModel):
+    """Turnover-type totals and distribution for one possession bucket."""
+    total_turnovers: int
+    by_type: TurnoverTypeDistribution
+
+    class Config:
+        from_attributes = True
+
+
+class TurnoverTypePhaseStats(BaseModel):
+    """Turnover-type stats split by who lost possession."""
+    our_possession_turnovers: TurnoverTypeBucket
+    opponent_possession_turnovers: TurnoverTypeBucket
+
+    class Config:
+        from_attributes = True
+
+
+class TurnoverTypeStats(BaseModel):
+    """Turnover-type stats across all points, O-start points, and D-start points."""
+    all_points: TurnoverTypePhaseStats
+    started_on_offense: TurnoverTypePhaseStats
+    started_on_defense: TurnoverTypePhaseStats
+
+    class Config:
+        from_attributes = True
+
+
 class PlayerOffenseStats(BaseModel):
     """Offensive statistics for a player"""
     points_played: int
@@ -47,6 +99,7 @@ class PlayerGameStats(BaseModel):
     player_number: Optional[int]  # Jersey number can be None
     points_played: int  # Number of completed points played
     effective_time_seconds: int  # Total effective time (point duration - stoppage durations)
+    turnover_type_stats: TurnoverTypeStats
     offense: PlayerOffenseStats
     defense: PlayerDefenseStats
 
@@ -143,6 +196,7 @@ class FieldSideStats(BaseModel):
 class TeamStatsBase(BaseModel):
     """Common offense/defense statistics payload shared across scopes"""
     total_completed_points: int
+    turnover_type_stats: TurnoverTypeStats
     offense: OffenseStats
     defense: DefenseStats
     field_side_stats: FieldSideStats

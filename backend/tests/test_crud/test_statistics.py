@@ -14,6 +14,7 @@ from app.crud.statistics import (
     get_team_team_stats,
     get_team_strategy_stats,
 )
+from app.crud.statistics_calculations import build_turnover_type_stats
 from tests.builders import (
     CompetitionBuilder,
     GameBuilder,
@@ -21,6 +22,79 @@ from tests.builders import (
     PointBuilder,
     PlayerBuilder,
 )
+
+
+def test_build_turnover_type_stats_counts_types_by_bucket_and_percentage(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    point1 = (
+        PointBuilder(db_session, scenario.game.id, player_ids)
+        .number(1).offense().won()
+        .with_turnover_type(10, "defended_pass")
+        .with_turnover_type(20, "drop")
+        .complete()
+    )
+    point2 = (
+        PointBuilder(db_session, scenario.game.id, player_ids)
+        .number(2).defense().won()
+        .with_turnover_type(10, "missed_huck")
+        .with_turnover_type(20, "stall_out")
+        .complete()
+    )
+    point3 = (
+        PointBuilder(db_session, scenario.game.id, player_ids)
+        .number(3).defense().lost()
+        .with_turnover_type(10, "miscommunication")
+        .complete()
+    )
+
+    turnover_type_stats = build_turnover_type_stats(
+        [point1, point2, point3],
+        {
+            point1.id: point1.turnovers,
+            point2.id: point2.turnovers,
+            point3.id: point3.turnovers,
+        },
+    )
+
+    assert turnover_type_stats["all_points"]["our_possession_turnovers"]["total_turnovers"] == 2
+    assert turnover_type_stats["all_points"]["our_possession_turnovers"]["by_type"]["defended_pass"]["count"] == 1
+    assert turnover_type_stats["all_points"]["our_possession_turnovers"]["by_type"]["stall_out"]["count"] == 1
+    assert turnover_type_stats["all_points"]["our_possession_turnovers"]["by_type"]["defended_pass"]["percentage"] == pytest.approx(0.5, rel=1e-6)
+
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 3
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["by_type"]["drop"]["count"] == 1
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["by_type"]["missed_huck"]["count"] == 1
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["by_type"]["miscommunication"]["count"] == 1
+
+    assert turnover_type_stats["started_on_offense"]["our_possession_turnovers"]["total_turnovers"] == 1
+    assert turnover_type_stats["started_on_offense"]["our_possession_turnovers"]["by_type"]["defended_pass"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+    assert turnover_type_stats["started_on_offense"]["opponent_possession_turnovers"]["by_type"]["drop"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+
+    assert turnover_type_stats["started_on_defense"]["our_possession_turnovers"]["total_turnovers"] == 1
+    assert turnover_type_stats["started_on_defense"]["our_possession_turnovers"]["by_type"]["stall_out"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+    assert turnover_type_stats["started_on_defense"]["opponent_possession_turnovers"]["total_turnovers"] == 2
+    assert turnover_type_stats["started_on_defense"]["opponent_possession_turnovers"]["by_type"]["missed_huck"]["percentage"] == pytest.approx(0.5, rel=1e-6)
+    assert turnover_type_stats["started_on_defense"]["opponent_possession_turnovers"]["by_type"]["miscommunication"]["percentage"] == pytest.approx(0.5, rel=1e-6)
+
+
+def test_build_turnover_type_stats_returns_zeroed_distribution_for_empty_dataset():
+    turnover_type_stats = build_turnover_type_stats([], {})
+
+    for phase in turnover_type_stats.values():
+        for bucket in phase.values():
+            assert bucket["total_turnovers"] == 0
+            for turnover_type in bucket["by_type"].values():
+                assert turnover_type["count"] == 0
+                assert turnover_type["percentage"] == 0.0
 
 
 def test_get_game_point_timeline_returns_cumulative_score_and_halftime_marker(db_session):
@@ -259,6 +333,39 @@ def test_get_team_team_stats_aggregates_turnover_totals(db_session):
     assert stats["defense"]["opponent_turnovers"] == 1
 
 
+def test_get_team_team_stats_exposes_turnover_type_distributions(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won() \
+        .with_turnover_type(10, "defended_pass") \
+        .with_turnover_type(20, "drop") \
+        .complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won() \
+        .with_turnover_type(10, "miscommunication") \
+        .complete()
+
+    stats = get_team_team_stats(db_session, scenario.team.id)
+
+    assert stats is not None
+    assert stats["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["total_turnovers"] == 1
+    assert stats["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["defended_pass"]["count"] == 1
+    assert stats["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 2
+    assert stats["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["drop"]["count"] == 1
+    assert stats["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["miscommunication"]["count"] == 1
+    assert stats["turnover_type_stats"]["started_on_offense"]["opponent_possession_turnovers"]["by_type"]["drop"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+    assert stats["turnover_type_stats"]["started_on_defense"]["opponent_possession_turnovers"]["by_type"]["miscommunication"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+
+
 def test_get_team_team_stats_calculates_defense_conversion_rates(db_session):
     scenario = (
         GameScenarioBuilder(db_session)
@@ -353,6 +460,40 @@ def test_get_team_player_stats_counts_turnovers_while_player_is_on_field(db_sess
     assert first_player["offense"]["opponent_turnovers"] == 1
     assert first_player["defense"]["our_turnovers"] == 0
     assert first_player["defense"]["opponent_turnovers"] == 1
+
+
+def test_get_team_player_stats_exposes_on_field_turnover_type_distributions(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won() \
+        .with_turnover_type(10, "defended_huck") \
+        .complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().lost() \
+        .with_turnover_type(10, "missed_pass") \
+        .with_turnover_type(20, "drop") \
+        .complete()
+
+    stats = get_team_player_stats(db_session, scenario.team.id)
+
+    assert stats is not None
+    first_player = stats[0]
+    assert first_player["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["total_turnovers"] == 2
+    assert first_player["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["defended_huck"]["count"] == 1
+    assert first_player["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["drop"]["count"] == 1
+    assert first_player["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["missed_pass"]["count"] == 1
+    assert first_player["turnover_type_stats"]["started_on_offense"]["our_possession_turnovers"]["by_type"]["defended_huck"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+    assert first_player["turnover_type_stats"]["started_on_defense"]["our_possession_turnovers"]["by_type"]["drop"]["percentage"] == pytest.approx(1.0, rel=1e-6)
+    assert first_player["turnover_type_stats"]["started_on_defense"]["opponent_possession_turnovers"]["by_type"]["missed_pass"]["percentage"] == pytest.approx(1.0, rel=1e-6)
 
 
 def test_get_team_player_stats_calculates_defense_conversion_rates_on_field(db_session):

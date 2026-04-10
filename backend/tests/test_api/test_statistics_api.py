@@ -1581,6 +1581,152 @@ def test_get_team_strategy_statistics_filters_dataset_by_game_ids(
     assert data["offense_strategies"][0]["points_won"] == 1
 
 
+def test_get_game_team_statistics_exposes_turnover_type_stats(
+    client: TestClient,
+    db_session: Session,
+):
+    from tests.builders import GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won() \
+        .with_turnover_type(10, "defended_pass") \
+        .with_turnover_type(20, "drop") \
+        .complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won() \
+        .with_turnover_type(10, "miscommunication") \
+        .complete()
+
+    response = client.get(f"/statistics/games/{scenario.game.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["total_turnovers"] == 1
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["defended_pass"]["count"] == 1
+    assert data["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 2
+    assert data["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["drop"]["count"] == 1
+    assert data["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["miscommunication"]["count"] == 1
+
+
+def test_get_competition_team_statistics_aggregates_turnover_type_stats_across_games(
+    client: TestClient,
+    db_session: Session,
+):
+    from tests.builders import GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won() \
+        .with_turnover_type(10, "defended_huck") \
+        .complete()
+
+    second_game = GameBuilder(db_session, scenario.competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, second_game.id, player_ids) \
+        .number(1).defense().lost() \
+        .with_turnover_type(10, "missed_pass") \
+        .with_turnover_type(20, "stall_out") \
+        .complete()
+
+    response = client.get(f"/statistics/competitions/{scenario.competition.id}/team")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["total_turnovers"] == 2
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["defended_huck"]["count"] == 1
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["stall_out"]["count"] == 1
+    assert data["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 1
+    assert data["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["missed_pass"]["count"] == 1
+
+
+def test_get_team_team_statistics_filters_turnover_type_stats_by_selected_games(
+    client: TestClient,
+    db_session: Session,
+):
+    from tests.builders import GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won() \
+        .with_turnover_type(10, "defended_pass") \
+        .complete()
+
+    other_game = GameBuilder(db_session, scenario.competition).with_opponent("Opponent 2").build()
+    PointBuilder(db_session, other_game.id, player_ids) \
+        .number(1).defense().won() \
+        .with_turnover_type(10, "drop") \
+        .complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/team",
+        params=[("game_ids", scenario.game.id)],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["total_turnovers"] == 1
+    assert data["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["defended_pass"]["count"] == 1
+    assert data["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 0
+
+
+def test_get_team_player_statistics_exposes_turnover_type_stats(
+    client: TestClient,
+    db_session: Session,
+):
+    from tests.builders import GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1")
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).defense().won() \
+        .with_turnover_type(10, "missed_pass") \
+        .with_turnover_type(20, "drop") \
+        .complete()
+
+    response = client.get(f"/statistics/teams/{scenario.team.id}/players")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 7
+    assert data[0]["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["drop"]["count"] == 1
+    assert data[0]["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["missed_pass"]["count"] == 1
+
+
 # Strategy Statistics API Tests
 
 def test_get_strategy_stats_success(client: TestClient, db_session: Session):

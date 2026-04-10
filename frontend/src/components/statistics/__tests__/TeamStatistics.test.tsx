@@ -4,6 +4,93 @@ import { render, screen, within } from "../../../test/test-utils";
 import TeamStatistics from "../TeamStatistics";
 import type { TeamStatsBase } from "../../../types";
 
+const sampleTurnoverTypeStats = {
+  all_points: {
+    our_possession_turnovers: {
+      total_turnovers: 2,
+      by_type: {
+        defended_pass: { count: 1, percentage: 0.5 },
+        missed_pass: { count: 0, percentage: 0 },
+        defended_huck: { count: 0, percentage: 0 },
+        missed_huck: { count: 0, percentage: 0 },
+        drop: { count: 1, percentage: 0.5 },
+        stall_out: { count: 0, percentage: 0 },
+        miscommunication: { count: 0, percentage: 0 },
+        other: { count: 0, percentage: 0 },
+      },
+    },
+    opponent_possession_turnovers: {
+      total_turnovers: 1,
+      by_type: {
+        defended_pass: { count: 0, percentage: 0 },
+        missed_pass: { count: 0, percentage: 0 },
+        defended_huck: { count: 0, percentage: 0 },
+        missed_huck: { count: 0, percentage: 0 },
+        drop: { count: 0, percentage: 0 },
+        stall_out: { count: 0, percentage: 0 },
+        miscommunication: { count: 1, percentage: 1 },
+        other: { count: 0, percentage: 0 },
+      },
+    },
+  },
+  started_on_offense: {
+    our_possession_turnovers: {
+      total_turnovers: 1,
+      by_type: {
+        defended_pass: { count: 1, percentage: 1 },
+        missed_pass: { count: 0, percentage: 0 },
+        defended_huck: { count: 0, percentage: 0 },
+        missed_huck: { count: 0, percentage: 0 },
+        drop: { count: 0, percentage: 0 },
+        stall_out: { count: 0, percentage: 0 },
+        miscommunication: { count: 0, percentage: 0 },
+        other: { count: 0, percentage: 0 },
+      },
+    },
+    opponent_possession_turnovers: {
+      total_turnovers: 0,
+      by_type: {
+        defended_pass: { count: 0, percentage: 0 },
+        missed_pass: { count: 0, percentage: 0 },
+        defended_huck: { count: 0, percentage: 0 },
+        missed_huck: { count: 0, percentage: 0 },
+        drop: { count: 0, percentage: 0 },
+        stall_out: { count: 0, percentage: 0 },
+        miscommunication: { count: 0, percentage: 0 },
+        other: { count: 0, percentage: 0 },
+      },
+    },
+  },
+  started_on_defense: {
+    our_possession_turnovers: {
+      total_turnovers: 1,
+      by_type: {
+        defended_pass: { count: 0, percentage: 0 },
+        missed_pass: { count: 0, percentage: 0 },
+        defended_huck: { count: 0, percentage: 0 },
+        missed_huck: { count: 0, percentage: 0 },
+        drop: { count: 1, percentage: 1 },
+        stall_out: { count: 0, percentage: 0 },
+        miscommunication: { count: 0, percentage: 0 },
+        other: { count: 0, percentage: 0 },
+      },
+    },
+    opponent_possession_turnovers: {
+      total_turnovers: 1,
+      by_type: {
+        defended_pass: { count: 0, percentage: 0 },
+        missed_pass: { count: 1, percentage: 1 },
+        defended_huck: { count: 0, percentage: 0 },
+        missed_huck: { count: 0, percentage: 0 },
+        drop: { count: 0, percentage: 0 },
+        stall_out: { count: 0, percentage: 0 },
+        miscommunication: { count: 0, percentage: 0 },
+        other: { count: 0, percentage: 0 },
+      },
+    },
+  },
+} satisfies NonNullable<TeamStatsBase["turnover_type_stats"]>;
+
 describe("TeamStatistics", () => {
   it("uses offense started points as clean hold count denominator", () => {
     const teamStats: TeamStatsBase = {
@@ -496,5 +583,71 @@ describe("TeamStatistics", () => {
       firstOpponentTurns.compareDocumentPosition(firstAdvancedStats) &
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
+  });
+
+  it("renders turnover type statistics when provided", () => {
+    const teamStats: TeamStatsBase = {
+      total_completed_points: 4,
+      turnover_type_stats: sampleTurnoverTypeStats,
+      offense: {
+        points_started: 2,
+        points_won: 1,
+        points_lost: 1,
+        hold_rate: 0.5,
+        points_won_no_turnover: 1,
+        clean_hold_rate: 0.5,
+        broken_rate: 0.5,
+      },
+      defense: {
+        points_started: 2,
+        points_won: 1,
+        points_lost: 1,
+        break_rate: 0.5,
+        points_with_turnover: 1,
+        turnover_rate: 0.5,
+        conversion_rate: 1,
+        points_won_no_turnover: 1,
+        clean_break_rate: 0.5,
+        clean_conversion_rate: 1,
+        points_lost_no_turnover: 0,
+        pull_stats: {
+          total_pulls: 2,
+          inbound_pulls: 1,
+          out_of_bounds_pulls: 1,
+          inbound_rate: 0.5,
+        },
+      },
+      field_side_stats: {
+        table_left: {
+          offense: {
+            points_started: 0,
+            points_won: 0,
+            hold_rate: 0,
+          },
+          defense: {
+            points_started: 0,
+            points_won: 0,
+            break_rate: 0,
+          },
+        },
+        table_right: {
+          offense: {
+            points_started: 0,
+            points_won: 0,
+            hold_rate: 0,
+          },
+          defense: {
+            points_started: 0,
+            points_won: 0,
+            break_rate: 0,
+          },
+        },
+      },
+    };
+
+    render(<TeamStatistics teamStats={teamStats} />);
+
+    expect(screen.getByText("Turnover types")).toBeInTheDocument();
+    expect(screen.getByText("All points")).toBeInTheDocument();
   });
 });

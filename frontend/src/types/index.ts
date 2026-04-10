@@ -417,12 +417,34 @@ export interface PlayerDefenseStats {
   opponent_turnovers?: number;
 }
 
+export interface TurnoverTypeCount {
+  count: number;
+  percentage: number;
+}
+
+export interface TurnoverTypeBucket {
+  total_turnovers: number;
+  by_type: Record<TurnoverType, TurnoverTypeCount>;
+}
+
+export interface TurnoverTypePhaseStats {
+  our_possession_turnovers: TurnoverTypeBucket;
+  opponent_possession_turnovers: TurnoverTypeBucket;
+}
+
+export interface TurnoverTypeStats {
+  all_points: TurnoverTypePhaseStats;
+  started_on_offense: TurnoverTypePhaseStats;
+  started_on_defense: TurnoverTypePhaseStats;
+}
+
 export interface PlayerGameStats {
   player_id: number;
   player_name: string;
   player_number: number | null;
   points_played: number;
   effective_time_seconds: number;
+  turnover_type_stats?: TurnoverTypeStats;
   offense: PlayerOffenseStats;
   defense: PlayerDefenseStats;
 }
@@ -487,6 +509,7 @@ export interface FieldSideStats {
 
 export interface TeamStatsBase {
   total_completed_points: number;
+  turnover_type_stats?: TurnoverTypeStats;
   offense: OffenseStats;
   defense: DefenseStats;
   field_side_stats: FieldSideStats;

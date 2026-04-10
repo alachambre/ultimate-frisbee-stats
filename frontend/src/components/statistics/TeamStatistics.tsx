@@ -27,6 +27,7 @@ import {
   type ValueGradientStops,
 } from "./statValueColors";
 import TurnoverCountSummary from "./TurnoverCountSummary";
+import TurnoverTypeStatsSection from "./TurnoverTypeStatsSection";
 
 interface TeamStatisticsProps {
   teamStats: TeamStatsBase;
@@ -366,6 +367,10 @@ export default function TeamStatistics({
           />
         )}
       </Box>
+
+      <Divider sx={{ my: 4 }} />
+
+      <TurnoverTypeStatsSection turnoverTypeStats={teamStats.turnover_type_stats} />
     </Box>
   );
 }

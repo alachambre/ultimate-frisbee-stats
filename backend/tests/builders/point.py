@@ -85,7 +85,15 @@ class PointBuilder:
         return self
 
     def with_turnover(self, seconds_from_start: int = 30) -> "PointBuilder":
-        self._turnovers.append(seconds_from_start)
+        self._turnovers.append((seconds_from_start, "other"))
+        return self
+
+    def with_turnover_type(
+        self,
+        seconds_from_start: int = 30,
+        turnover_type: str = "other",
+    ) -> "PointBuilder":
+        self._turnovers.append((seconds_from_start, turnover_type))
         return self
 
     def with_stoppage(self, start: int = 10, duration: int = 10) -> "PointBuilder":
@@ -125,12 +133,13 @@ class PointBuilder:
         )
 
         # Add turnovers
-        for offset in self._turnovers:
+        for offset, turnover_type in self._turnovers:
             turnovers_crud.create_turnover(
                 self.db,
                 TurnoverCreate(
                     point_id=point.id,
-                    timestamp=self._start_time + timedelta(seconds=offset)
+                    timestamp=self._start_time + timedelta(seconds=offset),
+                    turnover_type=turnover_type,
                 )
             )
 

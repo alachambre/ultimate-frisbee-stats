@@ -10,6 +10,17 @@ from app.models.player import Player
 from app.models.strategy import Strategy
 from app.models.turnover import Turnover
 
+TURNOVER_TYPE_VALUES = (
+    "defended_pass",
+    "missed_pass",
+    "defended_huck",
+    "missed_huck",
+    "drop",
+    "stall_out",
+    "miscommunication",
+    "other",
+)
+
 
 @dataclass(frozen=True)
 class PointFacts:
@@ -42,6 +53,95 @@ def calculate_effective_time_seconds(point: Point, stoppages: List[Stoppage]) ->
     point_duration = calculate_point_duration_seconds(point)
     stoppage_dead_time = calculate_stoppage_dead_time_seconds(stoppages)
     return max(0, point_duration - stoppage_dead_time)
+
+
+def build_empty_turnover_type_stats() -> Dict:
+    def empty_distribution() -> Dict:
+        return {
+            turnover_type: {
+                "count": 0,
+                "percentage": 0.0,
+            }
+            for turnover_type in TURNOVER_TYPE_VALUES
+        }
+
+    def empty_bucket() -> Dict:
+        return {
+            "total_turnovers": 0,
+            "by_type": empty_distribution(),
+        }
+
+    def empty_phase() -> Dict:
+        return {
+            "our_possession_turnovers": empty_bucket(),
+            "opponent_possession_turnovers": empty_bucket(),
+        }
+
+    return {
+        "all_points": empty_phase(),
+        "started_on_offense": empty_phase(),
+        "started_on_defense": empty_phase(),
+    }
+
+
+def normalize_turnover_type(turnover_type: Optional[str]) -> str:
+    if turnover_type in TURNOVER_TYPE_VALUES:
+        return turnover_type
+    return "other"
+
+
+def get_turnover_possession_bucket_key(
+    starting_on_offense: bool,
+    turnover_index: int,
+) -> str:
+    if starting_on_offense:
+        return "our_possession_turnovers" if turnover_index % 2 == 0 else "opponent_possession_turnovers"
+    return "opponent_possession_turnovers" if turnover_index % 2 == 0 else "our_possession_turnovers"
+
+
+def accumulate_turnover_type_stats(
+    turnover_type_stats: Dict,
+    starting_on_offense: bool,
+    turnovers: List[Turnover],
+) -> None:
+    point_phase_key = "started_on_offense" if starting_on_offense else "started_on_defense"
+
+    for turnover_index, turnover in enumerate(turnovers):
+        possession_bucket_key = get_turnover_possession_bucket_key(
+            starting_on_offense,
+            turnover_index,
+        )
+        normalized_turnover_type = normalize_turnover_type(turnover.turnover_type)
+
+        for phase_key in ("all_points", point_phase_key):
+            bucket = turnover_type_stats[phase_key][possession_bucket_key]
+            bucket["total_turnovers"] += 1
+            bucket["by_type"][normalized_turnover_type]["count"] += 1
+
+
+def finalize_turnover_type_stats(turnover_type_stats: Dict) -> Dict:
+    for phase in turnover_type_stats.values():
+        for bucket in phase.values():
+            total_turnovers = bucket["total_turnovers"]
+            for stats in bucket["by_type"].values():
+                stats["percentage"] = calculate_rate(stats["count"], total_turnovers)
+    return turnover_type_stats
+
+
+def build_turnover_type_stats(
+    completed_points: List[Point],
+    turnovers_by_point: Dict[int, List[Turnover]],
+) -> Dict:
+    turnover_type_stats = build_empty_turnover_type_stats()
+
+    for point in completed_points:
+        accumulate_turnover_type_stats(
+            turnover_type_stats,
+            point.starting_on_offense,
+            turnovers_by_point.get(point.id, []),
+        )
+
+    return finalize_turnover_type_stats(turnover_type_stats)
 
 
 def count_turnovers_by_possession(
@@ -167,6 +267,7 @@ def build_live_player_stats(
                 "player_number": player.number,
                 "points_played": 0,
                 "effective_time_seconds": 0,
+                "turnover_type_stats": build_empty_turnover_type_stats(),
                 "offense": {
                     "points_played": 0,
                     "points_won": 0,
@@ -204,6 +305,7 @@ def build_live_player_stats(
             "player_number": player.number,
             "points_played": 0,
             "effective_time_seconds": 0,
+            "turnover_type_stats": build_empty_turnover_type_stats(),
             "offense_played": 0,
             "offense_won": 0,
             "offense_lost": 0,
@@ -237,6 +339,11 @@ def build_live_player_stats(
             stats = player_stats[player.id]
             stats["points_played"] += 1
             stats["effective_time_seconds"] += effective_time
+            accumulate_turnover_type_stats(
+                stats["turnover_type_stats"],
+                point.starting_on_offense,
+                turnovers,
+            )
 
             if point.starting_on_offense:
                 stats["offense_played"] += 1
@@ -295,6 +402,7 @@ def build_live_player_stats(
             "player_number": stats["player_number"],
             "points_played": stats["points_played"],
             "effective_time_seconds": stats["effective_time_seconds"],
+            "turnover_type_stats": finalize_turnover_type_stats(stats["turnover_type_stats"]),
             "offense": {
                 "points_played": stats["offense_played"],
                 "points_won": stats["offense_won"],
@@ -325,7 +433,10 @@ def build_live_player_stats(
     return sorted(result, key=lambda x: (x["player_number"] is None, x["player_number"] or 0))
 
 
-def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
+def build_team_stats_from_point_facts(
+    point_facts: List[PointFacts],
+    turnover_type_stats: Optional[Dict] = None,
+) -> Dict:
     offense_started = 0
     offense_won = 0
     offense_lost = 0
@@ -392,6 +503,7 @@ def build_team_stats_from_point_facts(point_facts: List[PointFacts]) -> Dict:
 
     return {
         "total_completed_points": len(point_facts),
+        "turnover_type_stats": turnover_type_stats or build_empty_turnover_type_stats(),
         "offense": {
             "points_started": offense_started,
             "points_won": offense_won,
@@ -435,9 +547,10 @@ def build_scoped_team_stats(
     turnovers_by_point: Dict[int, List[Turnover]],
 ) -> Dict:
     point_facts = build_point_facts(completed_points, turnovers_by_point)
+    turnover_type_stats = build_turnover_type_stats(completed_points, turnovers_by_point)
     return {
         scope_key: scope_id,
-        **build_team_stats_from_point_facts(point_facts),
+        **build_team_stats_from_point_facts(point_facts, turnover_type_stats),
     }
 
 
