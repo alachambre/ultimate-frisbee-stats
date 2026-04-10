@@ -136,7 +136,12 @@
     "halfTime": "Mi-temps",
     "offenseTime": "Temps en attaque",
     "defenseTime": "Temps en d\u00e9fense",
-    "deleteHalfTime": "Supprimer la mi-temps"
+    "deleteHalfTime": "Supprimer la mi-temps",
+    "pointsPlayedCount_one": "{{count}} pt",
+    "pointsPlayedCount_other": "{{count}} pts",
+    "turnoversSummary": "R\u00e9sum\u00e9 des turns",
+    "halfTimeDetails": "D\u00e9tails de la mi-temps",
+    "gameSummaryDetails": "D\u00e9tails du r\u00e9sum\u00e9 du match"
   },
   "status": {
     "ready": "Pr\u00eat",

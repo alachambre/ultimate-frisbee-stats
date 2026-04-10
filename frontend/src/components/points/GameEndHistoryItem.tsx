@@ -16,6 +16,7 @@ export default function GameEndHistoryItem({ snapshot }: GameEndHistoryItemProps
       chipLabel={t("games:status.ended")}
       chipColor="success"
       icon={<SportsScoreIcon color="success" />}
+      detailsLabel={t("points:history.gameSummaryDetails")}
       snapshot={snapshot}
     />
   );

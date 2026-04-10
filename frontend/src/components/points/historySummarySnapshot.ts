@@ -17,6 +17,8 @@ export interface HistorySummarySnapshot {
   ourScore: number;
   opponentScore: number;
   elapsedSeconds: number | null;
+  offensePointsPlayed: number;
+  defensePointsPlayed: number;
   offenseElapsedSeconds: number;
   defenseElapsedSeconds: number;
   offenseTurnovers: TurnoverSplitSnapshot;
@@ -87,6 +89,8 @@ export function buildHistorySummarySnapshot(
 
   let ourScore = 0;
   let opponentScore = 0;
+  let offensePointsPlayed = 0;
+  let defensePointsPlayed = 0;
   let offenseElapsedSeconds = 0;
   let defenseElapsedSeconds = 0;
   const offenseTurnovers: TurnoverSplitSnapshot = {
@@ -112,8 +116,10 @@ export function buildHistorySummarySnapshot(
     targetTurnovers.opponentTurnovers += point.opponent_turnovers ?? 0;
 
     if (point.starting_on_offense) {
+      offensePointsPlayed += 1;
       offenseElapsedSeconds += pointDurationSeconds;
     } else {
+      defensePointsPlayed += 1;
       defenseElapsedSeconds += pointDurationSeconds;
     }
 
@@ -146,6 +152,8 @@ export function buildHistorySummarySnapshot(
       completedPoints.length > 0 && Number.isFinite(earliestPointMs)
         ? Math.max(0, Math.floor((snapshotMs - earliestPointMs) / 1000))
         : null,
+    offensePointsPlayed,
+    defensePointsPlayed,
     offenseElapsedSeconds,
     defenseElapsedSeconds,
     offenseTurnovers,

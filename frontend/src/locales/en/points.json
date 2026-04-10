@@ -136,7 +136,12 @@
     "halfTime": "Half time",
     "offenseTime": "Offense time",
     "defenseTime": "Defense time",
-    "deleteHalfTime": "Delete halftime"
+    "deleteHalfTime": "Delete halftime",
+    "pointsPlayedCount_one": "{{count}} pt",
+    "pointsPlayedCount_other": "{{count}} pts",
+    "turnoversSummary": "Turns summary",
+    "halfTimeDetails": "Half time details",
+    "gameSummaryDetails": "Game summary details"
   },
   "status": {
     "ready": "Ready",

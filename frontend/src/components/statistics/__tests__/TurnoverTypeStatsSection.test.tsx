@@ -68,17 +68,21 @@ describe("TurnoverTypeStatsSection", () => {
     render(<TurnoverTypeStatsSection turnoverTypeStats={createTurnoverTypeStats()} />);
 
     expect(screen.getByText("Turnover types")).toBeInTheDocument();
+    const opponentBucket = screen.getByRole("group", {
+      name: "Opponent lost possession",
+    });
     const ourBucket = screen.getByRole("group", { name: "We lost possession" });
+
+    const bucketGroups = screen.getAllByRole("group");
+    expect(bucketGroups[0]).toBe(opponentBucket);
+    expect(bucketGroups[1]).toBe(ourBucket);
+
+    expect(within(opponentBucket).getByText("Miscommunication")).toBeInTheDocument();
+    expect(within(opponentBucket).getByText("100% (1)")).toBeInTheDocument();
     expect(within(ourBucket).getByText("4 turnovers")).toBeInTheDocument();
     expect(within(ourBucket).getByText("Defended pass")).toBeInTheDocument();
     expect(within(ourBucket).getByText("50% (2)")).toBeInTheDocument();
     expect(within(ourBucket).getByText("Drop")).toBeInTheDocument();
-
-    const opponentBucket = screen.getByRole("group", {
-      name: "Opponent lost possession",
-    });
-    expect(within(opponentBucket).getByText("Miscommunication")).toBeInTheDocument();
-    expect(within(opponentBucket).getByText("100% (1)")).toBeInTheDocument();
   });
 
   it("shows empty-state text for empty buckets in collapsed phases", async () => {

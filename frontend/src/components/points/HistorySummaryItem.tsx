@@ -10,11 +10,14 @@ import {
   LinearProgress,
   Stack,
   Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { alpha, useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import TurnoverBalanceBar from "../shared/TurnoverBalanceBar";
 import {
   BREAK_RATE_VALUE_STOPS,
   HOLD_RATE_VALUE_STOPS,
@@ -22,6 +25,7 @@ import {
   getValueGradientTrackColor,
   type ValueGradientStops,
 } from "../statistics/statValueColors";
+import TurnoverBalanceBar from "../shared/TurnoverBalanceBar";
 import type { HistorySummarySnapshot } from "./historySummarySnapshot";
 
 interface HistorySummaryItemProps<TActionPayload = never> {
@@ -35,6 +39,7 @@ interface HistorySummaryItemProps<TActionPayload = never> {
   deletePayload?: TActionPayload;
   deleteAriaLabel?: string;
   isDeleting?: boolean;
+  detailsLabel?: string;
 }
 
 interface SummaryMetricProps {
@@ -85,11 +90,18 @@ function TurnoverSection({ title, opponentCount, ourCount }: TurnoverSectionProp
   const { t } = useTranslation("statistics");
 
   return (
-    <Box>
+    <Box
+      sx={{
+        p: 1.5,
+        borderRadius: 1.5,
+        border: 1,
+        borderColor: "divider",
+      }}
+    >
       <Typography
         variant="overline"
         color="text.secondary"
-        sx={{ display: "block", mb: 0.75, letterSpacing: 0.5 }}
+        sx={{ display: "block", letterSpacing: 0.5 }}
       >
         {title}
       </Typography>
@@ -161,6 +173,7 @@ export default function HistorySummaryItem<TActionPayload = never>({
   deletePayload,
   deleteAriaLabel,
   isDeleting = false,
+  detailsLabel,
 }: HistorySummaryItemProps<TActionPayload>) {
   const { t } = useTranslation(["points", "common", "statistics"]);
   const theme = useTheme();
@@ -175,6 +188,8 @@ export default function HistorySummaryItem<TActionPayload = never>({
         snapshot.breakByFieldSide.table_right.pointsStarted >
       0
     : false;
+  const formatDurationWithPoints = (totalSeconds: number, pointsPlayed: number) =>
+    `${formatDuration(totalSeconds)} (${t("points:history.pointsPlayedCount", { count: pointsPlayed })})`;
 
   return (
     <Card variant="outlined">
@@ -240,89 +255,126 @@ export default function HistorySummaryItem<TActionPayload = never>({
               )}
               <SummaryMetric
                 label={t("points:history.offenseTime")}
-                value={formatDuration(snapshot.offenseElapsedSeconds)}
+                value={formatDurationWithPoints(
+                  snapshot.offenseElapsedSeconds,
+                  snapshot.offensePointsPlayed,
+                )}
               />
               <SummaryMetric
                 label={t("points:history.defenseTime")}
-                value={formatDuration(snapshot.defenseElapsedSeconds)}
+                value={formatDurationWithPoints(
+                  snapshot.defenseElapsedSeconds,
+                  snapshot.defensePointsPlayed,
+                )}
               />
             </Box>
 
-            <Stack spacing={1.5} sx={{ mt: 2 }}>
-              <TurnoverSection
-                title={t("statistics:teamStats.offense")}
-                opponentCount={snapshot.offenseTurnovers.opponentTurnovers}
-                ourCount={snapshot.offenseTurnovers.ourTurnovers}
-              />
-              <TurnoverSection
-                title={t("statistics:teamStats.defense")}
-                opponentCount={snapshot.defenseTurnovers.opponentTurnovers}
-                ourCount={snapshot.defenseTurnovers.ourTurnovers}
-              />
-            </Stack>
-
-            {(hasHoldByFieldSideData || hasBreakByFieldSideData) && (
-              <>
-                <Divider sx={{ my: 2 }} />
+            <Accordion
+              disableGutters
+              elevation={0}
+              sx={{
+                mt: 2,
+                borderRadius: 1.5,
+                border: 1,
+                borderColor: alpha(theme.palette.warning.main, 0.14),
+                bgcolor: alpha(theme.palette.common.white, 0.3),
+                "&::before": { display: "none" },
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  {detailsLabel}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ pt: 0 }}>
                 <Stack spacing={2}>
-                  {hasHoldByFieldSideData && (
-                    <Box>
-                      <Typography
-                        variant="overline"
-                        color="text.secondary"
-                        sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
-                      >
-                        {t("statistics:teamStats.holdByFieldSide")}
-                      </Typography>
-                      <Stack spacing={1.25}>
-                        <FieldSideRow
-                          label={t("statistics:teamStats.leftSide")}
-                          percentage={snapshot.holdByFieldSide.table_left.rate}
-                          count={snapshot.holdByFieldSide.table_left.pointsWon}
-                          total={snapshot.holdByFieldSide.table_left.pointsStarted}
-                          valueGradientStops={HOLD_RATE_VALUE_STOPS}
-                        />
-                        <FieldSideRow
-                          label={t("statistics:teamStats.rightSide")}
-                          percentage={snapshot.holdByFieldSide.table_right.rate}
-                          count={snapshot.holdByFieldSide.table_right.pointsWon}
-                          total={snapshot.holdByFieldSide.table_right.pointsStarted}
-                          valueGradientStops={HOLD_RATE_VALUE_STOPS}
-                        />
-                      </Stack>
-                    </Box>
-                  )}
+                  <Box>
+                    <Typography
+                      variant="overline"
+                      color="text.secondary"
+                      sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
+                    >
+                      {t("points:history.turnoversSummary")}
+                    </Typography>
+                    <Stack spacing={1.25}>
+                      <TurnoverSection
+                        title={t("statistics:teamStats.offense")}
+                        opponentCount={snapshot.offenseTurnovers.opponentTurnovers}
+                        ourCount={snapshot.offenseTurnovers.ourTurnovers}
+                      />
+                      <TurnoverSection
+                        title={t("statistics:teamStats.defense")}
+                        opponentCount={snapshot.defenseTurnovers.opponentTurnovers}
+                        ourCount={snapshot.defenseTurnovers.ourTurnovers}
+                      />
+                    </Stack>
+                  </Box>
 
-                  {hasBreakByFieldSideData && (
-                    <Box>
-                      <Typography
-                        variant="overline"
-                        color="text.secondary"
-                        sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
-                      >
-                        {t("statistics:teamStats.breakByFieldSide")}
-                      </Typography>
-                      <Stack spacing={1.25}>
-                        <FieldSideRow
-                          label={t("statistics:teamStats.leftSide")}
-                          percentage={snapshot.breakByFieldSide.table_left.rate}
-                          count={snapshot.breakByFieldSide.table_left.pointsWon}
-                          total={snapshot.breakByFieldSide.table_left.pointsStarted}
-                          valueGradientStops={BREAK_RATE_VALUE_STOPS}
-                        />
-                        <FieldSideRow
-                          label={t("statistics:teamStats.rightSide")}
-                          percentage={snapshot.breakByFieldSide.table_right.rate}
-                          count={snapshot.breakByFieldSide.table_right.pointsWon}
-                          total={snapshot.breakByFieldSide.table_right.pointsStarted}
-                          valueGradientStops={BREAK_RATE_VALUE_STOPS}
-                        />
+                  {(hasHoldByFieldSideData || hasBreakByFieldSideData) && (
+                    <>
+                      <Divider />
+                      <Stack spacing={2}>
+                        {hasHoldByFieldSideData && (
+                          <Box>
+                            <Typography
+                              variant="overline"
+                              color="text.secondary"
+                              sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
+                            >
+                              {t("statistics:teamStats.holdByFieldSide")}
+                            </Typography>
+                            <Stack spacing={1.25}>
+                              <FieldSideRow
+                                label={t("statistics:teamStats.leftSide")}
+                                percentage={snapshot.holdByFieldSide.table_left.rate}
+                                count={snapshot.holdByFieldSide.table_left.pointsWon}
+                                total={snapshot.holdByFieldSide.table_left.pointsStarted}
+                                valueGradientStops={HOLD_RATE_VALUE_STOPS}
+                              />
+                              <FieldSideRow
+                                label={t("statistics:teamStats.rightSide")}
+                                percentage={snapshot.holdByFieldSide.table_right.rate}
+                                count={snapshot.holdByFieldSide.table_right.pointsWon}
+                                total={snapshot.holdByFieldSide.table_right.pointsStarted}
+                                valueGradientStops={HOLD_RATE_VALUE_STOPS}
+                              />
+                            </Stack>
+                          </Box>
+                        )}
+
+                        {hasBreakByFieldSideData && (
+                          <Box>
+                            <Typography
+                              variant="overline"
+                              color="text.secondary"
+                              sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
+                            >
+                              {t("statistics:teamStats.breakByFieldSide")}
+                            </Typography>
+                            <Stack spacing={1.25}>
+                              <FieldSideRow
+                                label={t("statistics:teamStats.leftSide")}
+                                percentage={snapshot.breakByFieldSide.table_left.rate}
+                                count={snapshot.breakByFieldSide.table_left.pointsWon}
+                                total={snapshot.breakByFieldSide.table_left.pointsStarted}
+                                valueGradientStops={BREAK_RATE_VALUE_STOPS}
+                              />
+                              <FieldSideRow
+                                label={t("statistics:teamStats.rightSide")}
+                                percentage={snapshot.breakByFieldSide.table_right.rate}
+                                count={snapshot.breakByFieldSide.table_right.pointsWon}
+                                total={snapshot.breakByFieldSide.table_right.pointsStarted}
+                                valueGradientStops={BREAK_RATE_VALUE_STOPS}
+                              />
+                            </Stack>
+                          </Box>
+                        )}
                       </Stack>
-                    </Box>
+                    </>
                   )}
                 </Stack>
-              </>
-            )}
+              </AccordionDetails>
+            </Accordion>
           </Box>
         )}
 

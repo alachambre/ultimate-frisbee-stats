@@ -25,6 +25,7 @@ export default function HalftimeHistoryItem({
       chipLabel={t("history.halfTime")}
       chipColor="warning"
       icon={<AccessTimeFilledIcon color="primary" />}
+      detailsLabel={t("history.halfTimeDetails")}
       snapshot={snapshot}
       comments={halftime.comments}
       onDelete={onDelete}

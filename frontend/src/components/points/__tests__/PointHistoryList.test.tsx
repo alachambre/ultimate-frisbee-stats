@@ -58,7 +58,10 @@ describe("PointHistoryList", () => {
     );
 
     expect(
-      screen.getAllByRole("heading", { level: 6 }).map((heading) => heading.textContent)
+      screen
+        .getAllByRole("heading", { level: 6 })
+        .map((heading) => heading.textContent)
+        .filter((text) => text !== "Half time details")
     ).toEqual(["Point #2", "Half time", "Point #1"]);
   });
 
@@ -88,9 +91,15 @@ describe("PointHistoryList", () => {
     );
 
     expect(
-      screen.getAllByRole("heading", { level: 6 }).map((heading) => heading.textContent)
+      screen
+        .getAllByRole("heading", { level: 6 })
+        .map((heading) => heading.textContent)
+        .filter((text) => text !== "Game summary details" && text !== "Half time details")
     ).toEqual(["End of game", "Point #2", "Half time", "Point #1"]);
     expect(screen.getByText("Finished")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /game summary details/i })
+    ).toBeInTheDocument();
   });
 
   it("calls delete halftime handler from history item", async () => {
@@ -120,7 +129,8 @@ describe("PointHistoryList", () => {
     expect(onDeleteHalftime).toHaveBeenCalledWith(halftime);
   });
 
-  it("renders halftime overview snapshot from points before halftime", () => {
+  it("renders halftime overview snapshot from points before halftime", async () => {
+    const user = userEvent.setup();
     const points: PointWithPlayers[] = [
       createPoint(1, 1, "2024-01-01T10:00:00Z", "table_left", { our: 1, opponent: 0 }),
       {
@@ -157,20 +167,17 @@ describe("PointHistoryList", () => {
     expect(halftimeWithin.getByText("30:00")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Offense time")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Defense time")).toBeInTheDocument();
-    expect(halftimeWithin.getAllByText("5:00")).toHaveLength(2);
+    expect(halftimeWithin.getAllByText("5:00 (1 pt)")).toHaveLength(2);
+
+    await user.click(halftimeWithin.getByRole("button", { name: /half time details/i }));
+
+    expect(halftimeWithin.getByText("Turns summary")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Hold by field side")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Break by field side")).toBeInTheDocument();
     expect(halftimeWithin.getByText("100% (1/1)")).toBeInTheDocument();
     expect(halftimeWithin.getByText("0% (0/1)")).toBeInTheDocument();
-
-    const offenseSection = halftimeWithin.getByText("Offense").closest("div");
-    expect(offenseSection).not.toBeNull();
-    expect(within(offenseSection as HTMLElement).getByText("1")).toBeInTheDocument();
-    expect(within(offenseSection as HTMLElement).getByText("0")).toBeInTheDocument();
-
-    const defenseSection = halftimeWithin.getByText("Defense").closest("div");
-    expect(defenseSection).not.toBeNull();
-    expect(within(defenseSection as HTMLElement).getByText("2")).toBeInTheDocument();
+    expect(halftimeWithin.getAllByText("Opponent turns")).toHaveLength(2);
+    expect(halftimeWithin.getAllByText("Our turns")).toHaveLength(2);
   });
 
   it("renders field side in chronology when available", async () => {

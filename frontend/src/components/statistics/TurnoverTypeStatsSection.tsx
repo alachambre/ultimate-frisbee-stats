@@ -211,16 +211,16 @@ export default function TurnoverTypeStatsSection({
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
             <TurnoverBucketCard
-              title={t("turnoverTypeStats.ourPossessionTurnovers")}
-              bucket={phase.our_possession_turnovers}
-              positive={false}
+              title={t("turnoverTypeStats.opponentPossessionTurnovers")}
+              bucket={phase.opponent_possession_turnovers}
+              positive
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <TurnoverBucketCard
-              title={t("turnoverTypeStats.opponentPossessionTurnovers")}
-              bucket={phase.opponent_possession_turnovers}
-              positive
+              title={t("turnoverTypeStats.ourPossessionTurnovers")}
+              bucket={phase.our_possession_turnovers}
+              positive={false}
             />
           </Grid>
         </Grid>
@@ -268,16 +268,16 @@ export default function TurnoverTypeStatsSection({
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TurnoverBucketCard
-                      title={t("turnoverTypeStats.ourPossessionTurnovers")}
-                      bucket={phase.our_possession_turnovers}
-                      positive={false}
+                      title={t("turnoverTypeStats.opponentPossessionTurnovers")}
+                      bucket={phase.opponent_possession_turnovers}
+                      positive
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TurnoverBucketCard
-                      title={t("turnoverTypeStats.opponentPossessionTurnovers")}
-                      bucket={phase.opponent_possession_turnovers}
-                      positive
+                      title={t("turnoverTypeStats.ourPossessionTurnovers")}
+                      bucket={phase.our_possession_turnovers}
+                      positive={false}
                     />
                   </Grid>
                 </Grid>
