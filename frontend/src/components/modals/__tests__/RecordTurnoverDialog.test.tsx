@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import userEvent from "@testing-library/user-event";
 import { RecordTurnoverDialog } from "../RecordTurnoverDialog";
 import type { PointWithPlayers, Player, TurnoverWithPlayer } from "../../../types";
 
@@ -126,6 +127,23 @@ describe("RecordTurnoverDialog", () => {
     expect(screen.getByLabelText(/comments/i)).toBeInTheDocument();
   });
 
+  it("defaults turnover type to other", () => {
+    renderWithQueryClient(
+      <RecordTurnoverDialog
+        open={true}
+        onClose={vi.fn()}
+        point={mockPoint}
+        existingTurnovers={[]}
+      />
+    );
+
+    expect(screen.getByText(/turnover type/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /defended pass/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /stall out/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /other/i })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /record/i })).toBeEnabled();
+  });
+
   it("has cancel and record buttons", () => {
     renderWithQueryClient(
       <RecordTurnoverDialog
@@ -142,6 +160,7 @@ describe("RecordTurnoverDialog", () => {
 
   it("successfully records a turnover", async () => {
     const onClose = vi.fn();
+    const user = userEvent.setup();
 
     renderWithQueryClient(
       <RecordTurnoverDialog
@@ -153,7 +172,7 @@ describe("RecordTurnoverDialog", () => {
     );
 
     const recordButton = screen.getByRole("button", { name: /record/i });
-    recordButton.click();
+    await user.click(recordButton);
 
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled();
@@ -166,6 +185,7 @@ describe("RecordTurnoverDialog", () => {
         id: 1,
         point_id: 1,
         player_id: 1,
+        turnover_type: "other",
         timestamp: "2024-01-01T10:02:00Z",
         comments: null,
         created_at: "2024-01-01T10:02:00Z",

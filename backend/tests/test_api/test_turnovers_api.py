@@ -198,14 +198,14 @@ def test_update_turnover_change_type(client: TestClient, sample_point: models.Po
     turnover = crud.create_turnover(db_session, turnover_data)
 
     update_data = {
-        "turnover_type": "defended_huck"
+        "turnover_type": "miscommunication"
     }
 
     response = client.put(f"/turnovers/{turnover.id}", json=update_data)
 
     assert response.status_code == 200
     data = response.json()
-    assert data["turnover_type"] == "defended_huck"
+    assert data["turnover_type"] == "miscommunication"
 
 
 def test_update_turnover_invalid_player(client: TestClient, sample_point: models.Point, sample_player: models.Player, db_session: Session):

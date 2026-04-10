@@ -24,7 +24,7 @@ Recommended internal enum values:
 - `missed_huck`
 - `drop`
 - `stall_out`
-- `wind`
+- `miscommunication`
 - `other`
 
 Recommended labels:
@@ -37,7 +37,7 @@ Recommended labels:
 | `missed_huck` | Longue ratée | Missed huck |
 | `drop` | Drop | Drop |
 | `stall_out` | Stall out | Stall out |
-| `wind` | Vent | Wind |
+| `miscommunication` | Mésentente | Miscommunication |
 | `other` | Autre | Other |
 
 Notes:

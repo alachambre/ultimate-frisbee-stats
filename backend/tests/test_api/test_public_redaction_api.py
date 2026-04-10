@@ -90,9 +90,11 @@ def test_public_event_reads_redact_comments(client, db_session):
     assert turnover_response.status_code == 200
     assert turnover_response.json()["comments"] is None
     assert turnover_response.json()["player_id"] == scenario["players"][0].id
+    assert turnover_response.json()["turnover_type"] == "defended_pass"
 
     assert turnovers_response.status_code == 200
     assert turnovers_response.json()[0]["comments"] is None
+    assert turnovers_response.json()[0]["turnover_type"] == "defended_pass"
 
     assert halftime_response.status_code == 200
     assert halftime_response.json()["comments"] is None
@@ -285,6 +287,7 @@ def _build_redaction_scenario(db_session):
         schemas.TurnoverCreate(
             point_id=running_point.id,
             player_id=scenario.players[0].id,
+            turnover_type=schemas.TurnoverType.defended_pass,
             timestamp=datetime(2026, 4, 6, 15, 1, tzinfo=timezone.utc),
             comments="Throwaway",
         ),

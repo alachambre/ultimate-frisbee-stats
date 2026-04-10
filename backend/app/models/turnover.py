@@ -15,7 +15,7 @@ class Turnover(Base):
             "'missed_huck', "
             "'drop', "
             "'stall_out', "
-            "'wind', "
+            "'miscommunication', "
             "'other'"
             ")",
             name="turnovers_turnover_type_check",

@@ -9,6 +9,15 @@ export type PointStatus = "ready" | "running" | "scored" | "completed";
 export type StrategyCategory = "offense" | "defense";
 export type FieldSide = "table_left" | "table_right";
 export type ManagedUserRole = "team_member" | "team_analyst" | "admin";
+export type TurnoverType =
+  | "defended_pass"
+  | "missed_pass"
+  | "defended_huck"
+  | "missed_huck"
+  | "drop"
+  | "stall_out"
+  | "miscommunication"
+  | "other";
 
 // ============================================
 // Team Types
@@ -345,6 +354,7 @@ export interface TurnoverWithPlayer {
   id: number;
   point_id: number;
   player_id: number | null; // Optional - can be null for team turnovers
+  turnover_type?: TurnoverType;
   timestamp: string; // ISO datetime with 'Z'
   comments: string | null;
   created_at: string; // ISO datetime with 'Z'
@@ -355,6 +365,7 @@ export interface Turnover {
   id: number;
   point_id: number;
   player_id: number | null;
+  turnover_type?: TurnoverType;
   timestamp: string;
   comments: string | null;
   created_at: string;
@@ -363,12 +374,14 @@ export interface Turnover {
 export interface TurnoverCreate {
   point_id: number;
   player_id?: number | null;
+  turnover_type?: TurnoverType;
   timestamp: string; // ISO datetime
   comments?: string | null;
 }
 
 export interface TurnoverUpdate {
   player_id?: number | null;
+  turnover_type?: TurnoverType;
   timestamp?: string;
   comments?: string | null;
 }

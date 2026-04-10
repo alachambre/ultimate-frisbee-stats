@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import { PointEventsHistory } from "../PointEventsHistory";
-import type { Stoppage, TurnoverWithPlayer } from "../../../types";
+import type { Stoppage, TurnoverType, TurnoverWithPlayer } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -23,9 +23,16 @@ const createMockCall = (
   created_at: timestamp,
 });
 
-const createMockTurnover = (id: number, timestamp: string, playerId: number | null = null, comments: string | null = null): TurnoverWithPlayer => ({
+const createMockTurnover = (
+  id: number,
+  timestamp: string,
+  playerId: number | null = null,
+  comments: string | null = null,
+  turnoverType: TurnoverType = "other",
+): TurnoverWithPlayer => ({
   id,
   point_id: 1,
+  turnover_type: turnoverType,
   timestamp,
   player_id: playerId,
   comments,
@@ -415,7 +422,7 @@ describe("PointEventsHistory", () => {
   describe("Turnover Events", () => {
     it("renders our turnover (starting on offense) with player", async () => {
       const turnovers = [
-        createMockTurnover(1, "2024-01-01T10:02:00Z", 5, "Drop"),
+        createMockTurnover(1, "2024-01-01T10:02:00Z", 5, "Throwaway note", "drop"),
       ];
 
       server.use(
@@ -442,15 +449,16 @@ describe("PointEventsHistory", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/turnover #1/i)).toBeInTheDocument();
+        expect(screen.getByText(/^Drop$/)).toBeInTheDocument();
         expect(screen.getByText(/by/i)).toBeInTheDocument();
         expect(screen.getByText("Test Player")).toBeInTheDocument();
-        expect(screen.getByText("Drop")).toBeInTheDocument();
+        expect(screen.getByText("Throwaway note")).toBeInTheDocument();
       });
     });
 
     it("renders opponent turnover (starting on defense)", async () => {
       const turnovers = [
-        createMockTurnover(1, "2024-01-01T10:02:00Z", null),
+        createMockTurnover(1, "2024-01-01T10:02:00Z", null, null, "defended_huck"),
       ];
 
       server.use(
@@ -477,6 +485,7 @@ describe("PointEventsHistory", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/turnover #1/i)).toBeInTheDocument();
+        expect(screen.getByText(/defended huck/i)).toBeInTheDocument();
         // Opponent turnover, no player displayed
         expect(screen.queryByText(/by/i)).not.toBeInTheDocument();
       });

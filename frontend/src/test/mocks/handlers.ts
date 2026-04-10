@@ -1629,6 +1629,7 @@ export const handlers = [
         id: t.id,
         point_id: t.point_id,
         player_id: t.player_id,
+        turnover_type: t.turnover_type,
         timestamp: t.timestamp,
         comments: t.comments,
         created_at: t.created_at,
@@ -1645,6 +1646,7 @@ export const handlers = [
       id: nextTurnoverId++,
       ...newTurnover,
       player_id: newTurnover.player_id ?? null,
+      turnover_type: newTurnover.turnover_type ?? "other",
       comments: newTurnover.comments ?? null,
       created_at: new Date().toISOString(),
       player: player ?? null,
@@ -1668,6 +1670,7 @@ export const handlers = [
     turnovers[turnoverIndex] = {
       ...turnovers[turnoverIndex],
       ...updates,
+      turnover_type: updates.turnover_type ?? turnovers[turnoverIndex].turnover_type,
       player: player ?? null,
     };
 

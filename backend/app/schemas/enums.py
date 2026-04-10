@@ -46,5 +46,5 @@ class TurnoverType(str, Enum):
     missed_huck = "missed_huck"
     drop = "drop"
     stall_out = "stall_out"
-    wind = "wind"
+    miscommunication = "miscommunication"
     other = "other"

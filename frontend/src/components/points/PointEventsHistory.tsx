@@ -22,6 +22,7 @@ import type { FieldSide, Stoppage, TurnoverWithPlayer } from '../../types';
 import { queryKeys } from '../../utils/queryKeys';
 import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 import { normalizeFieldSide } from '../../utils/fieldSide';
+import { getTurnoverTypeLabel } from '../../utils/turnoverTypes';
 
 interface PointEventsHistoryProps {
   pointId: number;
@@ -206,8 +207,11 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
                         {formatElapsedTime(pointStartTime, turnover.timestamp)}
                       </Typography>
                     </Box>
+                    <Typography variant="body2" sx={{ ml: 3 }}>
+                      {getTurnoverTypeLabel(t, turnover.turnover_type)}
+                    </Typography>
                     {turnover.player && (
-                      <Typography variant="body2" sx={{ ml: 3 }}>
+                      <Typography variant="body2" sx={{ ml: 3, mt: 0.5 }}>
                         {t('turnoverBy')}: <strong>{turnover.player.name}</strong>
                       </Typography>
                     )}

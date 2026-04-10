@@ -167,6 +167,17 @@
     "timeout": "Timeout",
     "other": "Other"
   },
+  "turnoverType": "Turnover type",
+  "turnoverTypes": {
+    "defended_pass": "Defended pass",
+    "missed_pass": "Missed pass",
+    "defended_huck": "Defended huck",
+    "missed_huck": "Missed huck",
+    "drop": "Drop",
+    "stall_out": "Stall out",
+    "miscommunication": "Miscommunication",
+    "other": "Other"
+  },
   "turnoverRecorded": "Turnover Recorded",
   "turnoverBy": "By",
   "teamTurnover": "Team Turnover",
