@@ -4,6 +4,95 @@ import userEvent from "@testing-library/user-event";
 import StrategyStatistics from "../StrategyStatistics";
 import type { GameStrategyStats } from "../../../types";
 
+function buildTurnoverTypeStats() {
+  return {
+    all_points: {
+      our_possession_turnovers: {
+        total_turnovers: 1,
+        by_type: {
+          defended_pass: { count: 0, percentage: 0 },
+          missed_pass: { count: 0, percentage: 0 },
+          defended_huck: { count: 0, percentage: 0 },
+          missed_huck: { count: 0, percentage: 0 },
+          drop: { count: 1, percentage: 1 },
+          stall_out: { count: 0, percentage: 0 },
+          miscommunication: { count: 0, percentage: 0 },
+          other: { count: 0, percentage: 0 },
+        },
+      },
+      opponent_possession_turnovers: {
+        total_turnovers: 2,
+        by_type: {
+          defended_pass: { count: 1, percentage: 0.5 },
+          missed_pass: { count: 0, percentage: 0 },
+          defended_huck: { count: 0, percentage: 0 },
+          missed_huck: { count: 1, percentage: 0.5 },
+          drop: { count: 0, percentage: 0 },
+          stall_out: { count: 0, percentage: 0 },
+          miscommunication: { count: 0, percentage: 0 },
+          other: { count: 0, percentage: 0 },
+        },
+      },
+    },
+    started_on_offense: {
+      our_possession_turnovers: {
+        total_turnovers: 0,
+        by_type: {
+          defended_pass: { count: 0, percentage: 0 },
+          missed_pass: { count: 0, percentage: 0 },
+          defended_huck: { count: 0, percentage: 0 },
+          missed_huck: { count: 0, percentage: 0 },
+          drop: { count: 0, percentage: 0 },
+          stall_out: { count: 0, percentage: 0 },
+          miscommunication: { count: 0, percentage: 0 },
+          other: { count: 0, percentage: 0 },
+        },
+      },
+      opponent_possession_turnovers: {
+        total_turnovers: 0,
+        by_type: {
+          defended_pass: { count: 0, percentage: 0 },
+          missed_pass: { count: 0, percentage: 0 },
+          defended_huck: { count: 0, percentage: 0 },
+          missed_huck: { count: 0, percentage: 0 },
+          drop: { count: 0, percentage: 0 },
+          stall_out: { count: 0, percentage: 0 },
+          miscommunication: { count: 0, percentage: 0 },
+          other: { count: 0, percentage: 0 },
+        },
+      },
+    },
+    started_on_defense: {
+      our_possession_turnovers: {
+        total_turnovers: 1,
+        by_type: {
+          defended_pass: { count: 0, percentage: 0 },
+          missed_pass: { count: 0, percentage: 0 },
+          defended_huck: { count: 0, percentage: 0 },
+          missed_huck: { count: 0, percentage: 0 },
+          drop: { count: 1, percentage: 1 },
+          stall_out: { count: 0, percentage: 0 },
+          miscommunication: { count: 0, percentage: 0 },
+          other: { count: 0, percentage: 0 },
+        },
+      },
+      opponent_possession_turnovers: {
+        total_turnovers: 2,
+        by_type: {
+          defended_pass: { count: 1, percentage: 0.5 },
+          missed_pass: { count: 0, percentage: 0 },
+          defended_huck: { count: 0, percentage: 0 },
+          missed_huck: { count: 1, percentage: 0.5 },
+          drop: { count: 0, percentage: 0 },
+          stall_out: { count: 0, percentage: 0 },
+          miscommunication: { count: 0, percentage: 0 },
+          other: { count: 0, percentage: 0 },
+        },
+      },
+    },
+  };
+}
+
 describe("StrategyStatistics", () => {
   it("does not render when there are no strategies", () => {
     const emptyStats: GameStrategyStats = {
@@ -149,6 +238,47 @@ describe("StrategyStatistics", () => {
     // Detailed stats should now be visible
     expect(screen.getByText("Break Rate")).toBeVisible();
     expect(screen.getByText("33% (1/3)")).toBeInTheDocument();
+  });
+
+  it("renders turnover type breakdown for expanded defense strategies", async () => {
+    const user = userEvent.setup();
+    const stats: GameStrategyStats = {
+      game_id: 1,
+      offense_strategies: [],
+      defense_strategies: [
+        {
+          strategy_id: 2,
+          strategy_name: "Zone",
+          points_played: 3,
+          points_won: 1,
+          points_lost: 2,
+          break_rate: 0.333,
+          points_with_turnover: 2,
+          turnover_rate: 0.667,
+          turnover_type_stats: buildTurnoverTypeStats(),
+        },
+      ],
+    };
+
+    render(<StrategyStatistics strategyStats={stats} />);
+
+    const strategyCard =
+      screen.getByText("Zone").closest("div[role='button']") ||
+      screen.getByText("Zone").parentElement?.parentElement;
+    if (strategyCard) {
+      await user.click(strategyCard);
+    }
+
+    expect(screen.getByText("Turnover types for Zone")).toBeVisible();
+    expect(screen.queryByText("All points")).not.toBeInTheDocument();
+    expect(screen.queryByText("Started on offense")).not.toBeInTheDocument();
+    expect(screen.queryByText("Started on defense")).not.toBeInTheDocument();
+
+    expect(screen.getByRole("group", { name: "We lost possession" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Opponent lost possession" })).toBeVisible();
+    expect(screen.getAllByText("Defended pass").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Missed huck").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Drop").length).toBeGreaterThan(0);
   });
 
   it("renders both offense and defense strategies", () => {

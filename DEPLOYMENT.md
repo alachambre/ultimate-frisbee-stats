@@ -79,6 +79,9 @@ SUPABASE_JWKS_URL=https://your-project.supabase.co/auth/v1/.well-known/jwks.json
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 INITIAL_ADMIN_AUTH_USER_ID=<supabase-auth-user-uuid>
 INITIAL_ADMIN_EMAIL=<admin-email>
+DB_STARTUP_MAX_ATTEMPTS=6
+DB_STARTUP_INITIAL_DELAY_SECONDS=2
+DB_STARTUP_BACKOFF_MULTIPLIER=1.5
 ```
 
 Notes:
@@ -87,6 +90,8 @@ Notes:
 - `INITIAL_ADMIN_*` is optional after the first bootstrap, but keeping it set is
   fine because the bootstrap is idempotent.
 - `AUTH_ENFORCEMENT_MODE=off` is the safest first production deploy.
+- The `DB_STARTUP_*` values are optional retry controls for transient DNS /
+  network failures between Render and Supabase during boot.
 
 ### Backend bootstrap check
 
@@ -306,3 +311,15 @@ Check that:
 
 This is expected on the Render free tier after inactivity. The service sleeps and
 needs time to wake up.
+
+### Deploy fails with a temporary Supabase host resolution error
+
+If logs mention a temporary failure in name resolution for the Supabase host:
+
+- this is usually a transient DNS/network issue, not a schema or credential issue
+- the backend now retries DB startup a few times before failing
+- you can increase `DB_STARTUP_MAX_ATTEMPTS` or `DB_STARTUP_INITIAL_DELAY_SECONDS`
+  on Render if it still happens too often
+
+The `/health` endpoint now also validates DB reachability and returns `503` when
+the app is up but the database is unreachable.

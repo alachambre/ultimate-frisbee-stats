@@ -4,7 +4,7 @@ Tests for strategy statistics CRUD operations
 import pytest
 from datetime import datetime, timezone
 from app.crud.statistics import get_game_strategy_stats
-from tests.builders import GameScenarioBuilder
+from tests.builders import GameScenarioBuilder, PointBuilder
 
 
 def test_get_strategy_stats_game_not_found(db_session):
@@ -122,6 +122,45 @@ def test_get_strategy_stats_defense_strategies(db_session):
     assert man_stats["break_rate"] == pytest.approx(0.5, rel=1e-6)
     assert man_stats["points_with_turnover"] == 1
     assert man_stats["turnover_rate"] == pytest.approx(0.5, rel=1e-6)
+
+
+def test_get_strategy_stats_defense_strategies_expose_turnover_type_breakdown(db_session):
+    """Defense strategy stats should include turnover-type distribution across all agreed buckets."""
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team()
+        .with_competition()
+        .with_game()
+        .with_players(7)
+        .with_defense_strategy("Zone")
+        .build()
+    )
+    zone = scenario.defense_strategies[0]
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).defense().won().with_strategy(zone.id) \
+        .with_turnover_type(10, "defended_pass") \
+        .complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().lost().with_strategy(zone.id) \
+        .with_turnover_type(10, "missed_huck") \
+        .with_turnover_type(20, "drop") \
+        .complete()
+
+    stats = get_game_strategy_stats(db_session, scenario.game.id)
+
+    zone_stats = next(s for s in stats["defense_strategies"] if s["strategy_name"] == "Zone")
+    turnover_type_stats = zone_stats["turnover_type_stats"]
+
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 2
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["by_type"]["defended_pass"]["count"] == 1
+    assert turnover_type_stats["all_points"]["opponent_possession_turnovers"]["by_type"]["missed_huck"]["count"] == 1
+    assert turnover_type_stats["all_points"]["our_possession_turnovers"]["total_turnovers"] == 1
+    assert turnover_type_stats["all_points"]["our_possession_turnovers"]["by_type"]["drop"]["count"] == 1
+    assert turnover_type_stats["started_on_defense"]["opponent_possession_turnovers"]["by_type"]["defended_pass"]["percentage"] == pytest.approx(0.5, rel=1e-6)
+    assert turnover_type_stats["started_on_defense"]["opponent_possession_turnovers"]["by_type"]["missed_huck"]["percentage"] == pytest.approx(0.5, rel=1e-6)
+    assert turnover_type_stats["started_on_defense"]["our_possession_turnovers"]["by_type"]["drop"]["percentage"] == pytest.approx(1.0, rel=1e-6)
 
 
 def test_get_strategy_stats_skips_points_without_strategy(db_session):

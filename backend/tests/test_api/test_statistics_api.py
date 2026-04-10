@@ -1768,6 +1768,46 @@ def test_get_strategy_stats_success(client: TestClient, db_session: Session):
     assert data["defense_strategies"][0]["points_played"] == 1
     assert data["defense_strategies"][0]["break_rate"] == 1.0
     assert data["defense_strategies"][0]["turnover_rate"] == 1.0
+    assert data["defense_strategies"][0]["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["other"]["count"] == 1
+
+
+def test_get_strategy_stats_exposes_defense_turnover_type_breakdown(client: TestClient, db_session: Session):
+    """Defense strategy stats should expose turnover-type distribution for the selected strategy."""
+    from tests.builders import GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team()
+        .with_competition()
+        .with_game()
+        .with_players(7)
+        .with_defense_strategy("Zone")
+        .build()
+    )
+
+    zone = scenario.defense_strategies[0]
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).defense().won().with_strategy(zone.id) \
+        .with_turnover_type(10, "defended_pass") \
+        .complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().lost().with_strategy(zone.id) \
+        .with_turnover_type(10, "missed_huck") \
+        .with_turnover_type(20, "drop") \
+        .complete()
+
+    response = client.get(f"/statistics/games/{scenario.game.id}/strategies")
+
+    assert response.status_code == 200
+    data = response.json()
+    zone_stats = data["defense_strategies"][0]
+
+    assert zone_stats["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["total_turnovers"] == 2
+    assert zone_stats["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["defended_pass"]["count"] == 1
+    assert zone_stats["turnover_type_stats"]["all_points"]["opponent_possession_turnovers"]["by_type"]["missed_huck"]["count"] == 1
+    assert zone_stats["turnover_type_stats"]["all_points"]["our_possession_turnovers"]["by_type"]["drop"]["count"] == 1
 
 
 def test_get_strategy_stats_game_not_found(client: TestClient):

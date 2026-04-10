@@ -7,6 +7,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useTranslation } from "react-i18next";
 import type { StrategyStatsBase } from "../../types";
+import TurnoverTypeStatsSection from "./TurnoverTypeStatsSection";
 import {
   BREAK_RATE_VALUE_STOPS,
   HOLD_RATE_VALUE_STOPS,
@@ -280,6 +281,17 @@ export default function StrategyStatistics({ strategyStats }: StrategyStatistics
                           total={strategy.points_played}
                           valueGradientStops={BREAK_RATE_VALUE_STOPS}
                         />
+                        {strategy.turnover_type_stats && (
+                          <TurnoverTypeStatsSection
+                            turnoverTypeStats={strategy.turnover_type_stats}
+                            title={t("strategyStats.turnoverTypesForStrategy", {
+                              strategyName: strategy.strategy_name,
+                            })}
+                            titleVariant="subtitle2"
+                            phaseKeys={["started_on_defense"]}
+                            singlePhaseLayout
+                          />
+                        )}
                       </Box>
                     </Collapse>
                   </Box>

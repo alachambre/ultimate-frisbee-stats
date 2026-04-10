@@ -247,6 +247,7 @@ class DefenseStrategyStats(BaseModel):
     break_rate: float
     points_with_turnover: int  # Points where we forced at least 1 turnover
     turnover_rate: float
+    turnover_type_stats: TurnoverTypeStats
 
     class Config:
         from_attributes = True

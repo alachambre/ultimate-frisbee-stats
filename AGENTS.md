@@ -42,6 +42,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
 - Statistics page layout is split into dedicated components such as `StatisticsConfigurationPanel` and `StatisticsSectionContainer` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
 - Turnover-type analytics in the statistics UI are rendered through `frontend/src/components/statistics/TurnoverTypeStatsSection.tsx` and reused in both `TeamStatistics` and `PlayerScopeStatistics`; extend that shared component instead of duplicating the 6-bucket breakdown in multiple places
+- Defensive strategy cards in `frontend/src/components/statistics/StrategyStatistics.tsx` also reuse `TurnoverTypeStatsSection` for turnover-type breakdowns; keep strategy-specific turnover analytics scoped to defense strategies instead of introducing a separate visualization pattern
 - Statistics data/query orchestration lives in `frontend/src/pages/hooks/useStatisticsPageData.ts`; keep `StatisticsPage.tsx` focused on composition/rendering
 - Statistics supports dataset filtering by competitions/games plus cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
 - Statistics player filter options are scope-aware: selected competitions/games restrict the list to the union of their rosters, and selected cohort players further narrow options to teammates who shared at least one completed point in the current dataset
@@ -49,6 +50,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - `Game trends` charts now render through Chart.js + `react-chartjs-2` with the zoom plugin; keep that charting stack isolated to `frontend/src/components/statistics/GameTrendsSection.tsx` unless there is a deliberate broader charting decision
 - Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
 - Team and player statistics now also expose top-level `turnover_type_stats` with 6 buckets (`all_points`, `started_on_offense`, `started_on_defense` x `our_possession_turnovers` / `opponent_possession_turnovers`); keep turnover-type analytics in that shared contract instead of scattering ad hoc breakdown fields through offense/defense sections
+- Defensive strategy statistics now expose `turnover_type_stats` with the same 6-bucket contract, allowing turnover-type breakdowns per defense strategy without inventing a parallel schema
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
 - Statistics UX pattern is filter-based: sticky team context + multi-select competition/game/player filters + active dataset summary chips; avoid reintroducing the old branch-navigation model
 - Team roster cards on `TeamDetailPage` are click-to-edit; player statistics access is available from `EditPlayerModal` (team scope)
@@ -72,6 +74,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
 - Backend exposes public `GET /health` for lightweight readiness checks and frontend cold-start wake-up behavior; keep it fast and unauthenticated
+- Backend `GET /health` now performs a lightweight DB reachability check (`SELECT 1`) and returns `503` with `database=unreachable` when the app is up but the database is not reachable
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`
 - Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)

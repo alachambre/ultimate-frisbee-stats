@@ -549,6 +549,7 @@ export interface DefenseStrategyStats {
   break_rate: number;
   points_with_turnover: number;
   turnover_rate: number;
+  turnover_type_stats?: TurnoverTypeStats;
 }
 
 export interface StrategyStatsBase {

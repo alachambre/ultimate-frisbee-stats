@@ -23,6 +23,11 @@ import { TURNOVER_TYPES, getTurnoverTypeLabel } from "../../utils/turnoverTypes"
 
 interface TurnoverTypeStatsSectionProps {
   turnoverTypeStats?: TurnoverTypeStats;
+  title?: string | null;
+  defaultExpandedIndex?: number | null;
+  phaseKeys?: Array<keyof TurnoverTypeStats>;
+  singlePhaseLayout?: boolean;
+  titleVariant?: "h6" | "subtitle2";
 }
 
 interface TurnoverBucketCardProps {
@@ -176,6 +181,11 @@ function TurnoverBucketCard({
 
 export default function TurnoverTypeStatsSection({
   turnoverTypeStats,
+  title,
+  defaultExpandedIndex = 0,
+  phaseKeys,
+  singlePhaseLayout = false,
+  titleVariant = "h6",
 }: TurnoverTypeStatsSectionProps) {
   const { t } = useTranslation("statistics");
   const phaseStats = turnoverTypeStats ?? {
@@ -183,22 +193,58 @@ export default function TurnoverTypeStatsSection({
     started_on_offense: buildEmptyPhaseStats(),
     started_on_defense: buildEmptyPhaseStats(),
   };
+  const visiblePhases = PHASE_CONFIG.filter(
+    (phaseConfig) => !phaseKeys || phaseKeys.includes(phaseConfig.key),
+  );
+
+  if (singlePhaseLayout && visiblePhases.length === 1) {
+    const phase = phaseStats[visiblePhases[0].key];
+
+    return (
+      <Box sx={{ mt: title === null ? 2 : 4 }}>
+        {title !== null && (
+          <Typography variant={titleVariant} sx={{ mb: 2 }} fontWeight={titleVariant === "subtitle2" ? "bold" : undefined}>
+            {title ?? t("turnoverTypeStats.title")}
+          </Typography>
+        )}
+
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TurnoverBucketCard
+              title={t("turnoverTypeStats.ourPossessionTurnovers")}
+              bucket={phase.our_possession_turnovers}
+              positive={false}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TurnoverBucketCard
+              title={t("turnoverTypeStats.opponentPossessionTurnovers")}
+              bucket={phase.opponent_possession_turnovers}
+              positive
+            />
+          </Grid>
+        </Grid>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ mt: 4 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        {t("turnoverTypeStats.title")}
-      </Typography>
+    <Box sx={{ mt: title === null ? 2 : 4 }}>
+      {title !== null && (
+        <Typography variant={titleVariant} sx={{ mb: 2 }} fontWeight={titleVariant === "subtitle2" ? "bold" : undefined}>
+          {title ?? t("turnoverTypeStats.title")}
+        </Typography>
+      )}
 
       <Stack spacing={1.5}>
-        {PHASE_CONFIG.map((phaseConfig, index) => {
+        {visiblePhases.map((phaseConfig, index) => {
           const phase = phaseStats[phaseConfig.key];
 
           return (
             <Accordion
               key={phaseConfig.key}
               disableGutters
-              defaultExpanded={index === 0}
+              defaultExpanded={defaultExpandedIndex === index}
               elevation={0}
               sx={{
                 border: 1,

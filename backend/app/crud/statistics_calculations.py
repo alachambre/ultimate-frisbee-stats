@@ -661,6 +661,11 @@ def build_game_strategy_stats(
                 points_with_turnover += 1
 
         turnover_rate = points_with_turnover / points_played if points_played > 0 else 0.0
+        strategy_turnovers_by_point = {
+            point.id: turnovers_by_point.get(point.id, [])
+            for point in points
+        }
+        turnover_type_stats = build_turnover_type_stats(points, strategy_turnovers_by_point)
 
         defense_strategies.append({
             "strategy_id": strategy_id,
@@ -671,6 +676,7 @@ def build_game_strategy_stats(
             "break_rate": break_rate,
             "points_with_turnover": points_with_turnover,
             "turnover_rate": turnover_rate,
+            "turnover_type_stats": turnover_type_stats,
         })
 
     offense_strategies.sort(key=lambda x: x["strategy_name"])

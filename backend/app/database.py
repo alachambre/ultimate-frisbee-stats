@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker
 import os
 
@@ -13,16 +13,19 @@ DATABASE_URL = os.getenv(
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+IS_SQLITE_DATABASE = DATABASE_URL.startswith("sqlite")
+
 # SQLite-specific: Use check_same_thread=False to allow FastAPI to work properly
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+connect_args = {"check_same_thread": False} if IS_SQLITE_DATABASE else {}
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args=connect_args
+    connect_args=connect_args,
+    pool_pre_ping=not IS_SQLITE_DATABASE,
 )
 
 # Enable foreign key constraints for SQLite
-if DATABASE_URL.startswith("sqlite"):
+if IS_SQLITE_DATABASE:
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_conn, connection_record):
         cursor = dbapi_conn.cursor()
@@ -43,5 +46,13 @@ def get_db():
 
 # Helper function to initialize the database (create all tables)
 def init_db():
-    from app.models import Base
-    Base.metadata.create_all(bind=engine)
+    if IS_SQLITE_DATABASE:
+        from app.models import Base
+        Base.metadata.create_all(bind=engine)
+
+    check_db_connection()
+
+
+def check_db_connection() -> None:
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
