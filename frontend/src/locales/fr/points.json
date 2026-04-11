@@ -141,7 +141,7 @@
     "pointsPlayedCount_other": "{{count}} pts",
     "turnoversSummary": "R\u00e9sum\u00e9 des turns",
     "halfTimeDetails": "D\u00e9tails de la mi-temps",
-    "gameSummaryDetails": "D\u00e9tails du r\u00e9sum\u00e9 du match"
+    "gameSummaryDetails": "D\u00e9tails du match"
   },
   "status": {
     "ready": "Pr\u00eat",

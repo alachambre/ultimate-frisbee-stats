@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getGame, getLiveGameStatistics } from "../../services";
+import { getGame, getGameTurnovers, getLiveGameStatistics } from "../../services";
 import { getCompetition } from "../../services/competitions";
 import { getActivePoint } from "../../services/points";
 import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
+
+const GAME_DETAIL_REFRESH_INTERVAL_MS = 30000;
 
 export function useGameDetailPageData(
   gameId: string | undefined,
@@ -21,6 +23,12 @@ export function useGameDetailPageData(
     queryKey: queryKeys.game(gameIdValid ? gameIdNumber : 0),
     queryFn: () => getGame(gameIdNumber),
     enabled: gameIdValid,
+    refetchInterval: (query) => {
+      const currentGame = query.state.data as { status?: string } | undefined;
+      return currentGame?.status === "ended"
+        ? false
+        : GAME_DETAIL_REFRESH_INTERVAL_MS;
+    },
   });
 
   const hasScoredPoint = useMemo(() => {
@@ -31,8 +39,24 @@ export function useGameDetailPageData(
     queryKey: queryKeys.activePoint(gameIdValid ? gameIdNumber : 0),
     queryFn: () => getActivePoint(gameIdNumber),
     enabled: gameIdValid && game?.status === "started" && !hasScoredPoint,
-    refetchInterval: game?.status === "started" && !hasScoredPoint ? 5000 : false,
+    refetchInterval:
+      game?.status === "started" && !hasScoredPoint
+        ? GAME_DETAIL_REFRESH_INTERVAL_MS
+        : false,
     retry: false,
+  });
+
+  const { data: gameTurnovers } = useQuery({
+    queryKey: queryKeys.gameTurnovers(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getGameTurnovers(gameIdNumber),
+    enabled:
+      gameIdValid &&
+      Boolean(game) &&
+      Boolean(game?.halftime || game?.status === "ended"),
+    refetchInterval:
+      game?.status === "started" && Boolean(game?.halftime)
+        ? GAME_DETAIL_REFRESH_INTERVAL_MS
+        : false,
   });
 
   const { data: liveStats } = useQuery({
@@ -42,7 +66,8 @@ export function useGameDetailPageData(
       includeLiveStats &&
       gameIdValid &&
       (game?.status === "started" || game?.status === "ended"),
-    refetchInterval: game?.status === "started" ? 5000 : false,
+    refetchInterval:
+      game?.status === "started" ? GAME_DETAIL_REFRESH_INTERVAL_MS : false,
   });
 
   const competitionId = game?.competition_id;
@@ -95,6 +120,7 @@ export function useGameDetailPageData(
     isLoading,
     error,
     activePoint,
+    gameTurnovers,
     liveStats,
     liveStatsByPlayerId,
     competition,

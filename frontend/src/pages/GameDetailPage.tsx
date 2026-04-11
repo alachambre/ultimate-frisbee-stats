@@ -61,6 +61,7 @@ export default function GameDetailPage() {
     isLoading,
     error,
     activePoint,
+    gameTurnovers,
     liveStatsByPlayerId,
     competition,
     competitionPath,
@@ -88,6 +89,7 @@ export default function GameDetailPage() {
     mutationFn: () => finishGame(gameIdNumber),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.games });
       setIsFinishConfirmOpen(false);
     },
@@ -97,6 +99,7 @@ export default function GameDetailPage() {
     mutationFn: (pointId: number) => deletePoint(pointId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
       setDeletingPoint(null);
     },
@@ -106,6 +109,7 @@ export default function GameDetailPage() {
     mutationFn: (halftimeId: number) => deleteHalftime(halftimeId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
     },
   });
 
@@ -127,6 +131,7 @@ export default function GameDetailPage() {
 
   const handlePointUpdated = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
     queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
   };
 
@@ -144,10 +149,7 @@ export default function GameDetailPage() {
     deleteHalftimeMutation.mutate(halftime.id);
   };
 
-  const completedGameTimeline =
-    game.status === "ended"
-      ? buildGamePointTimelineFromPoints(game.id, game.points, game.halftime)
-      : undefined;
+  const gameTimeline = buildGamePointTimelineFromPoints(game.id, game.points, game.halftime);
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -189,7 +191,7 @@ export default function GameDetailPage() {
         endDatetime={game.end_datetime}
         comments={game.comments}
       >
-        {completedGameTimeline && completedGameTimeline.points.length > 0 && (
+        {gameTimeline.points.length > 0 && (
           <Accordion
             disableGutters
             elevation={0}
@@ -210,7 +212,7 @@ export default function GameDetailPage() {
             </AccordionSummary>
             <AccordionDetails sx={{ px: 0, pt: 0, pb: 0 }}>
               <GameTrendsSection
-                timeline={completedGameTimeline}
+                timeline={gameTimeline}
                 isLoading={false}
                 embedded
                 teamName={game.team_name}
@@ -247,6 +249,7 @@ export default function GameDetailPage() {
 
       <GameHistorySection
         points={game.points}
+        turnovers={gameTurnovers}
         halftime={game.halftime}
         gameEndedAt={game.end_datetime}
         onEditPoint={canEditData ? (point) => setEditingPoint(point) : undefined}

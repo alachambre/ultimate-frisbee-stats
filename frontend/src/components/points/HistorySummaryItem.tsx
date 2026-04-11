@@ -26,6 +26,8 @@ import {
   type ValueGradientStops,
 } from "../statistics/statValueColors";
 import TurnoverBalanceBar from "../shared/TurnoverBalanceBar";
+import type { TurnoverTypeBucket, TurnoverTypePhaseStats } from "../../types";
+import { TURNOVER_TYPES, getTurnoverTypeLabel } from "../../utils/turnoverTypes";
 import type { HistorySummarySnapshot } from "./historySummarySnapshot";
 
 interface HistorySummaryItemProps<TActionPayload = never> {
@@ -61,16 +63,24 @@ interface TurnoverSectionProps {
   ourCount: number;
 }
 
-function formatDuration(totalSeconds: number): string {
+interface TurnoverTypeBucketSectionProps {
+  title: string;
+  bucket: TurnoverTypeBucket;
+  color: string;
+}
+
+const sectionTitleSx = {
+  display: "block",
+  mb: 0.25,
+  letterSpacing: 0.5,
+  fontWeight: 700,
+} as const;
+
+function formatSummaryDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
 
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 function SummaryMetric({ label, value }: SummaryMetricProps) {
@@ -86,22 +96,126 @@ function SummaryMetric({ label, value }: SummaryMetricProps) {
   );
 }
 
+function getTurnoverTypeEntries(bucket: TurnoverTypeBucket) {
+  return TURNOVER_TYPES.map((turnoverType, index) => ({
+    turnoverType,
+    index,
+    stats: bucket.by_type[turnoverType],
+  }))
+    .filter((entry) => entry.stats.count > 0)
+    .sort((left, right) => {
+      if (right.stats.count !== left.stats.count) {
+        return right.stats.count - left.stats.count;
+      }
+      return left.index - right.index;
+    });
+}
+
+function TurnoverTypeBucketSection({
+  title,
+  bucket,
+  color,
+}: TurnoverTypeBucketSectionProps) {
+  const { t } = useTranslation(["statistics", "points"]);
+  const entries = getTurnoverTypeEntries(bucket);
+
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return (
+    <Box sx={{ mt: 1 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+        {title}
+      </Typography>
+      <Stack spacing={0.75}>
+        {entries.map(({ turnoverType, stats }) => (
+          <Box key={turnoverType}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 1.5,
+                mb: 0.25,
+              }}
+            >
+              <Typography variant="caption">{getTurnoverTypeLabel(t, turnoverType)}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {Math.round(stats.percentage * 100)}% ({stats.count})
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={Math.round(stats.percentage * 100)}
+              sx={{
+                height: 4,
+                borderRadius: 999,
+                bgcolor: alpha(color, 0.12),
+                "& .MuiLinearProgress-bar": {
+                  borderRadius: 999,
+                  backgroundColor: color,
+                },
+              }}
+            />
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
+}
+
+function createEmptyMergedTurnoverTypeBucket(): TurnoverTypeBucket {
+  return {
+    total_turnovers: 0,
+    by_type: Object.fromEntries(
+      TURNOVER_TYPES.map((turnoverType) => [turnoverType, { count: 0, percentage: 0 }]),
+    ) as TurnoverTypeBucket["by_type"],
+  };
+}
+
+function mergeTurnoverTypeBucket(...buckets: TurnoverTypeBucket[]): TurnoverTypeBucket {
+  const mergedBucket = createEmptyMergedTurnoverTypeBucket();
+
+  buckets.forEach((bucket) => {
+    mergedBucket.total_turnovers += bucket.total_turnovers;
+    TURNOVER_TYPES.forEach((turnoverType) => {
+      mergedBucket.by_type[turnoverType].count += bucket.by_type[turnoverType].count;
+    });
+  });
+
+  TURNOVER_TYPES.forEach((turnoverType) => {
+    mergedBucket.by_type[turnoverType].percentage =
+      mergedBucket.total_turnovers > 0
+        ? mergedBucket.by_type[turnoverType].count / mergedBucket.total_turnovers
+        : 0;
+  });
+
+  return mergedBucket;
+}
+
+function mergeTurnoverTypePhaseStats(
+  ...phaseStatsList: TurnoverTypePhaseStats[]
+): TurnoverTypePhaseStats {
+  return {
+    opponent_possession_turnovers: mergeTurnoverTypeBucket(
+      ...phaseStatsList.map((phaseStats) => phaseStats.opponent_possession_turnovers),
+    ),
+    our_possession_turnovers: mergeTurnoverTypeBucket(
+      ...phaseStatsList.map((phaseStats) => phaseStats.our_possession_turnovers),
+    ),
+  };
+}
+
 function TurnoverSection({ title, opponentCount, ourCount }: TurnoverSectionProps) {
   const { t } = useTranslation("statistics");
 
   return (
-    <Box
-      sx={{
-        p: 1.5,
-        borderRadius: 1.5,
-        border: 1,
-        borderColor: "divider",
-      }}
-    >
+    <Box>
       <Typography
         variant="overline"
         color="text.secondary"
-        sx={{ display: "block", letterSpacing: 0.5 }}
+        sx={sectionTitleSx}
       >
         {title}
       </Typography>
@@ -177,6 +291,16 @@ export default function HistorySummaryItem<TActionPayload = never>({
 }: HistorySummaryItemProps<TActionPayload>) {
   const { t } = useTranslation(["points", "common", "statistics"]);
   const theme = useTheme();
+  const globalTurnoverTypeStats = snapshot
+    ? mergeTurnoverTypePhaseStats(
+        snapshot.offenseTurnoverTypeStats,
+        snapshot.defenseTurnoverTypeStats,
+      )
+    : null;
+  const hasGlobalTurnoverTypeStats =
+    (globalTurnoverTypeStats?.opponent_possession_turnovers.total_turnovers ?? 0) +
+      (globalTurnoverTypeStats?.our_possession_turnovers.total_turnovers ?? 0) >
+    0;
 
   const hasHoldByFieldSideData = snapshot
     ? snapshot.holdByFieldSide.table_left.pointsStarted +
@@ -189,7 +313,7 @@ export default function HistorySummaryItem<TActionPayload = never>({
       0
     : false;
   const formatDurationWithPoints = (totalSeconds: number, pointsPlayed: number) =>
-    `${formatDuration(totalSeconds)} (${t("points:history.pointsPlayedCount", { count: pointsPlayed })})`;
+    `${formatSummaryDuration(totalSeconds)} (${t("points:history.pointsPlayedCount", { count: pointsPlayed })})`;
 
   return (
     <Card variant="outlined">
@@ -228,9 +352,9 @@ export default function HistorySummaryItem<TActionPayload = never>({
               mt: 2,
               p: 2,
               borderRadius: 2,
-              bgcolor: alpha(theme.palette.warning.main, 0.06),
+              bgcolor: alpha(theme.palette.info.main, 0.06),
               border: 1,
-              borderColor: alpha(theme.palette.warning.main, 0.18),
+              borderColor: alpha(theme.palette.info.main, 0.18),
             }}
           >
             <Box
@@ -250,7 +374,7 @@ export default function HistorySummaryItem<TActionPayload = never>({
               {snapshot.elapsedSeconds != null && (
                 <SummaryMetric
                   label={t("points:tracker.elapsedTime")}
-                  value={formatDuration(snapshot.elapsedSeconds)}
+                  value={formatSummaryDuration(snapshot.elapsedSeconds)}
                 />
               )}
               <SummaryMetric
@@ -274,34 +398,39 @@ export default function HistorySummaryItem<TActionPayload = never>({
               elevation={0}
               sx={{
                 mt: 2,
-                borderRadius: 1.5,
-                border: 1,
-                borderColor: alpha(theme.palette.warning.main, 0.14),
-                bgcolor: alpha(theme.palette.common.white, 0.3),
+                bgcolor: "transparent",
                 "&::before": { display: "none" },
               }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  px: 0,
+                  minHeight: "unset",
+                  borderTop: 1,
+                  borderColor: alpha(theme.palette.info.main, 0.2),
+                  "& .MuiAccordionSummary-content": {
+                    my: 1.5,
+                  },
+                  "& .MuiAccordionSummary-content.Mui-expanded": {
+                    my: 1.5,
+                  },
+                }}
+              >
                 <Typography variant="subtitle2" fontWeight="bold">
                   {detailsLabel}
                 </Typography>
               </AccordionSummary>
-              <AccordionDetails sx={{ pt: 0 }}>
+              <AccordionDetails sx={{ px: 0, pt: 0, pb: 0 }}>
                 <Stack spacing={2}>
                   <Box>
-                    <Typography
-                      variant="overline"
-                      color="text.secondary"
-                      sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
-                    >
-                      {t("points:history.turnoversSummary")}
-                    </Typography>
                     <Stack spacing={1.25}>
                       <TurnoverSection
                         title={t("statistics:teamStats.offense")}
                         opponentCount={snapshot.offenseTurnovers.opponentTurnovers}
                         ourCount={snapshot.offenseTurnovers.ourTurnovers}
                       />
+                      <Divider />
                       <TurnoverSection
                         title={t("statistics:teamStats.defense")}
                         opponentCount={snapshot.defenseTurnovers.opponentTurnovers}
@@ -309,6 +438,33 @@ export default function HistorySummaryItem<TActionPayload = never>({
                       />
                     </Stack>
                   </Box>
+
+                  {globalTurnoverTypeStats && hasGlobalTurnoverTypeStats && (
+                    <>
+                      <Divider />
+                      <Box>
+                        <Typography
+                          variant="overline"
+                          color="text.secondary"
+                          sx={{ ...sectionTitleSx, mb: 1 }}
+                        >
+                          {t("statistics:turnoverTypeStats.title")}
+                        </Typography>
+                        <TurnoverTypeBucketSection
+                          title={t("statistics:turnoverTypeStats.opponentPossessionTurnovers")}
+                          bucket={globalTurnoverTypeStats.opponent_possession_turnovers}
+                          color={theme.palette.success.main}
+                        />
+                        <Box sx={{ mt: 1.75 }}>
+                          <TurnoverTypeBucketSection
+                            title={t("statistics:turnoverTypeStats.ourPossessionTurnovers")}
+                            bucket={globalTurnoverTypeStats.our_possession_turnovers}
+                            color={theme.palette.warning.main}
+                          />
+                        </Box>
+                      </Box>
+                    </>
+                  )}
 
                   {(hasHoldByFieldSideData || hasBreakByFieldSideData) && (
                     <>
@@ -319,7 +475,7 @@ export default function HistorySummaryItem<TActionPayload = never>({
                             <Typography
                               variant="overline"
                               color="text.secondary"
-                              sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
+                              sx={{ ...sectionTitleSx, mb: 1 }}
                             >
                               {t("statistics:teamStats.holdByFieldSide")}
                             </Typography>
@@ -347,7 +503,7 @@ export default function HistorySummaryItem<TActionPayload = never>({
                             <Typography
                               variant="overline"
                               color="text.secondary"
-                              sx={{ display: "block", mb: 1, letterSpacing: 0.5 }}
+                              sx={{ ...sectionTitleSx, mb: 1 }}
                             >
                               {t("statistics:teamStats.breakByFieldSide")}
                             </Typography>

@@ -866,6 +866,37 @@ export const handlers = [
     return HttpResponse.json(gameDetail);
   }),
 
+  // GET /games/:id/turnovers - Get all turnovers for a game
+  http.get(`${BASE_URL}/games/:id/turnovers`, ({ params }) => {
+    const gameId = Number(params.id);
+    const game = games.find((g) => g.id === gameId);
+
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    const pointNumberById = new Map(
+      points
+        .filter((point) => point.game_id === gameId)
+        .map((point) => [point.id, point.point_number])
+    );
+
+    const gameTurnovers = turnovers
+      .filter((turnover) => pointNumberById.has(turnover.point_id))
+      .slice()
+      .sort((left, right) => {
+        const leftPointNumber = pointNumberById.get(left.point_id) ?? Number.MAX_SAFE_INTEGER;
+        const rightPointNumber = pointNumberById.get(right.point_id) ?? Number.MAX_SAFE_INTEGER;
+        if (leftPointNumber !== rightPointNumber) {
+          return leftPointNumber - rightPointNumber;
+        }
+
+        return new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime();
+      });
+
+    return HttpResponse.json(gameTurnovers);
+  }),
+
   // PUT /games/:id - Update game
   http.put(`${BASE_URL}/games/:id`, async ({ request, params }) => {
     const gameId = Number(params.id);

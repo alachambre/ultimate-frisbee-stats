@@ -8,6 +8,7 @@ import type {
   PointWithPlayers,
   Player,
   PlayerIdsRequest,
+  TurnoverWithPlayer,
 } from "../types";
 
 // Create a new game
@@ -54,6 +55,16 @@ export const getGamePoints = async (
 ): Promise<PointWithPlayers[]> => {
   const response = await apiClient.get<PointWithPlayers[]>(
     `/games/${gameId}/points`
+  );
+  return response.data;
+};
+
+// Get all turnovers for a game
+export const getGameTurnovers = async (
+  gameId: number
+): Promise<TurnoverWithPlayer[]> => {
+  const response = await apiClient.get<TurnoverWithPlayer[]>(
+    `/games/${gameId}/turnovers`
   );
   return response.data;
 };

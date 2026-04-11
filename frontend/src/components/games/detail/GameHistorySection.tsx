@@ -1,10 +1,11 @@
 import { Alert, Box, Paper, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import type { Halftime, PointWithPlayers } from "../../../types";
+import type { Halftime, PointWithPlayers, TurnoverWithPlayer } from "../../../types";
 import PointHistoryList from "../../points/PointHistoryList";
 
 interface GameHistorySectionProps {
   points: PointWithPlayers[];
+  turnovers?: TurnoverWithPlayer[];
   halftime?: Halftime | null;
   gameEndedAt?: string | null;
   onEditPoint?: (point: PointWithPlayers) => void;
@@ -16,6 +17,7 @@ interface GameHistorySectionProps {
 
 export function GameHistorySection({
   points,
+  turnovers,
   halftime,
   gameEndedAt,
   onEditPoint,
@@ -37,6 +39,7 @@ export function GameHistorySection({
       <Box p={3}>
         <PointHistoryList
           points={points}
+          turnovers={turnovers}
           halftime={halftime}
           gameEndedAt={gameEndedAt}
           onEditPoint={onEditPoint}

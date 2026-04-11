@@ -11,6 +11,13 @@ import type { NavigateFunction } from "react-router-dom";
 // Mock useParams and useNavigate
 const mockUseParams = vi.fn();
 const mockUseNavigate = vi.fn();
+const PUBLIC_SPECTATOR_AUTH = {
+  role: "public" as const,
+  enforcementMode: "enforced" as const,
+  isAuthenticated: false,
+  hasAppAccess: false,
+  isConfigured: true,
+};
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -96,13 +103,7 @@ describe("GameDetailPage", () => {
     await updateGame(1, { status: "started" });
 
     render(<GameDetailPage />, {
-      auth: {
-        role: "public",
-        enforcementMode: "enforced",
-        isAuthenticated: false,
-        hasAppAccess: false,
-        isConfigured: true,
-      },
+      auth: PUBLIC_SPECTATOR_AUTH,
     });
 
     await waitFor(() => {
@@ -137,13 +138,7 @@ describe("GameDetailPage", () => {
     await finishGame(1);
 
     render(<GameDetailPage />, {
-      auth: {
-        role: "public",
-        enforcementMode: "enforced",
-        isAuthenticated: false,
-        hasAppAccess: false,
-        isConfigured: true,
-      },
+      auth: PUBLIC_SPECTATOR_AUTH,
     });
 
     await waitFor(() => {
@@ -151,6 +146,43 @@ describe("GameDetailPage", () => {
     });
 
     expect(screen.queryByRole("button", { name: /score progression/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /game trends/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /score progression/i })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+    });
+  });
+
+  it("shows game trends in the score overview for started games once completed points exist", async () => {
+    const user = userEvent.setup();
+    await updateGame(1, { status: "started" });
+
+    const point = await startPoint({
+      game_id: 1,
+      starting_on_offense: true,
+      start_datetime: "2024-01-15T10:00:00Z",
+    });
+    await updatePoint(point.id, { status: "running" });
+    await createTurnover({
+      point_id: point.id,
+      timestamp: "2024-01-15T10:00:25Z",
+    });
+    await finishPoint(point.id, {
+      won: true,
+      end_datetime: "2024-01-15T10:01:10Z",
+    });
+
+    render(<GameDetailPage />, {
+      auth: PUBLIC_SPECTATOR_AUTH,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /game trends/i })).toBeInTheDocument();
+    });
 
     await user.click(screen.getByRole("button", { name: /game trends/i }));
 

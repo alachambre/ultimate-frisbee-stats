@@ -49,6 +49,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Single-game statistics now include a lazy-loaded `Game trends` chart section fed by `/statistics/games/{game_id}/timeline`; keep chart-specific shaping in that timeline contract instead of piggybacking on game detail payloads
 - `Game trends` charts now render through Chart.js + `react-chartjs-2` with the zoom plugin; keep that charting stack isolated to `frontend/src/components/statistics/GameTrendsSection.tsx` unless there is a deliberate broader charting decision
 - Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
+- Halftime/end-of-game history recaps can aggregate turnover-type details from the public-safe `GET /games/{game_id}/turnovers` feed; prefer that game-level endpoint over point-by-point turnover fetches when enriching recap summaries
 - Team and player statistics now also expose top-level `turnover_type_stats` with 6 buckets (`all_points`, `started_on_offense`, `started_on_defense` x `our_possession_turnovers` / `opponent_possession_turnovers`); keep turnover-type analytics in that shared contract instead of scattering ad hoc breakdown fields through offense/defense sections
 - Defensive strategy statistics now expose `turnover_type_stats` with the same 6-bucket contract, allowing turnover-type breakdowns per defense strategy without inventing a parallel schema
 - Statistics navigation should always target `/statistics` query params (legacy `/statistics/*/:id` routes are removed)
@@ -74,6 +75,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
 - Backend exposes public `GET /health` for lightweight readiness checks and frontend cold-start wake-up behavior; keep it fast and unauthenticated
+- Backend exposes public `GET /games/{game_id}/turnovers` with the standard redaction rules so spectator-safe history/summary UI can aggregate turnover details without extra privileged stats endpoints
 - Backend `GET /health` now performs a lightweight DB reachability check (`SELECT 1`) and returns `503` with `database=unreachable` when the app is up but the database is not reachable
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`
 - Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game

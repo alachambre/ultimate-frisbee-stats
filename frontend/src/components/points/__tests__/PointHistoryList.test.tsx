@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { within } from "@testing-library/react";
 import PointHistoryList from "../PointHistoryList";
-import type { PointWithPlayers, Halftime } from "../../../types";
+import type { PointWithPlayers, Halftime, TurnoverWithPlayer } from "../../../types";
 
 const createPoint = (
   id: number,
@@ -30,6 +30,22 @@ const createPoint = (
   our_turnovers: turnoverSummary?.our ?? 0,
   opponent_turnovers: turnoverSummary?.opponent ?? 0,
   duration_seconds: 300,
+});
+
+const createTurnover = (
+  id: number,
+  pointId: number,
+  timestamp: string,
+  turnoverType: TurnoverWithPlayer["turnover_type"],
+): TurnoverWithPlayer => ({
+  id,
+  point_id: pointId,
+  player_id: null,
+  turnover_type: turnoverType,
+  timestamp,
+  comments: null,
+  created_at: timestamp,
+  player: null,
 });
 
 describe("PointHistoryList", () => {
@@ -94,11 +110,11 @@ describe("PointHistoryList", () => {
       screen
         .getAllByRole("heading", { level: 6 })
         .map((heading) => heading.textContent)
-        .filter((text) => text !== "Game summary details" && text !== "Half time details")
+        .filter((text) => text !== "Game details" && text !== "Half time details")
     ).toEqual(["End of game", "Point #2", "Half time", "Point #1"]);
     expect(screen.getByText("Finished")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /game summary details/i })
+      screen.getByRole("button", { name: /game details/i })
     ).toBeInTheDocument();
   });
 
@@ -140,6 +156,11 @@ describe("PointHistoryList", () => {
       },
       createPoint(3, 3, "2024-01-01T11:00:00Z", "table_left", { our: 3, opponent: 1 }),
     ];
+    const turnovers: TurnoverWithPlayer[] = [
+      createTurnover(1, 1, "2024-01-01T10:01:00Z", "defended_pass"),
+      createTurnover(2, 2, "2024-01-01T10:21:00Z", "drop"),
+      createTurnover(3, 2, "2024-01-01T10:22:00Z", "miscommunication"),
+    ];
 
     const halftime: Halftime = {
       id: 1,
@@ -152,6 +173,7 @@ describe("PointHistoryList", () => {
     render(
       <PointHistoryList
         points={points}
+        turnovers={turnovers}
         halftime={halftime}
         onEditPoint={vi.fn()}
         onDeletePoint={vi.fn()}
@@ -164,20 +186,22 @@ describe("PointHistoryList", () => {
     expect(halftimeCard).not.toBeNull();
 
     const halftimeWithin = within(halftimeCard as HTMLElement);
-    expect(halftimeWithin.getByText("30:00")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("00:30")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Offense time")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Defense time")).toBeInTheDocument();
-    expect(halftimeWithin.getAllByText("5:00 (1 pt)")).toHaveLength(2);
+    expect(halftimeWithin.getAllByText("00:05 (1 pt)")).toHaveLength(2);
 
     await user.click(halftimeWithin.getByRole("button", { name: /half time details/i }));
 
-    expect(halftimeWithin.getByText("Turns summary")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Hold by field side")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Break by field side")).toBeInTheDocument();
     expect(halftimeWithin.getByText("100% (1/1)")).toBeInTheDocument();
     expect(halftimeWithin.getByText("0% (0/1)")).toBeInTheDocument();
     expect(halftimeWithin.getAllByText("Opponent turns")).toHaveLength(2);
     expect(halftimeWithin.getAllByText("Our turns")).toHaveLength(2);
+    expect(halftimeWithin.getByText("Defended pass")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("Drop")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("Miscommunication")).toBeInTheDocument();
   });
 
   it("renders field side in chronology when available", async () => {

@@ -4,11 +4,12 @@ import { useTranslation } from "react-i18next";
 import PointHistoryItem from "./PointHistoryItem";
 import HalftimeHistoryItem from "./HalftimeHistoryItem";
 import GameEndHistoryItem from "./GameEndHistoryItem";
-import type { PointWithPlayers, Halftime } from "../../types";
+import type { PointWithPlayers, Halftime, TurnoverWithPlayer } from "../../types";
 import { buildHistorySummarySnapshot } from "./historySummarySnapshot";
 
 interface PointHistoryListProps {
   points: PointWithPlayers[];
+  turnovers?: TurnoverWithPlayer[];
   halftime?: Halftime | null;
   gameEndedAt?: string | null;
   onEditPoint?: (point: PointWithPlayers) => void;
@@ -19,6 +20,7 @@ interface PointHistoryListProps {
 
 export default function PointHistoryList({
   points,
+  turnovers,
   halftime,
   gameEndedAt,
   onEditPoint,
@@ -68,12 +70,18 @@ export default function PointHistoryList({
   }, [points, halftime, gameEndedAt]);
 
   const halftimeSnapshot = useMemo(
-    () => (halftime ? buildHistorySummarySnapshot(points, halftime.halftime_timestamp) : null),
-    [points, halftime]
+    () =>
+      halftime
+        ? buildHistorySummarySnapshot(points, halftime.halftime_timestamp, turnovers ?? [])
+        : null,
+    [points, halftime, turnovers]
   );
   const gameEndSnapshot = useMemo(
-    () => (gameEndedAt ? buildHistorySummarySnapshot(points, gameEndedAt) : null),
-    [points, gameEndedAt]
+    () =>
+      gameEndedAt
+        ? buildHistorySummarySnapshot(points, gameEndedAt, turnovers ?? [])
+        : null,
+    [points, gameEndedAt, turnovers]
   );
 
   if (historyItems.length === 0) {

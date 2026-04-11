@@ -56,6 +56,18 @@ def get_turnovers_by_point(db: Session, point_id: int) -> List[models.Turnover]:
     ).order_by(models.Turnover.timestamp).all()
 
 
+def get_turnovers_by_game(db: Session, game_id: int) -> List[models.Turnover]:
+    """Get all turnovers for a specific game, ordered by point number then timestamp."""
+    return (
+        db.query(models.Turnover)
+        .options(joinedload(models.Turnover.player))
+        .join(models.Point, models.Turnover.point_id == models.Point.id)
+        .filter(models.Point.game_id == game_id)
+        .order_by(models.Point.point_number, models.Turnover.timestamp)
+        .all()
+    )
+
+
 def get_turnovers_by_player(db: Session, player_id: int) -> List[models.Turnover]:
     """Get all turnovers for a specific player."""
     return db.query(models.Turnover).filter(

@@ -10,6 +10,7 @@ from app.auth.redaction import (
     serialize_game_detail,
     serialize_games_with_score,
     serialize_points,
+    serialize_turnovers,
 )
 from app.database import get_db
 from app.logging_config import get_logger
@@ -145,6 +146,18 @@ def list_game_points(
     access_context: AccessContext = Depends(get_request_access_context),
 ):
     return serialize_points(crud.get_points_by_game(db, game_id), access_context)
+
+
+@router.get("/{game_id}/turnovers", response_model=List[schemas.TurnoverWithPlayer])
+def list_game_turnovers(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return serialize_turnovers(crud.get_turnovers_by_game(db, game_id), access_context)
 
 
 @router.get("/{game_id}/players", response_model=List[schemas.Player])

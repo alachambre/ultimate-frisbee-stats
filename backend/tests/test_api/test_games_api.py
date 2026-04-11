@@ -200,6 +200,72 @@ def test_get_game_points_api(client, sample_game, sample_players):
     assert data[0]["opponent_turnovers"] == 0
 
 
+def test_get_game_turnovers_api_returns_turnovers_ordered_by_point_and_timestamp(
+    client, sample_game, sample_player, db_session
+):
+    from app import models
+
+    point_one = models.Point(
+        game_id=sample_game.id,
+        point_number=1,
+        starting_on_offense=True,
+        won=True,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 1, 0, tzinfo=timezone.utc),
+    )
+    point_two = models.Point(
+        game_id=sample_game.id,
+        point_number=2,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 2, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 3, 0, tzinfo=timezone.utc),
+    )
+    db_session.add_all([point_one, point_two])
+    db_session.flush()
+
+    db_session.add_all(
+        [
+            models.Turnover(
+                point_id=point_two.id,
+                player_id=sample_player.id,
+                timestamp=datetime(2024, 1, 1, 10, 2, 45, tzinfo=timezone.utc),
+                turnover_type="drop",
+                comments="Second point",
+            ),
+            models.Turnover(
+                point_id=point_one.id,
+                player_id=sample_player.id,
+                timestamp=datetime(2024, 1, 1, 10, 0, 45, tzinfo=timezone.utc),
+                turnover_type="missed_pass",
+                comments="Later on point one",
+            ),
+            models.Turnover(
+                point_id=point_one.id,
+                player_id=sample_player.id,
+                timestamp=datetime(2024, 1, 1, 10, 0, 15, tzinfo=timezone.utc),
+                turnover_type="defended_pass",
+                comments="Earlier on point one",
+            ),
+        ]
+    )
+    db_session.commit()
+
+    response = client.get(f"/games/{sample_game.id}/turnovers")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert [turnover["point_id"] for turnover in data] == [point_one.id, point_one.id, point_two.id]
+    assert [turnover["turnover_type"] for turnover in data] == [
+        "defended_pass",
+        "missed_pass",
+        "drop",
+    ]
+    assert data[0]["comments"] == "Earlier on point one"
+
+
 def test_create_game_validation_error_api(client, sample_competition):
     """Test POST /games with invalid data"""
     response = client.post("/games", json={

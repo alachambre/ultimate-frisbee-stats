@@ -141,7 +141,7 @@
     "pointsPlayedCount_other": "{{count}} pts",
     "turnoversSummary": "Turns summary",
     "halfTimeDetails": "Half time details",
-    "gameSummaryDetails": "Game summary details"
+    "gameSummaryDetails": "Game details"
   },
   "status": {
     "ready": "Ready",

@@ -78,6 +78,9 @@ def test_public_event_reads_redact_comments(client, db_session):
     turnovers_response = client.get(
         f"/turnovers/points/{scenario['running_point'].id}/turnovers"
     )
+    game_turnovers_response = client.get(
+        f"/games/{scenario['game'].id}/turnovers"
+    )
     halftime_response = client.get(f"/halftimes/games/{scenario['game'].id}/halftime")
 
     assert stoppage_response.status_code == 200
@@ -95,6 +98,15 @@ def test_public_event_reads_redact_comments(client, db_session):
     assert turnovers_response.status_code == 200
     assert turnovers_response.json()[0]["comments"] is None
     assert turnovers_response.json()[0]["turnover_type"] == "defended_pass"
+
+    assert game_turnovers_response.status_code == 200
+    game_turnover = next(
+        turnover
+        for turnover in game_turnovers_response.json()
+        if turnover["id"] == scenario["turnover"].id
+    )
+    assert game_turnover["comments"] is None
+    assert game_turnover["turnover_type"] == "defended_pass"
 
     assert halftime_response.status_code == 200
     assert halftime_response.json()["comments"] is None
@@ -140,6 +152,10 @@ def test_team_member_public_reads_keep_full_payloads(client, db_session):
     game_response = client.get(f"/games/{scenario['game'].id}", headers=headers)
     stoppage_response = client.get(f"/stoppages/{scenario['stoppage'].id}", headers=headers)
     turnover_response = client.get(f"/turnovers/{scenario['turnover'].id}", headers=headers)
+    game_turnovers_response = client.get(
+        f"/games/{scenario['game'].id}/turnovers",
+        headers=headers,
+    )
     halftime_response = client.get(
         f"/halftimes/games/{scenario['game'].id}/halftime",
         headers=headers,
@@ -158,6 +174,14 @@ def test_team_member_public_reads_keep_full_payloads(client, db_session):
 
     assert turnover_response.status_code == 200
     assert turnover_response.json()["comments"] == "Throwaway"
+
+    assert game_turnovers_response.status_code == 200
+    game_turnover = next(
+        turnover
+        for turnover in game_turnovers_response.json()
+        if turnover["id"] == scenario["turnover"].id
+    )
+    assert game_turnover["comments"] == "Throwaway"
 
     assert halftime_response.status_code == 200
     assert halftime_response.json()["comments"] == "Discuss matchups"
