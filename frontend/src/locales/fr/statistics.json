@@ -130,8 +130,8 @@
     "allPoints": "Tous les points",
     "startedOnOffense": "Points commencés en attaque",
     "startedOnDefense": "Points commencés en défense",
-    "ourPossessionTurnovers": "Quand nous perdons la possession",
-    "opponentPossessionTurnovers": "Quand l'adversaire perd la possession",
+    "ourPossessionTurnovers": "Nos turns",
+    "opponentPossessionTurnovers": "Turns adverses",
     "turnoverCountSingle": "1 turnover",
     "turnoverCountPlural": "{{count}} turnovers",
     "emptyBucket": "Aucun turnover enregistré dans ce bucket."

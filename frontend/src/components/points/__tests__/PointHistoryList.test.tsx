@@ -186,10 +186,10 @@ describe("PointHistoryList", () => {
     expect(halftimeCard).not.toBeNull();
 
     const halftimeWithin = within(halftimeCard as HTMLElement);
-    expect(halftimeWithin.getByText("00:30")).toBeInTheDocument();
+    expect(halftimeWithin.getByText("30min")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Offense time")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Defense time")).toBeInTheDocument();
-    expect(halftimeWithin.getAllByText("00:05 (1 pt)")).toHaveLength(2);
+    expect(halftimeWithin.getAllByText("5min (1 pt)")).toHaveLength(2);
 
     await user.click(halftimeWithin.getByRole("button", { name: /half time details/i }));
 
@@ -197,8 +197,8 @@ describe("PointHistoryList", () => {
     expect(halftimeWithin.getByText("Break by field side")).toBeInTheDocument();
     expect(halftimeWithin.getByText("100% (1/1)")).toBeInTheDocument();
     expect(halftimeWithin.getByText("0% (0/1)")).toBeInTheDocument();
-    expect(halftimeWithin.getAllByText("Opponent turns")).toHaveLength(2);
-    expect(halftimeWithin.getAllByText("Our turns")).toHaveLength(2);
+    expect(halftimeWithin.getAllByText("Opponent turns")).toHaveLength(3);
+    expect(halftimeWithin.getAllByText("Our turns")).toHaveLength(3);
     expect(halftimeWithin.getByText("Defended pass")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Drop")).toBeInTheDocument();
     expect(halftimeWithin.getByText("Miscommunication")).toBeInTheDocument();

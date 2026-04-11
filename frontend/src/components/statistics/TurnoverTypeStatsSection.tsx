@@ -236,7 +236,7 @@ export default function TurnoverTypeStatsSection({
         </Typography>
       )}
 
-      <Stack spacing={1.5}>
+      <Stack spacing={0}>
         {visiblePhases.map((phaseConfig, index) => {
           const phase = phaseStats[phaseConfig.key];
 
@@ -247,20 +247,32 @@ export default function TurnoverTypeStatsSection({
               defaultExpanded={defaultExpandedIndex === index}
               elevation={0}
               sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 2,
-                overflow: "hidden",
+                bgcolor: "transparent",
                 "&:before": { display: "none" },
               }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  px: 0,
+                  minHeight: "unset",
+                  borderTop: index === 0 ? 0 : 1,
+                  borderColor: "divider",
+                  "& .MuiAccordionSummary-content": {
+                    my: 1.75,
+                  },
+                  "& .MuiAccordionSummary-content.Mui-expanded": {
+                    my: 1.75,
+                  },
+                }}
+              >
                 <Typography variant="subtitle2" fontWeight="bold">
                   {t(phaseConfig.labelKey)}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails
                 sx={{
+                  px: 0,
                   pt: 0,
                   pb: 2,
                 }}

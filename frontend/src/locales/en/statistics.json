@@ -130,8 +130,8 @@
     "allPoints": "All points",
     "startedOnOffense": "Started on offense",
     "startedOnDefense": "Started on defense",
-    "ourPossessionTurnovers": "We lost possession",
-    "opponentPossessionTurnovers": "Opponent lost possession",
+    "ourPossessionTurnovers": "Our turns",
+    "opponentPossessionTurnovers": "Opponent turns",
     "turnoverCountSingle": "1 turnover",
     "turnoverCountPlural": "{{count}} turnovers",
     "emptyBucket": "No turnovers recorded in this bucket."

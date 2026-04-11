@@ -69,9 +69,9 @@ describe("TurnoverTypeStatsSection", () => {
 
     expect(screen.getByText("Turnover types")).toBeInTheDocument();
     const opponentBucket = screen.getByRole("group", {
-      name: "Opponent lost possession",
+      name: "Opponent turns",
     });
-    const ourBucket = screen.getByRole("group", { name: "We lost possession" });
+    const ourBucket = screen.getByRole("group", { name: "Our turns" });
 
     const bucketGroups = screen.getAllByRole("group");
     expect(bucketGroups[0]).toBe(opponentBucket);

@@ -47,6 +47,8 @@ interface HistorySummaryItemProps<TActionPayload = never> {
 interface SummaryMetricProps {
   label: string;
   value: string;
+  valueVariant?: "body1" | "body2";
+  valueFontWeight?: number | string;
 }
 
 interface FieldSideRowProps {
@@ -80,16 +82,25 @@ function formatSummaryDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
 
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  if (hours === 0) {
+    return `${minutes}min`;
+  }
+
+  return `${hours}h ${minutes}min`;
 }
 
-function SummaryMetric({ label, value }: SummaryMetricProps) {
+function SummaryMetric({
+  label,
+  value,
+  valueVariant = "body1",
+  valueFontWeight = "bold",
+}: SummaryMetricProps) {
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" display="block">
         {label}
       </Typography>
-      <Typography variant="body1" fontWeight="bold">
+      <Typography variant={valueVariant} fontWeight={valueFontWeight}>
         {value}
       </Typography>
     </Box>
@@ -375,6 +386,8 @@ export default function HistorySummaryItem<TActionPayload = never>({
                 <SummaryMetric
                   label={t("points:tracker.elapsedTime")}
                   value={formatSummaryDuration(snapshot.elapsedSeconds)}
+                  valueVariant="body2"
+                  valueFontWeight={400}
                 />
               )}
               <SummaryMetric
@@ -383,6 +396,8 @@ export default function HistorySummaryItem<TActionPayload = never>({
                   snapshot.offenseElapsedSeconds,
                   snapshot.offensePointsPlayed,
                 )}
+                valueVariant="body2"
+                valueFontWeight={400}
               />
               <SummaryMetric
                 label={t("points:history.defenseTime")}
@@ -390,6 +405,8 @@ export default function HistorySummaryItem<TActionPayload = never>({
                   snapshot.defenseElapsedSeconds,
                   snapshot.defensePointsPlayed,
                 )}
+                valueVariant="body2"
+                valueFontWeight={400}
               />
             </Box>
 
