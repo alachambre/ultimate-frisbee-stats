@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  PLAYER_HIGHLIGHT_MIN_COMPLETED_POINTS,
   PLAYER_HIGHLIGHT_TIER_RATIO,
+  estimateCompletedPointCountFromPlayerStats,
   getGenderScopedPlayerHighlight,
   getPlayerHighlight,
 } from "../playerHighlighting";
@@ -8,11 +10,15 @@ import type { Player, PlayerGameStats } from "../../types";
 
 describe("getPlayerHighlight", () => {
   // Helper to create mock player stats
-  const createPlayerStats = (playerId: number, effectiveTime: number): PlayerGameStats => ({
+  const createPlayerStats = (
+    playerId: number,
+    effectiveTime: number,
+    pointsPlayed = Math.floor(effectiveTime / 300)
+  ): PlayerGameStats => ({
     player_id: playerId,
     player_name: `Player ${playerId}`,
     player_number: playerId, // Just use playerId as the number
-    points_played: Math.floor(effectiveTime / 300), // Rough estimate
+    points_played: pointsPlayed,
     effective_time_seconds: effectiveTime,
     offense: {
       points_played: 0,
@@ -50,6 +56,10 @@ describe("getPlayerHighlight", () => {
     expect(PLAYER_HIGHLIGHT_TIER_RATIO).toBe(0.2);
   });
 
+  it("requires at least 4 completed points when point count is provided", () => {
+    expect(PLAYER_HIGHLIGHT_MIN_COMPLETED_POINTS).toBe(4);
+  });
+
   describe("Edge Cases", () => {
     it("returns null when fewer than 5 players", () => {
       const stats = [
@@ -80,6 +90,32 @@ describe("getPlayerHighlight", () => {
       // Player with 450 doesn't meet either threshold
       const result = getPlayerHighlight(outsidePlayer, stats);
       expect(result).toBeNull();
+    });
+
+    it("returns null before enough completed points have been played", () => {
+      const stats = [
+        createPlayerStats(1, 600),
+        createPlayerStats(2, 500),
+        createPlayerStats(3, 400),
+        createPlayerStats(4, 300),
+        createPlayerStats(5, 100),
+      ];
+
+      expect(getPlayerHighlight(stats[0], stats, { completedPointsPlayed: 3 })).toBeNull();
+      expect(getPlayerHighlight(stats[4], stats, { completedPointsPlayed: 3 })).toBeNull();
+    });
+
+    it("allows highlighting once the fourth completed point has been played", () => {
+      const stats = [
+        createPlayerStats(1, 600),
+        createPlayerStats(2, 500),
+        createPlayerStats(3, 400),
+        createPlayerStats(4, 300),
+        createPlayerStats(5, 100),
+      ];
+
+      expect(getPlayerHighlight(stats[0], stats, { completedPointsPlayed: 4 })).toBe("high");
+      expect(getPlayerHighlight(stats[4], stats, { completedPointsPlayed: 4 })).toBe("low");
     });
   });
 
@@ -158,21 +194,20 @@ describe("getPlayerHighlight", () => {
       expect(getPlayerHighlight(stats[4], stats)).toBe("low");
     });
 
-    it("does not highlight player with 0 time as high even if in top quintile", () => {
+    it("does not highlight players when everyone has 0 time", () => {
       const stats = [
-        createPlayerStats(1, 0), // Has 0 time, so can't be "high"
+        createPlayerStats(1, 0),
         createPlayerStats(2, 0),
         createPlayerStats(3, 0),
         createPlayerStats(4, 0),
         createPlayerStats(5, 0),
       ];
 
-      // All have 0 time, none should be highlighted as "high"
-      expect(getPlayerHighlight(stats[0], stats)).toBe("low");
-      expect(getPlayerHighlight(stats[1], stats)).toBe("low");
-      expect(getPlayerHighlight(stats[2], stats)).toBe("low");
-      expect(getPlayerHighlight(stats[3], stats)).toBe("low");
-      expect(getPlayerHighlight(stats[4], stats)).toBe("low");
+      expect(getPlayerHighlight(stats[0], stats)).toBeNull();
+      expect(getPlayerHighlight(stats[1], stats)).toBeNull();
+      expect(getPlayerHighlight(stats[2], stats)).toBeNull();
+      expect(getPlayerHighlight(stats[3], stats)).toBeNull();
+      expect(getPlayerHighlight(stats[4], stats)).toBeNull();
     });
   });
 
@@ -214,13 +249,38 @@ describe("getPlayerHighlight", () => {
         createPlayerStats(5, 500),
       ];
 
-      // When all equal, topThreshold and bottomThreshold are the same
-      // Players can't be both > bottomThreshold and >= topThreshold with strict conditions
-      // Actually, let me check the logic: effective_time_seconds > bottomThreshold would fail
-      // So they'd all be considered "low" (<=bottomThreshold)
       stats.forEach(stat => {
-        expect(getPlayerHighlight(stat, stats)).toBe("low");
+        expect(getPlayerHighlight(stat, stats)).toBeNull();
       });
+    });
+  });
+
+  describe("Completed point count estimation", () => {
+    it("estimates completed points from total player appearances", () => {
+      const stats = [
+        createPlayerStats(1, 600, 4),
+        createPlayerStats(2, 500, 4),
+        createPlayerStats(3, 400, 4),
+        createPlayerStats(4, 300, 4),
+        createPlayerStats(5, 200, 4),
+        createPlayerStats(6, 100, 4),
+        createPlayerStats(7, 50, 4),
+      ];
+
+      expect(estimateCompletedPointCountFromPlayerStats(stats)).toBe(4);
+    });
+
+    it("rounds down partial appearance totals", () => {
+      const stats = [
+        createPlayerStats(1, 600, 1),
+        createPlayerStats(2, 500, 1),
+        createPlayerStats(3, 400, 1),
+        createPlayerStats(4, 300, 1),
+        createPlayerStats(5, 200, 1),
+        createPlayerStats(6, 100, 1),
+      ];
+
+      expect(estimateCompletedPointCountFromPlayerStats(stats)).toBe(0);
     });
   });
 

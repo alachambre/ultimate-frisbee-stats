@@ -16,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import type {
   TurnoverType,
   TurnoverTypeBucket,
-  TurnoverTypePhaseStats,
   TurnoverTypeStats,
 } from "../../types";
 import { TURNOVER_TYPES, getTurnoverTypeLabel } from "../../utils/turnoverTypes";
@@ -44,25 +43,6 @@ const PHASE_CONFIG: Array<{
   { key: "started_on_offense", labelKey: "turnoverTypeStats.startedOnOffense" },
   { key: "started_on_defense", labelKey: "turnoverTypeStats.startedOnDefense" },
 ];
-
-function buildEmptyBucket(): TurnoverTypeBucket {
-  return {
-    total_turnovers: 0,
-    by_type: Object.fromEntries(
-      TURNOVER_TYPES.map((turnoverType) => [
-        turnoverType,
-        { count: 0, percentage: 0 },
-      ]),
-    ) as Record<TurnoverType, { count: number; percentage: number }>,
-  };
-}
-
-function buildEmptyPhaseStats(): TurnoverTypePhaseStats {
-  return {
-    our_possession_turnovers: buildEmptyBucket(),
-    opponent_possession_turnovers: buildEmptyBucket(),
-  };
-}
 
 function getDisplayEntries(bucket: TurnoverTypeBucket) {
   const indexedTypes = TURNOVER_TYPES.map((turnoverType, index) => ({
@@ -188,11 +168,11 @@ export default function TurnoverTypeStatsSection({
   titleVariant = "h6",
 }: TurnoverTypeStatsSectionProps) {
   const { t } = useTranslation("statistics");
-  const phaseStats = turnoverTypeStats ?? {
-    all_points: buildEmptyPhaseStats(),
-    started_on_offense: buildEmptyPhaseStats(),
-    started_on_defense: buildEmptyPhaseStats(),
-  };
+  if (!turnoverTypeStats) {
+    return null;
+  }
+
+  const phaseStats = turnoverTypeStats;
   const visiblePhases = PHASE_CONFIG.filter(
     (phaseConfig) => !phaseKeys || phaseKeys.includes(phaseConfig.key),
   );

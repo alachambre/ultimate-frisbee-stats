@@ -18,7 +18,10 @@ import {
   countSelectedPlayersByGender,
   hasValidPointSelection,
 } from "../../utils/playerComposition";
-import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
+import {
+  estimateCompletedPointCountFromPlayerStats,
+  getGenderScopedPlayerHighlight,
+} from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface PointPlayerSelectionProps {
@@ -74,14 +77,21 @@ export default function PointPlayerSelection({
     [liveStats]
   );
 
+  const completedPointCount = useMemo(
+    () => estimateCompletedPointCountFromPlayerStats(liveStats ?? []),
+    [liveStats]
+  );
+
   const getPlayerUsageHighlight = useMemo(() => {
     if (!liveStats || liveStats.length === 0) {
       return undefined;
     }
 
     return (playerId: number): "high" | "low" | null =>
-      getGenderScopedPlayerHighlight(playerId, players, liveStatsByPlayerId);
-  }, [liveStats, liveStatsByPlayerId, players]);
+      getGenderScopedPlayerHighlight(playerId, players, liveStatsByPlayerId, {
+        completedPointsPlayed: completedPointCount,
+      });
+  }, [completedPointCount, liveStats, liveStatsByPlayerId, players]);
 
   // Filter players based on selected line
   const filteredPlayers = useMemo(() => {

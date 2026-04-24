@@ -84,6 +84,11 @@ export function useGameDetailPageData(
     [liveStats]
   );
 
+  const completedPointCount = useMemo(
+    () => game?.points.filter((point) => point.status === "completed").length ?? 0,
+    [game?.points]
+  );
+
   const menPlayers = useMemo(
     () =>
       (game?.players ?? [])
@@ -110,7 +115,9 @@ export function useGameDetailPageData(
       return null;
     }
 
-    return getGenderScopedPlayerHighlight(playerId, game.players, liveStatsByPlayerId);
+    return getGenderScopedPlayerHighlight(playerId, game.players, liveStatsByPlayerId, {
+      completedPointsPlayed: completedPointCount,
+    });
   };
 
   return {

@@ -274,8 +274,8 @@ describe("StrategyStatistics", () => {
     expect(screen.queryByText("Started on offense")).not.toBeInTheDocument();
     expect(screen.queryByText("Started on defense")).not.toBeInTheDocument();
 
-    expect(screen.getByRole("group", { name: "We lost possession" })).toBeVisible();
-    expect(screen.getByRole("group", { name: "Opponent lost possession" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Our turns" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Opponent turns" })).toBeVisible();
     expect(screen.getAllByText("Defended pass").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Missed huck").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Drop").length).toBeGreaterThan(0);

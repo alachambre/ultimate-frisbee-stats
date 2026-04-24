@@ -93,6 +93,11 @@ export default function ManagePlayersDialog({
     [liveStats]
   );
 
+  const completedPointCount = useMemo(
+    () => game?.points.filter((gamePoint) => gamePoint.status === "completed").length ?? 0,
+    [game?.points]
+  );
+
   // Calculate required gender ratio based on ABBA pattern
   const requiredGenderRatio = useMemo(
     () => getRequiredGenderRatioForPoint(point.point_number, game?.points || []),
@@ -116,7 +121,9 @@ export default function ManagePlayersDialog({
   // Helper function to determine highlight based on playing time
   const getHighlight = (playerId: number): "high" | "low" | null => {
     if (!liveStats || liveStats.length === 0) return null;
-    return getGenderScopedPlayerHighlight(playerId, players, liveStatsByPlayerId);
+    return getGenderScopedPlayerHighlight(playerId, players, liveStatsByPlayerId, {
+      completedPointsPlayed: completedPointCount,
+    });
   };
 
   const getPlayerPoints = (playerId: number): number | null => {
