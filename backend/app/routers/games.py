@@ -9,7 +9,9 @@ from app.auth.dependencies import get_request_access_context, require_team_membe
 from app.auth.redaction import (
     serialize_game_detail,
     serialize_games_with_score,
+    serialize_point,
     serialize_points,
+    serialize_stoppages,
     serialize_turnovers,
 )
 from app.database import get_db
@@ -91,6 +93,42 @@ def get_game(
     if not game_detail:
         raise HTTPException(status_code=404, detail="Game not found")
     return serialize_game_detail(game_detail, access_context)
+
+
+@router.get("/{game_id}/live-state", response_model=schemas.GameLiveState)
+def get_game_live_state(
+    game_id: int,
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(get_request_access_context),
+):
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    active_point = crud.get_active_point_for_game(db, game_id)
+    active_point_turnovers = []
+    active_point_stoppages = []
+    if active_point:
+        active_point_turnovers = crud.get_turnovers_by_point(db, active_point.id)
+        active_point_stoppages = crud.get_stoppages_by_point(db, active_point.id)
+
+    our_score, opponent_score = crud.get_game_score(db, game_id)
+
+    return {
+        "game_id": game.id,
+        "status": game.status,
+        "our_score": our_score,
+        "opponent_score": opponent_score,
+        "active_point": serialize_point(active_point, access_context) if active_point else None,
+        "active_point_turnovers": serialize_turnovers(
+            active_point_turnovers,
+            access_context,
+        ),
+        "active_point_stoppages": serialize_stoppages(
+            active_point_stoppages,
+            access_context,
+        ),
+    }
 
 
 @router.put("/{game_id}", response_model=schemas.Game)

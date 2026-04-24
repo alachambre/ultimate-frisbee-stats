@@ -50,6 +50,8 @@ import { useLivePointState } from "./liveTracker/useLivePointState";
 interface LivePointTrackerProps {
   game: GameDetail;
   activePoint: PointWithPlayers | null;
+  activePointTurnovers?: TurnoverWithPlayer[];
+  activePointStoppages?: Stoppage[];
   players: Player[];
   teamId: number;
   onPointUpdated?: () => void;
@@ -59,6 +61,8 @@ interface LivePointTrackerProps {
 export default function LivePointTracker({
   game,
   activePoint,
+  activePointTurnovers,
+  activePointStoppages,
   players,
   teamId,
   onPointUpdated,
@@ -82,19 +86,21 @@ export default function LivePointTracker({
   const { data: existingTurnovers = [] } = useQuery<TurnoverWithPlayer[]>({
     queryKey: queryKeys.turnovers(activePoint?.id ?? 0),
     queryFn: () => getTurnoversByPoint(activePoint!.id),
-    enabled: !!activePoint,
+    enabled: !!activePoint && activePointTurnovers === undefined,
     refetchInterval: activePoint ? LIVE_TRACKER_REFRESH_INTERVAL_MS : false,
     refetchIntervalInBackground: true,
   });
+  const liveTurnovers = activePointTurnovers ?? existingTurnovers;
 
   // Fetch stoppages for active point (needed to check for pending stoppages)
   const { data: stoppages = [] } = useQuery<Stoppage[]>({
     queryKey: queryKeys.stoppages(activePoint?.id ?? 0),
     queryFn: () => getStoppagesByPoint(activePoint!.id),
-    enabled: !!activePoint,
+    enabled: !!activePoint && activePointStoppages === undefined,
     refetchInterval: activePoint ? LIVE_TRACKER_REFRESH_INTERVAL_MS : false,
     refetchIntervalInBackground: true,
   });
+  const liveStoppages = activePointStoppages ?? stoppages;
 
   const {
     scoredPoint,
@@ -106,7 +112,7 @@ export default function LivePointTracker({
   } = useLivePointState({
     game,
     activePoint,
-    stoppages,
+    stoppages: liveStoppages,
   });
 
   const {
@@ -361,6 +367,8 @@ export default function LivePointTracker({
                 endDateTime={currentPoint.end_datetime}
                 won={currentPoint.won}
                 fieldSide={currentPoint.field_side}
+                turnovers={currentPoint.id === activePoint?.id ? liveTurnovers : undefined}
+                stoppages={currentPoint.id === activePoint?.id ? liveStoppages : undefined}
               />
             )}
           </Box>
@@ -433,6 +441,7 @@ export default function LivePointTracker({
           open={isCallDialogOpen}
           onClose={() => setIsCallDialogOpen(false)}
           point={activePoint}
+          gameId={game.id}
         />
       )}
 
@@ -441,7 +450,7 @@ export default function LivePointTracker({
           open={isTurnoverDialogOpen}
           onClose={() => setIsTurnoverDialogOpen(false)}
           point={activePoint}
-          existingTurnovers={existingTurnovers}
+          existingTurnovers={liveTurnovers}
         />
       )}
 
@@ -450,6 +459,7 @@ export default function LivePointTracker({
           open={isResumeDialogOpen}
           onClose={() => setIsResumeDialogOpen(false)}
           stoppage={pendingStoppage}
+          gameId={game.id}
         />
       )}
 

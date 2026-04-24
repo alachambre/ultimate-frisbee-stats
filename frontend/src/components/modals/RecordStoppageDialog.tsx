@@ -24,9 +24,10 @@ interface RecordStoppageDialogProps {
   open: boolean;
   onClose: () => void;
   point: PointWithPlayers;
+  gameId?: number;
 }
 
-export const RecordStoppageDialog = ({ open, onClose, point }: RecordStoppageDialogProps) => {
+export const RecordStoppageDialog = ({ open, onClose, point, gameId }: RecordStoppageDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
   const [comments, setComments] = useState('');
@@ -36,6 +37,9 @@ export const RecordStoppageDialog = ({ open, onClose, point }: RecordStoppageDia
     mutationFn: (newStoppage: StoppageCreate) => createStoppage(newStoppage),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(point.id) });
+      if (gameId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+      }
       setComments('');
       setStoppageType('call');
       onClose();

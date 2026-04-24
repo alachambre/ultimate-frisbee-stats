@@ -18,7 +18,7 @@ from .enums import (
 from .team import Team, TeamCreate, TeamUpdate, TeamWithPlayers
 from .competition import Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, CompetitionWithTeam
 from .player import Player, PlayerCreate, PlayerUpdate
-from .game import Game, GameCreate, GameUpdate, GameWithScore, GameDetail
+from .game import Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState
 from .point import Point, PointCreate, PointUpdate, PointFinish, PointWithPlayers
 from .line import Line, LineCreate, LineUpdate, LineWithPlayers
 from .strategy import Strategy, StrategyCreate, StrategyUpdate
@@ -33,6 +33,7 @@ TeamWithPlayers.model_rebuild()
 CompetitionWithPlayers.model_rebuild()
 GameWithScore.model_rebuild()
 GameDetail.model_rebuild()
+GameLiveState.model_rebuild()
 PointWithPlayers.model_rebuild()
 LineWithPlayers.model_rebuild()
 TurnoverWithPlayer.model_rebuild()
@@ -67,6 +68,7 @@ __all__ = [
     "GameUpdate",
     "GameWithScore",
     "GameDetail",
+    "GameLiveState",
     # Points
     "Point",
     "PointCreate",

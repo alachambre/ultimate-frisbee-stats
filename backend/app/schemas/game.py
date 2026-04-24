@@ -59,3 +59,14 @@ class GameDetail(GameWithScore):
     points: List['PointWithPlayers']  # Forward reference to avoid circular import
     players: List['Player']  # Selected players for this game
     halftime: Optional['Halftime'] = None
+
+
+class GameLiveState(BaseModel):
+    """Condensed live-game payload for sideline polling."""
+    game_id: int
+    status: GameStatus
+    our_score: int
+    opponent_score: int
+    active_point: Optional['PointWithPlayers'] = None
+    active_point_turnovers: List['TurnoverWithPlayer'] = Field(default_factory=list)
+    active_point_stoppages: List['Stoppage'] = Field(default_factory=list)

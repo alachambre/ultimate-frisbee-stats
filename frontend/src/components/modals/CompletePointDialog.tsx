@@ -43,6 +43,7 @@ export default function CompletePointDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(scoredPoint.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(scoredPoint.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(scoredPoint.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(scoredPoint.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(scoredPoint.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(scoredPoint.game_id) });

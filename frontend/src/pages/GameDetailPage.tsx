@@ -61,6 +61,8 @@ export default function GameDetailPage() {
     isLoading,
     error,
     activePoint,
+    activePointTurnovers,
+    activePointStoppages,
     gameTurnovers,
     liveStatsByPlayerId,
     competition,
@@ -81,6 +83,7 @@ export default function GameDetailPage() {
     mutationFn: () => updateGame(gameIdNumber, { status: "started" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.games });
     },
   });
@@ -89,6 +92,7 @@ export default function GameDetailPage() {
     mutationFn: () => finishGame(gameIdNumber),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.games });
       setIsFinishConfirmOpen(false);
@@ -101,6 +105,7 @@ export default function GameDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
       setDeletingPoint(null);
     },
   });
@@ -110,6 +115,7 @@ export default function GameDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
     },
   });
 
@@ -131,6 +137,7 @@ export default function GameDetailPage() {
 
   const handlePointUpdated = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
     queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
     queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
   };
@@ -240,6 +247,8 @@ export default function GameDetailPage() {
         <LivePointTracker
           game={game}
           activePoint={activePoint || null}
+          activePointTurnovers={activePointTurnovers}
+          activePointStoppages={activePointStoppages}
           players={game.players}
           teamId={competition.team_id}
           onPointUpdated={handlePointUpdated}

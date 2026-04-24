@@ -29,6 +29,7 @@ def test_public_game_reads_redact_comments_and_strategy(client, db_session):
     _configure_shadow_auth(client)
 
     game_response = client.get(f"/games/{scenario['game'].id}")
+    live_state_response = client.get(f"/games/{scenario['game'].id}/live-state")
     points_response = client.get(f"/games/{scenario['game'].id}/points")
     running_point_response = client.get(f"/points/games/{scenario['game'].id}/running")
     point_response = client.get(f"/points/{scenario['running_point'].id}")
@@ -46,6 +47,16 @@ def test_public_game_reads_redact_comments_and_strategy(client, db_session):
     assert running_point["our_turnovers"] == 0
     assert running_point["opponent_turnovers"] == 1
     assert game_data["halftime"]["comments"] is None
+
+    assert live_state_response.status_code == 200
+    live_state = live_state_response.json()
+    assert live_state["active_point"]["comments"] is None
+    assert live_state["active_point"]["strategy"] is None
+    assert live_state["active_point"]["strategy_id"] is None
+    assert live_state["active_point"]["our_turnovers"] == 0
+    assert live_state["active_point"]["opponent_turnovers"] == 1
+    assert live_state["active_point_stoppages"][0]["comments"] is None
+    assert live_state["active_point_turnovers"][0]["comments"] is None
 
     assert points_response.status_code == 200
     points_data = points_response.json()

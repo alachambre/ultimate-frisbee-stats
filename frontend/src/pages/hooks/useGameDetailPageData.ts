@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getGame, getGameTurnovers, getLiveGameStatistics } from "../../services";
+import { getGame, getGameLiveState, getGameTurnovers, getLiveGameStatistics } from "../../services";
 import { getCompetition } from "../../services/competitions";
-import { getActivePoint } from "../../services/points";
 import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
 import {
@@ -33,20 +32,15 @@ export function useGameDetailPageData(
     },
   });
 
-  const hasScoredPoint = useMemo(() => {
-    return game?.points.some((point) => point.status === "scored") ?? false;
-  }, [game?.points]);
-
-  const { data: activePoint } = useQuery({
-    queryKey: queryKeys.activePoint(gameIdValid ? gameIdNumber : 0),
-    queryFn: () => getActivePoint(gameIdNumber),
-    enabled: gameIdValid && game?.status === "started" && !hasScoredPoint,
+  const { data: liveState } = useQuery({
+    queryKey: queryKeys.gameLiveState(gameIdValid ? gameIdNumber : 0),
+    queryFn: () => getGameLiveState(gameIdNumber),
+    enabled: gameIdValid && game?.status === "started",
     refetchInterval:
-      game?.status === "started" && !hasScoredPoint
+      game?.status === "started"
         ? LIVE_TRACKER_REFRESH_INTERVAL_MS
         : false,
     refetchIntervalInBackground: true,
-    retry: false,
   });
 
   const { data: gameTurnovers } = useQuery({
@@ -81,6 +75,9 @@ export function useGameDetailPageData(
   });
 
   const competitionPath = competitionId ? `/competitions/${competitionId}` : "/competitions";
+  const activePoint = game?.status === "started"
+    ? liveState?.active_point ?? null
+    : null;
 
   const liveStatsByPlayerId = useMemo(
     () => new Map((liveStats || []).map((stats) => [stats.player_id, stats])),
@@ -130,6 +127,9 @@ export function useGameDetailPageData(
     isLoading,
     error,
     activePoint,
+    liveState,
+    activePointTurnovers: activePoint ? liveState?.active_point_turnovers ?? [] : [],
+    activePointStoppages: activePoint ? liveState?.active_point_stoppages ?? [] : [],
     gameTurnovers,
     liveStats,
     liveStatsByPlayerId,

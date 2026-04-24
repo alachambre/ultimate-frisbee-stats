@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from app import models, schemas
 from app.logging_config import get_logger
 
@@ -80,7 +80,14 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> O
 
                 # Set end timestamp when game ends
                 if new_status == models.GameStatusEnum.ended and old_status == models.GameStatusEnum.started:
-                    db_game.end_datetime = datetime.now(timezone.utc)
+                    end_datetime = datetime.now(timezone.utc)
+                    if db_game.start_datetime:
+                        start_datetime = db_game.start_datetime
+                        if start_datetime.tzinfo is None:
+                            start_datetime = start_datetime.replace(tzinfo=timezone.utc)
+                        if end_datetime <= start_datetime:
+                            end_datetime = start_datetime + timedelta(microseconds=1)
+                    db_game.end_datetime = end_datetime
 
                 db_game.status = new_status
             if game_update.comments is not None:

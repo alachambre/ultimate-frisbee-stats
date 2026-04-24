@@ -45,6 +45,7 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
     mutationFn: (newTurnover: TurnoverCreate) => createTurnover(newTurnover),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.turnovers(point.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(point.game_id) });
       setComments('');
       setTurnoverType('other');
       onClose();

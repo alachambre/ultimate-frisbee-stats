@@ -782,7 +782,7 @@ def test_resume_scored_point_allows_running(db_session, sample_game, sample_play
         PointUpdate(
             status=PointStatus.scored,
             won=True,
-            end_datetime=datetime.now(tz.utc),
+            end_datetime=point.start_datetime + timedelta(seconds=1),
         )
     )
     assert point.status == models.PointStatusEnum.scored

@@ -128,6 +128,7 @@ export default function StartPointDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
       handleClose();
       onSuccess?.();
     },

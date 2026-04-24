@@ -20,12 +20,14 @@ interface ResumeFromStoppageDialogProps {
   open: boolean;
   onClose: () => void;
   stoppage: Stoppage;
+  gameId?: number;
 }
 
 export const ResumeFromStoppageDialog = ({
   open,
   onClose,
   stoppage,
+  gameId,
 }: ResumeFromStoppageDialogProps) => {
   const { t } = useTranslation('points');
   const queryClient = useQueryClient();
@@ -35,6 +37,9 @@ export const ResumeFromStoppageDialog = ({
     mutationFn: (stoppageUpdate: StoppageUpdate) => updateStoppage(stoppage.id, stoppageUpdate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(stoppage.point_id) });
+      if (gameId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+      }
       onClose();
     },
   });

@@ -4,6 +4,7 @@ import type {
   GameCreate,
   GameUpdate,
   GameDetail,
+  GameLiveState,
   GameWithScore,
   PointWithPlayers,
   Player,
@@ -20,6 +21,12 @@ export const createGame = async (data: GameCreate): Promise<Game> => {
 // Get game by ID with score and points
 export const getGame = async (gameId: number): Promise<GameDetail> => {
   const response = await apiClient.get<GameDetail>(`/games/${gameId}`);
+  return response.data;
+};
+
+// Get condensed live state for polling the live tracker
+export const getGameLiveState = async (gameId: number): Promise<GameLiveState> => {
+  const response = await apiClient.get<GameLiveState>(`/games/${gameId}/live-state`);
   return response.data;
 };
 

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate, GamePointTimeline } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate, GamePointTimeline } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -822,6 +822,47 @@ export const handlers = [
     gamePlayers.set(gameId, playerIds);
 
     return HttpResponse.json(newGame, { status: 201 });
+  }),
+
+  // GET /games/:id/live-state - Condensed live polling payload
+  http.get(`${BASE_URL}/games/:id/live-state`, ({ params }) => {
+    const gameId = Number(params.id);
+    const game = games.find((g) => g.id === gameId);
+    if (!game) {
+      return HttpResponse.json({ detail: "Game not found" }, { status: 404 });
+    }
+
+    const gamePoints = points.filter((p) => p.game_id === gameId);
+    let ourScore = 0;
+    let opponentScore = 0;
+    gamePoints.forEach((point) => {
+      if (point.status === "completed" && point.won !== null) {
+        if (point.won) {
+          ourScore++;
+        } else {
+          opponentScore++;
+        }
+      }
+    });
+
+    const activePoint = gamePoints.find((point) =>
+      point.status === "ready" || point.status === "running"
+    ) ?? null;
+    const liveState: GameLiveState = {
+      game_id: game.id,
+      status: game.status,
+      our_score: ourScore,
+      opponent_score: opponentScore,
+      active_point: activePoint,
+      active_point_turnovers: activePoint
+        ? turnovers.filter((turnover) => turnover.point_id === activePoint.id)
+        : [],
+      active_point_stoppages: activePoint
+        ? calls.filter((stoppage) => stoppage.point_id === activePoint.id)
+        : [],
+    };
+
+    return HttpResponse.json(liveState);
   }),
 
   // GET /games/:id - Get game detail with scores and points

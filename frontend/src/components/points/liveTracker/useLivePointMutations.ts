@@ -29,6 +29,7 @@ export function useLivePointMutations({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(gameId) });
       onPointUpdated?.();
     },
@@ -42,6 +43,7 @@ export function useLivePointMutations({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
       onPointUpdated?.();
     },
   });
@@ -69,6 +71,7 @@ export function useLivePointMutations({
       });
 
       queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(gameId) });
       onPointUpdated?.();
@@ -85,6 +88,7 @@ export function useLivePointMutations({
       onHalftimeCreated?.();
       queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
       onPointUpdated?.();
     },
   });

@@ -60,6 +60,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Live tracker empty state supports halftime recording (`Half time` button next to `Start Point`) and disables it once a halftime exists; halftime appears in the game history timeline and can be deleted from there
 - Field side (`field_side`) selection happens on the first point of each half (game start + first point after halftime); other points auto-infer side by alternating from the previous completed point
 - Live point tracker internals are split under `frontend/src/components/points/liveTracker/` (`LivePointHeader`, `LivePointActionBar`, `LivePointContextCards`, `useLivePointState`, `useLivePointMutations`); keep `LivePointTracker.tsx` as composition shell
+- Live tracker polling is consolidated through public `GET /games/{game_id}/live-state` for active point, live turnovers, and live stoppages; prefer extending that payload over adding separate high-frequency live polling queries
 - Game detail page is section-based: `frontend/src/pages/hooks/useGameDetailPageData.ts` + `frontend/src/components/games/detail/` (`GameHeaderActions`, `GameScorePanel`, `GameRosterDialog`, `GameHistorySection`)
 - Frontend stoppage API naming uses `frontend/src/services/stoppages.ts` and `queryKeys.stoppages`; legacy call aliases are removed
 - UI sport wording must still follow `GLOSSARY.md`: use `stoppage` for the generic interruption concept, and keep `Call` in English when referring to the specific stoppage type

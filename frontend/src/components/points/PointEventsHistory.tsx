@@ -34,6 +34,8 @@ interface PointEventsHistoryProps {
   endDateTime?: string | null;
   won?: boolean | null;
   fieldSide?: FieldSide | null;
+  turnovers?: TurnoverWithPlayer[];
+  stoppages?: Stoppage[];
 }
 
 // Union type for point events
@@ -56,7 +58,19 @@ const formatElapsedTime = (startTime: string | null, timestamp: string): string 
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime, strategy, pull, pointStatus, endDateTime, won, fieldSide }: PointEventsHistoryProps) => {
+export const PointEventsHistory = ({
+  pointId,
+  startingOnOffense,
+  pointStartTime,
+  strategy,
+  pull,
+  pointStatus,
+  endDateTime,
+  won,
+  fieldSide,
+  turnovers: providedTurnovers,
+  stoppages: providedStoppages,
+}: PointEventsHistoryProps) => {
   const { t } = useTranslation('points');
   const normalizedFieldSide = normalizeFieldSide(fieldSide);
   const fieldSideLabel = normalizedFieldSide
@@ -65,15 +79,19 @@ export const PointEventsHistory = ({ pointId, startingOnOffense, pointStartTime,
       : t('dialog.start.sideB')
     : null;
 
-  const { data: stoppages = [], isLoading: stoppagesLoading, error: stoppagesError } = useQuery({
+  const { data: fetchedStoppages = [], isLoading: stoppagesLoading, error: stoppagesError } = useQuery({
     queryKey: queryKeys.stoppages(pointId),
     queryFn: () => getStoppagesByPoint(pointId),
+    enabled: providedStoppages === undefined,
   });
 
-  const { data: turnovers = [], isLoading: turnoversLoading, error: turnoversError } = useQuery({
+  const { data: fetchedTurnovers = [], isLoading: turnoversLoading, error: turnoversError } = useQuery({
     queryKey: queryKeys.turnovers(pointId),
     queryFn: () => getTurnoversByPoint(pointId),
+    enabled: providedTurnovers === undefined,
   });
+  const stoppages = providedStoppages ?? fetchedStoppages;
+  const turnovers = providedTurnovers ?? fetchedTurnovers;
 
   if (stoppagesLoading || turnoversLoading) {
     return null; // Don't show loading state for this optional component

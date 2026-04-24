@@ -293,6 +293,16 @@ export interface GameDetail extends GameWithScore {
   halftime?: Halftime | null;
 }
 
+export interface GameLiveState {
+  game_id: number;
+  status: GameStatus;
+  our_score: number;
+  opponent_score: number;
+  active_point: PointWithPlayers | null;
+  active_point_turnovers: TurnoverWithPlayer[];
+  active_point_stoppages: Stoppage[];
+}
+
 // ============================================
 // Halftime Types
 // ============================================

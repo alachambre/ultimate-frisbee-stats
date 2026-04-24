@@ -62,6 +62,7 @@ export default function EditPointDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(point.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(point.game_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(point.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(point.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(point.game_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(point.game_id) });

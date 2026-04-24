@@ -104,6 +104,77 @@ def test_get_game_api_includes_halftime(client, sample_game):
     assert data["halftime"]["game_id"] == sample_game.id
 
 
+def test_get_game_live_state_returns_active_point_events(client, sample_game, sample_players):
+    player_ids = [player.id for player in sample_players]
+    point_response = client.post(
+        "/points",
+        json={
+            "game_id": sample_game.id,
+            "starting_on_offense": True,
+            "player_ids": player_ids,
+            "comments": "Point setup",
+        },
+    )
+    assert point_response.status_code == 201
+    point = point_response.json()
+
+    start_response = client.put(
+        f"/points/{point['id']}",
+        json={"status": "running"},
+    )
+    assert start_response.status_code == 200
+
+    turnover_response = client.post(
+        "/turnovers",
+        json={
+            "point_id": point["id"],
+            "player_id": sample_players[0].id,
+            "turnover_type": "drop",
+            "timestamp": "2024-01-01T10:01:00Z",
+            "comments": "Live turnover",
+        },
+    )
+    assert turnover_response.status_code == 201
+
+    stoppage_response = client.post(
+        "/stoppages",
+        json={
+            "point_id": point["id"],
+            "stoppage_type": "timeout",
+            "call_timestamp": "2024-01-01T10:02:00Z",
+            "comments": "Live timeout",
+        },
+    )
+    assert stoppage_response.status_code == 201
+
+    response = client.get(f"/games/{sample_game.id}/live-state")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["game_id"] == sample_game.id
+    assert data["status"] == "ready"
+    assert data["our_score"] == 0
+    assert data["opponent_score"] == 0
+    assert data["active_point"]["id"] == point["id"]
+    assert data["active_point"]["status"] == "running"
+    assert data["active_point"]["comments"] == "Point setup"
+    assert data["active_point_turnovers"][0]["turnover_type"] == "drop"
+    assert data["active_point_turnovers"][0]["comments"] == "Live turnover"
+    assert data["active_point_stoppages"][0]["stoppage_type"] == "timeout"
+    assert data["active_point_stoppages"][0]["comments"] == "Live timeout"
+
+
+def test_get_game_live_state_without_active_point_returns_empty_live_events(client, sample_game):
+    response = client.get(f"/games/{sample_game.id}/live-state")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["game_id"] == sample_game.id
+    assert data["active_point"] is None
+    assert data["active_point_turnovers"] == []
+    assert data["active_point_stoppages"] == []
+
+
 def test_get_game_not_found_api(client):
     """Test GET /games/{game_id} with invalid ID"""
     response = client.get("/games/999")
