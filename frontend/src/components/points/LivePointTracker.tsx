@@ -39,6 +39,7 @@ import { getTurnoversByPoint } from "../../services/turnovers";
 import { getStoppagesByPoint } from "../../services/stoppages";
 import GroupIcon from "@mui/icons-material/Group";
 import { queryKeys } from "../../utils/queryKeys";
+import { LIVE_TRACKER_REFRESH_INTERVAL_MS } from "../../utils/refreshIntervals";
 import { LivePointHeader } from "./liveTracker/LivePointHeader";
 import { LivePointActionBar } from "./liveTracker/LivePointActionBar";
 import { LivePointContextCards } from "./liveTracker/LivePointContextCards";
@@ -82,6 +83,8 @@ export default function LivePointTracker({
     queryKey: queryKeys.turnovers(activePoint?.id ?? 0),
     queryFn: () => getTurnoversByPoint(activePoint!.id),
     enabled: !!activePoint,
+    refetchInterval: activePoint ? LIVE_TRACKER_REFRESH_INTERVAL_MS : false,
+    refetchIntervalInBackground: true,
   });
 
   // Fetch stoppages for active point (needed to check for pending stoppages)
@@ -89,6 +92,8 @@ export default function LivePointTracker({
     queryKey: queryKeys.stoppages(activePoint?.id ?? 0),
     queryFn: () => getStoppagesByPoint(activePoint!.id),
     enabled: !!activePoint,
+    refetchInterval: activePoint ? LIVE_TRACKER_REFRESH_INTERVAL_MS : false,
+    refetchIntervalInBackground: true,
   });
 
   const {

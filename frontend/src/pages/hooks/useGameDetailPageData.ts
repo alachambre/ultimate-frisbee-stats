@@ -5,8 +5,10 @@ import { getCompetition } from "../../services/competitions";
 import { getActivePoint } from "../../services/points";
 import { getGenderScopedPlayerHighlight } from "../../utils/playerHighlighting";
 import { queryKeys } from "../../utils/queryKeys";
-
-const GAME_DETAIL_REFRESH_INTERVAL_MS = 30000;
+import {
+  GAME_DETAIL_REFRESH_INTERVAL_MS,
+  LIVE_TRACKER_REFRESH_INTERVAL_MS,
+} from "../../utils/refreshIntervals";
 
 export function useGameDetailPageData(
   gameId: string | undefined,
@@ -41,8 +43,9 @@ export function useGameDetailPageData(
     enabled: gameIdValid && game?.status === "started" && !hasScoredPoint,
     refetchInterval:
       game?.status === "started" && !hasScoredPoint
-        ? GAME_DETAIL_REFRESH_INTERVAL_MS
+        ? LIVE_TRACKER_REFRESH_INTERVAL_MS
         : false,
+    refetchIntervalInBackground: true,
     retry: false,
   });
 
