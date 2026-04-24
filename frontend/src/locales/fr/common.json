@@ -84,7 +84,7 @@
     "error": "Une erreur s'est produite",
     "success": "Succès",
     "loading": "Chargement...",
-    "coldStartHint": "Le serveur met du temps à répondre.\nSi vous ne vous êtes pas connecté depuis plus de 15 minutes, il est probablement en train de démarrer.",
+    "coldStartHint": "Le serveur met du temps à répondre.\nLe serveur s'éteint automatriquement lorsque il n'y a pas d'utilisation pendant 15min, et redémarre lors du prochain accès (serveur gratuit). Cela peut prendre 1 à 2 minutes.",
     "noData": "Aucune donnée disponible",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
     "saved": "Enregistré avec succès",
@@ -109,11 +109,11 @@
     "signIn": "Connexion",
     "signOut": "Deconnexion",
     "signInTitle": "Connexion",
-    "signInDescription": "Utilisez votre compte Supabase partage pour acceder aux espaces proteges de l'equipe.",
+    "signInDescription": "Connectez pour acceder aux espaces protegés de l'equipe.",
     "emailLabel": "Adresse e-mail",
     "passwordLabel": "Mot de passe",
     "submit": "Connexion",
-    "notConfigured": "L'authentification n'est pas configuree pour cet environnement.",
+    "notConfigured": "L'authentification n'est pas configurée pour cet environnement.",
     "genericError": "Connexion impossible. Veuillez reessayer."
   },
   "access": {
@@ -122,13 +122,13 @@
     "signInRequiredDescription": "Utilisez le bouton Connexion dans l'entete pour acceder a cet espace.",
     "signInUnavailableDescription": "L'authentification n'est pas configuree pour cet environnement.",
     "noAppAccessTitle": "Aucun acces applicatif",
-    "noAppAccessDescription": "Ce compte est authentifie, mais il n'a pas encore d'acces a Monkey Statistics.",
+    "noAppAccessDescription": "Vous n'avez pas les permissions requies pour voir cette page.",
     "insufficientPermissionsTitle": "Acces restreint",
     "insufficientPermissionsDescription": "Cette page requiert le role {{role}}.",
     "spectatorModeTitle": "Mode spectateur",
-    "competitionsSpectatorDescription": "Vous pouvez suivre les competitions et les matchs ici. Connectez-vous avec un compte equipe pour creer des competitions ou gerer les effectifs.",
-    "competitionSpectatorDescription": "Vous pouvez suivre cette competition ici. Connectez-vous avec un compte equipe pour la modifier, gerer l'effectif ou creer des matchs.",
-    "gameSpectatorDescription": "Vous pouvez suivre le score et l'historique des points ici. Connectez-vous avec un compte equipe pour gerer l'effectif, suivre le live tracker ou modifier l'historique.",
+    "competitionsSpectatorDescription": "Vous n'etes pas connecté, pouvez suivre les competitions et les matchs mais pas les éditer.",
+    "competitionSpectatorDescription": "Vous n'etes pas connecté, pouvez suivre les competitions et les matchs mais pas les éditer.",
+    "gameSpectatorDescription": "Vous n'etes pas connecté, pouvez suivre les competitions et les matchs mais pas les éditer.",
     "roles": {
       "team_member": "membre equipe",
       "team_analyst": "analyste equipe",
@@ -139,8 +139,8 @@
     "title": "Comptes utilisateurs",
     "addUser": "Nouveau compte",
     "noticeTitle": "Espace admin",
-    "noticeDescription": "Creez ici les comptes partages de l'equipe, changez les roles et desactivez les acces si besoin.",
-    "empty": "Aucun compte utilisateur n'a encore ete cree.",
+    "noticeDescription": "Créez ici les comptes partagés de l'equipe, changez les roles et desactivez les acces si besoin.",
+    "empty": "Aucun compte utilisateur n'a encore ete crée.",
     "status": {
       "active": "Actif",
       "inactive": "Inactif",
@@ -175,10 +175,10 @@
     "subtitle": "Suivez les performances de votre équipe, match par match, point par point",
     "byline": "Développé par Monkey Grenoble",
     "serverStatus": {
-      "wakingTitle": "R\u00e9veil du serveur",
-      "wakingDescription": "Le backend est en train de d\u00e9marrer. Cela peut prendre un peu de temps sur l'offre gratuite, mais l'ouverture de la page d'accueil a d\u00e9j\u00e0 lanc\u00e9 la requ\u00eate de r\u00e9veil.",
+      "wakingTitle": "Démarrage du serveur, application momentanément indisponible",
+      "wakingDescription": "Le serveur s'éteint automatriquement lorsque il n'y a pas d'utilisation pendant 15min, et redémarre lors du prochain accès (serveur gratuit). Cela peut prendre 1 à 2 minutes.",
       "unavailableTitle": "Serveur indisponible",
-      "unavailableDescription": "Le backend ne r\u00e9pond pas encore. Patientez un instant puis actualisez si besoin."
+      "unavailableDescription": "Le serveur ne répond pas encore. Patientez un instant puis actualisez si besoin."
     },
     "cards": {
       "teams": {
