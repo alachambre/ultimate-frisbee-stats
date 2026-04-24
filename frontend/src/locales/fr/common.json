@@ -84,7 +84,7 @@
     "error": "Une erreur s'est produite",
     "success": "Succès",
     "loading": "Chargement...",
-    "coldStartHint": "Le serveur met du temps à répondre.\nLe serveur s'éteint automatriquement lorsque il n'y a pas d'utilisation pendant 15min, et redémarre lors du prochain accès (serveur gratuit). Cela peut prendre 1 à 2 minutes.",
+    "coldStartHint": "Le serveur met du temps à répondre.\nLe serveur s'éteint automatiquement lorsque il n'y a pas d'utilisation pendant 15min, et redémarre lors du prochain accès (serveur gratuit).\nCela peut prendre 1 à 2 minutes.",
     "noData": "Aucune donnée disponible",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet élément ?",
     "saved": "Enregistré avec succès",
