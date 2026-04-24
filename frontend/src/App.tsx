@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { I18nextProvider } from "react-i18next";
+import { Analytics } from "@vercel/analytics/react";
 import i18n from "./locales";
 import Layout from "./components/Layout";
 import LoadingState from "./components/shared/LoadingState";
@@ -167,6 +168,7 @@ function App() {
             </BrowserRouter>
           </AuthProvider>
         </QueryClientProvider>
+        <Analytics />
       </ThemeProvider>
     </I18nextProvider>
   );
