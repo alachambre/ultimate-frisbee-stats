@@ -14,7 +14,6 @@ import { alpha, useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import type {
-  TurnoverType,
   TurnoverTypeBucket,
   TurnoverTypeStats,
 } from "../../types";
