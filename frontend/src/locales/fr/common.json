@@ -126,9 +126,9 @@
     "insufficientPermissionsTitle": "Acces restreint",
     "insufficientPermissionsDescription": "Cette page requiert le role {{role}}.",
     "spectatorModeTitle": "Mode spectateur",
-    "competitionsSpectatorDescription": "Vous n'etes pas connecté, pouvez suivre les competitions et les matchs mais pas les éditer.",
-    "competitionSpectatorDescription": "Vous n'etes pas connecté, pouvez suivre les competitions et les matchs mais pas les éditer.",
-    "gameSpectatorDescription": "Vous n'etes pas connecté, pouvez suivre les competitions et les matchs mais pas les éditer.",
+    "competitionsSpectatorDescription": "vous n'êtes, vous pouvez suivre les competitions et les matchs mais pas les éditer.",
+    "competitionSpectatorDescription": "vous n'êtes, vous pouvez suivre les competitions et les matchs mais pas les éditer.",
+    "gameSpectatorDescription": "vous n'êtes, vous pouvez suivre les competitions et les matchs mais pas les éditer.",
     "roles": {
       "team_member": "membre equipe",
       "team_analyst": "analyste equipe",
