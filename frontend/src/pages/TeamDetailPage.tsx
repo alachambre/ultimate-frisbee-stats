@@ -54,6 +54,8 @@ export default function TeamDetailPage() {
   const teamIdValid = Number.isFinite(teamIdNumber);
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
+  const canViewPlayerStatistics =
+    !shouldProtectUi || auth.capabilities.canViewPlayerStatistics;
 
   const {
     data: team,
@@ -336,7 +338,7 @@ export default function TeamDetailPage() {
           onClose={() => setEditingPlayer(null)}
           player={editingPlayer}
           teamId={Number(teamId)}
-          onViewStatistics={canViewStatistics ? handleViewPlayerStats : undefined}
+          onViewStatistics={canViewPlayerStatistics ? handleViewPlayerStats : undefined}
         />
       )}
 

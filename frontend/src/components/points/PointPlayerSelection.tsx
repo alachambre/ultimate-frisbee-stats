@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getLines } from "../../services/lines";
 import { getLiveGameStatistics } from "../../services/statistics";
+import { shouldEnforcePermissions, useAuth } from "../../auth";
 import PlayerSelector from "./PlayerSelector";
 import type { Player, Line } from "../../types";
 import {
@@ -57,7 +58,11 @@ export default function PointPlayerSelection({
   requiredGenderRatio = null,
   hideStartingPosition = false,
 }: PointPlayerSelectionProps) {
+  const auth = useAuth();
   const { t } = useTranslation(['points', 'common']);
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const canViewPlayerStatistics =
+    !shouldProtectUi || auth.capabilities.canViewPlayerStatistics;
 
   // Fetch lines for the team
   const { data: lines } = useQuery({
@@ -69,7 +74,7 @@ export default function PointPlayerSelection({
   const { data: liveStats } = useQuery({
     queryKey: queryKeys.liveStats(gameId ?? 0),
     queryFn: () => getLiveGameStatistics(gameId as number),
-    enabled: open && typeof gameId === "number",
+    enabled: open && typeof gameId === "number" && canViewPlayerStatistics,
   });
 
   const liveStatsByPlayerId = useMemo(

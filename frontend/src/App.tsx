@@ -150,7 +150,7 @@ function App() {
                   <Route
                     path="statistics"
                     element={renderLazyRoute(
-                      <RequireMinimumRole minimumRole="team_analyst">
+                      <RequireMinimumRole minimumRole="team_member">
                         <StatisticsPage />
                       </RequireMinimumRole>
                     )}

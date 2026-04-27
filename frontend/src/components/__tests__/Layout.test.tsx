@@ -56,7 +56,7 @@ describe("Layout", () => {
     expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it("keeps statistics hidden for team members when permissions are enforced", () => {
+  it("shows statistics for team members when permissions are enforced", () => {
     renderLayout({
       role: "team_member",
       enforcementMode: "enforced",
@@ -67,7 +67,7 @@ describe("Layout", () => {
     expect(screen.getByRole("link", { name: /^teams$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^strategies$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^competitions$/i })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^statistics$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^statistics$/i })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /^users$/i })).not.toBeInTheDocument();
   });
 

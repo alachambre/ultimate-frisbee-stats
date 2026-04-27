@@ -11,6 +11,26 @@ describe("auth capabilities", () => {
       canViewStrategies: false,
       canEditData: false,
       canViewStatistics: false,
+      canViewTeamStatistics: false,
+      canViewStrategyStatistics: false,
+      canViewPlayerStatistics: false,
+      canFilterStatisticsByPlayers: false,
+      canExportStatistics: false,
+      canManageUsers: false,
+    });
+  });
+
+  it("returns limited statistics capabilities for team members", () => {
+    expect(getCapabilitiesForRole("team_member")).toEqual({
+      canViewPublicContent: true,
+      canViewComments: true,
+      canViewStrategies: true,
+      canEditData: true,
+      canViewStatistics: true,
+      canViewTeamStatistics: true,
+      canViewStrategyStatistics: true,
+      canViewPlayerStatistics: false,
+      canFilterStatisticsByPlayers: false,
       canExportStatistics: false,
       canManageUsers: false,
     });
@@ -23,6 +43,10 @@ describe("auth capabilities", () => {
       canViewStrategies: true,
       canEditData: true,
       canViewStatistics: true,
+      canViewTeamStatistics: true,
+      canViewStrategyStatistics: true,
+      canViewPlayerStatistics: true,
+      canFilterStatisticsByPlayers: true,
       canExportStatistics: true,
       canManageUsers: false,
     });

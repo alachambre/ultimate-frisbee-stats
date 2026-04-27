@@ -36,9 +36,9 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - UI permission gating must respect rollout mode: only hide or block restricted surfaces when backend `enforcement_mode` is `enforced`; `off`/`shadow` should remain safe for incremental deploys
 - In enforced mode, protected frontend routes should render an in-app permission notice instead of silently redirecting; use that pattern for future gated screens so users understand whether they need login, a higher role, or app provisioning
 - Admin account management lives on `frontend/src/pages/AdminUsersPage.tsx` at `/admin/users`; keep that route strictly admin-only in the UI even before global enforcement is enabled so it matches the backend contract
-- On public or `team_member` surfaces, avoid protected statistics queries when UI enforcement is active; gate those requests before they fire instead of relying on 401/403 handling in the page
+- On public surfaces, avoid protected statistics queries when UI enforcement is active; for `team_member`, allow team/strategy/timeline statistics but gate player-statistics queries, player cohort filters, and CSV exports before they fire
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
-- Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (filter-driven workflow: `teamId`, multi-select `competitionIds`, multi-select `gameIds`, multi-select `playerIds`; keep legacy single-value `competitionId`, `gameId`, and `playerId` links backward-compatible when parsing)
+- Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (filter-driven workflow: `teamId`, multi-select `competitionIds`, multi-select `gameIds`, multi-select `playerIds`; keep legacy single-value `competitionId`, `gameId`, and `playerId` links backward-compatible when parsing). `team_member` users can access team and strategy statistics plus single-game timeline charts, but player cohort filtering, the Players tab, and CSV export require analyst/export capabilities.
 - Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
 - Statistics page layout is split into dedicated components such as `StatisticsConfigurationPanel` and `StatisticsSectionContainer` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
 - Turnover-type analytics in the statistics UI are rendered through `frontend/src/components/statistics/TurnoverTypeStatsSection.tsx` and reused in both `TeamStatistics` and `PlayerScopeStatistics`; extend that shared component instead of duplicating the 6-bucket breakdown in multiple places
@@ -71,7 +71,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Auth foundation lives under `backend/app/auth/`; keep role and permission logic centralized there (`public`, `team_member`, `team_analyst`, `admin`)
 - Backend auth rollout is controlled by `AUTH_ENFORCEMENT_MODE` with modes `off`, `shadow`, and `enforced`; prefer incremental deploys with `shadow` before enabling enforcement
 - Public spectator payload redaction is centralized in `backend/app/auth/redaction.py`; when exposing anonymous-safe game/point/stoppage/turnover/halftime reads, reuse those serializers instead of hand-redacting fields in routers
-- Backend route authorization uses `require_team_member` for operational/team-management surfaces and `require_team_analyst` for `/statistics` and `/exports`; keep only the approved spectator reads public
+- Backend route authorization uses `require_team_member` for operational/team-management surfaces and for team/strategy/timeline statistics, while player statistics and `/exports` require `require_team_analyst`; keep only the approved spectator reads public
 - Backend user management endpoints live under `/users`, use `require_admin_strict`, and rely on Supabase Auth admin APIs through the service role key; keep those flows rollout-independent and backend-enforced
 - App-level authenticated users are stored in the local `users` table and linked to Supabase Auth via `auth_user_id`
 - First-admin bootstrap is env-driven through `INITIAL_ADMIN_AUTH_USER_ID` + `INITIAL_ADMIN_EMAIL` and runs idempotently on startup when configured
@@ -86,7 +86,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable
 - Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
-- Team stats endpoints accept optional repeated `competition_ids`, `game_ids`, and `player_ids` query params so the statistics page can build filtered datasets without switching endpoint families
+- Team stats endpoints accept optional repeated `competition_ids`, `game_ids`, and `player_ids` query params so the statistics page can build filtered datasets without switching endpoint families; `player_ids` filtering is analyst-only when enforcement is active
 - Stats endpoints expose a single-game point timeline (`/statistics/games/{game_id}/timeline`) for chart visualizations such as point duration, score progression, and turns per point
 - `crud/games.py:get_game_detail` must return explicit contract fields (no `__dict__` passthrough)
 - Supabase schema changes are SQL-migration-based (`supabase/migrations/`), not `create_all()` based

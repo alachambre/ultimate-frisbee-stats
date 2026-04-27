@@ -39,6 +39,7 @@ interface StatisticsConfigurationPanelProps {
   selectedGames: GameWithScore[];
   playersForTeam: Player[];
   selectedPlayers: Player[];
+  canFilterStatisticsByPlayers: boolean;
   controlsLoading: boolean;
   isPlayerOptionsLoading: boolean;
   hasControlsError: boolean;
@@ -61,6 +62,7 @@ export default function StatisticsConfigurationPanel({
   selectedGames,
   playersForTeam,
   selectedPlayers,
+  canFilterStatisticsByPlayers,
   controlsLoading,
   isPlayerOptionsLoading,
   hasControlsError,
@@ -122,7 +124,7 @@ export default function StatisticsConfigurationPanel({
           }}
         >
           <Stack spacing={2}>
-            {selectedPlayerIds.length > 0 && (
+            {canFilterStatisticsByPlayers && selectedPlayerIds.length > 0 && (
               <Alert
                 severity="info"
                 action={
@@ -250,68 +252,70 @@ export default function StatisticsConfigurationPanel({
               noOptionsText={t("statistics:workflow.noGames")}
             />
 
-            <Autocomplete
-              multiple
-              disableCloseOnSelect
-              options={playersForTeam}
-              value={selectedPlayers}
-              onChange={(_, players) => onSelectPlayerIds(players.map((player) => player.id))}
-              disabled={
-                teamId === undefined ||
-                controlsLoading ||
-                isPlayerOptionsLoading ||
-                hasControlsError
-              }
-              loading={isPlayerOptionsLoading}
-              getOptionLabel={(player) => player.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              limitTags={2}
-              renderOption={(props, player, { selected }) => {
-                const { key, ...optionProps } = props;
-                return (
-                  <Box component="li" key={key} {...optionProps}>
-                    <Checkbox
-                      icon={checkboxIcon}
-                      checkedIcon={checkboxCheckedIcon}
-                      checked={selected}
-                      sx={{ mr: 1 }}
-                    />
-                    {player.gender === "M" ? (
-                      <MaleIcon
-                        sx={{
-                          mr: 1,
-                          fontSize: 18,
-                          color: (theme) => theme.colors.men.main,
-                        }}
+            {canFilterStatisticsByPlayers && (
+              <Autocomplete
+                multiple
+                disableCloseOnSelect
+                options={playersForTeam}
+                value={selectedPlayers}
+                onChange={(_, players) => onSelectPlayerIds(players.map((player) => player.id))}
+                disabled={
+                  teamId === undefined ||
+                  controlsLoading ||
+                  isPlayerOptionsLoading ||
+                  hasControlsError
+                }
+                loading={isPlayerOptionsLoading}
+                getOptionLabel={(player) => player.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                limitTags={2}
+                renderOption={(props, player, { selected }) => {
+                  const { key, ...optionProps } = props;
+                  return (
+                    <Box component="li" key={key} {...optionProps}>
+                      <Checkbox
+                        icon={checkboxIcon}
+                        checkedIcon={checkboxCheckedIcon}
+                        checked={selected}
+                        sx={{ mr: 1 }}
                       />
-                    ) : (
-                      <FemaleIcon
-                        sx={{
-                          mr: 1,
-                          fontSize: 18,
-                          color: (theme) => theme.colors.women.main,
-                        }}
-                      />
-                    )}
-                    <ListItemText primary={player.name} />
-                  </Box>
-                );
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={`4. ${t("statistics:workflow.playerCohort")}`}
-                  placeholder={t("statistics:workflow.selectPlayer")}
-                  helperText={
-                    teamId === undefined
-                      ? t("statistics:workflow.selectTeamFirst")
-                      : t("statistics:workflow.playersCount", { count: playersForTeam.length })
-                  }
-                />
-              )}
-              noOptionsText={t("statistics:workflow.noPlayers")}
-              loadingText={t("common:action.loading")}
-            />
+                      {player.gender === "M" ? (
+                        <MaleIcon
+                          sx={{
+                            mr: 1,
+                            fontSize: 18,
+                            color: (theme) => theme.colors.men.main,
+                          }}
+                        />
+                      ) : (
+                        <FemaleIcon
+                          sx={{
+                            mr: 1,
+                            fontSize: 18,
+                            color: (theme) => theme.colors.women.main,
+                          }}
+                        />
+                      )}
+                      <ListItemText primary={player.name} />
+                    </Box>
+                  );
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`4. ${t("statistics:workflow.playerCohort")}`}
+                    placeholder={t("statistics:workflow.selectPlayer")}
+                    helperText={
+                      teamId === undefined
+                        ? t("statistics:workflow.selectTeamFirst")
+                        : t("statistics:workflow.playersCount", { count: playersForTeam.length })
+                    }
+                  />
+                )}
+                noOptionsText={t("statistics:workflow.noPlayers")}
+                loadingText={t("common:action.loading")}
+              />
+            )}
           </Stack>
         </Box>
       </Collapse>

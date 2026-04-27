@@ -96,7 +96,10 @@ def test_authenticated_user_without_app_access_is_forbidden_from_protected_route
     assert response.json()["detail"] == "No app access configured"
 
 
-def test_team_member_can_use_operational_routes_but_not_statistics_or_exports(client, db_session):
+def test_team_member_can_use_operational_routes_and_limited_statistics_but_not_player_stats_or_exports(
+    client,
+    db_session,
+):
     scenario = _build_authorization_scenario(db_session)
     tokens_to_claims = _configure_auth(client, AuthEnforcementMode.ENFORCED)
     _provision_user(
@@ -125,8 +128,25 @@ def test_team_member_can_use_operational_routes_but_not_statistics_or_exports(cl
         },
         headers=headers,
     )
-    statistics_response = client.get(
+    team_statistics_response = client.get(
         f"/statistics/games/{scenario['game'].id}/team",
+        headers=headers,
+    )
+    strategy_statistics_response = client.get(
+        f"/statistics/games/{scenario['game'].id}/strategies",
+        headers=headers,
+    )
+    timeline_response = client.get(
+        f"/statistics/games/{scenario['game'].id}/timeline",
+        headers=headers,
+    )
+    player_statistics_response = client.get(
+        f"/statistics/games/{scenario['game'].id}/live",
+        headers=headers,
+    )
+    filtered_team_statistics_response = client.get(
+        f"/statistics/games/{scenario['game'].id}/team",
+        params={"player_ids": scenario["players"][0].id},
         headers=headers,
     )
     exports_response = client.get(
@@ -137,9 +157,17 @@ def test_team_member_can_use_operational_routes_but_not_statistics_or_exports(cl
     assert teams_response.status_code == 200
     assert competition_roster_response.status_code == 200
     assert create_point_response.status_code == 201
-    assert statistics_response.status_code == 403
+    assert team_statistics_response.status_code == 200
+    assert strategy_statistics_response.status_code == 200
+    assert timeline_response.status_code == 200
+    assert player_statistics_response.status_code == 403
+    assert filtered_team_statistics_response.status_code == 403
     assert exports_response.status_code == 403
-    assert statistics_response.json()["detail"] == "Insufficient permissions"
+    assert player_statistics_response.json()["detail"] == "Insufficient permissions"
+    assert (
+        filtered_team_statistics_response.json()["detail"]
+        == "Insufficient permissions"
+    )
 
 
 def test_team_analyst_can_access_statistics_and_exports(client, db_session):

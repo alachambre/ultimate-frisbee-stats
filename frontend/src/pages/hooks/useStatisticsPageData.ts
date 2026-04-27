@@ -21,6 +21,14 @@ interface StatisticsSelection {
   playerIds: number[];
 }
 
+interface StatisticsPageAccess {
+  canViewTeamStatistics: boolean;
+  canViewStrategyStatistics: boolean;
+  canViewPlayerStatistics: boolean;
+  canFilterStatisticsByPlayers: boolean;
+  canExportStatistics: boolean;
+}
+
 const STICKY_TEAM_KEY = "statistics:selectedTeamId";
 
 function parseOptionalId(value: string | null): number | undefined {
@@ -80,7 +88,7 @@ function buildDatasetFilters(selection: StatisticsSelection): StatisticsDatasetF
   };
 }
 
-export function useStatisticsPageData() {
+export function useStatisticsPageData(access: StatisticsPageAccess) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -116,8 +124,11 @@ export function useStatisticsPageData() {
   const teamId = selection.teamId;
   const competitionIds = selection.competitionIds;
   const gameIds = selection.gameIds;
-  const playerIds = selection.playerIds;
-  const statisticsFilters = buildDatasetFilters(selection);
+  const playerIds = access.canFilterStatisticsByPlayers ? selection.playerIds : [];
+  const statisticsFilters = buildDatasetFilters({
+    ...selection,
+    playerIds,
+  });
 
   const updateSelection = useCallback(
     (updates: Partial<StatisticsSelection>, options?: { replace?: boolean }) => {
@@ -256,7 +267,7 @@ export function useStatisticsPageData() {
   } = useQuery({
     queryKey: queryKeys.teamTeamStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
     queryFn: () => getTeamTeamStatistics(teamId as number, statisticsFilters),
-    enabled: teamId !== undefined,
+    enabled: teamId !== undefined && access.canViewTeamStatistics,
   });
 
   const {
@@ -266,7 +277,7 @@ export function useStatisticsPageData() {
   } = useQuery({
     queryKey: queryKeys.teamPlayerStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
     queryFn: () => getTeamPlayerStatistics(teamId as number, statisticsFilters),
-    enabled: teamId !== undefined,
+    enabled: teamId !== undefined && access.canViewPlayerStatistics,
   });
 
   const {
@@ -276,7 +287,7 @@ export function useStatisticsPageData() {
   } = useQuery({
     queryKey: queryKeys.teamStrategyStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
     queryFn: () => getTeamStrategyStatistics(teamId as number, statisticsFilters),
-    enabled: teamId !== undefined,
+    enabled: teamId !== undefined && access.canViewStrategyStatistics,
   });
 
   const {
@@ -286,7 +297,7 @@ export function useStatisticsPageData() {
   } = useQuery({
     queryKey: queryKeys.gamePointTimeline(selectedGame?.id ?? 0, playerIds),
     queryFn: () => getGamePointTimeline(selectedGame!.id, playerIds),
-    enabled: selectedGame !== undefined,
+    enabled: selectedGame !== undefined && access.canViewTeamStatistics,
   });
 
   const playerStatsById = useMemo(() => {
@@ -345,18 +356,30 @@ export function useStatisticsPageData() {
   const controlsLoading =
     teamId !== undefined && (isLoadingCompetitions || isLoadingAllGames);
   const isPlayerOptionsLoading =
+    access.canFilterStatisticsByPlayers &&
     teamId !== undefined &&
     isLoadingTeamPlayerStats &&
     (competitionIds.length > 0 || gameIds.length > 0 || playerIds.length > 0);
 
   const isScopeLoading =
     teamId !== undefined &&
-    (isLoadingTeamStats || isLoadingTeamPlayerStats || isLoadingTeamStrategyStats);
+    ((access.canViewTeamStatistics && isLoadingTeamStats) ||
+      (access.canViewPlayerStatistics && isLoadingTeamPlayerStats) ||
+      (access.canViewStrategyStatistics && isLoadingTeamStrategyStats));
 
-  const scopeError = teamStatsError || teamPlayerStatsError || teamStrategyStatsError;
+  const scopeError =
+    (access.canViewTeamStatistics ? teamStatsError : null) ||
+    (access.canViewPlayerStatistics ? teamPlayerStatsError : null) ||
+    (access.canViewStrategyStatistics ? teamStrategyStatsError : null);
 
-  const canExport = teamId !== undefined;
+  const canExport = teamId !== undefined && access.canExportStatistics;
   const shouldShowFieldSideStats = selectedGames.length === 1;
+
+  useEffect(() => {
+    if (!access.canFilterStatisticsByPlayers && selection.playerIds.length > 0) {
+      updateSelection({ playerIds: [] }, { replace: true });
+    }
+  }, [access.canFilterStatisticsByPlayers, selection.playerIds.length, updateSelection]);
 
   useEffect(() => {
     if (!teams || teamId !== undefined) {

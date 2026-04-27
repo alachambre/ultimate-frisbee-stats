@@ -12,6 +12,10 @@ describe("auth service", () => {
         can_view_strategies: true,
         can_edit_data: true,
         can_view_statistics: true,
+        can_view_team_statistics: true,
+        can_view_strategy_statistics: true,
+        can_view_player_statistics: true,
+        can_filter_statistics_by_players: true,
         can_export_statistics: true,
         can_manage_users: true,
       },
@@ -27,6 +31,10 @@ describe("auth service", () => {
     expect(result.capabilities.canViewStrategies).toBe(true);
     expect(result.capabilities.canEditData).toBe(true);
     expect(result.capabilities.canViewStatistics).toBe(true);
+    expect(result.capabilities.canViewTeamStatistics).toBe(true);
+    expect(result.capabilities.canViewStrategyStatistics).toBe(true);
+    expect(result.capabilities.canViewPlayerStatistics).toBe(true);
+    expect(result.capabilities.canFilterStatisticsByPlayers).toBe(true);
     expect(result.capabilities.canExportStatistics).toBe(true);
     expect(result.capabilities.canManageUsers).toBe(true);
   });

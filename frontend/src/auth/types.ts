@@ -7,6 +7,10 @@ export interface AppCapabilities {
   canViewStrategies: boolean;
   canEditData: boolean;
   canViewStatistics: boolean;
+  canViewTeamStatistics: boolean;
+  canViewStrategyStatistics: boolean;
+  canViewPlayerStatistics: boolean;
+  canFilterStatisticsByPlayers: boolean;
   canExportStatistics: boolean;
   canManageUsers: boolean;
 }

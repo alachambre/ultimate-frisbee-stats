@@ -54,6 +54,30 @@ describe("StatisticsPage", () => {
     });
   });
 
+  it("limits team members to team and strategy statistics", async () => {
+    const team = await createTeam({ name: "Monkey" });
+
+    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
+
+    render(<StatisticsPage />, {
+      auth: {
+        role: "team_member",
+        enforcementMode: "enforced",
+        isAuthenticated: true,
+        hasAppAccess: true,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole("tab", { name: "Players" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("4. Players cohort")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
+  });
+
   it("keeps legacy single-competition and single-game links working", async () => {
     const team = await createTeam({ name: "Monkey" });
     const competition = await createCompetition({

@@ -11,6 +11,10 @@ interface ApiCapabilityFlags {
   can_view_strategies: boolean;
   can_edit_data: boolean;
   can_view_statistics: boolean;
+  can_view_team_statistics?: boolean;
+  can_view_strategy_statistics?: boolean;
+  can_view_player_statistics?: boolean;
+  can_filter_statistics_by_players?: boolean;
   can_export_statistics: boolean;
   can_manage_users: boolean;
 }
@@ -44,6 +48,18 @@ export function mapAuthMeResponse(response: ApiAuthMeResponse): AuthMeResponse {
       canViewStrategies: response.capabilities.can_view_strategies,
       canEditData: response.capabilities.can_edit_data,
       canViewStatistics: response.capabilities.can_view_statistics,
+      canViewTeamStatistics:
+        response.capabilities.can_view_team_statistics ??
+        response.capabilities.can_view_statistics,
+      canViewStrategyStatistics:
+        response.capabilities.can_view_strategy_statistics ??
+        response.capabilities.can_view_statistics,
+      canViewPlayerStatistics:
+        response.capabilities.can_view_player_statistics ??
+        response.capabilities.can_view_statistics,
+      canFilterStatisticsByPlayers:
+        response.capabilities.can_filter_statistics_by_players ??
+        response.capabilities.can_view_statistics,
       canExportStatistics: response.capabilities.can_export_statistics,
       canManageUsers: response.capabilities.can_manage_users,
     },

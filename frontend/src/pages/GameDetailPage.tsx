@@ -53,6 +53,8 @@ export default function GameDetailPage() {
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
   const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
+  const canViewPlayerStatistics =
+    !shouldProtectUi || auth.capabilities.canViewPlayerStatistics;
   const showSpectatorNotice = shouldProtectUi && !canEditData;
 
   const {
@@ -69,7 +71,7 @@ export default function GameDetailPage() {
     competitionPath,
     rosterPlayersForTabs,
     getRosterPlayerHighlight,
-  } = useGameDetailPageData(gameId, canViewStatistics);
+  } = useGameDetailPageData(gameId, canViewPlayerStatistics);
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteGame(gameIdNumber),

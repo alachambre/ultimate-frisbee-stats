@@ -10,6 +10,7 @@ import CompetitionStatisticsTabs from "../components/statistics/CompetitionStati
 import StatisticsSectionContainer from "../components/statistics/StatisticsSectionContainer";
 import type { GameWithScore } from "../types";
 import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
+import { shouldEnforcePermissions, useAuth } from "../auth";
 
 const GameTrendsSection = lazy(() => import("../components/statistics/GameTrendsSection"));
 
@@ -30,8 +31,22 @@ function buildScopeOverview(games: GameWithScore[]) {
 }
 
 export default function StatisticsPage() {
+  const auth = useAuth();
   const { t } = useTranslation(["statistics", "games", "common"]);
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
+  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
+  const statisticsAccess = {
+    canViewTeamStatistics:
+      !shouldProtectUi || auth.capabilities.canViewTeamStatistics,
+    canViewStrategyStatistics:
+      !shouldProtectUi || auth.capabilities.canViewStrategyStatistics,
+    canViewPlayerStatistics:
+      !shouldProtectUi || auth.capabilities.canViewPlayerStatistics,
+    canFilterStatisticsByPlayers:
+      !shouldProtectUi || auth.capabilities.canFilterStatisticsByPlayers,
+    canExportStatistics:
+      !shouldProtectUi || auth.capabilities.canExportStatistics,
+  };
   const {
     teamId,
     playerIds,
@@ -67,7 +82,7 @@ export default function StatisticsPage() {
     teamStats,
     teamPlayerStats,
     teamStrategyStats,
-  } = useStatisticsPageData();
+  } = useStatisticsPageData(statisticsAccess);
 
   const datasetOverview = buildScopeOverview(selectedDatasetGames);
   const selectedSingleGame = selectedGames.length === 1 ? selectedGames[0] : undefined;
@@ -125,6 +140,7 @@ export default function StatisticsPage() {
         selectedGames={selectedGames}
         playersForTeam={playersForTeam}
         selectedPlayers={selectedPlayers}
+        canFilterStatisticsByPlayers={statisticsAccess.canFilterStatisticsByPlayers}
         controlsLoading={controlsLoading}
         isPlayerOptionsLoading={isPlayerOptionsLoading}
         hasControlsError={Boolean(controlsError)}
@@ -271,6 +287,9 @@ export default function StatisticsPage() {
                   strategyStats={teamStrategyStats}
                   playerStats={teamPlayerStats}
                   teamStatsScope={shouldShowFieldSideStats ? "game" : "team"}
+                  canViewTeamStatistics={statisticsAccess.canViewTeamStatistics}
+                  canViewStrategyStatistics={statisticsAccess.canViewStrategyStatistics}
+                  canViewPlayerStatistics={statisticsAccess.canViewPlayerStatistics}
                 />
               </>
             </StatisticsSectionContainer>

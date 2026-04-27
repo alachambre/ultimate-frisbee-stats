@@ -65,7 +65,9 @@ export default function StatisticsSectionContainer({
             </Stack>
           )}
         </Box>
-        <StatisticsExportMenuButton disabled={!canExport} isExporting={isExporting} onExport={onExport} />
+        {canExport && (
+          <StatisticsExportMenuButton isExporting={isExporting} onExport={onExport} />
+        )}
       </Box>
       <Box
         sx={{

@@ -26,6 +26,10 @@ class AppCapabilities:
     can_view_strategies: bool
     can_edit_data: bool
     can_view_statistics: bool
+    can_view_team_statistics: bool
+    can_view_strategy_statistics: bool
+    can_view_player_statistics: bool
+    can_filter_statistics_by_players: bool
     can_export_statistics: bool
     can_manage_users: bool
 
@@ -37,6 +41,10 @@ _CAPABILITY_MATRIX = {
         can_view_strategies=False,
         can_edit_data=False,
         can_view_statistics=False,
+        can_view_team_statistics=False,
+        can_view_strategy_statistics=False,
+        can_view_player_statistics=False,
+        can_filter_statistics_by_players=False,
         can_export_statistics=False,
         can_manage_users=False,
     ),
@@ -45,7 +53,11 @@ _CAPABILITY_MATRIX = {
         can_view_comments=True,
         can_view_strategies=True,
         can_edit_data=True,
-        can_view_statistics=False,
+        can_view_statistics=True,
+        can_view_team_statistics=True,
+        can_view_strategy_statistics=True,
+        can_view_player_statistics=False,
+        can_filter_statistics_by_players=False,
         can_export_statistics=False,
         can_manage_users=False,
     ),
@@ -55,6 +67,10 @@ _CAPABILITY_MATRIX = {
         can_view_strategies=True,
         can_edit_data=True,
         can_view_statistics=True,
+        can_view_team_statistics=True,
+        can_view_strategy_statistics=True,
+        can_view_player_statistics=True,
+        can_filter_statistics_by_players=True,
         can_export_statistics=True,
         can_manage_users=False,
     ),
@@ -64,6 +80,10 @@ _CAPABILITY_MATRIX = {
         can_view_strategies=True,
         can_edit_data=True,
         can_view_statistics=True,
+        can_view_team_statistics=True,
+        can_view_strategy_statistics=True,
+        can_view_player_statistics=True,
+        can_filter_statistics_by_players=True,
         can_export_statistics=True,
         can_manage_users=True,
     ),

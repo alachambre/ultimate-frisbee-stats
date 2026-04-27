@@ -13,6 +13,10 @@ class CapabilityFlags(BaseModel):
     can_view_strategies: bool
     can_edit_data: bool
     can_view_statistics: bool
+    can_view_team_statistics: bool
+    can_view_strategy_statistics: bool
+    can_view_player_statistics: bool
+    can_filter_statistics_by_players: bool
     can_export_statistics: bool
     can_manage_users: bool
 

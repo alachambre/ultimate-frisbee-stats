@@ -58,7 +58,8 @@ export default function ManagePlayersDialog({
   const theme = useTheme();
   const queryClient = useQueryClient();
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
-  const canViewStatistics = !shouldProtectUi || auth.capabilities.canViewStatistics;
+  const canViewPlayerStatistics =
+    !shouldProtectUi || auth.capabilities.canViewPlayerStatistics;
 
   // Lazy state initialization from point.players
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>(() =>
@@ -85,7 +86,7 @@ export default function ManagePlayersDialog({
   const { data: liveStats = [] } = useQuery({
     queryKey: queryKeys.liveStats(point.game_id),
     queryFn: () => getLiveGameStatistics(point.game_id),
-    enabled: open && game?.status === "started" && canViewStatistics,
+    enabled: open && game?.status === "started" && canViewPlayerStatistics,
   });
 
   const liveStatsByPlayerId = useMemo(

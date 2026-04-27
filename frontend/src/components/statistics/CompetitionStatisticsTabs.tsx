@@ -14,6 +14,9 @@ interface CompetitionStatisticsTabsProps {
   strategyStats?: StrategyStatsBase;
   playerStats?: PlayerGameStats[];
   teamStatsScope?: TeamStatsScope;
+  canViewTeamStatistics?: boolean;
+  canViewStrategyStatistics?: boolean;
+  canViewPlayerStatistics?: boolean;
 }
 
 const TAB_ORDER: CompetitionStatisticsTab[] = ["team", "strategies", "players"];
@@ -38,6 +41,9 @@ export default function CompetitionStatisticsTabs({
   strategyStats,
   playerStats,
   teamStatsScope = "competition",
+  canViewTeamStatistics = true,
+  canViewStrategyStatistics = true,
+  canViewPlayerStatistics = true,
 }: CompetitionStatisticsTabsProps) {
   const { t } = useTranslation(["statistics", "common"]);
   const [requestedTab, setRequestedTab] = useState<CompetitionStatisticsTab>("team");
@@ -48,16 +54,23 @@ export default function CompetitionStatisticsTabs({
 
   const tabEnabledState = useMemo<Record<CompetitionStatisticsTab, boolean>>(
     () => ({
-      team: hasTeamData,
-      strategies: hasStrategyData,
-      players: hasPlayerData,
+      team: canViewTeamStatistics && hasTeamData,
+      strategies: canViewStrategyStatistics && hasStrategyData,
+      players: canViewPlayerStatistics && hasPlayerData,
     }),
-    [hasPlayerData, hasStrategyData, hasTeamData]
+    [
+      canViewPlayerStatistics,
+      canViewStrategyStatistics,
+      canViewTeamStatistics,
+      hasPlayerData,
+      hasStrategyData,
+      hasTeamData,
+    ]
   );
 
   const activeTab = tabEnabledState[requestedTab]
     ? requestedTab
-    : (TAB_ORDER.find((tab) => tabEnabledState[tab]) ?? "players");
+    : (TAB_ORDER.find((tab) => tabEnabledState[tab]) ?? "team");
 
   const renderNoData = () => (
     <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
@@ -77,9 +90,15 @@ export default function CompetitionStatisticsTabs({
           allowScrollButtonsMobile
           aria-label={t("statistics:workflow.statisticsTabsAriaLabel")}
         >
-          <Tab value="team" label={t("statistics:workflow.team")} />
-          <Tab value="strategies" label={t("statistics:workflow.strategies")} />
-          <Tab value="players" label={t("statistics:workflow.players")} />
+          {canViewTeamStatistics && (
+            <Tab value="team" label={t("statistics:workflow.team")} />
+          )}
+          {canViewStrategyStatistics && (
+            <Tab value="strategies" label={t("statistics:workflow.strategies")} />
+          )}
+          {canViewPlayerStatistics && (
+            <Tab value="players" label={t("statistics:workflow.players")} />
+          )}
         </Tabs>
       </Box>
 
