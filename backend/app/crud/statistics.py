@@ -16,6 +16,7 @@ from app.crud.statistics_calculations import (
     count_turnovers_by_possession,
     build_team_team_stats,
 )
+from app.crud.statistics_evolution import get_team_evolution
 from app.crud.statistics_queries import (
     filter_points_by_player_ids,
     get_competition,

@@ -1205,6 +1205,178 @@ def test_get_team_team_statistics_filters_dataset_by_competition_ids(
     assert data["defense"]["points_started"] == 0
 
 
+def test_get_team_evolution_statistics_success(client: TestClient, db_session: Session):
+    """Team evolution should return chronological chart-ready rows and omit empty games."""
+    dataset = _build_team_evolution_api_dataset(db_session)
+
+    response = client.get(f"/statistics/teams/{dataset['team'].id}/evolution")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["team_id"] == dataset["team"].id
+    assert data["filters"] == {
+        "competition_ids": [],
+        "game_ids": [],
+        "player_ids": [],
+    }
+    assert data["default_preset_id"] == "turnover_battle"
+    assert data["omitted_games_count"] == 1
+    assert {metric["id"] for metric in data["metrics"]} >= {
+        "total_our_turnovers",
+        "total_opponent_turnovers",
+    }
+    assert data["presets"][0]["metric_ids"] == [
+        "total_our_turnovers",
+        "total_opponent_turnovers",
+    ]
+
+    games = data["games"]
+    assert [game["game_id"] for game in games] == [
+        dataset["early_game"].id,
+        dataset["late_game"].id,
+    ]
+    assert games[0]["date"] == "2026-01-01T09:00:00Z"
+    assert games[0]["competition_name"] == "Spring Cup"
+    assert games[0]["our_score"] == 2
+    assert games[0]["opponent_score"] == 0
+    assert games[0]["completed_points"] == 2
+    assert games[0]["metrics"]["total_opponent_turnovers"] == 1
+    assert games[0]["metrics"]["defense_break_rate"] == 1.0
+    assert games[1]["metrics"]["total_our_turnovers"] == 1
+
+
+def test_get_team_evolution_statistics_filters_dataset(
+    client: TestClient,
+    db_session: Session,
+):
+    """Competition and game filters should restrict the evolution series."""
+    dataset = _build_team_evolution_api_dataset(db_session)
+
+    competition_response = client.get(
+        f"/statistics/teams/{dataset['team'].id}/evolution",
+        params=[("competition_ids", dataset["spring_competition"].id)],
+    )
+    game_response = client.get(
+        f"/statistics/teams/{dataset['team'].id}/evolution",
+        params=[("game_ids", dataset["late_game"].id)],
+    )
+
+    assert competition_response.status_code == 200
+    competition_data = competition_response.json()
+    assert competition_data["filters"]["competition_ids"] == [
+        dataset["spring_competition"].id
+    ]
+    assert competition_data["omitted_games_count"] == 1
+    assert [game["game_id"] for game in competition_data["games"]] == [
+        dataset["early_game"].id
+    ]
+
+    assert game_response.status_code == 200
+    game_data = game_response.json()
+    assert game_data["filters"]["game_ids"] == [dataset["late_game"].id]
+    assert game_data["omitted_games_count"] == 0
+    assert [game["game_id"] for game in game_data["games"]] == [
+        dataset["late_game"].id
+    ]
+
+
+def test_get_team_evolution_statistics_filters_points_by_selected_players(
+    client: TestClient,
+    db_session: Session,
+):
+    """Player cohort filters should omit games with no matching completed points."""
+    from tests.builders import GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1", date=datetime(2026, 1, 1, 9, tzinfo=timezone.utc))
+        .with_players(8)
+        .build()
+    )
+    selected_ids = [scenario.players[0].id, scenario.players[1].id]
+    second_game = (
+        GameBuilder(db_session, scenario.competition)
+        .with_opponent("Opponent 2")
+        .with_date(datetime(2026, 1, 2, 9, tzinfo=timezone.utc))
+        .build()
+    )
+
+    PointBuilder(db_session, scenario.game.id, [player.id for player in scenario.players[:7]]) \
+        .number(1).offense().won().complete()
+    PointBuilder(
+        db_session,
+        second_game.id,
+        [scenario.players[0].id] + [player.id for player in scenario.players[2:]],
+    ).number(1).defense().won().complete()
+
+    response = client.get(
+        f"/statistics/teams/{scenario.team.id}/evolution",
+        params=[("player_ids", selected_ids[0]), ("player_ids", selected_ids[1])],
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["filters"]["player_ids"] == selected_ids
+    assert data["omitted_games_count"] == 1
+    assert [game["game_id"] for game in data["games"]] == [scenario.game.id]
+
+
+def test_get_team_evolution_statistics_not_found(client: TestClient):
+    response = client.get("/statistics/teams/99999/evolution")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Team not found"
+
+
+def _build_team_evolution_api_dataset(db_session: Session):
+    from tests.builders import CompetitionBuilder, GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Spring Cup")
+        .with_game("Early Opponent", date=datetime(2026, 1, 1, 9, tzinfo=timezone.utc))
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(1).offense().won().complete()
+    PointBuilder(db_session, scenario.game.id, player_ids) \
+        .number(2).defense().won().with_pull(True).with_turnover(10).complete()
+
+    empty_game = (
+        GameBuilder(db_session, scenario.competition)
+        .with_opponent("Empty Opponent")
+        .with_date(datetime(2026, 1, 2, 9, tzinfo=timezone.utc))
+        .build()
+    )
+    autumn_competition = (
+        CompetitionBuilder(db_session, scenario.team)
+        .with_name("Autumn Cup")
+        .build()
+    )
+    late_game = (
+        GameBuilder(db_session, autumn_competition)
+        .with_opponent("Late Opponent")
+        .with_date(datetime(2026, 1, 3, 9, tzinfo=timezone.utc))
+        .build()
+    )
+    PointBuilder(db_session, late_game.id, player_ids) \
+        .number(1).offense().lost().with_turnover(10).complete()
+
+    return {
+        "team": scenario.team,
+        "spring_competition": scenario.competition,
+        "autumn_competition": autumn_competition,
+        "early_game": scenario.game,
+        "empty_game": empty_game,
+        "late_game": late_game,
+    }
+
+
 # Competition and Team Player Statistics API Tests
 
 

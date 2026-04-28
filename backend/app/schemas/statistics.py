@@ -1,7 +1,8 @@
 """
 Statistics schemas
 """
-from pydantic import BaseModel
+from datetime import datetime, timezone
+from pydantic import BaseModel, field_serializer
 from typing import Optional
 from enum import Enum
 
@@ -41,6 +42,48 @@ class EvolutionMetricCatalog(BaseModel):
     default_preset_id: str
     metrics: list[EvolutionMetricDefinition]
     presets: list[EvolutionMetricPreset]
+
+
+class TeamEvolutionFilters(BaseModel):
+    """Filters applied to a team evolution dataset."""
+    competition_ids: list[int]
+    game_ids: list[int]
+    player_ids: list[int]
+
+
+class TeamEvolutionGame(BaseModel):
+    """One chronological game row for statistics evolution charts."""
+    game_id: int
+    competition_id: int
+    competition_name: str
+    opponent_name: str
+    date: datetime
+    our_score: int
+    opponent_score: int
+    completed_points: int
+    metrics: dict[str, int | float]
+
+    @field_serializer("date")
+    def serialize_date(self, dt: datetime, _info) -> str:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.isoformat().replace("+00:00", "Z")
+
+    class Config:
+        from_attributes = True
+
+
+class TeamEvolutionResponse(BaseModel):
+    """Chart-ready team statistics evolution payload."""
+    team_id: int
+    filters: TeamEvolutionFilters
+    default_preset_id: str
+    omitted_games_count: int
+    metrics: list[EvolutionMetricDefinition]
+    presets: list[EvolutionMetricPreset]
+    games: list[TeamEvolutionGame]
 
 
 class TurnoverTypeCount(BaseModel):

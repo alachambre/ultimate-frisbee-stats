@@ -68,6 +68,9 @@ def test_anonymous_users_are_blocked_from_protected_routes_in_enforced_mode(clie
         },
     )
     statistics_response = client.get(f"/statistics/games/{scenario['game'].id}/team")
+    evolution_response = client.get(
+        f"/statistics/teams/{scenario['team'].id}/evolution"
+    )
     exports_response = client.get(f"/exports/games/{scenario['game'].id}/csv")
 
     assert teams_response.status_code == 401
@@ -76,6 +79,7 @@ def test_anonymous_users_are_blocked_from_protected_routes_in_enforced_mode(clie
     assert competition_roster_response.status_code == 401
     assert create_point_response.status_code == 401
     assert statistics_response.status_code == 401
+    assert evolution_response.status_code == 401
     assert exports_response.status_code == 401
 
 
@@ -140,12 +144,21 @@ def test_team_member_can_use_operational_routes_and_limited_statistics_but_not_p
         f"/statistics/games/{scenario['game'].id}/timeline",
         headers=headers,
     )
+    evolution_response = client.get(
+        f"/statistics/teams/{scenario['team'].id}/evolution",
+        headers=headers,
+    )
     player_statistics_response = client.get(
         f"/statistics/games/{scenario['game'].id}/live",
         headers=headers,
     )
     filtered_team_statistics_response = client.get(
         f"/statistics/games/{scenario['game'].id}/team",
+        params={"player_ids": scenario["players"][0].id},
+        headers=headers,
+    )
+    filtered_evolution_response = client.get(
+        f"/statistics/teams/{scenario['team'].id}/evolution",
         params={"player_ids": scenario["players"][0].id},
         headers=headers,
     )
@@ -160,12 +173,18 @@ def test_team_member_can_use_operational_routes_and_limited_statistics_but_not_p
     assert team_statistics_response.status_code == 200
     assert strategy_statistics_response.status_code == 200
     assert timeline_response.status_code == 200
+    assert evolution_response.status_code == 200
     assert player_statistics_response.status_code == 403
     assert filtered_team_statistics_response.status_code == 403
+    assert filtered_evolution_response.status_code == 403
     assert exports_response.status_code == 403
     assert player_statistics_response.json()["detail"] == "Insufficient permissions"
     assert (
         filtered_team_statistics_response.json()["detail"]
+        == "Insufficient permissions"
+    )
+    assert (
+        filtered_evolution_response.json()["detail"]
         == "Insufficient permissions"
     )
 
@@ -189,12 +208,18 @@ def test_team_analyst_can_access_statistics_and_exports(client, db_session):
         f"/statistics/games/{scenario['game'].id}/team",
         headers=headers,
     )
+    filtered_evolution_response = client.get(
+        f"/statistics/teams/{scenario['team'].id}/evolution",
+        params={"player_ids": scenario["players"][0].id},
+        headers=headers,
+    )
     exports_response = client.get(
         f"/exports/games/{scenario['game'].id}/csv",
         headers=headers,
     )
 
     assert statistics_response.status_code == 200
+    assert filtered_evolution_response.status_code == 200
     assert exports_response.status_code == 200
     assert exports_response.headers["content-type"].startswith("text/csv")
 

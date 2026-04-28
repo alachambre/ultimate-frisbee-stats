@@ -88,6 +88,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Team defense stats contract does not expose `hold_rate`; use `break_rate`, `turnover_rate`, `clean_break_rate`, and pull stats
 - Stats scope coverage target: game + competition + team for team/player/strategy statistics
 - Team stats endpoints accept optional repeated `competition_ids`, `game_ids`, and `player_ids` query params so the statistics page can build filtered datasets without switching endpoint families; `player_ids` filtering is analyst-only when enforcement is active
+- Team statistics evolution is exposed by `GET /statistics/teams/{team_id}/evolution`; keep metric definitions and per-game formulas backend-owned in `crud/statistics_evolution.py` and reuse the existing team stats reducers.
 - Stats endpoints expose a single-game point timeline (`/statistics/games/{game_id}/timeline`) for chart visualizations such as point duration, score progression, and turns per point
 - `crud/games.py:get_game_detail` must return explicit contract fields (no `__dict__` passthrough)
 - Game `date` is a scheduled datetime stored as UTC in the DB/API contract; normalize incoming aware datetimes to UTC before persistence and serialize UTC values with `Z`.

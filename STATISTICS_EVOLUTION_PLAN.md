@@ -147,7 +147,7 @@ Acceptance criteria:
 - Tooltip copy is clearer and matches current formulas.
 - Metric catalog tests cover the default `turnover_battle` preset and all v1 metric IDs.
 
-### Milestone 2: Backend Evolution Endpoint
+### Milestone 2: Backend Evolution Endpoint - Done
 
 Purpose: produce chart-ready chronological per-game data without touching the UI yet.
 

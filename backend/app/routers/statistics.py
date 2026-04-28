@@ -193,6 +193,33 @@ def get_competition_team_statistics(
     return stats
 
 
+@router.get("/teams/{team_id}/evolution", response_model=schemas.TeamEvolutionResponse)
+def get_team_evolution_statistics(
+    team_id: int,
+    player_ids: Optional[List[int]] = Query(default=None),
+    competition_ids: Optional[List[int]] = Query(default=None),
+    game_ids: Optional[List[int]] = Query(default=None),
+    db: Session = Depends(get_db),
+    access_context: AccessContext = Depends(require_team_member),
+):
+    """
+    Get chronological per-game team statistics for evolution charts.
+    Returns backend-owned metric metadata plus one metric value map per game.
+    """
+    _ensure_player_filter_allowed(player_ids, access_context)
+    evolution = crud.get_team_evolution(
+        db,
+        team_id,
+        required_player_ids=_normalize_player_ids(player_ids),
+        competition_ids=_normalize_ids(competition_ids),
+        game_ids=_normalize_ids(game_ids),
+    )
+    if evolution is None:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    return evolution
+
+
 @router.get("/teams/{team_id}/team", response_model=schemas.TeamTeamStats)
 def get_team_team_statistics(
     team_id: int,

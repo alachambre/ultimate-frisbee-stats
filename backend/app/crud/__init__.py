@@ -111,6 +111,7 @@ from app.crud.users import (
 )
 
 from app.crud.statistics_evolution import (
+    get_team_evolution,
     get_team_evolution_metric_catalog,
 )
 
@@ -203,5 +204,6 @@ __all__ = [
     "get_users",
     "update_user",
     # Statistics evolution
+    "get_team_evolution",
     "get_team_evolution_metric_catalog",
 ]
