@@ -186,16 +186,16 @@
     "cohortExplanation": "These statistics are computed from points where all selected players were on the line together."
   },
   "tooltips": {
-    "cleanPointRate": "Percentage of offensive points won without our turnovers (over all offensive points played)",
-    "breakRate": "Percentage of defensive points won (breaks)",
-    "turnoverRate": "Percentage of defensive points where at least one turnover occurred",
-    "conversionRate": "Percentage of defensive points won among defensive points where at least one turnover occurred",
-    "cleanBreakRate": "Percentage of defensive points won without our turnovers",
-    "cleanConversionRate": "Percentage of defensive points won without our turnovers among defensive points where at least one turnover occurred",
-    "holdRate": "Percentage of offensive points won (holds)",
+    "cleanPointRate": "Offensive points won without us committing a turnover, out of all offensive points played.",
+    "breakRate": "Defensive points won, out of all defensive points played.",
+    "turnoverRate": "Defensive points where at least one turnover occurred, out of all defensive points played.",
+    "conversionRate": "Defensive points won, out of defensive points where at least one turnover occurred.",
+    "cleanBreakRate": "Defensive points won without us committing a turnover, out of all defensive points played.",
+    "cleanConversionRate": "Percentage of breaks won without us committing a turnover.",
+    "holdRate": "Offensive points won, out of all offensive points played.",
     "forcedTurnovers": "Defensive points where at least one turnover occurred",
     "offensePoints": "Number of completed offensive points played",
     "defensePoints": "Number of completed defensive points played",
-    "pullRate": "Percentage of pulls that stayed inbound"
+    "pullRate": "Pulls that stayed inbound, out of all tracked pulls."
   }
 }

@@ -293,7 +293,8 @@ describe("TeamStatistics", () => {
     expect(within(conversionStat).queryByText("2/5")).not.toBeInTheDocument();
   });
 
-  it("uses breaks as clean conversion denominator", () => {
+  it("uses breaks as clean conversion denominator and explains the metric", async () => {
+    const user = userEvent.setup();
     const teamStats: TeamStatsBase = {
       total_completed_points: 9,
       offense: {
@@ -358,6 +359,11 @@ describe("TeamStatistics", () => {
     expect(within(cleanConversionStat).getByText("50%")).toBeInTheDocument();
     expect(within(cleanConversionStat).getByText("1/2")).toBeInTheDocument();
     expect(within(cleanConversionStat).queryByText("1/5")).not.toBeInTheDocument();
+
+    await user.hover(within(cleanConversionStat).getByRole("button"));
+    expect(
+      await screen.findByText("Percentage of breaks won without us committing a turnover.")
+    ).toBeInTheDocument();
   });
 
   it("renders field-side stats inside advanced accordions only when enabled", async () => {

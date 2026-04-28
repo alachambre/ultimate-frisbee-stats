@@ -186,16 +186,16 @@
     "cohortExplanation": "Ces statistiques sont calculées à partir des points où tous les joueurs sélectionnés étaient ensemble sur le point."
   },
   "tooltips": {
-    "cleanPointRate": "Pourcentage de points offensifs gagnés sans nos turnovers (sur tous les points offensifs joués)",
-    "breakRate": "Pourcentage de points défensifs gagnés (breaks)",
-    "turnoverRate": "Pourcentage de points défensifs où au moins un turnover a eu lieu",
-    "conversionRate": "Pourcentage de points défensifs gagnés parmi les points défensifs avec au moins un turnover",
-    "cleanBreakRate": "Pourcentage de points défensifs gagnés sans que nous ne fassions de turnover",
-    "cleanConversionRate": "Pourcentage de points défensifs gagnés sans que nous ne fassions de turnover parmi les points défensifs avec au moins un turnover",
-    "holdRate": "Pourcentage de points offensifs gagnés (holds)",
+    "cleanPointRate": "Points offensifs gagnés sans que nous ne fassions de turnover, sur tous les points offensifs joués.",
+    "breakRate": "Points défensifs gagnés, sur tous les points défensifs joués.",
+    "turnoverRate": "Points défensifs où au moins un turnover a eu lieu, sur tous les points défensifs joués.",
+    "conversionRate": "Points défensifs gagnés parmi les points défensifs avec au moins un turnover.",
+    "cleanBreakRate": "Points défensifs gagnés sans que nous ne fassions de turnover, sur tous les points défensifs joués.",
+    "cleanConversionRate": "Pourcentage de breaks gagnés sans que nous ne fassions de turnover.",
+    "holdRate": "Points offensifs gagnés, sur tous les points offensifs joués.",
     "forcedTurnovers": "Points défensifs où au moins un turnover a eu lieu",
     "offensePoints": "Nombre de points offensifs complétés joués",
     "defensePoints": "Nombre de points défensifs complétés joués",
-    "pullRate": "Pourcentage de pulls restés dans le terrain"
+    "pullRate": "Pulls restés dans le terrain, sur tous les pulls suivis."
   }
 }

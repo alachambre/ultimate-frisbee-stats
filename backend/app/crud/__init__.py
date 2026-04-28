@@ -110,6 +110,10 @@ from app.crud.users import (
     update_user,
 )
 
+from app.crud.statistics_evolution import (
+    get_team_evolution_metric_catalog,
+)
+
 __all__ = [
     # Teams
     "create_team",
@@ -198,4 +202,6 @@ __all__ = [
     "get_user_by_email",
     "get_users",
     "update_user",
+    # Statistics evolution
+    "get_team_evolution_metric_catalog",
 ]

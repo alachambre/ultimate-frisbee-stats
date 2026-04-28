@@ -3,6 +3,44 @@ Statistics schemas
 """
 from pydantic import BaseModel
 from typing import Optional
+from enum import Enum
+
+
+class EvolutionMetricUnit(str, Enum):
+    """Unit used to decide which evolution metrics can share a chart."""
+    count = "count"
+    percentage = "percentage"
+
+
+class EvolutionMetricFormat(str, Enum):
+    """Frontend display format for an evolution metric value."""
+    integer = "integer"
+    percentage = "percentage"
+
+
+class EvolutionMetricDefinition(BaseModel):
+    """Backend-owned metadata for one statistics evolution metric."""
+    id: str
+    label: str
+    description: str
+    unit: EvolutionMetricUnit
+    group: str
+    format: EvolutionMetricFormat
+    higher_is_better: bool
+
+
+class EvolutionMetricPreset(BaseModel):
+    """Named default/shortcut metric selection for evolution charts."""
+    id: str
+    label: str
+    metric_ids: list[str]
+
+
+class EvolutionMetricCatalog(BaseModel):
+    """Available metrics and presets for one evolution scope."""
+    default_preset_id: str
+    metrics: list[EvolutionMetricDefinition]
+    presets: list[EvolutionMetricPreset]
 
 
 class TurnoverTypeCount(BaseModel):
