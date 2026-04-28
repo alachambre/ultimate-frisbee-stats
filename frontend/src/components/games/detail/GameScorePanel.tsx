@@ -1,14 +1,17 @@
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import CommentIcon from "@mui/icons-material/Comment";
 import type { ReactNode } from "react";
 import { Box, Divider, Paper, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import GameTimer from "../GameTimer";
+import { formatDateTime } from "../../../utils/dateFormatting";
 
 interface GameScorePanelProps {
   teamName: string;
   opponentName: string;
   ourScore: number;
   opponentScore: number;
+  scheduledAt?: string | null;
   startDatetime?: string | null;
   endDatetime?: string | null;
   comments?: string | null;
@@ -20,12 +23,13 @@ export function GameScorePanel({
   opponentName,
   ourScore,
   opponentScore,
+  scheduledAt,
   startDatetime,
   endDatetime,
   comments,
   children,
 }: GameScorePanelProps) {
-  const { t } = useTranslation(["games"]);
+  const { t, i18n } = useTranslation(["games"]);
 
   return (
     <Paper sx={{ mb: 3 }}>
@@ -49,6 +53,17 @@ export function GameScorePanel({
             </Typography>
           </Box>
         </Box>
+
+        {scheduledAt && (
+          <Box mt={3}>
+            <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+              <CalendarTodayIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              <Typography variant="body2" color="text.secondary">
+                {formatDateTime(scheduledAt, i18n.resolvedLanguage)}
+              </Typography>
+            </Box>
+          </Box>
+        )}
 
         {startDatetime && (
           <Box mt={3}>

@@ -80,6 +80,7 @@
     "opponent": "Nom de l'adversaire",
     "opponentPlaceholder": "Entrez le nom de l'adversaire",
     "date": "Date",
+    "dateTime": "Date et heure",
     "competition": "Compétition",
     "selectCompetition": "Sélectionnez une compétition"
   },

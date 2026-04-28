@@ -12,7 +12,11 @@ import {
   Box,
 } from "@mui/material";
 import { updateGame } from "../../services";
-import type { Game } from "../../types";
+import type { Game, GameUpdate } from "../../types";
+import {
+  dateTimeLocalInputValueToUtcIso,
+  toDateTimeLocalInputValue,
+} from "../../utils/dateTimeLocal";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface EditGameModalProps {
@@ -28,15 +32,12 @@ export default function EditGameModal({
 }: EditGameModalProps) {
   const { t } = useTranslation(["games", "common"]);
   const [opponentName, setOpponentName] = useState(game.opponent_name);
-  const [date, setDate] = useState(
-    game.date ? new Date(game.date).toISOString().split("T")[0] : ""
-  );
+  const [dateTime, setDateTime] = useState(toDateTimeLocalInputValue(game.date));
   const [comments, setComments] = useState(game.comments || "");
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: { opponent_name: string; comments: string | null }) =>
-      updateGame(game.id, data),
+    mutationFn: (data: GameUpdate) => updateGame(game.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.game(game.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.games });
@@ -47,8 +48,10 @@ export default function EditGameModal({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (opponentName.trim()) {
+      const scheduledAt = dateTimeLocalInputValueToUtcIso(dateTime);
       mutation.mutate({
         opponent_name: opponentName.trim(),
+        ...(scheduledAt ? { date: scheduledAt } : {}),
         comments: comments.trim() || null,
       });
     }
@@ -56,7 +59,7 @@ export default function EditGameModal({
 
   const handleClose = () => {
     setOpponentName(game.opponent_name);
-    setDate(game.date ? new Date(game.date).toISOString().split("T")[0] : "");
+    setDateTime(toDateTimeLocalInputValue(game.date));
     setComments(game.comments || "");
     mutation.reset();
     onClose();
@@ -81,17 +84,15 @@ export default function EditGameModal({
               required
             />
             <TextField
-              label={t("games:form.date")}
-              type="date"
+              label={t("games:form.dateTime")}
+              type="datetime-local"
               fullWidth
               variant="outlined"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
               InputLabelProps={{
                 shrink: true,
               }}
-              disabled
-              helperText={t("games:form.date")}
             />
             <TextField
               label={t("common:labels.comments")}

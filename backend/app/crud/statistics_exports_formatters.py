@@ -39,6 +39,8 @@ def format_datetime(value: Optional[datetime]) -> str:
         return ""
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
     return value.isoformat().replace("+00:00", "Z")
 
 

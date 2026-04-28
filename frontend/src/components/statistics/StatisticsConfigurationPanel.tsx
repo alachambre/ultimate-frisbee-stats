@@ -22,7 +22,7 @@ import MaleIcon from "@mui/icons-material/Male";
 import TuneIcon from "@mui/icons-material/Tune";
 import { useTranslation } from "react-i18next";
 import type { CompetitionWithTeam, GameWithScore, Player, TeamWithPlayers } from "../../types";
-import { formatDate } from "../../utils/dateFormatting";
+import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 
 const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkboxCheckedIcon = <CheckBoxIcon fontSize="small" />;
@@ -229,7 +229,7 @@ export default function StatisticsConfigurationPanel({
                     />
                     <ListItemText
                       primary={game.opponent_name}
-                      secondary={`${game.competition_name} - ${formatDate(
+                      secondary={`${game.competition_name} - ${formatDateTime(
                         game.date,
                         i18n.resolvedLanguage
                       )} - ${game.our_score}-${game.opponent_score}`}

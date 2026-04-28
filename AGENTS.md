@@ -63,6 +63,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Live tracker polling is consolidated through public `GET /games/{game_id}/live-state` for active point, live turnovers, and live stoppages; prefer extending that payload over adding separate high-frequency live polling queries
 - Game detail page is section-based: `frontend/src/pages/hooks/useGameDetailPageData.ts` + `frontend/src/components/games/detail/` (`GameHeaderActions`, `GameScorePanel`, `GameRosterDialog`, `GameHistorySection`)
 - Frontend stoppage API naming uses `frontend/src/services/stoppages.ts` and `queryKeys.stoppages`; legacy call aliases are removed
+- Game scheduled date/time inputs and display use the browser's local timezone; convert through `frontend/src/utils/dateTimeLocal.ts` when sending to the API so persisted values stay UTC.
 - UI sport wording must still follow `GLOSSARY.md`: use `stoppage` for the generic interruption concept, and keep `Call` in English when referring to the specific stoppage type
 
 **Backend**
@@ -89,6 +90,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Team stats endpoints accept optional repeated `competition_ids`, `game_ids`, and `player_ids` query params so the statistics page can build filtered datasets without switching endpoint families; `player_ids` filtering is analyst-only when enforcement is active
 - Stats endpoints expose a single-game point timeline (`/statistics/games/{game_id}/timeline`) for chart visualizations such as point duration, score progression, and turns per point
 - `crud/games.py:get_game_detail` must return explicit contract fields (no `__dict__` passthrough)
+- Game `date` is a scheduled datetime stored as UTC in the DB/API contract; normalize incoming aware datetimes to UTC before persistence and serialize UTC values with `Z`.
 - Supabase schema changes are SQL-migration-based (`supabase/migrations/`), not `create_all()` based
 
 ## Design & UI System

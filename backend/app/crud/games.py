@@ -8,12 +8,24 @@ from app.logging_config import get_logger
 logger = get_logger("crud.games")
 
 
+def _to_utc_naive(value: Optional[datetime]) -> Optional[datetime]:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def _current_utc_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 def create_game(db: Session, game: schemas.GameCreate) -> models.Game:
     try:
         db_game = models.Game(
             competition_id=game.competition_id,
             opponent_name=game.opponent_name,
-            date=game.date,
+            date=_to_utc_naive(game.date) or _current_utc_naive(),
             status=models.GameStatusEnum.ready,
             comments=game.comments
         )
@@ -73,6 +85,8 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> O
         try:
             if game_update.opponent_name is not None:
                 db_game.opponent_name = game_update.opponent_name
+            if game_update.date is not None:
+                db_game.date = _to_utc_naive(game_update.date)
             if game_update.status is not None:
                 # Convert GameStatus enum to GameStatusEnum
                 new_status = models.GameStatusEnum[game_update.status.value]

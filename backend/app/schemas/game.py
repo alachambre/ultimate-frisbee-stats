@@ -21,6 +21,7 @@ class GameCreate(GameBase):
 
 class GameUpdate(BaseModel):
     opponent_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    date: Optional[datetime] = None
     status: Optional[GameStatus] = None
     comments: Optional[str] = None
 
@@ -37,9 +38,10 @@ class Game(GameBase):
     def serialize_dt(self, dt: Optional[datetime], _info) -> Optional[str]:
         if dt is None:
             return None
-        # Ensure timezone-aware and serialize to ISO format with Z suffix
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
         return dt.isoformat().replace('+00:00', 'Z')
 
     class Config:

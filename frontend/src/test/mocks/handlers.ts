@@ -949,6 +949,9 @@ export const handlers = [
     if (body.opponent_name !== undefined) {
       game.opponent_name = body.opponent_name;
     }
+    if (body.date !== undefined && body.date !== null) {
+      game.date = body.date;
+    }
     if (body.comments !== undefined) {
       game.comments = body.comments;
     }

@@ -14,12 +14,12 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
     competition_id = Column(Integer, ForeignKey("competitions.id", ondelete="CASCADE"), nullable=False)
     opponent_name = Column(String, nullable=False)
-    date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    date = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
     status = Column(Enum(GameStatusEnum), default=GameStatusEnum.ready, nullable=False)
     start_datetime = Column(DateTime, nullable=True)
     end_datetime = Column(DateTime, nullable=True)
     comments = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
 
     # Relationships
     competition = relationship("Competition", back_populates="games")

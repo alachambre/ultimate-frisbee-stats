@@ -196,6 +196,7 @@ export default function GameDetailPage() {
         opponentName={game.opponent_name}
         ourScore={game.our_score}
         opponentScore={game.opponent_score}
+        scheduledAt={game.date}
         startDatetime={game.start_datetime}
         endDatetime={game.end_datetime}
         comments={game.comments}

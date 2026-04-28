@@ -14,7 +14,7 @@ import ScoreboardIcon from "@mui/icons-material/Scoreboard";
 import { useTranslation } from "react-i18next";
 import type { GameWithScore } from "../../types";
 import StatusChip from "../shared/StatusChip";
-import { formatDate } from "../../utils/dateFormatting";
+import { formatDateTime } from "../../utils/dateFormatting";
 
 interface GameCardProps {
   game: GameWithScore;
@@ -68,7 +68,7 @@ export default function GameCard({ game }: GameCardProps) {
             <CalendarTodayIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary">
               {game.date
-                ? formatDate(game.date, i18n.resolvedLanguage)
+                ? formatDateTime(game.date, i18n.resolvedLanguage)
                 : t("games:detail.dateNotSet")}
             </Typography>
           </Box>

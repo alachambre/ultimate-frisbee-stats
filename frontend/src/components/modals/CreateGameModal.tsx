@@ -22,6 +22,7 @@ import { alpha } from "@mui/material/styles";
 import { createGame, getCompetitions, getCompetition } from "../../services";
 import { getCompetitionPlayers } from "../../services/competitions";
 import { queryKeys } from "../../utils/queryKeys";
+import { dateTimeLocalInputValueToUtcIso } from "../../utils/dateTimeLocal";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 
 interface CreateGameModalProps {
@@ -38,7 +39,7 @@ export default function CreateGameModal({
   const { t } = useTranslation(["games", "players", "common"]);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | "">("");
   const [opponentName, setOpponentName] = useState("");
-  const [date, setDate] = useState("");
+  const [dateTime, setDateTime] = useState("");
   const [comments, setComments] = useState("");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const queryClient = useQueryClient();
@@ -75,7 +76,7 @@ export default function CreateGameModal({
       }
       setSelectedCompetitionId("");
       setOpponentName("");
-      setDate("");
+      setDateTime("");
       setComments("");
       setSelectedPlayerIds([]);
       onClose();
@@ -88,7 +89,7 @@ export default function CreateGameModal({
       mutation.mutate({
         competition_id: Number(finalCompetitionId),
         opponent_name: opponentName.trim(),
-        date: date || null,
+        date: dateTimeLocalInputValueToUtcIso(dateTime),
         comments: comments.trim() || null,
         player_ids: selectedPlayerIds.length > 0 ? selectedPlayerIds : undefined,
       });
@@ -98,7 +99,7 @@ export default function CreateGameModal({
   const handleClose = () => {
     setSelectedCompetitionId("");
     setOpponentName("");
-    setDate("");
+    setDateTime("");
     setComments("");
     setSelectedPlayerIds([]);
     mutation.reset();
@@ -173,12 +174,12 @@ export default function CreateGameModal({
 
           <TextField
             margin="dense"
-            label={t("games:form.date")}
-            type="date"
+            label={t("games:form.dateTime")}
+            type="datetime-local"
             fullWidth
             variant="outlined"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={dateTime}
+            onChange={(e) => setDateTime(e.target.value)}
             InputLabelProps={{
               shrink: true,
             }}

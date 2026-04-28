@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "../../test/test-utils";
+import { fireEvent, render, screen, waitFor } from "../../test/test-utils";
 import userEvent from "@testing-library/user-event";
-import { createTeam, createCompetition, createGame, createPlayer, createTurnover, finishGame, finishPoint, startPoint, updateGame, updatePoint } from "../../services";
+import { createTeam, createCompetition, createGame, createPlayer, createTurnover, finishGame, finishPoint, getGame, startPoint, updateGame, updatePoint } from "../../services";
 import { addPlayersToRoster } from "../../services/competitions";
 import { addPlayersToGame } from "../../services/games";
 import GameDetailPage from "../GameDetailPage";
@@ -217,6 +217,9 @@ describe("GameDetailPage", () => {
     await user.clear(opponentInput);
     await user.type(opponentInput, "Updated Rival");
 
+    const dateTimeInput = screen.getByLabelText(/date and time/i);
+    fireEvent.change(dateTimeInput, { target: { value: "2024-01-16T19:45" } });
+
     // Submit form
     const saveButton = screen.getByRole("button", { name: /save changes/i });
     await user.click(saveButton);
@@ -229,6 +232,9 @@ describe("GameDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/Test Team vs Updated Rival/i)).toBeInTheDocument();
     });
+
+    const updatedGame = await getGame(1);
+    expect(updatedGame.date).toBe(new Date(2024, 0, 16, 19, 45).toISOString());
   });
 
   it("finishes game successfully", async () => {

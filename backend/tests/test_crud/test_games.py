@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.crud import games, points
 from app.schemas import GameCreate, GameUpdate, PointCreate, GameStatus, PointUpdate, PointStatus, PointFinish
 from tests.builders import GameBuilder
@@ -28,6 +28,21 @@ def test_create_game(db_session, sample_competition):
     assert fetched_game.id == game.id
     assert fetched_game.opponent_name == "Rival Team"
     assert fetched_game.status.value == "ready"
+
+
+def test_create_game_normalizes_aware_date_to_utc(db_session, sample_competition):
+    scheduled_at = datetime(2026, 4, 9, 10, 30, tzinfo=timezone(timedelta(hours=2)))
+    game = games.create_game(
+        db_session,
+        GameCreate(
+            competition_id=sample_competition.id,
+            opponent_name="Rival Team",
+            date=scheduled_at,
+        ),
+    )
+
+    assert game.date == datetime(2026, 4, 9, 8, 30)
+    assert game.date.tzinfo is None
 
 
 def test_get_game(db_session, sample_game):
@@ -74,6 +89,17 @@ def test_update_game(db_session, sample_game):
     assert updated_game.id == sample_game.id
     assert updated_game.opponent_name == "Updated Opponent"
     assert updated_game.status.value == "ready"
+
+
+def test_update_game_date_normalizes_aware_date_to_utc(db_session, sample_game):
+    update_data = GameUpdate(
+        date=datetime(2026, 4, 9, 18, 45, tzinfo=timezone(timedelta(hours=-4)))
+    )
+    updated_game = games.update_game(db_session, sample_game.id, update_data)
+
+    assert updated_game is not None
+    assert updated_game.date == datetime(2026, 4, 9, 22, 45)
+    assert updated_game.date.tzinfo is None
 
 
 def test_update_game_status(db_session, sample_game):

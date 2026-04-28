@@ -206,6 +206,7 @@ export interface GameCreate extends GameBase {
 
 export interface GameUpdate {
   opponent_name?: string;
+  date?: string | null;
   status?: GameStatus;
   comments?: string | null;
 }

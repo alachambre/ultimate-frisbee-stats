@@ -5,6 +5,14 @@ const DATE_FORMAT_OPTIONS: Record<DateFormatType, Intl.DateTimeFormatOptions> = 
   monthDay: { month: "short", day: "numeric" },
 };
 
+const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+};
+
 function normalizeLocale(locale?: string): string {
   if (!locale) {
     return "en-US";
@@ -33,6 +41,18 @@ export function formatDate(
   }
 
   return resolvedDate.toLocaleDateString(normalizeLocale(locale), DATE_FORMAT_OPTIONS[format]);
+}
+
+export function formatDateTime(
+  date: string | Date | null | undefined,
+  locale?: string
+): string {
+  const resolvedDate = resolveDate(date);
+  if (!resolvedDate) {
+    return "-";
+  }
+
+  return resolvedDate.toLocaleString(normalizeLocale(locale), DATE_TIME_FORMAT_OPTIONS);
 }
 
 interface DateRangeOptions {

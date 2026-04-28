@@ -18,6 +18,19 @@ def test_create_game_api(client, sample_competition):
     assert "id" in data
 
 
+def test_create_game_api_normalizes_date_to_utc(client, sample_competition):
+    """Test POST /games stores browser-local ISO datetimes as UTC."""
+    response = client.post("/games", json={
+        "competition_id": sample_competition.id,
+        "opponent_name": "Rival Team",
+        "date": "2026-04-09T10:30:00+02:00"
+    })
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["date"] == "2026-04-09T08:30:00Z"
+
+
 def test_create_game_competition_not_found_api(client):
     """Test POST /games with invalid competition_id"""
     response = client.post("/games", json={
@@ -193,6 +206,18 @@ def test_update_game_api(client, sample_game):
     data = response.json()
     assert data["id"] == sample_game.id
     assert data["opponent_name"] == "Updated Opponent"
+
+
+def test_update_game_date_api(client, sample_game):
+    """Test PUT /games/{game_id} can update the scheduled date/time."""
+    response = client.put(
+        f"/games/{sample_game.id}",
+        json={"date": "2026-04-09T18:45:00-04:00"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["date"] == "2026-04-09T22:45:00Z"
 
 
 def test_update_game_status_api(client, sample_game):
