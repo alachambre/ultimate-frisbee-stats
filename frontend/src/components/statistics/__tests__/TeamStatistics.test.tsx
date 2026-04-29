@@ -293,7 +293,7 @@ describe("TeamStatistics", () => {
     expect(within(conversionStat).queryByText("2/5")).not.toBeInTheDocument();
   });
 
-  it("uses breaks as clean conversion denominator and explains the metric", async () => {
+  it("uses D points with turns as clean conversion denominator and explains the metric", async () => {
     const user = userEvent.setup();
     const teamStats: TeamStatsBase = {
       total_completed_points: 9,
@@ -316,7 +316,7 @@ describe("TeamStatistics", () => {
         conversion_rate: 2 / 3,
         points_won_no_turnover: 1,
         clean_break_rate: 0.2,
-        clean_conversion_rate: 0.5,
+        clean_conversion_rate: 1 / 3,
         points_lost_no_turnover: 1,
         pull_stats: {
           total_pulls: 5,
@@ -356,13 +356,15 @@ describe("TeamStatistics", () => {
     render(<TeamStatistics teamStats={teamStats} />);
 
     const cleanConversionStat = screen.getByRole("group", { name: "Clean Conversion" });
-    expect(within(cleanConversionStat).getByText("50%")).toBeInTheDocument();
-    expect(within(cleanConversionStat).getByText("1/2")).toBeInTheDocument();
+    expect(within(cleanConversionStat).getByText("33%")).toBeInTheDocument();
+    expect(within(cleanConversionStat).getByText("1/3")).toBeInTheDocument();
     expect(within(cleanConversionStat).queryByText("1/5")).not.toBeInTheDocument();
 
     await user.hover(within(cleanConversionStat).getByRole("button"));
     expect(
-      await screen.findByText("Percentage of breaks won without us committing a turnover.")
+      await screen.findByText(
+        "Defensive points won without us committing a turnover, out of defensive points where at least one turnover occurred."
+      )
     ).toBeInTheDocument();
   });
 

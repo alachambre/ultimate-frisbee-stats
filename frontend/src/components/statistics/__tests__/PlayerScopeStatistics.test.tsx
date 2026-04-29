@@ -232,7 +232,7 @@ describe("PlayerScopeStatistics", () => {
     expect(within(conversionStat).queryByText("2/5")).not.toBeInTheDocument();
   });
 
-  it("uses breaks as clean conversion denominator", () => {
+  it("uses D points with turns as clean conversion denominator", () => {
     const stats: PlayerGameStats = {
       player_id: 7,
       player_name: "Jane Doe",
@@ -257,7 +257,7 @@ describe("PlayerScopeStatistics", () => {
         conversion_rate: 2 / 3,
         points_won_no_turnover: 1,
         clean_break_rate: 0.2,
-        clean_conversion_rate: 0.5,
+        clean_conversion_rate: 1 / 3,
         points_lost_no_turnover: 1,
       },
     };
@@ -274,8 +274,8 @@ describe("PlayerScopeStatistics", () => {
     );
 
     const cleanConversionStat = screen.getByRole("group", { name: "Clean Conversion" });
-    expect(within(cleanConversionStat).getByText("50%")).toBeInTheDocument();
-    expect(within(cleanConversionStat).getByText("1/2")).toBeInTheDocument();
+    expect(within(cleanConversionStat).getByText("33%")).toBeInTheDocument();
+    expect(within(cleanConversionStat).getByText("1/3")).toBeInTheDocument();
     expect(within(cleanConversionStat).queryByText("1/5")).not.toBeInTheDocument();
   });
 

@@ -172,7 +172,10 @@ TEAM_EVOLUTION_METRICS: tuple[EvolutionMetricDefinition, ...] = (
     EvolutionMetricDefinition(
         id="defense_clean_conversion_rate",
         label="Clean conversion rate",
-        description="Breaks won without us committing a turnover, out of all breaks.",
+        description=(
+            "Defensive points won without us committing a turnover, out of "
+            "defensive points where at least one possession turnover occurred."
+        ),
         unit=EvolutionMetricUnit.percentage,
         group="defense",
         format=EvolutionMetricFormat.percentage,

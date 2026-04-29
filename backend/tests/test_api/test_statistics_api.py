@@ -644,6 +644,26 @@ def test_get_live_game_statistics_defense_conversion_rates(
     )
     point3.players.append(sample_player)
     db_session.add(point3)
+    db_session.flush()
+
+    point4 = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+        start_datetime=datetime(2024, 1, 1, 10, 15, 0, tzinfo=timezone.utc),
+        end_datetime=datetime(2024, 1, 1, 10, 18, 0, tzinfo=timezone.utc),
+    )
+    point4.players.append(sample_player)
+    db_session.add(point4)
+    db_session.flush()
+    db_session.add(
+        models.Turnover(
+            point_id=point4.id,
+            timestamp=datetime(2024, 1, 1, 10, 16, 0, tzinfo=timezone.utc),
+        )
+    )
     db_session.commit()
 
     response = client.get(f"/statistics/games/{sample_game.id}/live")
@@ -653,12 +673,12 @@ def test_get_live_game_statistics_defense_conversion_rates(
     assert len(data) == 1
 
     player_stats = data[0]
-    assert player_stats["defense"]["points_played"] == 3
-    assert player_stats["defense"]["points_with_turnover"] == 2
+    assert player_stats["defense"]["points_played"] == 4
+    assert player_stats["defense"]["points_with_turnover"] == 3
     assert player_stats["defense"]["points_won"] == 2
     assert player_stats["defense"]["points_won_no_turnover"] == 1
-    assert player_stats["defense"]["conversion_rate"] == pytest.approx(1.0, rel=1e-6)
-    assert player_stats["defense"]["clean_conversion_rate"] == pytest.approx(0.5, rel=1e-6)
+    assert player_stats["defense"]["conversion_rate"] == pytest.approx(2 / 3, rel=1e-6)
+    assert player_stats["defense"]["clean_conversion_rate"] == pytest.approx(1 / 3, rel=1e-6)
 
 
 # Tests for team statistics endpoint
@@ -827,7 +847,7 @@ def test_get_game_team_statistics_defense_conversion_rates(
     sample_game: models.Game,
     db_session: Session,
 ):
-    """Team defense conversion metrics should use turnovers and breaks as denominators"""
+    """Team defense conversion metrics should use turnover-opportunity points as denominators"""
     defense1 = models.Point(
         game_id=sample_game.id,
         point_number=1,
@@ -872,18 +892,35 @@ def test_get_game_team_statistics_defense_conversion_rates(
         status=models.PointStatusEnum.completed,
     )
     db_session.add(defense3)
+    db_session.flush()
+
+    defense4 = models.Point(
+        game_id=sample_game.id,
+        point_number=4,
+        starting_on_offense=False,
+        won=False,
+        status=models.PointStatusEnum.completed,
+    )
+    db_session.add(defense4)
+    db_session.flush()
+    db_session.add(
+        models.Turnover(
+            point_id=defense4.id,
+            timestamp=datetime(2024, 1, 1, 11, 10, 0, tzinfo=timezone.utc),
+        )
+    )
     db_session.commit()
 
     response = client.get(f"/statistics/games/{sample_game.id}/team")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["defense"]["points_started"] == 3
-    assert data["defense"]["points_with_turnover"] == 2
+    assert data["defense"]["points_started"] == 4
+    assert data["defense"]["points_with_turnover"] == 3
     assert data["defense"]["points_won"] == 2
     assert data["defense"]["points_won_no_turnover"] == 1
-    assert data["defense"]["conversion_rate"] == pytest.approx(1.0, rel=1e-6)
-    assert data["defense"]["clean_conversion_rate"] == pytest.approx(0.5, rel=1e-6)
+    assert data["defense"]["conversion_rate"] == pytest.approx(2 / 3, rel=1e-6)
+    assert data["defense"]["clean_conversion_rate"] == pytest.approx(1 / 3, rel=1e-6)
 
 
 def test_get_game_team_statistics_ignores_non_completed(client: TestClient, sample_game: models.Game, db_session: Session):

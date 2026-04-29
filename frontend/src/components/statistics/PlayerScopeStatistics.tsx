@@ -209,7 +209,7 @@ export default function PlayerScopeStatistics({
               label={t("teamStats.cleanConversion")}
               percentage={stats.defense.clean_conversion_rate}
               count={stats.defense.points_won_no_turnover}
-              total={stats.defense.points_won}
+              total={stats.defense.points_with_turnover}
               useValueGradient
               tooltip={t("tooltips.cleanConversionRate")}
             />

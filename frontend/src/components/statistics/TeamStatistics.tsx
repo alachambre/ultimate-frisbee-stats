@@ -333,7 +333,7 @@ export default function TeamStatistics({
               label={t("teamStats.cleanConversion")}
               percentage={teamStats.defense.clean_conversion_rate}
               count={teamStats.defense.points_won_no_turnover}
-              total={teamStats.defense.points_won}
+              total={teamStats.defense.points_with_turnover}
               useValueGradient
               tooltip={t("tooltips.cleanConversionRate")}
             />

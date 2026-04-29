@@ -191,7 +191,7 @@
       },
       "defense_clean_conversion_rate": {
         "label": "Clean conversion rate",
-        "description": "Breaks won without us committing a turnover, out of all breaks."
+        "description": "Defensive points won without us committing a turnover, out of defensive points where at least one possession turnover occurred."
       },
       "defense_pull_inbound_rate": {
         "label": "Pull inbound rate",
@@ -298,7 +298,7 @@
     "turnoverRate": "Defensive points where at least one turnover occurred, out of all defensive points played.",
     "conversionRate": "Defensive points won, out of defensive points where at least one turnover occurred.",
     "cleanBreakRate": "Defensive points won without us committing a turnover, out of all defensive points played.",
-    "cleanConversionRate": "Percentage of breaks won without us committing a turnover.",
+    "cleanConversionRate": "Defensive points won without us committing a turnover, out of defensive points where at least one turnover occurred.",
     "holdRate": "Offensive points won, out of all offensive points played.",
     "forcedTurnovers": "Defensive points where at least one turnover occurred",
     "offensePoints": "Number of completed offensive points played",

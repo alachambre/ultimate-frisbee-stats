@@ -559,7 +559,7 @@ const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
   {
     id: "defense_clean_conversion_rate",
     label: "Clean conversion rate",
-    description: "Breaks won without us committing a turnover, out of all breaks.",
+    description: "Defensive points won without us committing a turnover, out of defensive points where at least one possession turnover occurred.",
     unit: "percentage",
     group: "defense",
     format: "percentage",
@@ -670,7 +670,7 @@ function buildTeamEvolutionMetricsForPoints(gamePoints: PointWithPlayers[]): Rec
     defense_break_rate: calculateRate(defenseWon, defenseStarted),
     defense_clean_break_rate: calculateRate(defenseWonNoTurnover, defenseStarted),
     defense_conversion_rate: calculateRate(defenseWon, defensePointsWithTurnover),
-    defense_clean_conversion_rate: calculateRate(defenseWonNoTurnover, defenseWon),
+    defense_clean_conversion_rate: calculateRate(defenseWonNoTurnover, defensePointsWithTurnover),
     defense_pull_inbound_rate: calculateRate(inboundPulls, totalPulls),
   };
 }

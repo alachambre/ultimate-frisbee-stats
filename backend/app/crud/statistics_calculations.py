@@ -393,7 +393,7 @@ def build_live_player_stats(
         )
         clean_conversion_rate = calculate_rate(
             stats["defense_won_no_turnover"],
-            stats["defense_won"],
+            stats["defense_with_turnover"],
         )
 
         result.append({
@@ -490,7 +490,10 @@ def build_team_stats_from_point_facts(
     defense_turnover_rate = calculate_rate(defense_points_with_turnover, defense_started)
     defense_conversion_rate = calculate_rate(defense_won, defense_points_with_turnover)
     defense_clean_break_rate = calculate_rate(defense_won_no_turnover, defense_started)
-    defense_clean_conversion_rate = calculate_rate(defense_won_no_turnover, defense_won)
+    defense_clean_conversion_rate = calculate_rate(
+        defense_won_no_turnover,
+        defense_points_with_turnover,
+    )
 
     defense_points_with_pull = [
         point for point in point_facts if (not point.starting_on_offense and point.pull is not None)

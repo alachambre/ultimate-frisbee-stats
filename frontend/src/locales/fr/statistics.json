@@ -191,7 +191,7 @@
       },
       "defense_clean_conversion_rate": {
         "label": "Taux de clean conversion",
-        "description": "Breaks gagn\u00e9s sans que nous ne commettions de turnover, parmi tous les breaks."
+        "description": "Points de d\u00e9fense gagn\u00e9s sans que nous ne commettions de turnover, parmi les points de d\u00e9fense avec au moins un turnover de possession."
       },
       "defense_pull_inbound_rate": {
         "label": "Taux de Pull dans le terrain",
@@ -298,7 +298,7 @@
     "turnoverRate": "Points défensifs où au moins un turnover a eu lieu, sur tous les points défensifs joués.",
     "conversionRate": "Points défensifs gagnés parmi les points défensifs avec au moins un turnover.",
     "cleanBreakRate": "Points défensifs gagnés sans que nous ne fassions de turnover, sur tous les points défensifs joués.",
-    "cleanConversionRate": "Pourcentage de breaks gagnés sans que nous ne fassions de turnover.",
+    "cleanConversionRate": "Points défensifs gagnés sans que nous ne fassions de turnover, parmi les points défensifs avec au moins un turnover.",
     "holdRate": "Points offensifs gagnés, sur tous les points offensifs joués.",
     "forcedTurnovers": "Points défensifs où au moins un turnover a eu lieu",
     "offensePoints": "Nombre de points offensifs complétés joués",

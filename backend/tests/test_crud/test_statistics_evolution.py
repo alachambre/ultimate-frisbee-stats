@@ -68,7 +68,10 @@ def test_team_evolution_catalog_documents_current_team_stat_semantics():
 
     assert (
         metrics_by_id["defense_clean_conversion_rate"].description
-        == "Breaks won without us committing a turnover, out of all breaks."
+        == (
+            "Defensive points won without us committing a turnover, out of "
+            "defensive points where at least one possession turnover occurred."
+        )
     )
     assert metrics_by_id["defense_conversion_rate"].description == (
         "Defensive points won, out of defensive points where at least one "
