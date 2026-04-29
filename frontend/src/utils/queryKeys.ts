@@ -62,6 +62,19 @@ export const queryKeys = {
       normalizeIds(gameIds),
       normalizeIds(playerIds),
     ] as const,
+  teamEvolutionStatistics: (
+    teamId: number,
+    competitionIds?: number[],
+    gameIds?: number[],
+    playerIds?: number[]
+  ) =>
+    [
+      "teamEvolutionStatistics",
+      teamId,
+      normalizeIds(competitionIds),
+      normalizeIds(gameIds),
+      normalizeIds(playerIds),
+    ] as const,
   teamStrategyStatistics: (
     teamId: number,
     competitionIds?: number[],

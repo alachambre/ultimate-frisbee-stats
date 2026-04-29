@@ -19,6 +19,7 @@
   "workflow": {
     "description": "Sélectionnez une équipe, puis affinez le jeu de données avec les compétitions, les matchs et les joueurs.",
     "path": "Chemin actuel",
+    "evolution": "\u00c9volution",
     "team": "Équipe",
     "competition": "Compétition",
     "game": "Match",
@@ -91,6 +92,19 @@
     "halftime": "Mi-temps",
     "resetZoom": "R\u00e9initialiser le zoom",
     "empty": "Aucun point complété n'est disponible pour le graphique."
+  },
+  "evolution": {
+    "title": "\u00c9volution",
+    "loading": "Chargement de l'\u00e9volution...",
+    "empty": "Aucun match compl\u00e9t\u00e9 n'est disponible pour cette s\u00e9lection.",
+    "omittedGames": "{{count}} match ignor\u00e9",
+    "omittedGames_plural": "{{count}} matchs ignor\u00e9s",
+    "date": "Date",
+    "game": "Match",
+    "competition": "Comp\u00e9tition",
+    "score": "Score",
+    "completedPoints": "Points",
+    "tableAriaLabel": "Tableau d'\u00e9volution des statistiques"
   },
   "teamStats": {
     "title": "Statistiques d'équipe",

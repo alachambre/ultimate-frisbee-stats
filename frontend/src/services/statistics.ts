@@ -8,6 +8,7 @@ import type {
   GameStrategyStats,
   CompetitionStrategyStats,
   TeamStrategyStats,
+  TeamEvolutionResponse,
 } from "../types";
 
 export type StatisticsExportDetailMode = "summary" | "full";
@@ -162,6 +163,16 @@ export async function getTeamTeamStatistics(
 ): Promise<TeamTeamStats> {
   const response = await apiClient.get(
     appendStatisticsFilters(`/statistics/teams/${teamId}/team`, filters)
+  );
+  return response.data;
+}
+
+export async function getTeamEvolutionStatistics(
+  teamId: number,
+  filters?: StatisticsDatasetFilters
+): Promise<TeamEvolutionResponse> {
+  const response = await apiClient.get(
+    appendStatisticsFilters(`/statistics/teams/${teamId}/evolution`, filters)
   );
   return response.data;
 }

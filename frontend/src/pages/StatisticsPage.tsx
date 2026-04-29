@@ -80,6 +80,9 @@ export default function StatisticsPage() {
     gamePointTimelineError,
 
     teamStats,
+    teamEvolution,
+    isLoadingTeamEvolution,
+    teamEvolutionError,
     teamPlayerStats,
     teamStrategyStats,
   } = useStatisticsPageData(statisticsAccess);
@@ -284,6 +287,9 @@ export default function StatisticsPage() {
 
                 <CompetitionStatisticsTabs
                   teamStats={teamStats}
+                  teamEvolution={teamEvolution}
+                  isLoadingTeamEvolution={isLoadingTeamEvolution}
+                  teamEvolutionError={teamEvolutionError}
                   strategyStats={teamStrategyStats}
                   playerStats={teamPlayerStats}
                   teamStatsScope={shouldShowFieldSideStats ? "game" : "team"}

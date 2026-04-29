@@ -20,6 +20,7 @@
     "description": "Select a team, then refine the dataset with competitions, games, and players.",
     "path": "Current path",
     "team": "Team",
+    "evolution": "Evolution",
     "competition": "Competition",
     "game": "Game",
     "player": "Player",
@@ -91,6 +92,19 @@
     "halftime": "Half time",
     "resetZoom": "Reset zoom",
     "empty": "No completed points are available for charting yet."
+  },
+  "evolution": {
+    "title": "Evolution",
+    "loading": "Loading evolution data...",
+    "empty": "No completed games are available for this selection.",
+    "omittedGames": "{{count}} game omitted",
+    "omittedGames_plural": "{{count}} games omitted",
+    "date": "Date",
+    "game": "Game",
+    "competition": "Competition",
+    "score": "Score",
+    "completedPoints": "Points",
+    "tableAriaLabel": "Statistics evolution table"
   },
   "teamStats": {
     "title": "Team statistics",

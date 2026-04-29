@@ -401,6 +401,53 @@ export interface TurnoverUpdate {
 // Statistics Types
 // ============================================
 
+export type EvolutionMetricUnit = "count" | "percentage";
+export type EvolutionMetricFormat = "integer" | "percentage";
+
+export interface EvolutionMetricDefinition {
+  id: string;
+  label: string;
+  description: string;
+  unit: EvolutionMetricUnit;
+  group: string;
+  format: EvolutionMetricFormat;
+  higher_is_better: boolean;
+}
+
+export interface EvolutionMetricPreset {
+  id: string;
+  label: string;
+  metric_ids: string[];
+}
+
+export interface TeamEvolutionFilters {
+  competition_ids: number[];
+  game_ids: number[];
+  player_ids: number[];
+}
+
+export interface TeamEvolutionGame {
+  game_id: number;
+  competition_id: number;
+  competition_name: string;
+  opponent_name: string;
+  date: string;
+  our_score: number;
+  opponent_score: number;
+  completed_points: number;
+  metrics: Record<string, number>;
+}
+
+export interface TeamEvolutionResponse {
+  team_id: number;
+  filters: TeamEvolutionFilters;
+  default_preset_id: string;
+  omitted_games_count: number;
+  metrics: EvolutionMetricDefinition[];
+  presets: EvolutionMetricPreset[];
+  games: TeamEvolutionGame[];
+}
+
 export interface PlayerOffenseStats {
   points_played: number;
   points_won: number;

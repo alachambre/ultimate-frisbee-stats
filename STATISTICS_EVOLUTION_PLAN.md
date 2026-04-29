@@ -166,7 +166,7 @@ Acceptance criteria:
 - Authorization matches team statistics access; player filters remain analyst-only when enforcement is active.
 - Existing statistics endpoints keep passing unchanged.
 
-### Milestone 3: Frontend Data Hook And Table Preview
+### Milestone 3: Frontend Data Hook And Table Preview - Done
 
 Purpose: wire the endpoint into the statistics workflow and validate data correctness before chart work.
 

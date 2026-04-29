@@ -5,6 +5,7 @@ import { getAllGames, getCompetitions, getTeams } from "../../services";
 import {
   downloadTeamStatisticsCSV,
   getGamePointTimeline,
+  getTeamEvolutionStatistics,
   getTeamPlayerStatistics,
   getTeamStrategyStatistics,
   getTeamTeamStatistics,
@@ -271,6 +272,16 @@ export function useStatisticsPageData(access: StatisticsPageAccess) {
   });
 
   const {
+    data: teamEvolution,
+    isLoading: isLoadingTeamEvolution,
+    error: teamEvolutionError,
+  } = useQuery({
+    queryKey: queryKeys.teamEvolutionStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryFn: () => getTeamEvolutionStatistics(teamId as number, statisticsFilters),
+    enabled: teamId !== undefined && access.canViewTeamStatistics,
+  });
+
+  const {
     data: teamPlayerStats,
     isLoading: isLoadingTeamPlayerStats,
     error: teamPlayerStatsError,
@@ -497,6 +508,9 @@ export function useStatisticsPageData(access: StatisticsPageAccess) {
     shouldShowFieldSideStats,
 
     teamStats,
+    teamEvolution,
+    isLoadingTeamEvolution,
+    teamEvolutionError,
     teamPlayerStats,
     teamStrategyStats,
     gamePointTimeline,

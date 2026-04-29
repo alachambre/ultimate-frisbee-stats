@@ -43,6 +43,7 @@ describe("StatisticsPage", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Evolution" })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Players" })).toBeInTheDocument();
     });
@@ -70,12 +71,114 @@ describe("StatisticsPage", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Evolution" })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
     });
 
     expect(screen.queryByRole("tab", { name: "Players" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("4. Players cohort")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
+  });
+
+  it("renders the evolution table preview for the selected dataset", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const bob = await createPlayer({ team_id: team.id, name: "Bob", gender: "M" });
+    const tom = await createPlayer({ team_id: team.id, name: "Tom", gender: "M" });
+    const competition = await createCompetition({
+      team_id: team.id,
+      name: "Spring Cup",
+      start_date: "2026-03-01",
+      end_date: "2026-03-31",
+    });
+    await addPlayersToRoster(competition.id, [bob.id, tom.id]);
+
+    const earlyGame = await createGame({
+      competition_id: competition.id,
+      opponent_name: "Early Rivals",
+      date: "2026-03-15T10:00:00Z",
+    });
+    await addPlayersToGame(earlyGame.id, [bob.id, tom.id]);
+
+    await createGame({
+      competition_id: competition.id,
+      opponent_name: "Empty Rivals",
+      date: "2026-03-16T10:00:00Z",
+    });
+
+    const lateGame = await createGame({
+      competition_id: competition.id,
+      opponent_name: "Late Rivals",
+      date: "2026-03-17T10:00:00Z",
+    });
+    await addPlayersToGame(lateGame.id, [bob.id, tom.id]);
+
+    const holdPoint = await startPoint({
+      game_id: earlyGame.id,
+      starting_on_offense: true,
+      player_ids: [bob.id, tom.id],
+      start_datetime: "2026-03-15T10:00:00Z",
+    });
+    await updatePoint(holdPoint.id, { status: "running" });
+    await finishPoint(holdPoint.id, {
+      won: true,
+      end_datetime: "2026-03-15T10:01:00Z",
+    });
+
+    const breakPoint = await startPoint({
+      game_id: earlyGame.id,
+      starting_on_offense: false,
+      player_ids: [bob.id, tom.id],
+      start_datetime: "2026-03-15T10:02:00Z",
+    });
+    await updatePoint(breakPoint.id, { status: "running", pull: true });
+    await createTurnover({
+      point_id: breakPoint.id,
+      timestamp: "2026-03-15T10:02:20Z",
+    });
+    await finishPoint(breakPoint.id, {
+      won: true,
+      end_datetime: "2026-03-15T10:03:00Z",
+    });
+
+    const brokenPoint = await startPoint({
+      game_id: lateGame.id,
+      starting_on_offense: true,
+      player_ids: [bob.id, tom.id],
+      start_datetime: "2026-03-17T10:00:00Z",
+    });
+    await updatePoint(brokenPoint.id, { status: "running" });
+    await createTurnover({
+      point_id: brokenPoint.id,
+      timestamp: "2026-03-17T10:00:20Z",
+    });
+    await finishPoint(brokenPoint.id, {
+      won: false,
+      end_datetime: "2026-03-17T10:01:00Z",
+    });
+
+    window.history.pushState(
+      {},
+      "",
+      `/statistics?teamId=${team.id}&competitionIds=${competition.id}`
+    );
+
+    render(<StatisticsPage />);
+
+    const evolutionTab = await screen.findByRole("tab", { name: "Evolution" });
+    await user.click(evolutionTab);
+
+    const table = await screen.findByRole("table", {
+      name: "Statistics evolution table",
+    });
+    expect(within(table).getByText("Early Rivals")).toBeInTheDocument();
+    expect(within(table).getByText("Late Rivals")).toBeInTheDocument();
+    expect(within(table).queryByText("Empty Rivals")).not.toBeInTheDocument();
+    expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("2 - 0")).toBeInTheDocument();
+    expect(within(table).getByText("0 - 1")).toBeInTheDocument();
+    expect(screen.getByText("1 game omitted")).toBeInTheDocument();
   });
 
   it("keeps legacy single-competition and single-game links working", async () => {

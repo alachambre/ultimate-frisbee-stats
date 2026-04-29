@@ -1,16 +1,25 @@
 import { useMemo, useState } from "react";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import type { PlayerGameStats, StrategyStatsBase, TeamStatsBase } from "../../types";
+import type {
+  PlayerGameStats,
+  StrategyStatsBase,
+  TeamEvolutionResponse,
+  TeamStatsBase,
+} from "../../types";
 import PlayerStatistics from "./PlayerStatistics";
+import StatisticsEvolutionTable from "./StatisticsEvolutionTable";
 import StrategyStatistics from "./StrategyStatistics";
 import TeamStatistics from "./TeamStatistics";
 
-type CompetitionStatisticsTab = "team" | "strategies" | "players";
+type CompetitionStatisticsTab = "team" | "evolution" | "strategies" | "players";
 type TeamStatsScope = "team" | "competition" | "game";
 
 interface CompetitionStatisticsTabsProps {
   teamStats?: TeamStatsBase;
+  teamEvolution?: TeamEvolutionResponse;
+  isLoadingTeamEvolution?: boolean;
+  teamEvolutionError?: Error | null;
   strategyStats?: StrategyStatsBase;
   playerStats?: PlayerGameStats[];
   teamStatsScope?: TeamStatsScope;
@@ -19,7 +28,7 @@ interface CompetitionStatisticsTabsProps {
   canViewPlayerStatistics?: boolean;
 }
 
-const TAB_ORDER: CompetitionStatisticsTab[] = ["team", "strategies", "players"];
+const TAB_ORDER: CompetitionStatisticsTab[] = ["team", "evolution", "strategies", "players"];
 
 function hasTeamStatsData(teamStats?: TeamStatsBase): boolean {
   return Boolean(teamStats && teamStats.total_completed_points > 0);
@@ -38,6 +47,9 @@ function hasStrategyStatsData(strategyStats?: StrategyStatsBase): boolean {
 
 export default function CompetitionStatisticsTabs({
   teamStats,
+  teamEvolution,
+  isLoadingTeamEvolution = false,
+  teamEvolutionError = null,
   strategyStats,
   playerStats,
   teamStatsScope = "competition",
@@ -49,12 +61,16 @@ export default function CompetitionStatisticsTabs({
   const [requestedTab, setRequestedTab] = useState<CompetitionStatisticsTab>("team");
 
   const hasTeamData = hasTeamStatsData(teamStats);
+  const hasEvolutionSurface = Boolean(
+    teamEvolution || isLoadingTeamEvolution || teamEvolutionError
+  );
   const hasStrategyData = hasStrategyStatsData(strategyStats);
   const hasPlayerData = Boolean(playerStats);
 
   const tabEnabledState = useMemo<Record<CompetitionStatisticsTab, boolean>>(
     () => ({
       team: canViewTeamStatistics && hasTeamData,
+      evolution: canViewTeamStatistics && hasEvolutionSurface,
       strategies: canViewStrategyStatistics && hasStrategyData,
       players: canViewPlayerStatistics && hasPlayerData,
     }),
@@ -62,6 +78,7 @@ export default function CompetitionStatisticsTabs({
       canViewPlayerStatistics,
       canViewStrategyStatistics,
       canViewTeamStatistics,
+      hasEvolutionSurface,
       hasPlayerData,
       hasStrategyData,
       hasTeamData,
@@ -93,6 +110,9 @@ export default function CompetitionStatisticsTabs({
           {canViewTeamStatistics && (
             <Tab value="team" label={t("statistics:workflow.team")} />
           )}
+          {canViewTeamStatistics && (
+            <Tab value="evolution" label={t("statistics:workflow.evolution")} />
+          )}
           {canViewStrategyStatistics && (
             <Tab value="strategies" label={t("statistics:workflow.strategies")} />
           )}
@@ -109,6 +129,14 @@ export default function CompetitionStatisticsTabs({
             showFieldSideStats={teamStatsScope === "game"}
           />
         ) : renderNoData())}
+
+      {activeTab === "evolution" && (
+        <StatisticsEvolutionTable
+          evolution={teamEvolution}
+          isLoading={isLoadingTeamEvolution}
+          error={teamEvolutionError}
+        />
+      )}
 
       {activeTab === "strategies" &&
         (hasStrategyData && strategyStats ? (

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate, GamePointTimeline } from "../../types";
+import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate, GamePointTimeline, TeamEvolutionResponse } from "../../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -417,6 +417,307 @@ function buildGamePointTimelineResponse(gameId: number, requiredPlayerIds: numbe
         opponent_score_after: scoreAfter.opponent,
       };
     }),
+  };
+}
+
+const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
+  {
+    id: "total_our_turnovers",
+    label: "Our turnovers",
+    description: "Total possession turnovers committed by us across the game.",
+    unit: "count",
+    group: "turnovers",
+    format: "integer",
+    higher_is_better: false,
+  },
+  {
+    id: "total_opponent_turnovers",
+    label: "Opponent turnovers",
+    description: "Total possession turnovers committed by the opponent across the game.",
+    unit: "count",
+    group: "turnovers",
+    format: "integer",
+    higher_is_better: true,
+  },
+  {
+    id: "offense_our_turnovers",
+    label: "Our offensive turnovers",
+    description: "Possession turnovers committed by us on points started on offense.",
+    unit: "count",
+    group: "turnovers",
+    format: "integer",
+    higher_is_better: false,
+  },
+  {
+    id: "defense_opponent_turnovers",
+    label: "Opponent turnovers on our defense",
+    description: "Possession turnovers committed by the opponent on points we started on defense.",
+    unit: "count",
+    group: "turnovers",
+    format: "integer",
+    higher_is_better: true,
+  },
+  {
+    id: "points_won",
+    label: "Points won",
+    description: "Completed points won by us.",
+    unit: "count",
+    group: "results",
+    format: "integer",
+    higher_is_better: true,
+  },
+  {
+    id: "points_lost",
+    label: "Points lost",
+    description: "Completed points won by the opponent.",
+    unit: "count",
+    group: "results",
+    format: "integer",
+    higher_is_better: false,
+  },
+  {
+    id: "holds",
+    label: "Holds",
+    description: "Offensive points won by us.",
+    unit: "count",
+    group: "offense",
+    format: "integer",
+    higher_is_better: true,
+  },
+  {
+    id: "breaks",
+    label: "Breaks",
+    description: "Defensive points won by us.",
+    unit: "count",
+    group: "defense",
+    format: "integer",
+    higher_is_better: true,
+  },
+  {
+    id: "offense_hold_rate",
+    label: "Hold rate",
+    description: "Offensive points won, out of all offensive points played.",
+    unit: "percentage",
+    group: "offense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "offense_clean_hold_rate",
+    label: "Clean hold rate",
+    description: "Offensive points won without us committing a turnover, out of all offensive points played.",
+    unit: "percentage",
+    group: "offense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "defense_turnover_rate",
+    label: "Turnover rate",
+    description: "Defensive points where at least one possession turnover occurred, out of all defensive points played.",
+    unit: "percentage",
+    group: "defense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "defense_break_rate",
+    label: "Break rate",
+    description: "Defensive points won, out of all defensive points played.",
+    unit: "percentage",
+    group: "defense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "defense_clean_break_rate",
+    label: "Clean break rate",
+    description: "Defensive points won without us committing a turnover, out of all defensive points played.",
+    unit: "percentage",
+    group: "defense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "defense_conversion_rate",
+    label: "Conversion rate",
+    description: "Defensive points won, out of defensive points where at least one possession turnover occurred.",
+    unit: "percentage",
+    group: "defense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "defense_clean_conversion_rate",
+    label: "Clean conversion rate",
+    description: "Breaks won without us committing a turnover, out of all breaks.",
+    unit: "percentage",
+    group: "defense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+  {
+    id: "defense_pull_inbound_rate",
+    label: "Pull inbound rate",
+    description: "Tracked pulls that stayed inbound, out of all tracked pulls.",
+    unit: "percentage",
+    group: "defense",
+    format: "percentage",
+    higher_is_better: true,
+  },
+];
+
+const TEAM_EVOLUTION_PRESETS: TeamEvolutionResponse["presets"] = [
+  {
+    id: "turnover_battle",
+    label: "Turnover battle",
+    metric_ids: ["total_our_turnovers", "total_opponent_turnovers"],
+  },
+];
+
+function calculateRate(numerator: number, denominator: number): number {
+  return denominator > 0 ? numerator / denominator : 0;
+}
+
+function normalizeNumberIds(ids: number[]): number[] {
+  return Array.from(new Set(ids)).sort((left, right) => left - right);
+}
+
+function buildTeamEvolutionMetricsForPoints(gamePoints: PointWithPlayers[]): Record<string, number> {
+  let offenseStarted = 0;
+  let offenseWon = 0;
+  let offenseLost = 0;
+  let offenseWonNoTurnover = 0;
+  let offenseOurTurnovers = 0;
+  let offenseOpponentTurnovers = 0;
+  let defenseStarted = 0;
+  let defenseWon = 0;
+  let defenseLost = 0;
+  let defensePointsWithTurnover = 0;
+  let defenseWonNoTurnover = 0;
+  let defenseOurTurnovers = 0;
+  let defenseOpponentTurnovers = 0;
+  let totalPulls = 0;
+  let inboundPulls = 0;
+
+  for (const point of gamePoints) {
+    const pointTurnovers = turnovers
+      .filter((turnover) => turnover.point_id === point.id)
+      .slice()
+      .sort((left, right) => new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime());
+    const turnoverCounts = countTurnoversByPossession(point.starting_on_offense, pointTurnovers);
+    const totalTurnovers = turnoverCounts.ourTurnovers + turnoverCounts.opponentTurnovers;
+
+    if (point.starting_on_offense) {
+      offenseStarted += 1;
+      offenseOurTurnovers += turnoverCounts.ourTurnovers;
+      offenseOpponentTurnovers += turnoverCounts.opponentTurnovers;
+      if (point.won) {
+        offenseWon += 1;
+        if (turnoverCounts.ourTurnovers === 0) {
+          offenseWonNoTurnover += 1;
+        }
+      } else {
+        offenseLost += 1;
+      }
+      continue;
+    }
+
+    defenseStarted += 1;
+    defenseOurTurnovers += turnoverCounts.ourTurnovers;
+    defenseOpponentTurnovers += turnoverCounts.opponentTurnovers;
+    if (totalTurnovers > 0) {
+      defensePointsWithTurnover += 1;
+    }
+    if (point.pull !== null && point.pull !== undefined) {
+      totalPulls += 1;
+      if (point.pull) {
+        inboundPulls += 1;
+      }
+    }
+    if (point.won) {
+      defenseWon += 1;
+      if (turnoverCounts.ourTurnovers === 0) {
+        defenseWonNoTurnover += 1;
+      }
+    } else {
+      defenseLost += 1;
+    }
+  }
+
+  return {
+    total_our_turnovers: offenseOurTurnovers + defenseOurTurnovers,
+    total_opponent_turnovers: offenseOpponentTurnovers + defenseOpponentTurnovers,
+    offense_our_turnovers: offenseOurTurnovers,
+    defense_opponent_turnovers: defenseOpponentTurnovers,
+    points_won: offenseWon + defenseWon,
+    points_lost: offenseLost + defenseLost,
+    holds: offenseWon,
+    breaks: defenseWon,
+    offense_hold_rate: calculateRate(offenseWon, offenseStarted),
+    offense_clean_hold_rate: calculateRate(offenseWonNoTurnover, offenseStarted),
+    defense_turnover_rate: calculateRate(defensePointsWithTurnover, defenseStarted),
+    defense_break_rate: calculateRate(defenseWon, defenseStarted),
+    defense_clean_break_rate: calculateRate(defenseWonNoTurnover, defenseStarted),
+    defense_conversion_rate: calculateRate(defenseWon, defensePointsWithTurnover),
+    defense_clean_conversion_rate: calculateRate(defenseWonNoTurnover, defenseWon),
+    defense_pull_inbound_rate: calculateRate(inboundPulls, totalPulls),
+  };
+}
+
+function buildTeamEvolutionResponse(
+  teamId: number,
+  competitionIds: number[],
+  gameIds: number[],
+  requiredPlayerIds: number[]
+): TeamEvolutionResponse {
+  const normalizedCompetitionIds = normalizeNumberIds(competitionIds);
+  const normalizedGameIds = normalizeNumberIds(gameIds);
+  const normalizedPlayerIds = normalizeNumberIds(requiredPlayerIds);
+  const scopedGames = getScopedTeamGames(teamId, normalizedCompetitionIds, normalizedGameIds)
+    .slice()
+    .sort((left, right) => {
+      const leftDate = left.date ? new Date(left.date).getTime() : 0;
+      const rightDate = right.date ? new Date(right.date).getTime() : 0;
+      return leftDate - rightDate || left.id - right.id;
+    });
+
+  let omittedGamesCount = 0;
+  const evolutionGames: TeamEvolutionResponse["games"] = [];
+  for (const game of scopedGames) {
+    const gamePoints = filterCompletedPointsByRequiredPlayers([game], normalizedPlayerIds);
+    if (gamePoints.length === 0) {
+      omittedGamesCount += 1;
+      continue;
+    }
+
+    const competition = competitions.find((entry) => entry.id === game.competition_id);
+    const metrics = buildTeamEvolutionMetricsForPoints(gamePoints);
+    evolutionGames.push({
+      game_id: game.id,
+      competition_id: game.competition_id,
+      competition_name: competition?.name ?? "",
+      opponent_name: game.opponent_name,
+      date: game.date ?? game.created_at,
+      our_score: metrics.points_won,
+      opponent_score: metrics.points_lost,
+      completed_points: gamePoints.length,
+      metrics,
+    });
+  }
+
+  return {
+    team_id: teamId,
+    filters: {
+      competition_ids: normalizedCompetitionIds,
+      game_ids: normalizedGameIds,
+      player_ids: normalizedPlayerIds,
+    },
+    default_preset_id: "turnover_battle",
+    omitted_games_count: omittedGamesCount,
+    metrics: TEAM_EVOLUTION_METRICS,
+    presets: TEAM_EVOLUTION_PRESETS,
+    games: evolutionGames,
   };
 }
 
@@ -1874,6 +2175,24 @@ export const handlers = [
     }
 
     return HttpResponse.json(buildEmptyTeamStats({ team_id: teamId }));
+  }),
+
+  // GET /statistics/teams/:teamId/evolution - Get team evolution statistics
+  http.get(`${BASE_URL}/statistics/teams/:teamId/evolution`, ({ params, request }) => {
+    const teamId = Number(params.teamId);
+    const team = teams.find((t) => t.id === teamId);
+
+    if (!team) {
+      return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+    }
+
+    const competitionIds = parseRepeatedIds(request.url, "competition_ids");
+    const gameIds = parseRepeatedIds(request.url, "game_ids");
+    const requiredPlayerIds = parseRepeatedIds(request.url, "player_ids");
+
+    return HttpResponse.json(
+      buildTeamEvolutionResponse(teamId, competitionIds, gameIds, requiredPlayerIds)
+    );
   }),
 
   // GET /statistics/competitions/:competitionId/strategies - Get competition strategy statistics
