@@ -36,21 +36,27 @@ def get_competition_statistics_csv(
     team_stats = statistics_crud.get_competition_team_stats(db, competition_id)
     player_stats = statistics_crud.get_competition_player_stats(db, competition_id) or []
     strategy_stats = statistics_crud.get_competition_strategy_stats(db, competition_id)
-    completed_points = get_completed_points_for_competition(db, competition_id)
+    completed_points = get_completed_points_for_competition(
+        db,
+        competition_id,
+        load_players=True,
+        load_strategy=True,
+        load_game=True,
+    )
     point_ids = [point.id for point in completed_points]
     stoppages_by_point = get_stoppages_for_points(db, point_ids)
     turnovers_by_point = get_turnovers_for_points(db, point_ids)
 
     competition_games: List[Dict] = []
-    for game in sorted(games_crud.get_games_by_competition(db, competition_id), key=lambda item: item.date):
-        our_score, opponent_score = games_crud.get_game_score(db, game.id)
+    scored_games = games_crud.get_games_by_competition_with_scores(db, competition_id)
+    for game in sorted(scored_games, key=lambda item: item["date"]):
         competition_games.append(
             {
-                "date": format_datetime(game.date),
-                "opponent": game.opponent_name,
-                "status": enum_value(game.status),
-                "our_score": our_score,
-                "opponent_score": opponent_score,
+                "date": format_datetime(game["date"]),
+                "opponent": game["opponent_name"],
+                "status": enum_value(game["status"]),
+                "our_score": game["our_score"],
+                "opponent_score": game["opponent_score"],
             }
         )
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Text, String, CheckConstraint
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from .base import Base
@@ -11,6 +11,7 @@ class Stoppage(Base):
             "stoppage_type IN ('call', 'injury', 'timeout', 'other')",
             name="stoppages_stoppage_type_check",
         ),
+        Index("idx_stoppages_point_time", "point_id", "call_timestamp"),
     )
 
     id = Column(Integer, primary_key=True, index=True)

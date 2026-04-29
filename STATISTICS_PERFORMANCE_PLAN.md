@@ -140,6 +140,10 @@ This can start broad: clear the whole statistics cache on those mutations. The d
 
 ## Milestone 3: Query and Relationship Optimization
 
+Status: implemented by pushing statistics player filters into SQL, adding
+relationship loading options for statistics point queries, using grouped game
+score helpers for list payloads, and adding supporting database indexes.
+
 ### Objective
 
 Reduce DB work for a single uncached statistics request.

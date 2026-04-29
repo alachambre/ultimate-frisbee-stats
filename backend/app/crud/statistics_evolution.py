@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.crud.statistics_calculations import build_game_team_stats
 from app.crud.statistics_queries import (
-    filter_points_by_player_ids,
     get_completed_points_for_team,
     get_team,
     get_turnovers_for_points,
@@ -228,10 +227,7 @@ def get_team_evolution(
         team_id,
         competition_ids=normalized_competition_ids,
         game_ids=normalized_game_ids,
-    )
-    completed_points = filter_points_by_player_ids(
-        completed_points,
-        normalized_player_ids,
+        required_player_ids=normalized_player_ids,
     )
 
     points_by_game = _group_points_by_game(completed_points)

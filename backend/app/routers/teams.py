@@ -72,18 +72,4 @@ def list_team_games(team_id: int, db: Session = Depends(get_db)):
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    games = crud.get_games_by_team(db, team_id)
-    # Add scores, team name, and competition name to each game
-    result = []
-    for game in games:
-        our_score, opponent_score = crud.get_game_score(db, game.id)
-        competition = crud.get_competition(db, game.competition_id)
-        game_dict = {
-            **game.__dict__,
-            "our_score": our_score,
-            "opponent_score": opponent_score,
-            "team_name": team.name,
-            "competition_name": competition.name if competition else "Unknown"
-        }
-        result.append(game_dict)
-    return result
+    return crud.get_games_by_team_with_scores(db, team_id)

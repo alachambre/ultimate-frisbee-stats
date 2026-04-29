@@ -127,6 +127,11 @@ The default TTL is 300 seconds and can be disabled with
 `STATISTICS_CACHE_TTL_SECONDS=0`. Auth and permission checks still run before
 cache reads, and stats-affecting mutations clear the cache broadly.
 
+Uncached statistics point queries keep player-filtered datasets SQL-side via
+`required_player_ids`, and relationship loading is explicit through query helper
+flags. Game list score payloads use grouped score queries rather than per-game
+score lookups.
+
 ## Project Layout
 
 - `app/routers/` HTTP endpoints per domain

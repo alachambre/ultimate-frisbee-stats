@@ -84,6 +84,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)
 - Statistics read caching lives in `backend/app/statistics_cache.py`; keep permission checks before cache reads, use `STATISTICS_CACHE_TTL_SECONDS` (`0` disables), and broadly clear the cache after stats-affecting mutations
+- Statistics point queries support SQL-side `required_player_ids` filtering plus explicit relationship loading flags; avoid reintroducing Python-side player filtering for endpoint datasets
+- Game list score payloads should use grouped score helpers in `backend/app/crud/games.py` instead of calling `get_game_score` inside loops
 - CSV statistics exports are backend-owned via `/exports/*/csv` endpoints; frontend should only trigger download
 - CSV export implementation is split by concern: `statistics_exports_formatters.py`, `statistics_exports_sections.py`, `statistics_exports_game.py`, `statistics_exports_competition.py`, `statistics_exports_team.py` (`statistics_exports.py` stays as facade)
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable

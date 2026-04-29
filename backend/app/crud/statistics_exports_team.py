@@ -19,7 +19,6 @@ from app.crud.statistics_exports_sections import (
     append_team_statistics,
 )
 from app.crud.statistics_queries import (
-    filter_points_by_player_ids,
     get_completed_points_for_team,
     get_stoppages_for_points,
     get_team,
@@ -63,14 +62,15 @@ def get_team_statistics_csv(
         competition_ids=competition_ids,
         game_ids=game_ids,
     )
-    completed_points = filter_points_by_player_ids(
-        get_completed_points_for_team(
-            db,
-            team_id,
-            competition_ids=competition_ids,
-            game_ids=game_ids,
-        ),
-        required_player_ids,
+    completed_points = get_completed_points_for_team(
+        db,
+        team_id,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+        required_player_ids=required_player_ids,
+        load_players=True,
+        load_strategy=True,
+        load_game=True,
     )
     point_ids = [point.id for point in completed_points]
     stoppages_by_point = get_stoppages_for_points(db, point_ids)
@@ -80,18 +80,23 @@ def get_team_statistics_csv(
         competitions_crud.get_competitions(db, team_id=team_id, skip=0, limit=10000),
         key=lambda competition: competition.start_date,
     )
-    filtered_games = sorted(games_crud.get_games_by_team(db, team_id), key=lambda item: item.date)
+    filtered_games = sorted(
+        games_crud.get_games_by_team_with_scores(db, team_id),
+        key=lambda item: item["date"],
+    )
     if competition_ids:
         competition_ids_set = set(competition_ids)
         filtered_games = [
-            game for game in filtered_games if game.competition_id in competition_ids_set
+            game for game in filtered_games if game["competition_id"] in competition_ids_set
         ]
     if game_ids:
         game_ids_set = set(game_ids)
-        filtered_games = [game for game in filtered_games if game.id in game_ids_set]
+        filtered_games = [game for game in filtered_games if game["id"] in game_ids_set]
 
     if game_ids:
-        represented_competition_ids = {game.competition_id for game in filtered_games}
+        represented_competition_ids = {
+            game["competition_id"] for game in filtered_games
+        }
         competitions = [
             competition
             for competition in all_competitions
@@ -119,15 +124,14 @@ def get_team_statistics_csv(
 
     team_games: List[Dict] = []
     for game in filtered_games:
-        our_score, opponent_score = games_crud.get_game_score(db, game.id)
         team_games.append(
             {
-                "date": format_datetime(game.date),
-                "competition_name": game.competition.name if game.competition else "",
-                "opponent": game.opponent_name,
-                "status": enum_value(game.status),
-                "our_score": our_score,
-                "opponent_score": opponent_score,
+                "date": format_datetime(game["date"]),
+                "competition_name": game["competition_name"],
+                "opponent": game["opponent_name"],
+                "status": enum_value(game["status"]),
+                "our_score": game["our_score"],
+                "opponent_score": game["opponent_score"],
             }
         )
 

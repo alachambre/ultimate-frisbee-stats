@@ -31,19 +31,8 @@ def list_games(
     db: Session = Depends(get_db),
     access_context: AccessContext = Depends(get_request_access_context),
 ):
-    games = crud.get_all_games(db)
-    # Transform to include scores, team name, and competition name
-    result = []
-    for game in games:
-        competition = crud.get_competition(db, game.competition_id)
-        result.append({
-            **game.__dict__,
-            "our_score": crud.get_game_score(db, game.id)[0],
-            "opponent_score": crud.get_game_score(db, game.id)[1],
-            "team_name": competition.team.name if competition and competition.team else "Unknown",
-            "competition_name": competition.name if competition else "Unknown",
-        })
-    return serialize_games_with_score(result, access_context)
+    games = crud.get_all_games_with_scores(db)
+    return serialize_games_with_score(games, access_context)
 
 
 @router.post("", response_model=schemas.Game, status_code=201)

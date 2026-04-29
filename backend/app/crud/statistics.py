@@ -18,7 +18,6 @@ from app.crud.statistics_calculations import (
 )
 from app.crud.statistics_evolution import get_team_evolution
 from app.crud.statistics_queries import (
-    filter_points_by_player_ids,
     get_competition,
     get_competition_players,
     get_completed_points,
@@ -42,6 +41,9 @@ def _fetch_scope_completed_points(
     *,
     require_timestamps: bool = False,
     required_player_ids: Optional[List[int]] = None,
+    load_players: bool = False,
+    load_strategy: bool = False,
+    load_game: bool = False,
     points_fetcher_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Optional[List]:
     """Return completed points for a scope or None if the scope does not exist."""
@@ -52,9 +54,13 @@ def _fetch_scope_completed_points(
         db,
         scope_id,
         require_timestamps=require_timestamps,
+        required_player_ids=required_player_ids,
+        load_players=load_players,
+        load_strategy=load_strategy,
+        load_game=load_game,
         **(points_fetcher_kwargs or {}),
     )
-    return filter_points_by_player_ids(points, required_player_ids)
+    return points
 
 
 def _get_point_ids(points: List) -> List[int]:
@@ -124,6 +130,7 @@ def _build_scope_player_stats(
         points_fetcher,
         require_timestamps=True,
         required_player_ids=required_player_ids,
+        load_players=True,
         points_fetcher_kwargs=points_fetcher_kwargs,
     )
     if completed_points is None:
@@ -257,7 +264,17 @@ def get_game_point_timeline(
         return None
 
     all_completed_points = _sort_points_for_timeline(get_completed_points(db, game_id))
-    filtered_points = filter_points_by_player_ids(all_completed_points, required_player_ids)
+    filtered_points = (
+        _sort_points_for_timeline(
+            get_completed_points(
+                db,
+                game_id,
+                required_player_ids=required_player_ids,
+            )
+        )
+        if required_player_ids
+        else all_completed_points
+    )
     filtered_turnovers_by_point = _get_scope_turnovers(db, filtered_points)
 
     cumulative_scores_by_point_id: Dict[int, tuple[int, int]] = {}

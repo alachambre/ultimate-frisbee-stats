@@ -177,17 +177,5 @@ def list_competition_games(
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
 
-    games = crud.get_games_by_competition(db, competition_id)
-    # Add scores and team/competition name to each game
-    result = []
-    for game in games:
-        our_score, opponent_score = crud.get_game_score(db, game.id)
-        game_dict = {
-            **game.__dict__,
-            "our_score": our_score,
-            "opponent_score": opponent_score,
-            "team_name": competition.team.name,
-            "competition_name": competition.name
-        }
-        result.append(game_dict)
-    return serialize_games_with_score(result, access_context)
+    games = crud.get_games_by_competition_with_scores(db, competition_id)
+    return serialize_games_with_score(games, access_context)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Text, String, CheckConstraint
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from .base import Base
@@ -20,6 +20,7 @@ class Turnover(Base):
             ")",
             name="turnovers_turnover_type_check",
         ),
+        Index("idx_turnovers_point_time", "point_id", "timestamp"),
     )
 
     id = Column(Integer, primary_key=True, index=True)

@@ -1,7 +1,7 @@
 """
 Point model
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Enum
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -10,6 +10,10 @@ from .base import Base, point_players, PointStatusEnum
 
 class Point(Base):
     __tablename__ = "points"
+    __table_args__ = (
+        Index("idx_points_game_id", "game_id"),
+        Index("idx_points_status", "status"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     game_id = Column(Integer, ForeignKey("games.id", ondelete="CASCADE"), nullable=False)

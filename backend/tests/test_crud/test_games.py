@@ -80,6 +80,44 @@ def test_get_games_by_team(db_session, sample_team, sample_competition):
     assert team_games[2].opponent_name == "Opponent 1"
 
 
+def test_get_games_by_team_with_scores(db_session):
+    """Team game score payloads should be computed from grouped point totals."""
+    from tests.builders import GameBuilder, GameScenarioBuilder, PointBuilder
+
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent 1", date=datetime(2026, 1, 1, tzinfo=timezone.utc))
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+    later_game = (
+        GameBuilder(db_session, scenario.competition)
+        .with_opponent("Opponent 2")
+        .with_date(datetime(2026, 1, 2, tzinfo=timezone.utc))
+        .build()
+    )
+
+    PointBuilder(db_session, scenario.game.id, player_ids).number(1).offense().won().complete()
+    PointBuilder(db_session, scenario.game.id, player_ids).number(2).defense().lost().complete()
+    PointBuilder(db_session, later_game.id, player_ids).number(1).defense().won().complete()
+
+    team_games = games.get_games_by_team_with_scores(db_session, scenario.team.id)
+
+    assert [game["opponent_name"] for game in team_games] == [
+        "Opponent 2",
+        "Opponent 1",
+    ]
+    assert team_games[0]["our_score"] == 1
+    assert team_games[0]["opponent_score"] == 0
+    assert team_games[1]["our_score"] == 1
+    assert team_games[1]["opponent_score"] == 1
+    assert team_games[0]["team_name"] == "Team A"
+    assert team_games[0]["competition_name"] == "Comp A"
+
+
 def test_update_game(db_session, sample_game):
     """Test updating a game"""
     update_data = GameUpdate(opponent_name="Updated Opponent")

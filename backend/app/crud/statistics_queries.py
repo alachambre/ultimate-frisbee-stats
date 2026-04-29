@@ -3,7 +3,8 @@ Query helpers for statistics calculations.
 """
 from collections import defaultdict
 from typing import Dict, List, Optional
-from sqlalchemy.orm import Query, Session
+from sqlalchemy import func, select
+from sqlalchemy.orm import Query, Session, selectinload
 
 from app.models.game import Game
 from app.models.point import Point
@@ -13,7 +14,7 @@ from app.models.team import Team
 from app.models.stoppage import Stoppage
 from app.models.turnover import Turnover
 from app.models.strategy import Strategy
-from app.models.base import PointStatusEnum
+from app.models.base import PointStatusEnum, point_players
 
 
 def get_game(db: Session, game_id: int) -> Optional[Game]:
@@ -45,10 +46,57 @@ def _apply_team_dataset_filters(
     return query
 
 
+def _normalize_required_player_ids(required_player_ids: Optional[List[int]]) -> List[int]:
+    if not required_player_ids:
+        return []
+    return sorted(set(required_player_ids))
+
+
+def _apply_required_player_filter(
+    query: Query,
+    required_player_ids: Optional[List[int]],
+) -> Query:
+    normalized_player_ids = _normalize_required_player_ids(required_player_ids)
+    if not normalized_player_ids:
+        return query
+
+    matching_point_ids = (
+        select(point_players.c.point_id)
+        .where(point_players.c.player_id.in_(normalized_player_ids))
+        .group_by(point_players.c.point_id)
+        .having(func.count(func.distinct(point_players.c.player_id)) == len(normalized_player_ids))
+    )
+    return query.filter(Point.id.in_(matching_point_ids))
+
+
+def _apply_point_load_options(
+    query: Query,
+    *,
+    load_players: bool = False,
+    load_strategy: bool = False,
+    load_game: bool = False,
+) -> Query:
+    options = []
+    if load_players:
+        options.append(selectinload(Point.players))
+    if load_strategy:
+        options.append(selectinload(Point.strategy))
+    if load_game:
+        options.append(selectinload(Point.game).selectinload(Game.competition))
+
+    if not options:
+        return query
+    return query.options(*options)
+
+
 def get_completed_points(
     db: Session,
     game_id: int,
     require_timestamps: bool = False,
+    required_player_ids: Optional[List[int]] = None,
+    load_players: bool = False,
+    load_strategy: bool = False,
+    load_game: bool = False,
 ) -> List[Point]:
     query = db.query(Point).filter(
         Point.game_id == game_id,
@@ -59,6 +107,13 @@ def get_completed_points(
             Point.start_datetime.isnot(None),
             Point.end_datetime.isnot(None),
         )
+    query = _apply_required_player_filter(query, required_player_ids)
+    query = _apply_point_load_options(
+        query,
+        load_players=load_players,
+        load_strategy=load_strategy,
+        load_game=load_game,
+    )
     return query.all()
 
 
@@ -66,6 +121,10 @@ def get_completed_points_for_competition(
     db: Session,
     competition_id: int,
     require_timestamps: bool = False,
+    required_player_ids: Optional[List[int]] = None,
+    load_players: bool = False,
+    load_strategy: bool = False,
+    load_game: bool = False,
 ) -> List[Point]:
     query = db.query(Point).join(Game).filter(
         Game.competition_id == competition_id,
@@ -76,6 +135,13 @@ def get_completed_points_for_competition(
             Point.start_datetime.isnot(None),
             Point.end_datetime.isnot(None),
         )
+    query = _apply_required_player_filter(query, required_player_ids)
+    query = _apply_point_load_options(
+        query,
+        load_players=load_players,
+        load_strategy=load_strategy,
+        load_game=load_game,
+    )
     return query.all()
 
 
@@ -83,8 +149,12 @@ def get_completed_points_for_team(
     db: Session,
     team_id: int,
     require_timestamps: bool = False,
+    required_player_ids: Optional[List[int]] = None,
     competition_ids: Optional[List[int]] = None,
     game_ids: Optional[List[int]] = None,
+    load_players: bool = False,
+    load_strategy: bool = False,
+    load_game: bool = False,
 ) -> List[Point]:
     query = _apply_team_dataset_filters(
         db.query(Point),
@@ -99,6 +169,13 @@ def get_completed_points_for_team(
             Point.start_datetime.isnot(None),
             Point.end_datetime.isnot(None),
         )
+    query = _apply_required_player_filter(query, required_player_ids)
+    query = _apply_point_load_options(
+        query,
+        load_players=load_players,
+        load_strategy=load_strategy,
+        load_game=load_game,
+    )
     return query.all()
 
 

@@ -1,6 +1,7 @@
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import case, func
+from sqlalchemy.orm import Query, Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from typing import List, Optional
+from typing import Dict, List, Optional, Sequence
 from datetime import datetime, timedelta, timezone
 from app import models, schemas
 from app.logging_config import get_logger
@@ -64,10 +65,102 @@ def get_all_games(db: Session) -> List[models.Game]:
     return db.query(models.Game).order_by(models.Game.date.desc()).all()
 
 
+def get_game_scores_by_game_ids(
+    db: Session,
+    game_ids: Sequence[int],
+) -> Dict[int, tuple[int, int]]:
+    """Calculate scores for multiple games with a single grouped query."""
+    normalized_game_ids = sorted(set(game_ids))
+    if not normalized_game_ids:
+        return {}
+
+    score_rows = (
+        db.query(
+            models.Point.game_id,
+            func.coalesce(
+                func.sum(case((models.Point.won.is_(True), 1), else_=0)),
+                0,
+            ).label("our_score"),
+            func.count(models.Point.id).label("completed_points"),
+        )
+        .filter(
+            models.Point.game_id.in_(normalized_game_ids),
+            models.Point.status == models.PointStatusEnum.completed,
+        )
+        .group_by(models.Point.game_id)
+        .all()
+    )
+
+    return {
+        row.game_id: (
+            int(row.our_score),
+            int(row.completed_points) - int(row.our_score),
+        )
+        for row in score_rows
+    }
+
+
+def _game_with_score_payload(
+    game: models.Game,
+    scores_by_game_id: Dict[int, tuple[int, int]],
+) -> dict:
+    our_score, opponent_score = scores_by_game_id.get(game.id, (0, 0))
+    competition = game.competition
+    return {
+        "id": game.id,
+        "competition_id": game.competition_id,
+        "opponent_name": game.opponent_name,
+        "date": game.date,
+        "status": game.status,
+        "start_datetime": game.start_datetime,
+        "end_datetime": game.end_datetime,
+        "comments": game.comments,
+        "created_at": game.created_at,
+        "our_score": our_score,
+        "opponent_score": opponent_score,
+        "team_name": (
+            competition.team.name
+            if competition and competition.team
+            else "Unknown"
+        ),
+        "competition_name": competition.name if competition else "Unknown",
+    }
+
+
+def _games_with_scores(db: Session, query: Query) -> List[dict]:
+    games = (
+        query.options(
+            joinedload(models.Game.competition).joinedload(models.Competition.team),
+        )
+        .all()
+    )
+    scores_by_game_id = get_game_scores_by_game_ids(db, [game.id for game in games])
+    return [_game_with_score_payload(game, scores_by_game_id) for game in games]
+
+
+def get_all_games_with_scores(db: Session) -> List[dict]:
+    return _games_with_scores(
+        db,
+        db.query(models.Game).order_by(models.Game.date.desc()),
+    )
+
+
 def get_games_by_competition(db: Session, competition_id: int) -> List[models.Game]:
     return db.query(models.Game).filter(
         models.Game.competition_id == competition_id
     ).order_by(models.Game.date.desc()).all()
+
+
+def get_games_by_competition_with_scores(
+    db: Session,
+    competition_id: int,
+) -> List[dict]:
+    return _games_with_scores(
+        db,
+        db.query(models.Game)
+        .filter(models.Game.competition_id == competition_id)
+        .order_by(models.Game.date.desc()),
+    )
 
 
 def get_games_by_team(db: Session, team_id: int) -> List[models.Game]:
@@ -77,6 +170,17 @@ def get_games_by_team(db: Session, team_id: int) -> List[models.Game]:
     ).filter(
         models.Competition.team_id == team_id
     ).order_by(models.Game.date.desc()).all()
+
+
+def get_games_by_team_with_scores(db: Session, team_id: int) -> List[dict]:
+    """Get all games for a team across all competitions with grouped scores."""
+    return _games_with_scores(
+        db,
+        db.query(models.Game)
+        .join(models.Competition)
+        .filter(models.Competition.team_id == team_id)
+        .order_by(models.Game.date.desc()),
+    )
 
 
 def update_game(db: Session, game_id: int, game_update: schemas.GameUpdate) -> Optional[models.Game]:
@@ -133,13 +237,7 @@ def delete_game(db: Session, game_id: int) -> bool:
 
 def get_game_score(db: Session, game_id: int) -> tuple[int, int]:
     """Calculate the score for a game (our_score, opponent_score)"""
-    from app.crud.points import get_points_by_game
-    points = get_points_by_game(db, game_id)
-    # Only count completed points for score calculation
-    completed_points = [p for p in points if p.status == models.PointStatusEnum.completed]
-    our_score = sum(1 for p in completed_points if p.won)
-    opponent_score = len(completed_points) - our_score
-    return our_score, opponent_score
+    return get_game_scores_by_game_ids(db, [game_id]).get(game_id, (0, 0))
 
 
 def get_game_detail(db: Session, game_id: int) -> Optional[dict]:

@@ -1,7 +1,7 @@
 """
 Base classes, enums, and association tables for database models
 """
-from sqlalchemy import Table, Column, Integer, ForeignKey, Enum
+from sqlalchemy import Table, Column, Integer, ForeignKey, Enum, Index
 from sqlalchemy.ext.declarative import declarative_base
 import enum
 
@@ -42,7 +42,8 @@ point_players = Table(
     'point_players',
     Base.metadata,
     Column('point_id', Integer, ForeignKey('points.id', ondelete='CASCADE'), primary_key=True),
-    Column('player_id', Integer, ForeignKey('players.id', ondelete='CASCADE'), primary_key=True)
+    Column('player_id', Integer, ForeignKey('players.id', ondelete='CASCADE'), primary_key=True),
+    Index('idx_point_players_player_id', 'player_id'),
 )
 
 competition_players = Table(
