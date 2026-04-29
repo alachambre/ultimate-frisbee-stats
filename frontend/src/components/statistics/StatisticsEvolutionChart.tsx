@@ -2,10 +2,12 @@ import { useMemo } from "react";
 import { Box } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import {
+  BarController,
   BarElement,
   CategoryScale,
   Chart as ChartJS,
   Legend,
+  LineController,
   LinearScale,
   LineElement,
   PointElement,
@@ -28,9 +30,11 @@ import {
 } from "./statisticsEvolutionUtils";
 
 ChartJS.register(
+  BarController,
   BarElement,
   CategoryScale,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Tooltip,

@@ -96,6 +96,7 @@
   "evolution": {
     "title": "\u00c9volution",
     "chartTitle": "Graphique d'\u00e9volution",
+    "chartLoading": "Chargement du graphique d'\u00e9volution...",
     "tableTitle": "Donn\u00e9es d'\u00e9volution",
     "loading": "Chargement de l'\u00e9volution...",
     "empty": "Aucun match compl\u00e9t\u00e9 n'est disponible pour cette s\u00e9lection.",

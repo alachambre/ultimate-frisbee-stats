@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { render, screen, within } from "../../../test/test-utils";
+import { Chart as ChartJS } from "chart.js";
+import { render, screen, waitFor, within } from "../../../test/test-utils";
 import userEvent from "@testing-library/user-event";
 import type { TeamEvolutionResponse } from "../../../types";
 import StatisticsEvolutionTable from "../StatisticsEvolutionTable";
@@ -41,6 +42,15 @@ const baseEvolution: TeamEvolutionResponse = {
       format: "percentage",
       higher_is_better: true,
     },
+    {
+      id: "points_won",
+      label: "Points won",
+      description: "Completed points won by us.",
+      unit: "count",
+      group: "results",
+      format: "integer",
+      higher_is_better: true,
+    },
   ],
   presets: [
     {
@@ -63,13 +73,21 @@ const baseEvolution: TeamEvolutionResponse = {
         total_our_turnovers: 4,
         total_opponent_turnovers: 5,
         offense_hold_rate: 0.5,
+        points_won: 2,
       },
     },
   ],
 };
 
 describe("StatisticsEvolutionTable", () => {
-  it("renders the default preset columns and omitted games state", () => {
+  it("registers Chart.js controllers needed by the lazy evolution chart", async () => {
+    await import("../StatisticsEvolutionChart");
+
+    expect(() => ChartJS.registry.getController("bar")).not.toThrow();
+    expect(() => ChartJS.registry.getController("line")).not.toThrow();
+  });
+
+  it("renders the default preset columns and omitted games state", async () => {
     render(
       <StatisticsEvolutionTable
         evolution={baseEvolution}
@@ -81,7 +99,7 @@ describe("StatisticsEvolutionTable", () => {
     expect(screen.getByText("Evolution")).toBeInTheDocument();
     expect(screen.getByText("Evolution chart")).toBeInTheDocument();
     expect(screen.getByText("1 game omitted")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+    expect(await screen.findByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
       "data-chart-type",
       "bar"
     );
@@ -96,6 +114,26 @@ describe("StatisticsEvolutionTable", () => {
     expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
     expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
     expect(within(table).getByText("2 - 1")).toBeInTheDocument();
+  });
+
+  it("allows adding compatible count metrics", async () => {
+    const user = userEvent.setup();
+    render(
+      <StatisticsEvolutionTable
+        evolution={baseEvolution}
+        isLoading={false}
+        error={null}
+      />
+    );
+
+    await user.click(screen.getByLabelText("Metrics"));
+    const listbox = await screen.findByRole("listbox");
+    await user.click(within(listbox).getByText("Points won"));
+
+    const table = screen.getByRole("table", { name: "Statistics evolution table" });
+    expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("Points won")).toBeInTheDocument();
   });
 
   it("keeps metric selections compatible and supports chart modes", async () => {
@@ -115,30 +153,36 @@ describe("StatisticsEvolutionTable", () => {
     const table = screen.getByRole("table", { name: "Statistics evolution table" });
     expect(within(table).getByText("Hold rate")).toBeInTheDocument();
     expect(within(table).queryByText("Our turnovers")).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
-      "data-chart-type",
-      "line"
-    );
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+        "data-chart-type",
+        "line"
+      );
+    });
 
     await user.click(screen.getByRole("button", { name: "Bar" }));
     expect(screen.getByRole("button", { name: "Bar" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
-    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
-      "data-chart-type",
-      "bar"
-    );
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+        "data-chart-type",
+        "bar"
+      );
+    });
 
     await user.click(screen.getByRole("button", { name: "Line" }));
     expect(screen.getByRole("button", { name: "Line" })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
-    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
-      "data-chart-type",
-      "line"
-    );
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+        "data-chart-type",
+        "line"
+      );
+    });
   });
 
   it("renders loading, error, and empty states", () => {

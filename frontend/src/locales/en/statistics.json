@@ -96,6 +96,7 @@
   "evolution": {
     "title": "Evolution",
     "chartTitle": "Evolution chart",
+    "chartLoading": "Loading evolution chart...",
     "tableTitle": "Evolution data",
     "loading": "Loading evolution data...",
     "empty": "No completed games are available for this selection.",

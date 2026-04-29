@@ -109,6 +109,18 @@ pytest tests/test_api/test_route_authorization_api.py -v
 pytest tests/test_api/test_users_api.py -v
 ```
 
+## Statistics APIs
+
+Team statistics support aggregate and evolution workflows. The evolution endpoint
+is:
+
+- `GET /statistics/teams/{team_id}/evolution`
+
+It accepts repeated `competition_ids`, `game_ids`, and `player_ids` query params.
+Games with no completed points are omitted from the series. The response includes
+the backend-owned metric catalog, default preset, omitted game count, and
+chronological per-game values for the frontend chart/table.
+
 ## Project Layout
 
 - `app/routers/` HTTP endpoints per domain

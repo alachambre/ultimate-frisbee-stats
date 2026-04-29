@@ -206,7 +206,7 @@ Acceptance criteria:
 - The chart is usable on mobile.
 - Chart empty state is clear when the filtered dataset has fewer than one completed game.
 
-### Milestone 5: Polish, Tests, And Documentation
+### Milestone 5: Polish, Tests, And Documentation - Done
 
 Purpose: make the feature durable and ready for broader use.
 
