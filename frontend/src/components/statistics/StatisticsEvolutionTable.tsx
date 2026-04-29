@@ -69,7 +69,7 @@ export default function StatisticsEvolutionTable({
 }: StatisticsEvolutionTableProps) {
   const { t, i18n } = useTranslation(["statistics", "common"]);
   const theme = useTheme();
-  const [selectedMetricIds, setSelectedMetricIds] = useState<string[]>([]);
+  const [selectedMetricIds, setSelectedMetricIds] = useState<string[] | null>(null);
   const [chartMode, setChartMode] = useState<EvolutionChartMode>("auto");
 
   const metricsById = useMemo(
@@ -81,13 +81,15 @@ export default function StatisticsEvolutionTable({
     [evolution, metricsById]
   );
   const selectedMetrics = useMemo(() => {
+    if (selectedMetricIds === null) {
+      return getCompatibleEvolutionMetrics(defaultPresetMetrics);
+    }
+
     const metricsFromSelection = selectedMetricIds
       .map((metricId) => metricsById.get(metricId))
       .filter((metric): metric is EvolutionMetricDefinition => metric !== undefined);
 
-    return getCompatibleEvolutionMetrics(
-      metricsFromSelection.length > 0 ? metricsFromSelection : defaultPresetMetrics
-    );
+    return getCompatibleEvolutionMetrics(metricsFromSelection);
   }, [defaultPresetMetrics, metricsById, selectedMetricIds]);
   const selectedUnit = selectedMetrics[0]?.unit;
 
@@ -150,8 +152,6 @@ export default function StatisticsEvolutionTable({
 
       {!hasRows ? (
         <Alert severity="info">{t("statistics:evolution.empty")}</Alert>
-      ) : !hasMetrics ? (
-        <Alert severity="info">{t("statistics:evolution.noMetrics")}</Alert>
       ) : (
         <Stack spacing={2}>
           <Box
@@ -286,11 +286,15 @@ export default function StatisticsEvolutionTable({
                 </Box>
               }
             >
-              <StatisticsEvolutionChart
-                evolution={evolution}
-                selectedMetrics={selectedMetrics}
-                chartMode={chartMode}
-              />
+              {hasMetrics ? (
+                <StatisticsEvolutionChart
+                  evolution={evolution}
+                  selectedMetrics={selectedMetrics}
+                  chartMode={chartMode}
+                />
+              ) : (
+                <Alert severity="info">{t("statistics:evolution.noMetrics")}</Alert>
+              )}
             </Suspense>
           </Box>
 

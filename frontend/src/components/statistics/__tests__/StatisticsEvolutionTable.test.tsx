@@ -185,6 +185,46 @@ describe("StatisticsEvolutionTable", () => {
     });
   });
 
+  it("allows clearing all metric selections without restoring the default preset", async () => {
+    const user = userEvent.setup();
+    render(
+      <StatisticsEvolutionTable
+        evolution={baseEvolution}
+        isLoading={false}
+        error={null}
+      />
+    );
+
+    await screen.findByRole("img", { name: "Statistics evolution chart" });
+    await user.click(screen.getByLabelText("Metrics"));
+
+    let listbox = await screen.findByRole("listbox");
+    await user.click(within(listbox).getByText("Our turnovers"));
+    await user.click(within(listbox).getByText("Opponent turnovers"));
+
+    expect(
+      screen.getByText("No evolution metrics are available for this selection.")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Statistics evolution chart" })
+    ).not.toBeInTheDocument();
+
+    listbox = screen.getByRole("listbox");
+    await user.click(within(listbox).getByText("Points won"));
+
+    await waitFor(() => {
+      expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+        "data-chart-type",
+        "bar"
+      );
+    });
+
+    const table = screen.getByRole("table", { name: "Statistics evolution table" });
+    expect(within(table).getByText("Points won")).toBeInTheDocument();
+    expect(within(table).queryByText("Our turnovers")).not.toBeInTheDocument();
+    expect(within(table).queryByText("Opponent turnovers")).not.toBeInTheDocument();
+  });
+
   it("renders loading, error, and empty states", () => {
     const { rerender } = render(
       <StatisticsEvolutionTable isLoading error={null} />
