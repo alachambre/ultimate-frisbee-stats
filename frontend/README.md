@@ -100,7 +100,7 @@ The `/statistics` page is filter-driven:
 
 - pick one team
 - optionally narrow the dataset with competitions and games
-- optionally apply player cohort filters when the current role can access them
+- optionally apply player filters when the current role can access them
 
 The Team tab shows aggregate values. The Evolution tab uses
 `GET /statistics/teams/{team_id}/evolution` to plot game-by-game team metrics.

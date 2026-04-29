@@ -57,7 +57,7 @@
     "selectCompetition": "Select competition",
     "selectGame": "Select game",
     "selectPlayer": "Select player",
-    "playerCohort": "Players cohort",
+    "playerFilter": "Player filter",
     "selectTeamPrompt": "Select a team to start exploring statistics.",
     "choosePlayerPrompt": "Choose one or more players to display shared statistics.",
     "cohortFilterActive": "Active player filter: {{count}} selected",
@@ -211,7 +211,7 @@
     "competition": "Competition",
     "game": "Game",
     "cohortNames": "Players: {{names}}",
-    "cohortExplanation": "These statistics are computed from points where all selected players were on the line together."
+    "cohortExplanation": "Stats are computed from points where all selected players were on the line together."
   },
   "tooltips": {
     "cleanPointRate": "Offensive points won without us committing a turnover, out of all offensive points played.",

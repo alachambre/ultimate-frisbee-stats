@@ -76,7 +76,7 @@ describe("StatisticsPage", () => {
     });
 
     expect(screen.queryByRole("tab", { name: "Players" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("4. Players cohort")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("4. Player filter")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
   });
 
@@ -299,7 +299,7 @@ describe("StatisticsPage", () => {
     expect(within(listbox).queryByText("Beta")).not.toBeInTheDocument();
   });
 
-  it("supports selecting multiple players as a cohort filter", async () => {
+  it("supports selecting multiple players as a player filter", async () => {
     const user = userEvent.setup();
     const team = await createTeam({ name: "Monkey" });
     const player1 = await createPlayer({
@@ -339,18 +339,17 @@ describe("StatisticsPage", () => {
     window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
     render(<StatisticsPage />);
 
-    const playersInput = await screen.findByLabelText("4. Players cohort");
+    const playersInput = await screen.findByLabelText("4. Player filter");
     await user.click(playersInput);
-    let listbox = await screen.findByRole("listbox");
+    const listbox = await screen.findByRole("listbox");
     await user.click(within(listbox).getByText("Bob"));
-
-    await waitFor(() => {
-      expect(screen.getByText("Active player filter: 1 selected")).toBeInTheDocument();
-    });
-
-    await user.click(playersInput);
-    listbox = await screen.findByRole("listbox");
     await user.click(within(listbox).getByText("Tom"));
+
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    expect(screen.queryByText("Active player filter: 1 selected")).not.toBeInTheDocument();
+    expect(window.location.search).not.toContain("playerIds=");
+
+    await user.keyboard("{Escape}");
 
     await waitFor(() => {
       expect(screen.getByText("Active player filter: 2 selected")).toBeInTheDocument();
@@ -394,7 +393,7 @@ describe("StatisticsPage", () => {
     await user.click(gamesInput);
     await user.click(await screen.findByText("Rivals A"));
 
-    const playersInput = screen.getByLabelText("4. Players cohort");
+    const playersInput = screen.getByLabelText("4. Player filter");
     await user.click(playersInput);
 
     await waitFor(() => {
@@ -446,11 +445,12 @@ describe("StatisticsPage", () => {
     window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
     render(<StatisticsPage />);
 
-    const playersInput = await screen.findByLabelText("4. Players cohort");
+    const playersInput = await screen.findByLabelText("4. Player filter");
     await user.click(playersInput);
 
     let listbox = await screen.findByRole("listbox");
     await user.click(within(listbox).getByText("Bob"));
+    await user.keyboard("{Escape}");
 
     await waitFor(() => {
       expect(screen.getByText("Active player filter: 1 selected")).toBeInTheDocument();

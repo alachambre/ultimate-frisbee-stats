@@ -323,7 +323,7 @@ describe("PlayerScopeStatistics", () => {
     expect(screen.getByText("Players: Alice, Bob")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "These statistics are computed from points where all selected players were on the line together."
+        "Stats are computed from points where all selected players were on the line together."
       )
     ).toBeInTheDocument();
   });

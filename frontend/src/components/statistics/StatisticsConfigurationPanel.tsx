@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Autocomplete,
@@ -26,6 +26,18 @@ import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 
 const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkboxCheckedIcon = <CheckBoxIcon fontSize="small" />;
+
+function normalizeIds(ids: number[]): number[] {
+  return Array.from(new Set(ids)).sort((a, b) => a - b);
+}
+
+function areSameIds(left: number[], right: number[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((id, index) => id === right[index]);
+}
 
 interface StatisticsConfigurationPanelProps {
   isConfigurationExpanded: boolean;
@@ -73,11 +85,27 @@ export default function StatisticsConfigurationPanel({
   onClearPlayersSelection,
 }: StatisticsConfigurationPanelProps) {
   const { t, i18n } = useTranslation(["statistics", "games", "common"]);
+  const [isPlayerFilterOpen, setIsPlayerFilterOpen] = useState(false);
+  const [draftPlayerIds, setDraftPlayerIds] = useState(() =>
+    normalizeIds(selectedPlayerIds)
+  );
 
   const selectedTeam = useMemo(
     () => sortedTeams.find((team) => team.id === teamId) ?? null,
     [sortedTeams, teamId]
   );
+  const draftPlayerIdsSet = useMemo(() => new Set(draftPlayerIds), [draftPlayerIds]);
+  const draftSelectedPlayers = useMemo(
+    () => playersForTeam.filter((player) => draftPlayerIdsSet.has(player.id)),
+    [draftPlayerIdsSet, playersForTeam]
+  );
+  const commitPlayerFilter = useCallback(() => {
+    const nextPlayerIds = normalizeIds(draftPlayerIds);
+
+    if (!areSameIds(nextPlayerIds, normalizeIds(selectedPlayerIds))) {
+      onSelectPlayerIds(nextPlayerIds);
+    }
+  }, [draftPlayerIds, onSelectPlayerIds, selectedPlayerIds]);
 
   return (
     <Paper
@@ -257,8 +285,26 @@ export default function StatisticsConfigurationPanel({
                 multiple
                 disableCloseOnSelect
                 options={playersForTeam}
-                value={selectedPlayers}
-                onChange={(_, players) => onSelectPlayerIds(players.map((player) => player.id))}
+                value={isPlayerFilterOpen ? draftSelectedPlayers : selectedPlayers}
+                onOpen={() => {
+                  setDraftPlayerIds(normalizeIds(selectedPlayerIds));
+                  setIsPlayerFilterOpen(true);
+                }}
+                onClose={() => {
+                  setIsPlayerFilterOpen(false);
+                  commitPlayerFilter();
+                }}
+                onChange={(_, players) => {
+                  const nextPlayerIds = normalizeIds(players.map((player) => player.id));
+                  setDraftPlayerIds(nextPlayerIds);
+
+                  if (
+                    !isPlayerFilterOpen &&
+                    !areSameIds(nextPlayerIds, normalizeIds(selectedPlayerIds))
+                  ) {
+                    onSelectPlayerIds(nextPlayerIds);
+                  }
+                }}
                 disabled={
                   teamId === undefined ||
                   controlsLoading ||
@@ -303,7 +349,7 @@ export default function StatisticsConfigurationPanel({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={`4. ${t("statistics:workflow.playerCohort")}`}
+                    label={`4. ${t("statistics:workflow.playerFilter")}`}
                     placeholder={t("statistics:workflow.selectPlayer")}
                     helperText={
                       teamId === undefined
