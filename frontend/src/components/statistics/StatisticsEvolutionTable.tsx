@@ -33,6 +33,9 @@ import {
   formatEvolutionMetricValue,
   getCompatibleEvolutionMetrics,
   getEvolutionScoreLabel,
+  getEvolutionMetricGroupLabel,
+  localizeEvolutionMetric,
+  type EvolutionTranslator,
   type EvolutionChartMode,
 } from "./statisticsEvolutionUtils";
 
@@ -71,10 +74,18 @@ export default function StatisticsEvolutionTable({
   const theme = useTheme();
   const [selectedMetricIds, setSelectedMetricIds] = useState<string[] | null>(null);
   const [chartMode, setChartMode] = useState<EvolutionChartMode>("auto");
+  const translateEvolution = t as EvolutionTranslator;
+  const localizedMetrics = useMemo(
+    () =>
+      (evolution?.metrics ?? []).map((metric) =>
+        localizeEvolutionMetric(metric, translateEvolution)
+      ),
+    [evolution?.metrics, translateEvolution]
+  );
 
   const metricsById = useMemo(
-    () => new Map((evolution?.metrics ?? []).map((metric) => [metric.id, metric])),
-    [evolution?.metrics]
+    () => new Map(localizedMetrics.map((metric) => [metric.id, metric])),
+    [localizedMetrics]
   );
   const defaultPresetMetrics = useMemo(
     () => (evolution ? getDefaultPresetMetrics(evolution, metricsById) : []),
@@ -195,7 +206,7 @@ export default function StatisticsEvolutionTable({
                   multiple
                   disableCloseOnSelect
                   size="small"
-                  options={evolution.metrics}
+                  options={localizedMetrics}
                   value={selectedMetrics}
                   isOptionEqualToValue={(option, value) => option.id === value.id}
                   getOptionLabel={(option) => option.label}
@@ -215,7 +226,10 @@ export default function StatisticsEvolutionTable({
                         <ListItemText
                           primary={option.label}
                           secondary={t("statistics:evolution.metricOptionContext", {
-                            group: option.group,
+                            group: getEvolutionMetricGroupLabel(
+                              option.group,
+                              translateEvolution
+                            ),
                             unit:
                               option.unit === "percentage"
                                 ? t("statistics:evolution.metricUnitPercentage")

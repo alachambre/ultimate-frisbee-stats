@@ -17,7 +17,7 @@ const baseEvolution: TeamEvolutionResponse = {
   metrics: [
     {
       id: "total_our_turnovers",
-      label: "Our turnovers",
+      label: "Our turns",
       description: "Our turns",
       unit: "count",
       group: "turnovers",
@@ -26,12 +26,21 @@ const baseEvolution: TeamEvolutionResponse = {
     },
     {
       id: "total_opponent_turnovers",
-      label: "Opponent turnovers",
+      label: "Opponent turns",
       description: "Opponent turns",
       unit: "count",
       group: "turnovers",
       format: "integer",
       higher_is_better: true,
+    },
+    {
+      id: "defense_our_turnovers",
+      label: "D-line turns",
+      description: "Possession turnovers committed by us on points started on defense.",
+      unit: "count",
+      group: "turnovers",
+      format: "integer",
+      higher_is_better: false,
     },
     {
       id: "offense_hold_rate",
@@ -72,6 +81,7 @@ const baseEvolution: TeamEvolutionResponse = {
       metrics: {
         total_our_turnovers: 4,
         total_opponent_turnovers: 5,
+        defense_our_turnovers: 0,
         offense_hold_rate: 0.5,
         points_won: 2,
       },
@@ -111,8 +121,8 @@ describe("StatisticsEvolutionTable", () => {
     const table = screen.getByRole("table", { name: "Statistics evolution table" });
     expect(within(table).getByText("Rivals")).toBeInTheDocument();
     expect(within(table).getByText("Spring Cup")).toBeInTheDocument();
-    expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
-    expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("Our turns")).toBeInTheDocument();
+    expect(within(table).getByText("Opponent turns")).toBeInTheDocument();
     expect(within(table).getByText("2 - 1")).toBeInTheDocument();
   });
 
@@ -131,8 +141,8 @@ describe("StatisticsEvolutionTable", () => {
     await user.click(within(listbox).getByText("Points won"));
 
     const table = screen.getByRole("table", { name: "Statistics evolution table" });
-    expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
-    expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("Our turns")).toBeInTheDocument();
+    expect(within(table).getByText("Opponent turns")).toBeInTheDocument();
     expect(within(table).getByText("Points won")).toBeInTheDocument();
   });
 
@@ -152,7 +162,7 @@ describe("StatisticsEvolutionTable", () => {
 
     const table = screen.getByRole("table", { name: "Statistics evolution table" });
     expect(within(table).getByText("Hold rate")).toBeInTheDocument();
-    expect(within(table).queryByText("Our turnovers")).not.toBeInTheDocument();
+    expect(within(table).queryByText("Our turns")).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
         "data-chart-type",
@@ -199,8 +209,8 @@ describe("StatisticsEvolutionTable", () => {
     await user.click(screen.getByLabelText("Metrics"));
 
     let listbox = await screen.findByRole("listbox");
-    await user.click(within(listbox).getByText("Our turnovers"));
-    await user.click(within(listbox).getByText("Opponent turnovers"));
+    await user.click(within(listbox).getByText("Our turns"));
+    await user.click(within(listbox).getByText("Opponent turns"));
 
     expect(
       screen.getByText("No evolution metrics are available for this selection.")
@@ -221,8 +231,8 @@ describe("StatisticsEvolutionTable", () => {
 
     const table = screen.getByRole("table", { name: "Statistics evolution table" });
     expect(within(table).getByText("Points won")).toBeInTheDocument();
-    expect(within(table).queryByText("Our turnovers")).not.toBeInTheDocument();
-    expect(within(table).queryByText("Opponent turnovers")).not.toBeInTheDocument();
+    expect(within(table).queryByText("Our turns")).not.toBeInTheDocument();
+    expect(within(table).queryByText("Opponent turns")).not.toBeInTheDocument();
   });
 
   it("renders loading, error, and empty states", () => {

@@ -6,6 +6,34 @@ import type {
 
 export type EvolutionChartMode = "auto" | "line" | "bar";
 export type EvolutionChartType = "line" | "bar";
+export type EvolutionTranslator = (
+  key: string,
+  options: { defaultValue: string }
+) => string;
+
+export function localizeEvolutionMetric(
+  metric: EvolutionMetricDefinition,
+  translate: EvolutionTranslator
+): EvolutionMetricDefinition {
+  return {
+    ...metric,
+    label: translate(`statistics:evolution.metrics.${metric.id}.label`, {
+      defaultValue: metric.label,
+    }),
+    description: translate(`statistics:evolution.metrics.${metric.id}.description`, {
+      defaultValue: metric.description,
+    }),
+  };
+}
+
+export function getEvolutionMetricGroupLabel(
+  group: string,
+  translate: EvolutionTranslator
+): string {
+  return translate(`statistics:evolution.metricGroups.${group}`, {
+    defaultValue: group,
+  });
+}
 
 export function formatEvolutionMetricValue(
   metric: EvolutionMetricDefinition,

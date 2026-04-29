@@ -121,7 +121,83 @@
     "competition": "Comp\u00e9tition",
     "score": "Score",
     "completedPoints": "Points",
-    "tableAriaLabel": "Tableau d'\u00e9volution des statistiques"
+    "tableAriaLabel": "Tableau d'\u00e9volution des statistiques",
+    "metricGroups": {
+      "turnovers": "Turns",
+      "results": "R\u00e9sultats",
+      "offense": "Attaque",
+      "defense": "D\u00e9fense"
+    },
+    "metrics": {
+      "total_our_turnovers": {
+        "label": "Nos turns",
+        "description": "Total des turns commis par nous sur le match."
+      },
+      "total_opponent_turnovers": {
+        "label": "Turns adverses",
+        "description": "Total des turns commis par l'adversaire sur le match."
+      },
+      "offense_our_turnovers": {
+        "label": "Turns O-line",
+        "description": "Turns commis par nous sur les points commenc\u00e9s en attaque."
+      },
+      "defense_our_turnovers": {
+        "label": "Turns D-line",
+        "description": "Turns commis par nous sur les points commenc\u00e9s en d\u00e9fense."
+      },
+      "defense_opponent_turnovers": {
+        "label": "Turns adverses contre D-line",
+        "description": "Turns commis par l'adversaire sur les points que nous avons commenc\u00e9s en d\u00e9fense."
+      },
+      "points_won": {
+        "label": "Points gagn\u00e9s",
+        "description": "Points compl\u00e9t\u00e9s gagn\u00e9s par nous."
+      },
+      "points_lost": {
+        "label": "Points perdus",
+        "description": "Points compl\u00e9t\u00e9s gagn\u00e9s par l'adversaire."
+      },
+      "holds": {
+        "label": "Holds",
+        "description": "Points d'attaque gagn\u00e9s par nous."
+      },
+      "breaks": {
+        "label": "Breaks",
+        "description": "Points de d\u00e9fense gagn\u00e9s par nous."
+      },
+      "offense_hold_rate": {
+        "label": "Taux de hold",
+        "description": "Points d'attaque gagn\u00e9s, sur tous les points d'attaque jou\u00e9s."
+      },
+      "offense_clean_hold_rate": {
+        "label": "Taux de clean hold",
+        "description": "Points d'attaque gagn\u00e9s sans que nous ne commettions de turnover, sur tous les points d'attaque jou\u00e9s."
+      },
+      "defense_turnover_rate": {
+        "label": "Points D avec turns",
+        "description": "Points de d\u00e9fense avec au moins un turnover de possession, sur tous les points de d\u00e9fense jou\u00e9s."
+      },
+      "defense_break_rate": {
+        "label": "Taux de break",
+        "description": "Points de d\u00e9fense gagn\u00e9s, sur tous les points de d\u00e9fense jou\u00e9s."
+      },
+      "defense_clean_break_rate": {
+        "label": "Taux de clean break",
+        "description": "Points de d\u00e9fense gagn\u00e9s sans que nous ne commettions de turnover, sur tous les points de d\u00e9fense jou\u00e9s."
+      },
+      "defense_conversion_rate": {
+        "label": "Taux de conversion",
+        "description": "Points de d\u00e9fense gagn\u00e9s parmi les points de d\u00e9fense avec au moins un turnover de possession."
+      },
+      "defense_clean_conversion_rate": {
+        "label": "Taux de clean conversion",
+        "description": "Breaks gagn\u00e9s sans que nous ne commettions de turnover, parmi tous les breaks."
+      },
+      "defense_pull_inbound_rate": {
+        "label": "Taux de Pull dans le terrain",
+        "description": "Pulls suivis qui sont rest\u00e9s dans le terrain, sur tous les pulls suivis."
+      }
+    }
   },
   "teamStats": {
     "title": "Statistiques d'équipe",

@@ -24,7 +24,7 @@ TURNOVER_BATTLE_PRESET_ID = "turnover_battle"
 TEAM_EVOLUTION_METRICS: tuple[EvolutionMetricDefinition, ...] = (
     EvolutionMetricDefinition(
         id="total_our_turnovers",
-        label="Our turnovers",
+        label="Our turns",
         description="Total possession turnovers committed by us across the game.",
         unit=EvolutionMetricUnit.count,
         group="turnovers",
@@ -33,7 +33,7 @@ TEAM_EVOLUTION_METRICS: tuple[EvolutionMetricDefinition, ...] = (
     ),
     EvolutionMetricDefinition(
         id="total_opponent_turnovers",
-        label="Opponent turnovers",
+        label="Opponent turns",
         description="Total possession turnovers committed by the opponent across the game.",
         unit=EvolutionMetricUnit.count,
         group="turnovers",
@@ -42,7 +42,7 @@ TEAM_EVOLUTION_METRICS: tuple[EvolutionMetricDefinition, ...] = (
     ),
     EvolutionMetricDefinition(
         id="offense_our_turnovers",
-        label="Our offensive turnovers",
+        label="O-line turns",
         description="Possession turnovers committed by us on points started on offense.",
         unit=EvolutionMetricUnit.count,
         group="turnovers",
@@ -50,8 +50,17 @@ TEAM_EVOLUTION_METRICS: tuple[EvolutionMetricDefinition, ...] = (
         higher_is_better=False,
     ),
     EvolutionMetricDefinition(
+        id="defense_our_turnovers",
+        label="D-line turns",
+        description="Possession turnovers committed by us on points started on defense.",
+        unit=EvolutionMetricUnit.count,
+        group="turnovers",
+        format=EvolutionMetricFormat.integer,
+        higher_is_better=False,
+    ),
+    EvolutionMetricDefinition(
         id="defense_opponent_turnovers",
-        label="Opponent turnovers on our defense",
+        label="Opponent turns vs D-line",
         description="Possession turnovers committed by the opponent on points we started on defense.",
         unit=EvolutionMetricUnit.count,
         group="turnovers",
@@ -117,7 +126,7 @@ TEAM_EVOLUTION_METRICS: tuple[EvolutionMetricDefinition, ...] = (
     ),
     EvolutionMetricDefinition(
         id="defense_turnover_rate",
-        label="Turnover rate",
+        label="D points with turns",
         description=(
             "Defensive points where at least one possession turnover occurred, "
             "out of all defensive points played."
@@ -313,6 +322,7 @@ def _build_team_evolution_metrics(stats: dict) -> dict[str, int | float]:
             offense["opponent_turnovers"] + defense["opponent_turnovers"]
         ),
         "offense_our_turnovers": offense["our_turnovers"],
+        "defense_our_turnovers": defense["our_turnovers"],
         "defense_opponent_turnovers": defense["opponent_turnovers"],
         "points_won": offense["points_won"] + defense["points_won"],
         "points_lost": offense["points_lost"] + defense["points_lost"],

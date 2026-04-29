@@ -265,8 +265,8 @@ describe("StatisticsPage", () => {
     expect(within(table).getByText("Early Rivals")).toBeInTheDocument();
     expect(within(table).getByText("Late Rivals")).toBeInTheDocument();
     expect(within(table).queryByText("Empty Rivals")).not.toBeInTheDocument();
-    expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
-    expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
+    expect(within(table).getByText("Our turns")).toBeInTheDocument();
+    expect(within(table).getByText("Opponent turns")).toBeInTheDocument();
     expect(within(table).getByText("2 - 0")).toBeInTheDocument();
     expect(within(table).getByText("0 - 1")).toBeInTheDocument();
     expect(screen.getByText("1 game omitted")).toBeInTheDocument();

@@ -121,7 +121,83 @@
     "competition": "Competition",
     "score": "Score",
     "completedPoints": "Points",
-    "tableAriaLabel": "Statistics evolution table"
+    "tableAriaLabel": "Statistics evolution table",
+    "metricGroups": {
+      "turnovers": "Turns",
+      "results": "Results",
+      "offense": "Offense",
+      "defense": "Defense"
+    },
+    "metrics": {
+      "total_our_turnovers": {
+        "label": "Our turns",
+        "description": "Total possession turnovers committed by us across the game."
+      },
+      "total_opponent_turnovers": {
+        "label": "Opponent turns",
+        "description": "Total possession turnovers committed by the opponent across the game."
+      },
+      "offense_our_turnovers": {
+        "label": "O-line turns",
+        "description": "Possession turnovers committed by us on points started on offense."
+      },
+      "defense_our_turnovers": {
+        "label": "D-line turns",
+        "description": "Possession turnovers committed by us on points started on defense."
+      },
+      "defense_opponent_turnovers": {
+        "label": "Opponent turns vs D-line",
+        "description": "Possession turnovers committed by the opponent on points we started on defense."
+      },
+      "points_won": {
+        "label": "Points won",
+        "description": "Completed points won by us."
+      },
+      "points_lost": {
+        "label": "Points lost",
+        "description": "Completed points won by the opponent."
+      },
+      "holds": {
+        "label": "Holds",
+        "description": "Offensive points won by us."
+      },
+      "breaks": {
+        "label": "Breaks",
+        "description": "Defensive points won by us."
+      },
+      "offense_hold_rate": {
+        "label": "Hold rate",
+        "description": "Offensive points won, out of all offensive points played."
+      },
+      "offense_clean_hold_rate": {
+        "label": "Clean hold rate",
+        "description": "Offensive points won without us committing a turnover, out of all offensive points played."
+      },
+      "defense_turnover_rate": {
+        "label": "D points with turns",
+        "description": "Defensive points where at least one possession turnover occurred, out of all defensive points played."
+      },
+      "defense_break_rate": {
+        "label": "Break rate",
+        "description": "Defensive points won, out of all defensive points played."
+      },
+      "defense_clean_break_rate": {
+        "label": "Clean break rate",
+        "description": "Defensive points won without us committing a turnover, out of all defensive points played."
+      },
+      "defense_conversion_rate": {
+        "label": "Conversion rate",
+        "description": "Defensive points won, out of defensive points where at least one possession turnover occurred."
+      },
+      "defense_clean_conversion_rate": {
+        "label": "Clean conversion rate",
+        "description": "Breaks won without us committing a turnover, out of all breaks."
+      },
+      "defense_pull_inbound_rate": {
+        "label": "Pull inbound rate",
+        "description": "Tracked pulls that stayed inbound, out of all tracked pulls."
+      }
+    }
   },
   "teamStats": {
     "title": "Team statistics",

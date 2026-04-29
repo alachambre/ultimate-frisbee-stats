@@ -1241,6 +1241,7 @@ def test_get_team_evolution_statistics_success(client: TestClient, db_session: S
     assert games[0]["opponent_score"] == 0
     assert games[0]["completed_points"] == 2
     assert games[0]["metrics"]["total_opponent_turnovers"] == 1
+    assert games[0]["metrics"]["defense_our_turnovers"] == 0
     assert games[0]["metrics"]["defense_break_rate"] == 1.0
     assert games[1]["metrics"]["total_our_turnovers"] == 1
 

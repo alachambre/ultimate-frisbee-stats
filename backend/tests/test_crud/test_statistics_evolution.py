@@ -12,6 +12,7 @@ EXPECTED_TEAM_EVOLUTION_METRIC_IDS = {
     "total_our_turnovers",
     "total_opponent_turnovers",
     "offense_our_turnovers",
+    "defense_our_turnovers",
     "defense_opponent_turnovers",
     "points_won",
     "points_lost",
@@ -123,8 +124,38 @@ def test_get_team_evolution_returns_chronological_metric_rows_and_omits_empty_ga
     assert late_metrics["total_our_turnovers"] == 1
     assert late_metrics["total_opponent_turnovers"] == 0
     assert late_metrics["offense_our_turnovers"] == 1
+    assert late_metrics["defense_our_turnovers"] == 0
     assert late_metrics["points_lost"] == 1
     assert late_metrics["offense_hold_rate"] == 0.0
+
+
+def test_get_team_evolution_counts_d_line_turnovers(db_session):
+    scenario = (
+        GameScenarioBuilder(db_session)
+        .with_team("Team A")
+        .with_competition("Comp A")
+        .with_game("Opponent", date=datetime(2026, 1, 1, 9, tzinfo=timezone.utc))
+        .with_players(7)
+        .build()
+    )
+    player_ids = [player.id for player in scenario.players]
+
+    (
+        PointBuilder(db_session, scenario.game.id, player_ids)
+        .number(1)
+        .defense()
+        .lost()
+        .with_turnover(10)
+        .with_turnover(20)
+        .complete()
+    )
+
+    result = get_team_evolution(db_session, scenario.team.id)
+
+    assert result is not None
+    metrics = result["games"][0]["metrics"]
+    assert metrics["defense_our_turnovers"] == 1
+    assert metrics["defense_opponent_turnovers"] == 1
 
 
 def test_get_team_evolution_applies_competition_and_game_filters(db_session):

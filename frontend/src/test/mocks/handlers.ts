@@ -423,7 +423,7 @@ function buildGamePointTimelineResponse(gameId: number, requiredPlayerIds: numbe
 const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
   {
     id: "total_our_turnovers",
-    label: "Our turnovers",
+    label: "Our turns",
     description: "Total possession turnovers committed by us across the game.",
     unit: "count",
     group: "turnovers",
@@ -432,7 +432,7 @@ const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
   },
   {
     id: "total_opponent_turnovers",
-    label: "Opponent turnovers",
+    label: "Opponent turns",
     description: "Total possession turnovers committed by the opponent across the game.",
     unit: "count",
     group: "turnovers",
@@ -441,7 +441,7 @@ const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
   },
   {
     id: "offense_our_turnovers",
-    label: "Our offensive turnovers",
+    label: "O-line turns",
     description: "Possession turnovers committed by us on points started on offense.",
     unit: "count",
     group: "turnovers",
@@ -449,8 +449,17 @@ const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
     higher_is_better: false,
   },
   {
+    id: "defense_our_turnovers",
+    label: "D-line turns",
+    description: "Possession turnovers committed by us on points started on defense.",
+    unit: "count",
+    group: "turnovers",
+    format: "integer",
+    higher_is_better: false,
+  },
+  {
     id: "defense_opponent_turnovers",
-    label: "Opponent turnovers on our defense",
+    label: "Opponent turns vs D-line",
     description: "Possession turnovers committed by the opponent on points we started on defense.",
     unit: "count",
     group: "turnovers",
@@ -513,7 +522,7 @@ const TEAM_EVOLUTION_METRICS: TeamEvolutionResponse["metrics"] = [
   },
   {
     id: "defense_turnover_rate",
-    label: "Turnover rate",
+    label: "D points with turns",
     description: "Defensive points where at least one possession turnover occurred, out of all defensive points played.",
     unit: "percentage",
     group: "defense",
@@ -649,6 +658,7 @@ function buildTeamEvolutionMetricsForPoints(gamePoints: PointWithPlayers[]): Rec
     total_our_turnovers: offenseOurTurnovers + defenseOurTurnovers,
     total_opponent_turnovers: offenseOpponentTurnovers + defenseOpponentTurnovers,
     offense_our_turnovers: offenseOurTurnovers,
+    defense_our_turnovers: defenseOurTurnovers,
     defense_opponent_turnovers: defenseOpponentTurnovers,
     points_won: offenseWon + defenseWon,
     points_lost: offenseLost + defenseLost,
