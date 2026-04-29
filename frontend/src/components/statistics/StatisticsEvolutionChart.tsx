@@ -20,8 +20,9 @@ import {
 import { Chart } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
 import type { EvolutionMetricDefinition, TeamEvolutionResponse } from "../../types";
-import { formatDate, formatDateTime } from "../../utils/dateFormatting";
+import { formatDateTime } from "../../utils/dateFormatting";
 import {
+  getEvolutionChartLabel,
   formatEvolutionMetricValue,
   getEvolutionScoreLabel,
   resolveEvolutionChartType,
@@ -77,8 +78,8 @@ export default function StatisticsEvolutionChart({
     ]
   );
   const chartLabels = useMemo(
-    () => evolution.games.map((game) => formatDate(game.date, i18n.language, "monthDay")),
-    [evolution.games, i18n.language]
+    () => evolution.games.map(getEvolutionChartLabel),
+    [evolution.games]
   );
   const chartDatasets = useMemo(() => {
     return selectedMetrics.map((metric, index) => {

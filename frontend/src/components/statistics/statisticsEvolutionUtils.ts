@@ -54,3 +54,7 @@ export function resolveEvolutionChartType(
 export function getEvolutionScoreLabel(game: TeamEvolutionGame): string {
   return `${game.our_score} - ${game.opponent_score}`;
 }
+
+export function getEvolutionChartLabel(game: TeamEvolutionGame): string {
+  return game.opponent_name;
+}
