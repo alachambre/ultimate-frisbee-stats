@@ -5,6 +5,7 @@ from typing import List
 from app import schemas, crud
 from app.auth.dependencies import require_team_member
 from app.database import get_db
+from app.statistics_cache import clear_statistics_cache
 
 router = APIRouter(
     prefix="/teams",
@@ -15,7 +16,9 @@ router = APIRouter(
 
 @router.post("", response_model=schemas.Team, status_code=201)
 def create_team(team: schemas.TeamCreate, db: Session = Depends(get_db)):
-    return crud.create_team(db, team)
+    created_team = crud.create_team(db, team)
+    clear_statistics_cache("team_created")
+    return created_team
 
 
 @router.get("", response_model=List[schemas.TeamWithPlayers])
@@ -36,6 +39,7 @@ def update_team(team_id: int, team_update: schemas.TeamUpdate, db: Session = Dep
     team = crud.update_team(db, team_id, team_update)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+    clear_statistics_cache("team_updated")
     return team
 
 
@@ -44,6 +48,7 @@ def delete_team(team_id: int, db: Session = Depends(get_db)):
     success = crud.delete_team(db, team_id)
     if not success:
         raise HTTPException(status_code=404, detail="Team not found")
+    clear_statistics_cache("team_deleted")
 
 
 # Nested endpoints for team resources

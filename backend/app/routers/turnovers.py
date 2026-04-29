@@ -8,6 +8,7 @@ from app.auth.dependencies import get_request_access_context, require_team_membe
 from app.auth.redaction import serialize_turnover, serialize_turnovers
 from app.database import get_db
 from app.logging_config import get_logger
+from app.statistics_cache import clear_statistics_cache
 
 logger = get_logger("routers.turnovers")
 
@@ -30,6 +31,7 @@ def create_turnover(
             f"Turnover created: id={created_turnover.id}, point={turnover.point_id}, "
             f"player={turnover.player_id or 'unassigned'}, type={turnover.turnover_type.value}"
         )
+        clear_statistics_cache("turnover_created")
         return created_turnover
     except ValueError as e:
         logger.warning(f"Failed to create turnover: {str(e)}")
@@ -64,6 +66,7 @@ def update_turnover(
             logger.warning(f"Failed to update turnover: turnover {turnover_id} not found")
             raise HTTPException(status_code=404, detail="Turnover not found")
 
+        clear_statistics_cache("turnover_updated")
         return turnover
     except ValueError as e:
         logger.warning(f"Failed to update turnover {turnover_id}: {str(e)}")
@@ -83,6 +86,7 @@ def delete_turnover(
         raise HTTPException(status_code=404, detail="Turnover not found")
 
     logger.info(f"Turnover {turnover_id} deleted")
+    clear_statistics_cache("turnover_deleted")
 
 
 # Nested endpoints

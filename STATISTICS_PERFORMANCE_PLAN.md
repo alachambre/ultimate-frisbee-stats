@@ -53,6 +53,10 @@ Stop fetching data before the user needs it.
 
 ## Milestone 2: Backend Short-TTL Statistics Cache
 
+Status: implemented with `backend/app/statistics_cache.py`, router-level cache
+wrapping for the selected read-only statistics endpoints, and broad invalidation
+after stats-affecting mutations.
+
 ### Objective
 
 Avoid recomputing identical statistics datasets while a user explores the page.

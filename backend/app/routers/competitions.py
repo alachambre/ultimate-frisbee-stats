@@ -8,6 +8,7 @@ from app.auth.context import AccessContext
 from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_games_with_score
 from app.database import get_db
+from app.statistics_cache import clear_statistics_cache
 
 router = APIRouter(
     prefix="/competitions",
@@ -37,7 +38,9 @@ def create_competition(
                 detail=f"Players {invalid_players} not found in team {competition.team_id}"
             )
 
-    return crud.create_competition(db, competition)
+    created_competition = crud.create_competition(db, competition)
+    clear_statistics_cache("competition_created")
+    return created_competition
 
 
 @router.get("", response_model=List[schemas.CompetitionWithTeam])
@@ -73,6 +76,7 @@ def update_competition(
     competition = crud.update_competition(db, competition_id, competition_update)
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
+    clear_statistics_cache("competition_updated")
     return competition
 
 
@@ -85,6 +89,7 @@ def delete_competition(
     success = crud.delete_competition(db, competition_id)
     if not success:
         raise HTTPException(status_code=404, detail="Competition not found")
+    clear_statistics_cache("competition_deleted")
 
 
 # Nested endpoints for competition resources
@@ -128,7 +133,13 @@ def add_players_to_roster(
                 detail=f"Players {invalid_players} not found in team {competition.team_id}"
             )
 
-    return crud.add_players_to_competition(db, competition_id, request.player_ids)
+    competition = crud.add_players_to_competition(
+        db,
+        competition_id,
+        request.player_ids,
+    )
+    clear_statistics_cache("competition_players_added")
+    return competition
 
 
 @router.delete("/{competition_id}/players", response_model=schemas.CompetitionWithPlayers)
@@ -144,7 +155,13 @@ def remove_players_from_roster(
         raise HTTPException(status_code=404, detail="Competition not found")
 
     try:
-        return crud.remove_players_from_competition(db, competition_id, request.player_ids)
+        competition = crud.remove_players_from_competition(
+            db,
+            competition_id,
+            request.player_ids,
+        )
+        clear_statistics_cache("competition_players_removed")
+        return competition
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

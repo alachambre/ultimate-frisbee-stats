@@ -8,6 +8,7 @@ from app.auth.dependencies import get_request_access_context, require_team_membe
 from app.auth.redaction import serialize_point
 from app.database import get_db
 from app.logging_config import get_logger
+from app.statistics_cache import clear_statistics_cache
 
 logger = get_logger("routers.points")
 
@@ -30,6 +31,7 @@ def create_point(
             f"Point created: id={created_point.id}, game={point.game_id}, "
             f"offense={point.starting_on_offense}, players={player_count}, status=ready"
         )
+        clear_statistics_cache("point_created")
         return created_point
     except ValueError as e:
         logger.warning(
@@ -70,6 +72,7 @@ def update_point(
         if point_update.status:
             logger.info(f"Point {point_id} status changed to {point_update.status.value}")
 
+        clear_statistics_cache("point_updated")
         return point
     except ValueError as e:
         logger.warning(f"Failed to update point {point_id}: {str(e)}")
@@ -85,6 +88,7 @@ def delete_point(
     success = crud.delete_point(db, point_id)
     if not success:
         raise HTTPException(status_code=404, detail="Point not found")
+    clear_statistics_cache("point_deleted")
 
 
 @router.post("/{point_id}/finish", response_model=schemas.PointWithPlayers)
@@ -101,6 +105,7 @@ def finish_point(
             raise HTTPException(status_code=404, detail="Point not found")
 
         logger.info(f"Point {point_id} finished: won={finish_data.won}")
+        clear_statistics_cache("point_finished")
         return point
     except ValueError as e:
         logger.warning(f"Failed to finish point {point_id}: {str(e)}")
@@ -120,6 +125,7 @@ def cancel_point(
             raise HTTPException(status_code=404, detail="Point not found")
 
         logger.info(f"Point {point_id} cancelled")
+        clear_statistics_cache("point_cancelled")
     except ValueError as e:
         logger.warning(f"Failed to cancel point {point_id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))

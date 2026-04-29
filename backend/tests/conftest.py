@@ -6,6 +6,15 @@ from sqlalchemy.pool import StaticPool
 from app.models import Base
 from app.database import get_db
 from app.main import app
+from app.statistics_cache import clear_statistics_cache
+
+
+@pytest.fixture(autouse=True)
+def clear_statistics_cache_between_tests():
+    """Keep the process-local statistics cache isolated between tests."""
+    clear_statistics_cache("test_setup")
+    yield
+    clear_statistics_cache("test_teardown")
 
 
 # Create in-memory SQLite database for testing

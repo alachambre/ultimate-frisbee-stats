@@ -121,6 +121,12 @@ Games with no completed points are omitted from the series. The response include
 the backend-owned metric catalog, default preset, omitted game count, and
 chronological per-game values for the frontend chart/table.
 
+Selected read-only statistics endpoints use an in-process TTL cache to avoid
+recomputing identical filtered datasets while users browse the statistics page.
+The default TTL is 300 seconds and can be disabled with
+`STATISTICS_CACHE_TTL_SECONDS=0`. Auth and permission checks still run before
+cache reads, and stats-affecting mutations clear the cache broadly.
+
 ## Project Layout
 
 - `app/routers/` HTTP endpoints per domain

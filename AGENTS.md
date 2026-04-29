@@ -83,6 +83,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Game interruption model uses `Stoppage` (table `stoppages`) with `stoppage_type` values: `call`, `injury`, `timeout`, `other`
 - Halftime tracking is a dedicated `Halftime` entity (`halftimes` table), one halftime max per game
 - Statistics architecture: keep `statistics_queries.py` (data access), `statistics_calculations.py` (pure reducers/point facts), `statistics.py` (scope facade)
+- Statistics read caching lives in `backend/app/statistics_cache.py`; keep permission checks before cache reads, use `STATISTICS_CACHE_TTL_SECONDS` (`0` disables), and broadly clear the cache after stats-affecting mutations
 - CSV statistics exports are backend-owned via `/exports/*/csv` endpoints; frontend should only trigger download
 - CSV export implementation is split by concern: `statistics_exports_formatters.py`, `statistics_exports_sections.py`, `statistics_exports_game.py`, `statistics_exports_competition.py`, `statistics_exports_team.py` (`statistics_exports.py` stays as facade)
 - CSV exports support `detail=summary|full` query mode (default `summary`); keep summary format readable and stable

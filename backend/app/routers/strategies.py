@@ -5,6 +5,7 @@ from typing import List, Optional
 from app import schemas, crud
 from app.auth.dependencies import require_team_member
 from app.database import get_db
+from app.statistics_cache import clear_statistics_cache
 
 router = APIRouter(
     prefix="/strategies",
@@ -17,7 +18,9 @@ router = APIRouter(
 def create_strategy(strategy: schemas.StrategyCreate, db: Session = Depends(get_db)):
     """Create a new strategy"""
     try:
-        return crud.create_strategy(db, strategy)
+        created_strategy = crud.create_strategy(db, strategy)
+        clear_statistics_cache("strategy_created")
+        return created_strategy
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -53,6 +56,7 @@ def update_strategy(
         strategy = crud.update_strategy(db, strategy_id, strategy_update)
         if not strategy:
             raise HTTPException(status_code=404, detail="Strategy not found")
+        clear_statistics_cache("strategy_updated")
         return strategy
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -64,3 +68,4 @@ def delete_strategy(strategy_id: int, db: Session = Depends(get_db)):
     success = crud.delete_strategy(db, strategy_id)
     if not success:
         raise HTTPException(status_code=404, detail="Strategy not found")
+    clear_statistics_cache("strategy_deleted")

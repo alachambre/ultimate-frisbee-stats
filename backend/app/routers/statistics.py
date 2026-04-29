@@ -13,6 +13,7 @@ from app.database import get_db
 from app.schemas import statistics as schemas
 from app.crud import statistics as crud
 from app.models.game import Game
+from app.statistics_cache import get_or_set_statistics_cache
 
 router = APIRouter(
     prefix="/statistics",
@@ -105,12 +106,23 @@ def get_team_player_statistics(
     """
     Get player statistics aggregated over all completed points for a team.
     """
-    stats = crud.get_team_player_stats(
-        db,
+    normalized_player_ids = _normalize_player_ids(player_ids)
+    normalized_competition_ids = _normalize_ids(competition_ids)
+    normalized_game_ids = _normalize_ids(game_ids)
+
+    stats = get_or_set_statistics_cache(
+        "team_players",
         team_id,
-        required_player_ids=_normalize_player_ids(player_ids),
-        competition_ids=_normalize_ids(competition_ids),
-        game_ids=_normalize_ids(game_ids),
+        lambda: crud.get_team_player_stats(
+            db,
+            team_id,
+            required_player_ids=normalized_player_ids,
+            competition_ids=normalized_competition_ids,
+            game_ids=normalized_game_ids,
+        ),
+        competition_ids=normalized_competition_ids,
+        game_ids=normalized_game_ids,
+        player_ids=normalized_player_ids,
     )
     if stats is None:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -159,10 +171,17 @@ def get_game_point_timeline(
     points to those where all selected players were on the line together.
     """
     _ensure_player_filter_allowed(player_ids, access_context)
-    timeline = crud.get_game_point_timeline(
-        db,
+    normalized_player_ids = _normalize_player_ids(player_ids)
+
+    timeline = get_or_set_statistics_cache(
+        "game_timeline",
         game_id,
-        required_player_ids=_normalize_player_ids(player_ids),
+        lambda: crud.get_game_point_timeline(
+            db,
+            game_id,
+            required_player_ids=normalized_player_ids,
+        ),
+        player_ids=normalized_player_ids,
     )
     if not timeline:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -207,12 +226,23 @@ def get_team_evolution_statistics(
     Returns backend-owned metric metadata plus one metric value map per game.
     """
     _ensure_player_filter_allowed(player_ids, access_context)
-    evolution = crud.get_team_evolution(
-        db,
+    normalized_player_ids = _normalize_player_ids(player_ids)
+    normalized_competition_ids = _normalize_ids(competition_ids)
+    normalized_game_ids = _normalize_ids(game_ids)
+
+    evolution = get_or_set_statistics_cache(
+        "team_evolution",
         team_id,
-        required_player_ids=_normalize_player_ids(player_ids),
-        competition_ids=_normalize_ids(competition_ids),
-        game_ids=_normalize_ids(game_ids),
+        lambda: crud.get_team_evolution(
+            db,
+            team_id,
+            required_player_ids=normalized_player_ids,
+            competition_ids=normalized_competition_ids,
+            game_ids=normalized_game_ids,
+        ),
+        competition_ids=normalized_competition_ids,
+        game_ids=normalized_game_ids,
+        player_ids=normalized_player_ids,
     )
     if evolution is None:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -234,12 +264,23 @@ def get_team_team_statistics(
     Returns offense and defense efficiency metrics, including pull statistics.
     """
     _ensure_player_filter_allowed(player_ids, access_context)
-    stats = crud.get_team_team_stats(
-        db,
+    normalized_player_ids = _normalize_player_ids(player_ids)
+    normalized_competition_ids = _normalize_ids(competition_ids)
+    normalized_game_ids = _normalize_ids(game_ids)
+
+    stats = get_or_set_statistics_cache(
+        "team_team",
         team_id,
-        required_player_ids=_normalize_player_ids(player_ids),
-        competition_ids=_normalize_ids(competition_ids),
-        game_ids=_normalize_ids(game_ids),
+        lambda: crud.get_team_team_stats(
+            db,
+            team_id,
+            required_player_ids=normalized_player_ids,
+            competition_ids=normalized_competition_ids,
+            game_ids=normalized_game_ids,
+        ),
+        competition_ids=normalized_competition_ids,
+        game_ids=normalized_game_ids,
+        player_ids=normalized_player_ids,
     )
     if not stats:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -284,12 +325,23 @@ def get_team_strategy_statistics(
     Returns success rates per strategy on all completed points with assigned strategies.
     """
     _ensure_player_filter_allowed(player_ids, access_context)
-    stats = crud.get_team_strategy_stats(
-        db,
+    normalized_player_ids = _normalize_player_ids(player_ids)
+    normalized_competition_ids = _normalize_ids(competition_ids)
+    normalized_game_ids = _normalize_ids(game_ids)
+
+    stats = get_or_set_statistics_cache(
+        "team_strategies",
         team_id,
-        required_player_ids=_normalize_player_ids(player_ids),
-        competition_ids=_normalize_ids(competition_ids),
-        game_ids=_normalize_ids(game_ids),
+        lambda: crud.get_team_strategy_stats(
+            db,
+            team_id,
+            required_player_ids=normalized_player_ids,
+            competition_ids=normalized_competition_ids,
+            game_ids=normalized_game_ids,
+        ),
+        competition_ids=normalized_competition_ids,
+        game_ids=normalized_game_ids,
+        player_ids=normalized_player_ids,
     )
     if not stats:
         raise HTTPException(status_code=404, detail="Team not found")
