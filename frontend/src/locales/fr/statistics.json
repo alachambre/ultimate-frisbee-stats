@@ -174,7 +174,7 @@
         "description": "Points d'attaque gagn\u00e9s sans que nous ne commettions de turnover, sur tous les points d'attaque jou\u00e9s."
       },
       "defense_turnover_rate": {
-        "label": "Points D avec turns",
+        "label": "Taux de points de D avec turns",
         "description": "Points de d\u00e9fense avec au moins un turnover de possession, sur tous les points de d\u00e9fense jou\u00e9s."
       },
       "defense_break_rate": {

@@ -174,7 +174,7 @@
         "description": "Offensive points won without us committing a turnover, out of all offensive points played."
       },
       "defense_turnover_rate": {
-        "label": "D points with turns",
+        "label": "D points with turns rate",
         "description": "Defensive points where at least one possession turnover occurred, out of all defensive points played."
       },
       "defense_break_rate": {
