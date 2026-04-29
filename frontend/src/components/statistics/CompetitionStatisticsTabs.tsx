@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Box, Tab, Tabs, Typography } from "@mui/material";
+import { useMemo } from "react";
+import { Alert, Box, Tab, Tabs, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type {
   PlayerGameStats,
@@ -7,21 +7,30 @@ import type {
   TeamEvolutionResponse,
   TeamStatsBase,
 } from "../../types";
+import LoadingState from "../shared/LoadingState";
 import PlayerStatistics from "./PlayerStatistics";
 import StatisticsEvolutionTable from "./StatisticsEvolutionTable";
 import StrategyStatistics from "./StrategyStatistics";
 import TeamStatistics from "./TeamStatistics";
 
-type CompetitionStatisticsTab = "team" | "evolution" | "strategies" | "players";
+export type CompetitionStatisticsTab = "team" | "evolution" | "strategies" | "players";
 type TeamStatsScope = "team" | "competition" | "game";
 
 interface CompetitionStatisticsTabsProps {
+  activeTab: CompetitionStatisticsTab;
+  onTabChange: (tab: CompetitionStatisticsTab) => void;
   teamStats?: TeamStatsBase;
+  isLoadingTeamStats?: boolean;
+  teamStatsError?: Error | null;
   teamEvolution?: TeamEvolutionResponse;
   isLoadingTeamEvolution?: boolean;
   teamEvolutionError?: Error | null;
   strategyStats?: StrategyStatsBase;
+  isLoadingStrategyStats?: boolean;
+  strategyStatsError?: Error | null;
   playerStats?: PlayerGameStats[];
+  isLoadingPlayerStats?: boolean;
+  playerStatsError?: Error | null;
   teamStatsScope?: TeamStatsScope;
   canViewTeamStatistics?: boolean;
   canViewStrategyStatistics?: boolean;
@@ -46,47 +55,46 @@ function hasStrategyStatsData(strategyStats?: StrategyStatsBase): boolean {
 }
 
 export default function CompetitionStatisticsTabs({
+  activeTab,
+  onTabChange,
   teamStats,
+  isLoadingTeamStats = false,
+  teamStatsError = null,
   teamEvolution,
   isLoadingTeamEvolution = false,
   teamEvolutionError = null,
   strategyStats,
+  isLoadingStrategyStats = false,
+  strategyStatsError = null,
   playerStats,
+  isLoadingPlayerStats = false,
+  playerStatsError = null,
   teamStatsScope = "competition",
   canViewTeamStatistics = true,
   canViewStrategyStatistics = true,
   canViewPlayerStatistics = true,
 }: CompetitionStatisticsTabsProps) {
   const { t } = useTranslation(["statistics", "common"]);
-  const [requestedTab, setRequestedTab] = useState<CompetitionStatisticsTab>("team");
 
   const hasTeamData = hasTeamStatsData(teamStats);
-  const hasEvolutionSurface = Boolean(
-    teamEvolution || isLoadingTeamEvolution || teamEvolutionError
-  );
   const hasStrategyData = hasStrategyStatsData(strategyStats);
-  const hasPlayerData = Boolean(playerStats);
 
   const tabEnabledState = useMemo<Record<CompetitionStatisticsTab, boolean>>(
     () => ({
-      team: canViewTeamStatistics && hasTeamData,
-      evolution: canViewTeamStatistics && hasEvolutionSurface,
-      strategies: canViewStrategyStatistics && hasStrategyData,
-      players: canViewPlayerStatistics && hasPlayerData,
+      team: canViewTeamStatistics,
+      evolution: canViewTeamStatistics,
+      strategies: canViewStrategyStatistics,
+      players: canViewPlayerStatistics,
     }),
     [
       canViewPlayerStatistics,
       canViewStrategyStatistics,
       canViewTeamStatistics,
-      hasEvolutionSurface,
-      hasPlayerData,
-      hasStrategyData,
-      hasTeamData,
     ]
   );
 
-  const activeTab = tabEnabledState[requestedTab]
-    ? requestedTab
+  const visibleActiveTab = tabEnabledState[activeTab]
+    ? activeTab
     : (TAB_ORDER.find((tab) => tabEnabledState[tab]) ?? "team");
 
   const renderNoData = () => (
@@ -97,12 +105,18 @@ export default function CompetitionStatisticsTabs({
     </Box>
   );
 
+  const renderError = (error: Error) => (
+    <Alert severity="error" sx={{ mb: 2 }}>
+      {t("common:messages.error")}: {error.message}
+    </Alert>
+  );
+
   return (
     <>
       <Box sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          value={activeTab}
-          onChange={(_, nextTab: CompetitionStatisticsTab) => setRequestedTab(nextTab)}
+          value={visibleActiveTab}
+          onChange={(_, nextTab: CompetitionStatisticsTab) => onTabChange(nextTab)}
           variant="scrollable"
           allowScrollButtonsMobile
           aria-label={t("statistics:workflow.statisticsTabsAriaLabel")}
@@ -122,15 +136,19 @@ export default function CompetitionStatisticsTabs({
         </Tabs>
       </Box>
 
-      {activeTab === "team" &&
-        (hasTeamData && teamStats ? (
+      {visibleActiveTab === "team" &&
+        (isLoadingTeamStats ? (
+          <LoadingState showColdStartHint={false} />
+        ) : teamStatsError ? (
+          renderError(teamStatsError)
+        ) : hasTeamData && teamStats ? (
           <TeamStatistics
             teamStats={teamStats}
             showFieldSideStats={teamStatsScope === "game"}
           />
         ) : renderNoData())}
 
-      {activeTab === "evolution" && (
+      {visibleActiveTab === "evolution" && (
         <StatisticsEvolutionTable
           evolution={teamEvolution}
           isLoading={isLoadingTeamEvolution}
@@ -138,17 +156,27 @@ export default function CompetitionStatisticsTabs({
         />
       )}
 
-      {activeTab === "strategies" &&
-        (hasStrategyData && strategyStats ? (
+      {visibleActiveTab === "strategies" &&
+        (isLoadingStrategyStats ? (
+          <LoadingState showColdStartHint={false} />
+        ) : strategyStatsError ? (
+          renderError(strategyStatsError)
+        ) : hasStrategyData && strategyStats ? (
           <StrategyStatistics strategyStats={strategyStats} />
         ) : (
           renderNoData()
         ))}
 
-      {activeTab === "players" && (
+      {visibleActiveTab === "players" && (
+        isLoadingPlayerStats ? (
+          <LoadingState showColdStartHint={false} />
+        ) : playerStatsError ? (
+          renderError(playerStatsError)
+        ) : (
         <PlayerStatistics
           playerStats={playerStats ?? []}
         />
+        )
       )}
     </>
   );

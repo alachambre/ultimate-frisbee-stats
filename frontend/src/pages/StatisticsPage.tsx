@@ -6,7 +6,9 @@ import PageHeader from "../components/shared/PageHeader";
 import LoadingState from "../components/shared/LoadingState";
 import GameTimer from "../components/games/GameTimer";
 import StatisticsConfigurationPanel from "../components/statistics/StatisticsConfigurationPanel";
-import CompetitionStatisticsTabs from "../components/statistics/CompetitionStatisticsTabs";
+import CompetitionStatisticsTabs, {
+  type CompetitionStatisticsTab,
+} from "../components/statistics/CompetitionStatisticsTabs";
 import StatisticsSectionContainer from "../components/statistics/StatisticsSectionContainer";
 import type { GameWithScore } from "../types";
 import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
@@ -34,6 +36,9 @@ export default function StatisticsPage() {
   const auth = useAuth();
   const { t } = useTranslation(["statistics", "games", "common"]);
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
+  const [activeStatisticsTab, setActiveStatisticsTab] =
+    useState<CompetitionStatisticsTab>("team");
+  const [isPlayerFilterOpen, setIsPlayerFilterOpen] = useState(false);
   const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
   const statisticsAccess = {
     canViewTeamStatistics:
@@ -71,8 +76,6 @@ export default function StatisticsPage() {
     controlsLoading,
     isPlayerOptionsLoading,
     controlsError,
-    isScopeLoading,
-    scopeError,
     canExport,
     shouldShowFieldSideStats,
     gamePointTimeline,
@@ -80,12 +83,21 @@ export default function StatisticsPage() {
     gamePointTimelineError,
 
     teamStats,
+    isLoadingTeamStats,
+    teamStatsError,
     teamEvolution,
     isLoadingTeamEvolution,
     teamEvolutionError,
     teamPlayerStats,
+    isLoadingTeamPlayerStats,
+    teamPlayerStatsError,
     teamStrategyStats,
-  } = useStatisticsPageData(statisticsAccess);
+    isLoadingTeamStrategyStats,
+    teamStrategyStatsError,
+  } = useStatisticsPageData(statisticsAccess, {
+    activeTab: activeStatisticsTab,
+    isPlayerFilterOpen,
+  });
 
   const datasetOverview = buildScopeOverview(selectedDatasetGames);
   const selectedSingleGame = selectedGames.length === 1 ? selectedGames[0] : undefined;
@@ -167,6 +179,7 @@ export default function StatisticsPage() {
           updateSelection({ playerIds: nextPlayerIds });
         }}
         onClearPlayersSelection={() => updateSelection({ playerIds: [] })}
+        onPlayerFilterOpenChange={setIsPlayerFilterOpen}
       />
 
       <Box>
@@ -182,21 +195,9 @@ export default function StatisticsPage() {
           <Alert severity="info">{t("statistics:workflow.selectTeamPrompt")}</Alert>
         )}
 
-        {!controlsLoading && !controlsError && teamId !== undefined && isScopeLoading && (
-          <LoadingState message={t("common:action.loading")} />
-        )}
-
-        {!controlsLoading && !controlsError && teamId !== undefined && !isScopeLoading && scopeError && (
-          <Alert severity="error">
-            {t("common:messages.error")}: {scopeError.message}
-          </Alert>
-        )}
-
         {!controlsLoading &&
           !controlsError &&
-          teamId !== undefined &&
-          !isScopeLoading &&
-          !scopeError && (
+          teamId !== undefined && (
             <StatisticsSectionContainer
               pathItems={statisticsContextItems}
               canExport={canExport}
@@ -286,12 +287,20 @@ export default function StatisticsPage() {
                 </Paper>
 
                 <CompetitionStatisticsTabs
+                  activeTab={activeStatisticsTab}
+                  onTabChange={setActiveStatisticsTab}
                   teamStats={teamStats}
+                  isLoadingTeamStats={isLoadingTeamStats}
+                  teamStatsError={teamStatsError}
                   teamEvolution={teamEvolution}
                   isLoadingTeamEvolution={isLoadingTeamEvolution}
                   teamEvolutionError={teamEvolutionError}
                   strategyStats={teamStrategyStats}
+                  isLoadingStrategyStats={isLoadingTeamStrategyStats}
+                  strategyStatsError={teamStrategyStatsError}
                   playerStats={teamPlayerStats}
+                  isLoadingPlayerStats={isLoadingTeamPlayerStats}
+                  playerStatsError={teamPlayerStatsError}
                   teamStatsScope={shouldShowFieldSideStats ? "game" : "team"}
                   canViewTeamStatistics={statisticsAccess.canViewTeamStatistics}
                   canViewStrategyStatistics={statisticsAccess.canViewStrategyStatistics}

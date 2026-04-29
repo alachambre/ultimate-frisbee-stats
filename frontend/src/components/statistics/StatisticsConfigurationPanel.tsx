@@ -60,6 +60,7 @@ interface StatisticsConfigurationPanelProps {
   onSelectGameIds: (gameIds: number[]) => void;
   onSelectPlayerIds: (playerIds: number[]) => void;
   onClearPlayersSelection: () => void;
+  onPlayerFilterOpenChange?: (isOpen: boolean) => void;
 }
 
 export default function StatisticsConfigurationPanel({
@@ -83,6 +84,7 @@ export default function StatisticsConfigurationPanel({
   onSelectGameIds,
   onSelectPlayerIds,
   onClearPlayersSelection,
+  onPlayerFilterOpenChange,
 }: StatisticsConfigurationPanelProps) {
   const { t, i18n } = useTranslation(["statistics", "games", "common"]);
   const [isPlayerFilterOpen, setIsPlayerFilterOpen] = useState(false);
@@ -289,9 +291,11 @@ export default function StatisticsConfigurationPanel({
                 onOpen={() => {
                   setDraftPlayerIds(normalizeIds(selectedPlayerIds));
                   setIsPlayerFilterOpen(true);
+                  onPlayerFilterOpenChange?.(true);
                 }}
                 onClose={() => {
                   setIsPlayerFilterOpen(false);
+                  onPlayerFilterOpenChange?.(false);
                   commitPlayerFilter();
                 }}
                 onChange={(_, players) => {
@@ -308,7 +312,6 @@ export default function StatisticsConfigurationPanel({
                 disabled={
                   teamId === undefined ||
                   controlsLoading ||
-                  isPlayerOptionsLoading ||
                   hasControlsError
                 }
                 loading={isPlayerOptionsLoading}

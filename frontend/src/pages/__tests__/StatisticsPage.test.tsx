@@ -14,6 +14,7 @@ import {
   updateGame,
   updatePoint,
 } from "../../services";
+import { server } from "../../test/setup";
 import StatisticsPage from "../StatisticsPage";
 
 describe("StatisticsPage", () => {
@@ -53,6 +54,52 @@ describe("StatisticsPage", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Players statistics" })).toBeInTheDocument();
     });
+  });
+
+  it("loads statistics tab data only when the tab is opened", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const statisticsRequests: string[] = [];
+    const requestListener = ({ request }: { request: Request }) => {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith(`/statistics/teams/${team.id}/`)) {
+        statisticsRequests.push(url.pathname);
+      }
+    };
+
+    server.events.on("request:start", requestListener);
+    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
+
+    try {
+      render(<StatisticsPage />);
+
+      await waitFor(() => {
+        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/team`);
+      });
+
+      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/evolution`);
+      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/players`);
+      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
+
+      await user.click(screen.getByRole("tab", { name: "Evolution" }));
+
+      await waitFor(() => {
+        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/evolution`);
+      });
+
+      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/players`);
+      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
+
+      await user.click(screen.getByRole("tab", { name: "Players" }));
+
+      await waitFor(() => {
+        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/players`);
+      });
+
+      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
+    } finally {
+      server.events.removeListener("request:start", requestListener);
+    }
   });
 
   it("limits team members to team and strategy statistics", async () => {
