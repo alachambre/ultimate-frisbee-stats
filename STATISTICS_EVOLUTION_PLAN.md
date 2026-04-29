@@ -185,7 +185,7 @@ Acceptance criteria:
 - Permission gating matches the current Team tab behavior.
 - No chart dependency is introduced in this milestone.
 
-### Milestone 4: Chart UI
+### Milestone 4: Chart UI - Done
 
 Purpose: deliver the actual evolution graph.
 

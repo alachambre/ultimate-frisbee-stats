@@ -9,7 +9,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Tech Stack
 - Backend: FastAPI + SQLAlchemy + PostgreSQL (Supabase in production, SQLite locally)
-- Frontend: React + TypeScript + Material UI + TanStack Query + Chart.js (game trends)
+- Frontend: React + TypeScript + Material UI + TanStack Query + Chart.js (game trends and statistics evolution)
 - Testing: Pytest (backend), Vitest + MSW + React Testing Library (frontend)
 - Deployment: Render (backend) + Vercel (frontend) + Supabase (database)
 
@@ -41,14 +41,14 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (filter-driven workflow: `teamId`, multi-select `competitionIds`, multi-select `gameIds`, multi-select `playerIds`; keep legacy single-value `competitionId`, `gameId`, and `playerId` links backward-compatible when parsing). `team_member` users can access team and strategy statistics plus single-game timeline charts, but player cohort filtering, the Players tab, and CSV export require analyst/export capabilities.
 - Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
 - Statistics page layout is split into dedicated components such as `StatisticsConfigurationPanel` and `StatisticsSectionContainer` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
-- Team statistics evolution preview is rendered by `frontend/src/components/statistics/StatisticsEvolutionTable.tsx` inside the statistics tabs; keep it driven by `/statistics/teams/{team_id}/evolution` metadata and default presets rather than duplicating formulas in the frontend.
+- Team statistics evolution chart/table is rendered by `frontend/src/components/statistics/StatisticsEvolutionTable.tsx` inside the statistics tabs; keep it driven by `/statistics/teams/{team_id}/evolution` metadata and default presets rather than duplicating formulas in the frontend.
 - Turnover-type analytics in the statistics UI are rendered through `frontend/src/components/statistics/TurnoverTypeStatsSection.tsx` and reused in both `TeamStatistics` and `PlayerScopeStatistics`; extend that shared component instead of duplicating the 6-bucket breakdown in multiple places
 - Defensive strategy cards in `frontend/src/components/statistics/StrategyStatistics.tsx` also reuse `TurnoverTypeStatsSection` for turnover-type breakdowns; keep strategy-specific turnover analytics scoped to defense strategies instead of introducing a separate visualization pattern
 - Statistics data/query orchestration lives in `frontend/src/pages/hooks/useStatisticsPageData.ts`; keep `StatisticsPage.tsx` focused on composition/rendering
 - Statistics supports dataset filtering by competitions/games plus cohort filtering by players: when `playerIds` is set, all stats are computed only on completed points containing every selected player
 - Statistics player filter options are scope-aware: selected competitions/games restrict the list to the union of their rosters, and selected cohort players further narrow options to teammates who shared at least one completed point in the current dataset
 - Single-game statistics now include a lazy-loaded `Game trends` chart section fed by `/statistics/games/{game_id}/timeline`; keep chart-specific shaping in that timeline contract instead of piggybacking on game detail payloads
-- `Game trends` charts now render through Chart.js + `react-chartjs-2` with the zoom plugin; keep that charting stack isolated to `frontend/src/components/statistics/GameTrendsSection.tsx` unless there is a deliberate broader charting decision
+- `Game trends` and team evolution charts render through Chart.js + `react-chartjs-2`; keep chart-specific shaping in their dedicated statistics components instead of piggybacking on unrelated payloads
 - Point history and statistics expose possession-based turnover totals as `our_turnovers` and `opponent_turnovers`; player turnover stats always mean on-field events, not individual attribution
 - Halftime/end-of-game history recaps can aggregate turnover-type details from the public-safe `GET /games/{game_id}/turnovers` feed; prefer that game-level endpoint over point-by-point turnover fetches when enriching recap summaries
 - Team and player statistics now also expose top-level `turnover_type_stats` with 6 buckets (`all_points`, `started_on_offense`, `started_on_defense` x `our_possession_turnovers` / `opponent_possession_turnovers`); keep turnover-type analytics in that shared contract instead of scattering ad hoc breakdown fields through offense/defense sections

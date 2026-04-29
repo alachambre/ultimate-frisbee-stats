@@ -7,7 +7,15 @@ import { handlers, resetMockData } from "./mocks/handlers";
 import i18n from "../locales";
 
 vi.mock("react-chartjs-2", () => ({
-  Line: forwardRef(function MockLine() {
+  Chart: forwardRef(function MockChart(props: Record<string, unknown>, _ref) {
+    return createElement("div", {
+      "data-testid": "chartjs-chart",
+      "data-chart-type": props.type,
+      role: props.role ?? "img",
+      "aria-label": props["aria-label"] ?? "Chart preview",
+    });
+  }),
+  Line: forwardRef(function MockLine(_props, _ref) {
     return createElement("div", {
       "data-testid": "chartjs-line",
       role: "img",

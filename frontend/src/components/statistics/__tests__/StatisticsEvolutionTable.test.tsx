@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "../../../test/test-utils";
+import userEvent from "@testing-library/user-event";
 import type { TeamEvolutionResponse } from "../../../types";
 import StatisticsEvolutionTable from "../StatisticsEvolutionTable";
 
@@ -31,6 +32,15 @@ const baseEvolution: TeamEvolutionResponse = {
       format: "integer",
       higher_is_better: true,
     },
+    {
+      id: "offense_hold_rate",
+      label: "Hold rate",
+      description: "Offensive points won, out of all offensive points played.",
+      unit: "percentage",
+      group: "offense",
+      format: "percentage",
+      higher_is_better: true,
+    },
   ],
   presets: [
     {
@@ -52,6 +62,7 @@ const baseEvolution: TeamEvolutionResponse = {
       metrics: {
         total_our_turnovers: 4,
         total_opponent_turnovers: 5,
+        offense_hold_rate: 0.5,
       },
     },
   ],
@@ -68,7 +79,16 @@ describe("StatisticsEvolutionTable", () => {
     );
 
     expect(screen.getByText("Evolution")).toBeInTheDocument();
+    expect(screen.getByText("Evolution chart")).toBeInTheDocument();
     expect(screen.getByText("1 game omitted")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+      "data-chart-type",
+      "bar"
+    );
+    expect(screen.getByRole("button", { name: "Auto" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
 
     const table = screen.getByRole("table", { name: "Statistics evolution table" });
     expect(within(table).getByText("Rivals")).toBeInTheDocument();
@@ -76,6 +96,49 @@ describe("StatisticsEvolutionTable", () => {
     expect(within(table).getByText("Our turnovers")).toBeInTheDocument();
     expect(within(table).getByText("Opponent turnovers")).toBeInTheDocument();
     expect(within(table).getByText("2 - 1")).toBeInTheDocument();
+  });
+
+  it("keeps metric selections compatible and supports chart modes", async () => {
+    const user = userEvent.setup();
+    render(
+      <StatisticsEvolutionTable
+        evolution={baseEvolution}
+        isLoading={false}
+        error={null}
+      />
+    );
+
+    await user.click(screen.getByLabelText("Metrics"));
+    const listbox = await screen.findByRole("listbox");
+    await user.click(within(listbox).getByText("Hold rate"));
+
+    const table = screen.getByRole("table", { name: "Statistics evolution table" });
+    expect(within(table).getByText("Hold rate")).toBeInTheDocument();
+    expect(within(table).queryByText("Our turnovers")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+      "data-chart-type",
+      "line"
+    );
+
+    await user.click(screen.getByRole("button", { name: "Bar" }));
+    expect(screen.getByRole("button", { name: "Bar" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+      "data-chart-type",
+      "bar"
+    );
+
+    await user.click(screen.getByRole("button", { name: "Line" }));
+    expect(screen.getByRole("button", { name: "Line" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(screen.getByRole("img", { name: "Statistics evolution chart" })).toHaveAttribute(
+      "data-chart-type",
+      "line"
+    );
   });
 
   it("renders loading, error, and empty states", () => {

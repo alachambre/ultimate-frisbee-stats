@@ -80,7 +80,7 @@ describe("StatisticsPage", () => {
     expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
   });
 
-  it("renders the evolution table preview for the selected dataset", async () => {
+  it("renders the evolution chart and table for the selected dataset", async () => {
     const user = userEvent.setup();
     const team = await createTeam({ name: "Monkey" });
     const bob = await createPlayer({ team_id: team.id, name: "Bob", gender: "M" });
@@ -168,6 +168,9 @@ describe("StatisticsPage", () => {
     const evolutionTab = await screen.findByRole("tab", { name: "Evolution" });
     await user.click(evolutionTab);
 
+    expect(
+      await screen.findByRole("img", { name: "Statistics evolution chart" })
+    ).toBeInTheDocument();
     const table = await screen.findByRole("table", {
       name: "Statistics evolution table",
     });
