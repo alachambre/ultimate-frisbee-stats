@@ -97,6 +97,47 @@ describe("StatisticsPage", () => {
       });
 
       expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
+
+      await user.click(screen.getByRole("tab", { name: "Strategies" }));
+
+      await waitFor(() => {
+        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/strategies`);
+      });
+    } finally {
+      server.events.removeListener("request:start", requestListener);
+    }
+  });
+
+  it("lets users refresh the active statistics dataset", async () => {
+    const user = userEvent.setup();
+    const team = await createTeam({ name: "Monkey" });
+    const teamStatsRequests: string[] = [];
+    const requestListener = ({ request }: { request: Request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === `/statistics/teams/${team.id}/team`) {
+        teamStatsRequests.push(url.pathname);
+      }
+    };
+
+    server.events.on("request:start", requestListener);
+    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
+
+    try {
+      render(<StatisticsPage />);
+
+      await waitFor(() => {
+        expect(teamStatsRequests).toHaveLength(1);
+      });
+
+      expect(
+        screen.getByText(/Statistics may be cached for up to 5 minutes/i)
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Refresh statistics" }));
+
+      await waitFor(() => {
+        expect(teamStatsRequests).toHaveLength(2);
+      });
     } finally {
       server.events.removeListener("request:start", requestListener);
     }

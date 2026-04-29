@@ -112,6 +112,11 @@ Chart.js surfaces stay split by purpose:
 - `GameTrendsSection` is lazy-loaded for single-game point timelines
 - `StatisticsEvolutionChart` is lazy-loaded from the Evolution tab
 
+Statistics are analytical, not live-tracker state. The backend may cache
+read-only statistics responses for up to 5 minutes, while live game state stays
+immediate. The statistics header exposes a refresh action that invalidates the
+current frontend dataset queries after edits.
+
 ## Conventions
 
 - Material UI v7 with semantic theme values only (no hardcoded colors)

@@ -20,13 +20,13 @@ def test_team_statistics_cache_is_invalidated_when_point_finishes(
         .build()
     )
     player_ids = [player.id for player in scenario.players]
-    PointBuilder(db_session, scenario.game.id, player_ids) \
-        .number(1).offense().won().complete()
-
-    first_response = client.get(f"/statistics/teams/{scenario.team.id}/team")
-    assert first_response.status_code == 200
-    assert first_response.json()["total_completed_points"] == 1
-    assert get_statistics_cache_size() == 1
+    (
+        PointBuilder(db_session, scenario.game.id, player_ids)
+        .number(1)
+        .offense()
+        .won()
+        .complete()
+    )
 
     create_response = client.post(
         "/points",
@@ -42,8 +42,14 @@ def test_team_statistics_cache_is_invalidated_when_point_finishes(
     update_response = client.put(f"/points/{point_id}", json={"status": "running"})
     assert update_response.status_code == 200
 
+    first_response = client.get(f"/statistics/teams/{scenario.team.id}/team")
+    assert first_response.status_code == 200
+    assert first_response.json()["total_completed_points"] == 1
+    assert get_statistics_cache_size() == 1
+
     finish_response = client.post(f"/points/{point_id}/finish", json={"won": False})
     assert finish_response.status_code == 200
+    assert get_statistics_cache_size() == 0
 
     second_response = client.get(f"/statistics/teams/{scenario.team.id}/team")
     assert second_response.status_code == 200

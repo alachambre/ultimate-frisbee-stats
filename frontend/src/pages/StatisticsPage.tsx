@@ -58,6 +58,8 @@ export default function StatisticsPage() {
     updateSelection,
     isExporting,
     handleExportCSV,
+    isRefreshingStatistics,
+    handleRefreshStatistics,
 
     teams,
     isLoadingTeams,
@@ -203,6 +205,8 @@ export default function StatisticsPage() {
               canExport={canExport}
               isExporting={isExporting}
               onExport={handleExportCSV}
+              isRefreshing={isRefreshingStatistics}
+              onRefresh={handleRefreshStatistics}
             >
               <>
                 <Paper sx={{ mb: 3 }}>

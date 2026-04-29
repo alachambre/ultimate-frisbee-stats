@@ -1,7 +1,8 @@
 import { Fragment } from "react";
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import { Box, Chip, CircularProgress, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
 import type { StatisticsExportDetailMode } from "../../services/statistics";
 import StatisticsExportMenuButton from "./StatisticsExportMenuButton";
@@ -11,6 +12,8 @@ interface StatisticsSectionContainerProps {
   canExport: boolean;
   isExporting: boolean;
   onExport: (detailMode: StatisticsExportDetailMode) => Promise<void> | void;
+  isRefreshing?: boolean;
+  onRefresh?: () => Promise<void> | void;
   children: React.ReactNode;
 }
 
@@ -19,9 +22,14 @@ export default function StatisticsSectionContainer({
   canExport,
   isExporting,
   onExport,
+  isRefreshing = false,
+  onRefresh,
   children,
 }: StatisticsSectionContainerProps) {
   const { t } = useTranslation("statistics");
+  const refreshLabel = isRefreshing
+    ? t("workflow.refreshingStatistics")
+    : t("workflow.refreshStatistics");
 
   return (
     <Box
@@ -65,9 +73,40 @@ export default function StatisticsSectionContainer({
             </Stack>
           )}
         </Box>
-        {canExport && (
-          <StatisticsExportMenuButton isExporting={isExporting} onExport={onExport} />
-        )}
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              maxWidth: { xs: "100%", sm: 360 },
+              textAlign: { xs: "left", sm: "right" },
+            }}
+          >
+            {t("workflow.freshnessNotice")}
+          </Typography>
+          {onRefresh && (
+            <Tooltip title={refreshLabel} arrow>
+              <span>
+                <IconButton
+                  aria-label={t("workflow.refreshStatistics")}
+                  size="small"
+                  onClick={onRefresh}
+                  disabled={isRefreshing}
+                  color="primary"
+                >
+                  {isRefreshing ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <RefreshIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+          {canExport && (
+            <StatisticsExportMenuButton isExporting={isExporting} onExport={onExport} />
+          )}
+        </Stack>
       </Box>
       <Box
         sx={{

@@ -206,6 +206,10 @@ GET /statistics/teams/{team_id}/summary?sections=team,players,strategies,evoluti
 
 ## Milestone 5: Regression Protection and UX Polish
 
+Status: implemented with cache TTL/invalidation regression tests, expanded
+lazy-tab coverage, a statistics refresh action, and freshness documentation in
+the UI and developer docs.
+
 ### Objective
 
 Keep performance from degrading again.

@@ -12,6 +12,7 @@ export const queryKeys = {
   health: ["health"] as const,
   competitions: ["competitions"] as const,
   competition: (competitionId: number) => ["competition", competitionId] as const,
+  competitionsByTeam: (teamId: number) => ["competitions", "team", teamId] as const,
   competitionPlayers: (competitionId: number) =>
     ["competition-players", competitionId] as const,
   competitionGames: (competitionId: number) =>

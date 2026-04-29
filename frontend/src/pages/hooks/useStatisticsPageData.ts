@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+  type QueryKey,
+} from "@tanstack/react-query";
 import { getAllGames, getCompetitions, getTeams } from "../../services";
 import {
   downloadTeamStatisticsCSV,
@@ -101,7 +106,9 @@ export function useStatisticsPageData(
   queryOptions: StatisticsPageQueryOptions
 ) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   const legacyCompetitionId = parseOptionalId(searchParams.get("competitionId"));
   const legacyGameId = parseOptionalId(searchParams.get("gameId"));
@@ -182,7 +189,7 @@ export function useStatisticsPageData(
     isLoading: isLoadingCompetitions,
     error: competitionsError,
   } = useQuery({
-    queryKey: ["competitions", "team", teamId ?? 0],
+    queryKey: queryKeys.competitionsByTeam(teamId ?? 0),
     queryFn: () => getCompetitions(teamId as number),
     enabled: teamId !== undefined,
   });
@@ -288,13 +295,42 @@ export function useStatisticsPageData(
     access.canViewStrategyStatistics &&
     queryOptions.activeTab === "strategies";
 
+  const teamStatsQueryKey = queryKeys.teamTeamStatistics(
+    teamId ?? 0,
+    competitionIds,
+    gameIds,
+    playerIds
+  );
+  const teamEvolutionQueryKey = queryKeys.teamEvolutionStatistics(
+    teamId ?? 0,
+    competitionIds,
+    gameIds,
+    playerIds
+  );
+  const teamPlayerStatsQueryKey = queryKeys.teamPlayerStatistics(
+    teamId ?? 0,
+    competitionIds,
+    gameIds,
+    playerIds
+  );
+  const teamStrategyStatsQueryKey = queryKeys.teamStrategyStatistics(
+    teamId ?? 0,
+    competitionIds,
+    gameIds,
+    playerIds
+  );
+  const gamePointTimelineQueryKey = queryKeys.gamePointTimeline(
+    selectedGame?.id ?? 0,
+    playerIds
+  );
+
   const {
     data: teamStats,
     isLoading: isLoadingTeamStats,
     isFetching: isFetchingTeamStats,
     error: teamStatsError,
   } = useQuery({
-    queryKey: queryKeys.teamTeamStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryKey: teamStatsQueryKey,
     queryFn: () => getTeamTeamStatistics(teamId as number, statisticsFilters),
     enabled: shouldLoadTeamStats,
     placeholderData: keepPreviousData,
@@ -306,7 +342,7 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamEvolution,
     error: teamEvolutionError,
   } = useQuery({
-    queryKey: queryKeys.teamEvolutionStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryKey: teamEvolutionQueryKey,
     queryFn: () => getTeamEvolutionStatistics(teamId as number, statisticsFilters),
     enabled: shouldLoadTeamEvolution,
     placeholderData: keepPreviousData,
@@ -318,7 +354,7 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamPlayerStats,
     error: teamPlayerStatsError,
   } = useQuery({
-    queryKey: queryKeys.teamPlayerStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryKey: teamPlayerStatsQueryKey,
     queryFn: () => getTeamPlayerStatistics(teamId as number, statisticsFilters),
     enabled: shouldLoadTeamPlayerStats,
     placeholderData: keepPreviousData,
@@ -330,7 +366,7 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamStrategyStats,
     error: teamStrategyStatsError,
   } = useQuery({
-    queryKey: queryKeys.teamStrategyStatistics(teamId ?? 0, competitionIds, gameIds, playerIds),
+    queryKey: teamStrategyStatsQueryKey,
     queryFn: () => getTeamStrategyStatistics(teamId as number, statisticsFilters),
     enabled: shouldLoadTeamStrategyStats,
     placeholderData: keepPreviousData,
@@ -339,9 +375,10 @@ export function useStatisticsPageData(
   const {
     data: gamePointTimeline,
     isLoading: isLoadingGamePointTimeline,
+    isFetching: isFetchingGamePointTimeline,
     error: gamePointTimelineError,
   } = useQuery({
-    queryKey: queryKeys.gamePointTimeline(selectedGame?.id ?? 0, playerIds),
+    queryKey: gamePointTimelineQueryKey,
     queryFn: () => getGamePointTimeline(selectedGame!.id, playerIds),
     enabled: selectedGame !== undefined && access.canViewTeamStatistics,
     placeholderData: keepPreviousData,
@@ -410,6 +447,13 @@ export function useStatisticsPageData(
 
   const canExport = teamId !== undefined && access.canExportStatistics;
   const shouldShowFieldSideStats = selectedGames.length === 1;
+  const isRefreshingStatistics =
+    isManualRefreshing ||
+    isFetchingTeamStats ||
+    isFetchingTeamEvolution ||
+    isFetchingTeamPlayerStats ||
+    isFetchingTeamStrategyStats ||
+    isFetchingGamePointTimeline;
 
   useEffect(() => {
     if (!access.canFilterStatisticsByPlayers && selection.playerIds.length > 0) {
@@ -495,6 +539,46 @@ export function useStatisticsPageData(
     [statisticsFilters, teamId]
   );
 
+  const handleRefreshStatistics = useCallback(async () => {
+    if (teamId === undefined) {
+      return;
+    }
+
+    const refreshQueryKeys: QueryKey[] = [
+      queryKeys.teams,
+      queryKeys.competitionsByTeam(teamId),
+      queryKeys.games,
+      teamStatsQueryKey,
+      teamEvolutionQueryKey,
+      teamPlayerStatsQueryKey,
+      teamStrategyStatsQueryKey,
+    ];
+
+    if (selectedGame !== undefined) {
+      refreshQueryKeys.push(gamePointTimelineQueryKey);
+    }
+
+    setIsManualRefreshing(true);
+    try {
+      await Promise.all(
+        refreshQueryKeys.map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey, exact: true })
+        )
+      );
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  }, [
+    gamePointTimelineQueryKey,
+    queryClient,
+    selectedGame,
+    teamEvolutionQueryKey,
+    teamId,
+    teamPlayerStatsQueryKey,
+    teamStatsQueryKey,
+    teamStrategyStatsQueryKey,
+  ]);
+
   return {
     teamId,
     competitionIds,
@@ -504,6 +588,8 @@ export function useStatisticsPageData(
     updateSelection,
     isExporting,
     handleExportCSV,
+    isRefreshingStatistics,
+    handleRefreshStatistics,
 
     teams,
     isLoadingTeams,
@@ -548,6 +634,7 @@ export function useStatisticsPageData(
     teamStrategyStatsError,
     gamePointTimeline,
     isLoadingGamePointTimeline,
+    isFetchingGamePointTimeline,
     gamePointTimelineError,
   };
 }

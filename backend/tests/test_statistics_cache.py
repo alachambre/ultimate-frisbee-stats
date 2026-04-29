@@ -40,6 +40,31 @@ def test_statistics_cache_reuses_cached_value_and_returns_copy(monkeypatch):
     assert get_statistics_cache_size() == 1
 
 
+def test_statistics_cache_expires_after_ttl(monkeypatch):
+    monkeypatch.setenv("STATISTICS_CACHE_TTL_SECONDS", "5")
+    current_time = [1000.0]
+    monkeypatch.setattr(
+        "app.statistics_cache.time.monotonic",
+        lambda: current_time[0],
+    )
+    calls = 0
+
+    def loader():
+        nonlocal calls
+        calls += 1
+        return {"value": calls}
+
+    assert get_or_set_statistics_cache("team_team", 1, loader) == {"value": 1}
+
+    current_time[0] += 4.9
+    assert get_or_set_statistics_cache("team_team", 1, loader) == {"value": 1}
+
+    current_time[0] += 0.2
+    assert get_or_set_statistics_cache("team_team", 1, loader) == {"value": 2}
+    assert calls == 2
+    assert get_statistics_cache_size() == 1
+
+
 def test_statistics_cache_can_be_disabled(monkeypatch):
     monkeypatch.setenv("STATISTICS_CACHE_TTL_SECONDS", "0")
     clear_statistics_cache("test_disabled")

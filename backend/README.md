@@ -126,6 +126,7 @@ recomputing identical filtered datasets while users browse the statistics page.
 The default TTL is 300 seconds and can be disabled with
 `STATISTICS_CACHE_TTL_SECONDS=0`. Auth and permission checks still run before
 cache reads, and stats-affecting mutations clear the cache broadly.
+Live game state endpoints are not part of this cache; they remain immediate.
 
 Uncached statistics point queries keep player-filtered datasets SQL-side via
 `required_player_ids`, and relationship loading is explicit through query helper
