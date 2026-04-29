@@ -8,7 +8,7 @@ export type EvolutionChartMode = "auto" | "line" | "bar";
 export type EvolutionChartType = "line" | "bar";
 export type EvolutionTranslator = (
   key: string,
-  options: { defaultValue: string }
+  options: { defaultValue: string; [key: string]: unknown }
 ) => string;
 
 export function localizeEvolutionMetric(

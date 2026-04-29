@@ -146,6 +146,33 @@ describe("StatisticsEvolutionTable", () => {
     expect(within(table).getByText("Points won")).toBeInTheDocument();
   });
 
+  it("shows metric descriptions in the selector and table header tooltips", async () => {
+    const user = userEvent.setup();
+    render(
+      <StatisticsEvolutionTable
+        evolution={baseEvolution}
+        isLoading={false}
+        error={null}
+      />
+    );
+
+    await user.click(screen.getByLabelText("Metrics"));
+    const listbox = await screen.findByRole("listbox");
+    expect(
+      within(listbox).getByText("Completed points won by us.")
+    ).toBeInTheDocument();
+    expect(within(listbox).getAllByText("Turns / Count").length).toBeGreaterThan(0);
+
+    await user.keyboard("{Escape}");
+
+    const table = screen.getByRole("table", { name: "Statistics evolution table" });
+    await user.hover(within(table).getByText("Our turns"));
+
+    expect(
+      await screen.findByText("Total possession turnovers committed by us across the game.")
+    ).toBeInTheDocument();
+  });
+
   it("keeps metric selections compatible and supports chart modes", async () => {
     const user = userEvent.setup();
     render(

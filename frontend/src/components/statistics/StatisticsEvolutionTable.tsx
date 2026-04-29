@@ -16,12 +16,14 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { alpha, useTheme } from "@mui/material/styles";
@@ -49,6 +51,24 @@ interface StatisticsEvolutionTableProps {
 
 const checkboxIcon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedCheckboxIcon = <CheckBoxIcon fontSize="small" />;
+
+function getMetricContext(
+  metric: EvolutionMetricDefinition,
+  translate: EvolutionTranslator
+): string {
+  return translate("statistics:evolution.metricOptionContext", {
+    group: getEvolutionMetricGroupLabel(metric.group, translate),
+    unit:
+      metric.unit === "percentage"
+        ? translate("statistics:evolution.metricUnitPercentage", {
+            defaultValue: "percentage",
+          })
+        : translate("statistics:evolution.metricUnitCount", {
+            defaultValue: "count",
+          }),
+    defaultValue: `${metric.group} / ${metric.unit}`,
+  });
+}
 
 function getDefaultPresetMetrics(
   evolution: TeamEvolutionResponse,
@@ -225,16 +245,24 @@ export default function StatisticsEvolutionTable({
                         />
                         <ListItemText
                           primary={option.label}
-                          secondary={t("statistics:evolution.metricOptionContext", {
-                            group: getEvolutionMetricGroupLabel(
-                              option.group,
-                              translateEvolution
-                            ),
-                            unit:
-                              option.unit === "percentage"
-                                ? t("statistics:evolution.metricUnitPercentage")
-                                : t("statistics:evolution.metricUnitCount"),
-                          })}
+                          secondary={
+                            <Stack spacing={0.25} component="span">
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {option.description}
+                              </Typography>
+                              <Typography
+                                component="span"
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {getMetricContext(option, translateEvolution)}
+                              </Typography>
+                            </Stack>
+                          }
                         />
                       </li>
                     );
@@ -336,7 +364,27 @@ export default function StatisticsEvolutionTable({
                     </TableCell>
                     {selectedMetrics.map((metric) => (
                       <TableCell key={metric.id} align="right">
-                        {metric.label}
+                        <Tooltip title={metric.description} arrow>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              gap: 0.5,
+                              cursor: "help",
+                            }}
+                          >
+                            {metric.label}
+                            <InfoOutlinedIcon
+                              aria-hidden
+                              sx={{
+                                color: "text.secondary",
+                                fontSize: 16,
+                              }}
+                            />
+                          </Box>
+                        </Tooltip>
                       </TableCell>
                     ))}
                   </TableRow>
