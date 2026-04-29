@@ -132,6 +132,11 @@ Uncached statistics point queries keep player-filtered datasets SQL-side via
 flags. Game list score payloads use grouped score queries rather than per-game
 score lookups.
 
+Shared statistics dataset construction lives in
+`app/crud/statistics_dataset.py`. Use it for statistics paths that need a
+consistent filtered point set plus related players, turnovers, stoppages, or
+strategies.
+
 ## Project Layout
 
 - `app/routers/` HTTP endpoints per domain

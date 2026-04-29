@@ -172,6 +172,11 @@ Reduce DB work for a single uncached statistics request.
 
 ## Milestone 4: Shared Backend Statistics Dataset
 
+Status: implemented with `backend/app/crud/statistics_dataset.py`, which
+normalizes filters, loads filtered completed points once per statistics path,
+and attaches requested players, turnovers, stoppages, and strategies for the
+calculators.
+
 ### Objective
 
 Avoid loading and filtering the same points separately for each statistics endpoint.

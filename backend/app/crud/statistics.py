@@ -3,10 +3,14 @@ Statistics CRUD operations (facade).
 """
 
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.crud.statistics_dataset import (
+    StatisticsScope,
+    build_statistics_dataset,
+)
 from app.crud.statistics_calculations import (
     build_competition_team_stats,
     build_game_strategy_stats,
@@ -18,61 +22,8 @@ from app.crud.statistics_calculations import (
 )
 from app.crud.statistics_evolution import get_team_evolution
 from app.crud.statistics_queries import (
-    get_competition,
-    get_competition_players,
     get_completed_points,
-    get_completed_points_for_competition,
-    get_completed_points_for_team,
-    get_game,
-    get_game_players,
-    get_stoppages_for_points,
-    get_strategies_by_ids,
-    get_team,
-    get_team_players,
-    get_turnovers_for_points,
 )
-
-
-def _fetch_scope_completed_points(
-    db: Session,
-    scope_id: int,
-    scope_fetcher: Callable[[Session, int], object],
-    points_fetcher: Callable[..., List],
-    *,
-    require_timestamps: bool = False,
-    required_player_ids: Optional[List[int]] = None,
-    load_players: bool = False,
-    load_strategy: bool = False,
-    load_game: bool = False,
-    points_fetcher_kwargs: Optional[Dict[str, Any]] = None,
-) -> Optional[List]:
-    """Return completed points for a scope or None if the scope does not exist."""
-    if not scope_fetcher(db, scope_id):
-        return None
-
-    points = points_fetcher(
-        db,
-        scope_id,
-        require_timestamps=require_timestamps,
-        required_player_ids=required_player_ids,
-        load_players=load_players,
-        load_strategy=load_strategy,
-        load_game=load_game,
-        **(points_fetcher_kwargs or {}),
-    )
-    return points
-
-
-def _get_point_ids(points: List) -> List[int]:
-    return [point.id for point in points]
-
-
-def _get_scope_turnovers(db: Session, points: List) -> Dict[int, List]:
-    return get_turnovers_for_points(db, _get_point_ids(points))
-
-
-def _get_scope_stoppages(db: Session, points: List) -> Dict[int, List]:
-    return get_stoppages_for_points(db, _get_point_ids(points))
 
 
 def _sort_points_for_timeline(points: List) -> List:
@@ -113,108 +64,91 @@ def _get_halftime_after_point_number(all_completed_points: List, halftime) -> Op
 
 def _build_scope_player_stats(
     db: Session,
+    scope_type: StatisticsScope,
     scope_id: int,
-    scope_fetcher: Callable[[Session, int], object],
-    points_fetcher: Callable[..., List],
-    players_fetcher: Callable[..., List],
     *,
     include_players_from_points: bool = False,
     required_player_ids: Optional[List[int]] = None,
-    points_fetcher_kwargs: Optional[Dict[str, Any]] = None,
-    players_fetcher_kwargs: Optional[Dict[str, Any]] = None,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
 ) -> Optional[List[Dict]]:
-    completed_points = _fetch_scope_completed_points(
+    dataset = build_statistics_dataset(
         db,
+        scope_type,
         scope_id,
-        scope_fetcher,
-        points_fetcher,
         require_timestamps=True,
         required_player_ids=required_player_ids,
-        load_players=True,
-        points_fetcher_kwargs=points_fetcher_kwargs,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+        include_players=True,
+        include_players_from_points=include_players_from_points,
+        include_turnovers=True,
+        include_stoppages=True,
     )
-    if completed_points is None:
+    if dataset is None:
         return None
 
-    scope_players = players_fetcher(db, scope_id, **(players_fetcher_kwargs or {}))
-    players_for_stats = scope_players
-
-    # Competition stats should still include players who appeared in points even if
-    # the roster is incomplete.
-    if include_players_from_points:
-        players_by_id = {player.id: player for player in scope_players}
-        for point in completed_points:
-            for player in point.players:
-                if player.id not in players_by_id:
-                    players_by_id[player.id] = player
-        players_for_stats = list(players_by_id.values())
-
-    stoppages_by_point = _get_scope_stoppages(db, completed_points)
-    turnovers_by_point = _get_scope_turnovers(db, completed_points)
-
     return build_live_player_stats(
-        completed_points,
-        players_for_stats,
-        stoppages_by_point,
-        turnovers_by_point,
+        dataset.completed_points,
+        dataset.players,
+        dataset.stoppages_by_point,
+        dataset.turnovers_by_point,
     )
 
 
 def _build_scope_team_stats(
     db: Session,
+    scope_type: StatisticsScope,
     scope_id: int,
-    scope_fetcher: Callable[[Session, int], object],
-    points_fetcher: Callable[..., List],
     calculator: Callable[[int, List, Dict[int, List]], Dict],
     *,
     required_player_ids: Optional[List[int]] = None,
-    points_fetcher_kwargs: Optional[Dict[str, Any]] = None,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
 ) -> Optional[Dict]:
-    completed_points = _fetch_scope_completed_points(
+    dataset = build_statistics_dataset(
         db,
+        scope_type,
         scope_id,
-        scope_fetcher,
-        points_fetcher,
         required_player_ids=required_player_ids,
-        points_fetcher_kwargs=points_fetcher_kwargs,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+        include_turnovers=True,
     )
-    if completed_points is None:
+    if dataset is None:
         return None
 
-    turnovers_by_point = _get_scope_turnovers(db, completed_points)
-    return calculator(scope_id, completed_points, turnovers_by_point)
+    return calculator(scope_id, dataset.completed_points, dataset.turnovers_by_point)
 
 
 def _build_scope_strategy_stats(
     db: Session,
+    scope_type: StatisticsScope,
     scope_id: int,
     scope_key: str,
-    scope_fetcher: Callable[[Session, int], object],
-    points_fetcher: Callable[..., List],
     *,
     required_player_ids: Optional[List[int]] = None,
-    points_fetcher_kwargs: Optional[Dict[str, Any]] = None,
+    competition_ids: Optional[List[int]] = None,
+    game_ids: Optional[List[int]] = None,
 ) -> Optional[Dict]:
-    completed_points = _fetch_scope_completed_points(
+    dataset = build_statistics_dataset(
         db,
+        scope_type,
         scope_id,
-        scope_fetcher,
-        points_fetcher,
         require_timestamps=True,
         required_player_ids=required_player_ids,
-        points_fetcher_kwargs=points_fetcher_kwargs,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+        include_turnovers=True,
+        include_strategies=True,
     )
-    if completed_points is None:
+    if dataset is None:
         return None
 
-    strategy_ids = [point.strategy_id for point in completed_points if point.strategy_id]
-    strategies_by_id = get_strategies_by_ids(db, strategy_ids)
-    turnovers_by_point = _get_scope_turnovers(db, completed_points)
-
     strategy_stats = build_game_strategy_stats(
-        completed_points,
-        strategies_by_id,
-        turnovers_by_point,
+        dataset.completed_points,
+        dataset.strategies_by_id,
+        dataset.turnovers_by_point,
     )
 
     return {
@@ -244,10 +178,8 @@ def get_live_game_player_stats(
     """
     player_stats = _build_scope_player_stats(
         db,
+        "game",
         game_id,
-        get_game,
-        get_completed_points,
-        get_game_players,
         required_player_ids=required_player_ids,
     )
     return player_stats or []
@@ -259,23 +191,24 @@ def get_game_point_timeline(
     required_player_ids: Optional[List[int]] = None,
 ) -> Optional[Dict]:
     """Return a point-by-point timeline payload for a single game."""
-    game = get_game(db, game_id)
-    if not game:
+    dataset = build_statistics_dataset(
+        db,
+        "game",
+        game_id,
+        required_player_ids=required_player_ids,
+        include_turnovers=True,
+    )
+    if dataset is None:
         return None
 
-    all_completed_points = _sort_points_for_timeline(get_completed_points(db, game_id))
-    filtered_points = (
-        _sort_points_for_timeline(
-            get_completed_points(
-                db,
-                game_id,
-                required_player_ids=required_player_ids,
-            )
-        )
+    game = dataset.scope
+    filtered_points = _sort_points_for_timeline(dataset.completed_points)
+    all_completed_points = (
+        _sort_points_for_timeline(get_completed_points(db, game_id))
         if required_player_ids
-        else all_completed_points
+        else filtered_points
     )
-    filtered_turnovers_by_point = _get_scope_turnovers(db, filtered_points)
+    filtered_turnovers_by_point = dataset.turnovers_by_point
 
     cumulative_scores_by_point_id: Dict[int, tuple[int, int]] = {}
     our_score = 0
@@ -336,10 +269,8 @@ def get_competition_player_stats(
     """
     return _build_scope_player_stats(
         db,
+        "competition",
         competition_id,
-        get_competition,
-        get_completed_points_for_competition,
-        get_competition_players,
         include_players_from_points=True,
         required_player_ids=required_player_ids,
     )
@@ -360,20 +291,12 @@ def get_team_player_stats(
     """
     return _build_scope_player_stats(
         db,
+        "team",
         team_id,
-        get_team,
-        get_completed_points_for_team,
-        get_team_players,
         include_players_from_points=bool(competition_ids or game_ids),
         required_player_ids=required_player_ids,
-        points_fetcher_kwargs={
-            "competition_ids": competition_ids,
-            "game_ids": game_ids,
-        },
-        players_fetcher_kwargs={
-            "competition_ids": competition_ids,
-            "game_ids": game_ids,
-        },
+        competition_ids=competition_ids,
+        game_ids=game_ids,
     )
 
 
@@ -396,9 +319,8 @@ def get_game_team_stats(
     """
     return _build_scope_team_stats(
         db,
+        "game",
         game_id,
-        get_game,
-        get_completed_points,
         build_game_team_stats,
         required_player_ids=required_player_ids,
     )
@@ -417,9 +339,8 @@ def get_competition_team_stats(
     """
     return _build_scope_team_stats(
         db,
+        "competition",
         competition_id,
-        get_competition,
-        get_completed_points_for_competition,
         build_competition_team_stats,
         required_player_ids=required_player_ids,
     )
@@ -440,15 +361,12 @@ def get_team_team_stats(
     """
     return _build_scope_team_stats(
         db,
+        "team",
         team_id,
-        get_team,
-        get_completed_points_for_team,
         build_team_team_stats,
         required_player_ids=required_player_ids,
-        points_fetcher_kwargs={
-            "competition_ids": competition_ids,
-            "game_ids": game_ids,
-        },
+        competition_ids=competition_ids,
+        game_ids=game_ids,
     )
 
 
@@ -470,10 +388,9 @@ def get_game_strategy_stats(
     """
     return _build_scope_strategy_stats(
         db,
+        "game",
         game_id,
         "game_id",
-        get_game,
-        get_completed_points,
         required_player_ids=required_player_ids,
     )
 
@@ -491,10 +408,9 @@ def get_competition_strategy_stats(
     """
     return _build_scope_strategy_stats(
         db,
+        "competition",
         competition_id,
         "competition_id",
-        get_competition,
-        get_completed_points_for_competition,
         required_player_ids=required_player_ids,
     )
 
@@ -514,13 +430,10 @@ def get_team_strategy_stats(
     """
     return _build_scope_strategy_stats(
         db,
+        "team",
         team_id,
         "team_id",
-        get_team,
-        get_completed_points_for_team,
         required_player_ids=required_player_ids,
-        points_fetcher_kwargs={
-            "competition_ids": competition_ids,
-            "game_ids": game_ids,
-        },
+        competition_ids=competition_ids,
+        game_ids=game_ids,
     )

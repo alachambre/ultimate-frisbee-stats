@@ -6,11 +6,7 @@ from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 
 from app.crud.statistics_calculations import build_game_team_stats
-from app.crud.statistics_queries import (
-    get_completed_points_for_team,
-    get_team,
-    get_turnovers_for_points,
-)
+from app.crud.statistics_dataset import build_statistics_dataset
 from app.models.competition import Competition
 from app.models.game import Game
 from app.models.point import Point
@@ -209,32 +205,26 @@ def get_team_evolution(
     game_ids: Optional[list[int]] = None,
 ) -> Optional[dict]:
     """Return chronological per-game team metric values for evolution charts."""
-    if not get_team(db, team_id):
+    dataset = build_statistics_dataset(
+        db,
+        "team",
+        team_id,
+        required_player_ids=required_player_ids,
+        competition_ids=competition_ids,
+        game_ids=game_ids,
+        include_turnovers=True,
+    )
+    if dataset is None:
         return None
-
-    normalized_competition_ids = _normalize_filter_ids(competition_ids)
-    normalized_game_ids = _normalize_filter_ids(game_ids)
-    normalized_player_ids = _normalize_filter_ids(required_player_ids)
 
     games = _get_team_evolution_games(
         db,
         team_id,
-        competition_ids=normalized_competition_ids,
-        game_ids=normalized_game_ids,
-    )
-    completed_points = get_completed_points_for_team(
-        db,
-        team_id,
-        competition_ids=normalized_competition_ids,
-        game_ids=normalized_game_ids,
-        required_player_ids=normalized_player_ids,
+        competition_ids=dataset.filters.competition_ids,
+        game_ids=dataset.filters.game_ids,
     )
 
-    points_by_game = _group_points_by_game(completed_points)
-    turnovers_by_point = get_turnovers_for_points(
-        db,
-        [point.id for point in completed_points],
-    )
+    points_by_game = _group_points_by_game(dataset.completed_points)
 
     rows = []
     omitted_games_count = 0
@@ -247,7 +237,7 @@ def get_team_evolution(
         stats = build_game_team_stats(
             game.id,
             game_points,
-            turnovers_by_point,
+            dataset.turnovers_by_point,
         )
         rows.append(_build_team_evolution_game(game, stats))
 
@@ -255,9 +245,9 @@ def get_team_evolution(
     return {
         "team_id": team_id,
         "filters": {
-            "competition_ids": normalized_competition_ids,
-            "game_ids": normalized_game_ids,
-            "player_ids": normalized_player_ids,
+            "competition_ids": dataset.filters.competition_ids,
+            "game_ids": dataset.filters.game_ids,
+            "player_ids": dataset.filters.player_ids,
         },
         "default_preset_id": catalog.default_preset_id,
         "omitted_games_count": omitted_games_count,
@@ -265,12 +255,6 @@ def get_team_evolution(
         "presets": catalog.presets,
         "games": rows,
     }
-
-
-def _normalize_filter_ids(values: Optional[list[int]]) -> list[int]:
-    if not values:
-        return []
-    return sorted(set(values))
 
 
 def _get_team_evolution_games(
