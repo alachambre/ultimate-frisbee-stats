@@ -245,24 +245,7 @@ export default function StatisticsEvolutionTable({
                         />
                         <ListItemText
                           primary={option.label}
-                          secondary={
-                            <Stack spacing={0.25} component="span">
-                              <Typography
-                                component="span"
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {option.description}
-                              </Typography>
-                              <Typography
-                                component="span"
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {getMetricContext(option, translateEvolution)}
-                              </Typography>
-                            </Stack>
-                          }
+                          secondary={getMetricContext(option, translateEvolution)}
                         />
                       </li>
                     );

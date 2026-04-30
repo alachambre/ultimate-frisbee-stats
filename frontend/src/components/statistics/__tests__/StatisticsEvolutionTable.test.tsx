@@ -146,7 +146,7 @@ describe("StatisticsEvolutionTable", () => {
     expect(within(table).getByText("Points won")).toBeInTheDocument();
   });
 
-  it("shows metric descriptions in the selector and table header tooltips", async () => {
+  it("shows compact metric context in the selector and table header tooltips", async () => {
     const user = userEvent.setup();
     render(
       <StatisticsEvolutionTable
@@ -159,8 +159,8 @@ describe("StatisticsEvolutionTable", () => {
     await user.click(screen.getByLabelText("Metrics"));
     const listbox = await screen.findByRole("listbox");
     expect(
-      within(listbox).getByText("Completed points won by us.")
-    ).toBeInTheDocument();
+      within(listbox).queryByText("Completed points won by us.")
+    ).not.toBeInTheDocument();
     expect(within(listbox).getAllByText("Turns / Count").length).toBeGreaterThan(0);
 
     await user.keyboard("{Escape}");
