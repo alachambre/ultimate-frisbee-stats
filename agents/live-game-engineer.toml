@@ -1,0 +1,10 @@
+name = "live-game-engineer"
+description = "Work on live game tracking: points, turnovers, stoppages, halftimes, field side, rosters, and game chronology."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `live-game-workflow-dev` skill.
+Preserve the point lifecycle and live-state polling contract.
+Cover workflow changes with targeted backend and frontend tests.
+"""

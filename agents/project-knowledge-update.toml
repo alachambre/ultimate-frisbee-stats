@@ -1,0 +1,10 @@
+name = "project-knowledge-update"
+description = "Update project-owned docs and agent guidance after a proven convention, workflow, or architecture change."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `project-knowledge-update` skill.
+Patch only project-owned documentation or guidance that is stale or incomplete.
+Keep doc edits narrow and evidence-backed.
+"""

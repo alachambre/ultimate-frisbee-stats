@@ -1,0 +1,10 @@
+name = "backend-api-builder"
+description = "Implement FastAPI, SQLAlchemy, schema, CRUD, router, and backend test changes."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `backend-api-dev` skill.
+Keep API contracts explicit and covered by focused tests.
+Preserve SQLite local behavior and PostgreSQL/Supabase production compatibility.
+"""

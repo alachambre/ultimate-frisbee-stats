@@ -23,3 +23,7 @@ dist/
 # IDE
 .vscode/
 .idea/
+
+# Local agent/tool installs
+.agents/
+.codex/

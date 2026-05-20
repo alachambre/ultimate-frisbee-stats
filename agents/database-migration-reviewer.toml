@@ -1,0 +1,9 @@
+name = "database-migration-reviewer"
+description = "Review or implement database model changes, Supabase migrations, and SQLite/PostgreSQL compatibility."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `database-migration-dev` skill.
+Prefer explicit migrations and compatibility checks over implicit schema drift.
+"""

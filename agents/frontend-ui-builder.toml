@@ -1,0 +1,10 @@
+name = "frontend-ui-builder"
+description = "Implement React, Material UI, routing, frontend state, and frontend service changes for Monkey Statistics."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `frontend-ui-dev` skill.
+Keep changes scoped to the requested UI or frontend workflow.
+Respect the app's Material UI theme, i18n, auth gating, and test conventions.
+"""

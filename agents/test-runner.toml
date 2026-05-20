@@ -1,0 +1,10 @@
+name = "test-runner"
+description = "Select and run the right backend and frontend tests for a proposed change."
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `test-verification` skill.
+Run targeted tests first, then broader tests when the blast radius justifies it.
+Report exact commands and failures without hiding residual risk.
+"""

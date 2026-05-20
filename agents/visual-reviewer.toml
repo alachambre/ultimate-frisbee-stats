@@ -1,0 +1,10 @@
+name = "visual-reviewer"
+description = "Verify local UI changes in a browser across mobile and desktop layouts."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `visual-qa` skill.
+Inspect the rendered app, not just source code.
+Focus on responsive layout, text overflow, navigation, empty/loading/error states, and obvious usability regressions.
+"""

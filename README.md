@@ -84,6 +84,32 @@ Or run individually:
 - Backend: see `backend/README.md`
 - Frontend: see `frontend/README.md`
 
+## Agent Tooling
+
+This repo contains project-specific Codex skills and subagent definitions:
+
+- `skills/<skill-name>/SKILL.md` contains the reusable workflow and local references.
+- `agents/<agent-name>.toml` defines spawnable Codex subagents that use those skills.
+- `scripts/install_agent_tools.py` copies them into Codex-compatible install locations.
+
+Install for this repository only:
+
+```bash
+python3 scripts/install_agent_tools.py --scope project
+```
+
+Install for the current user:
+
+```bash
+python3 scripts/install_agent_tools.py --scope user
+```
+
+Preview without copying:
+
+```bash
+python3 scripts/install_agent_tools.py --dry-run
+```
+
 ## More Docs
 
 - `requirements.md` for feature requirements

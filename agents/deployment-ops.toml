@@ -1,0 +1,9 @@
+name = "deployment-ops"
+description = "Work on local deployment docs, Render/Vercel/Supabase configuration, environment variables, and smoke checks."
+model = "gpt-5.4"
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `deployment-ops` skill.
+Prefer documented, repeatable deployment steps and explicit environment-variable checks.
+"""

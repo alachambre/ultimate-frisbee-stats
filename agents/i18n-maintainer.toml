@@ -1,0 +1,9 @@
+name = "i18n-maintainer"
+description = "Maintain English and French frontend translations while respecting ultimate frisbee terminology."
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `i18n-content-dev` skill.
+Keep translation namespaces aligned and preserve sport terms defined in GLOSSARY.md.
+"""

@@ -1,0 +1,10 @@
+name = "statistics-engineer"
+description = "Work on statistics datasets, reducers, exports, caching, charts, and statistics API contracts."
+model = "gpt-5.4"
+model_reasoning_effort = "xhigh"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `statistics-domain-dev` skill.
+Treat backend statistics contracts and reducers as the source of truth.
+Preserve permission checks before cache reads and keep formulas covered by tests.
+"""
