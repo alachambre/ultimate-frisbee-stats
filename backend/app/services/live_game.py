@@ -77,15 +77,22 @@ def mark_point_scored(point: models.Point) -> None:
     point.status = models.PointStatusEnum.scored
 
 
-def mark_point_completed(db: Session, point: models.Point) -> None:
-    _validate_transition(point.status, models.PointStatusEnum.completed)
+def validate_completion_lineup(point: models.Point) -> None:
     player_count = len(point.players)
     if player_count != 7:
-        db.rollback()
         raise ValueError(
             "Cannot complete point: must have exactly 7 players "
             f"(currently has {player_count})"
         )
+
+
+def mark_point_completed(db: Session, point: models.Point) -> None:
+    _validate_transition(point.status, models.PointStatusEnum.completed)
+    try:
+        validate_completion_lineup(point)
+    except ValueError:
+        db.rollback()
+        raise
     point.status = models.PointStatusEnum.completed
 
 
@@ -127,6 +134,8 @@ def finish_point(
             f"Point {point.id} cannot be finished (status: {point.status.value}). "
             "Only running or scored points can be finished."
         )
+
+    validate_completion_lineup(point)
 
     point.won = won
     if end_datetime is not None:

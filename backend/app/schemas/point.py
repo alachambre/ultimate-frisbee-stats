@@ -37,7 +37,7 @@ class PointUpdate(BaseModel):
     start_datetime: Optional[datetime] = None
     end_datetime: Optional[datetime] = None
     status: Optional[PointStatus] = None
-    player_ids: Optional[List[int]] = Field(None, min_length=7, max_length=7)
+    player_ids: Optional[List[int]] = None
 
 
 class Point(PointBase):

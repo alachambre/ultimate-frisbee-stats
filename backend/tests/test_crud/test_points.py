@@ -212,10 +212,12 @@ def test_update_point_change_players(db_session, sample_game, sample_players):
     assert updated_player_ids == sorted(new_player_ids)
 
 
-def test_update_point_wrong_player_count(db_session, sample_game, sample_players):
-    """Test that updating with wrong number of players fails"""
-    from pydantic import ValidationError
-
+def test_update_point_allows_partial_line_before_completion(
+    db_session,
+    sample_game,
+    sample_players,
+):
+    """Test that editing a point line can temporarily use fewer than 7 players."""
     player_ids = [p.id for p in sample_players]
     point = points.create_point(
         db_session,
@@ -226,12 +228,37 @@ def test_update_point_wrong_player_count(db_session, sample_game, sample_players
         )
     )
 
-    # Try to update with only 5 players - Pydantic validates this
-    with pytest.raises(ValidationError):
-        update_data = PointUpdate(
+    updated_point = points.update_point(
+        db_session,
+        point.id,
+        PointUpdate(
             starting_on_offense=True,
-            player_ids=player_ids[:5]
-        )
+            player_ids=player_ids[:5],
+        ),
+    )
+
+    assert updated_point is not None
+    assert len(updated_point.players) == 5
+
+
+def test_finish_point_requires_exactly_seven_players(
+    db_session,
+    sample_game,
+    sample_players,
+):
+    """Test that completion still enforces a full line."""
+    point = points.create_point(
+        db_session,
+        PointCreate(
+            game_id=sample_game.id,
+            starting_on_offense=True,
+            player_ids=[player.id for player in sample_players[:5]],
+        ),
+    )
+    points.update_point(db_session, point.id, PointUpdate(status=PointStatus.running))
+
+    with pytest.raises(ValueError, match="must have exactly 7 players"):
+        points.finish_point(db_session, point.id, PointFinish(won=True))
 
 
 def test_update_point_not_found(db_session):

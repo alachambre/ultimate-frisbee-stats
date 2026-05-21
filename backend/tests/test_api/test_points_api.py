@@ -284,8 +284,12 @@ def test_update_point_change_players_api(client, sample_game, sample_players):
     assert returned_player_ids == sorted(new_player_ids)
 
 
-def test_update_point_wrong_player_count_api(client, sample_game, sample_players):
-    """Test PUT /points/{point_id} with wrong player count"""
+def test_update_point_allows_partial_line_before_completion_api(
+    client,
+    sample_game,
+    sample_players,
+):
+    """Test PUT /points/{point_id} can edit a line before completion."""
     player_ids = [p.id for p in sample_players]
 
     # Create a point
@@ -296,13 +300,15 @@ def test_update_point_wrong_player_count_api(client, sample_game, sample_players
     })
     point_id = create_response.json()["id"]
 
-    # Try to update with only 5 players
+    # Update with only 5 players while the point is still editable.
     response = client.put(f"/points/{point_id}", json={
         "starting_on_offense": True,
         "player_ids": player_ids[:5]
     })
 
-    assert response.status_code == 422
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["players"]) == 5
 
 
 def test_update_point_not_found_api(client):

@@ -58,6 +58,26 @@ def test_finish_point_not_active_api(client, sample_game, sample_players):
     assert "cannot be finished" in response.json()["detail"].lower()
 
 
+def test_finish_point_requires_exactly_seven_players_api(
+    client,
+    sample_game,
+    sample_players,
+):
+    """Test POST /points/{point_id}/finish keeps completion line validation."""
+    create_response = client.post("/points", json={
+        "game_id": sample_game.id,
+        "starting_on_offense": True,
+        "player_ids": [player.id for player in sample_players[:5]]
+    })
+    point_id = create_response.json()["id"]
+
+    client.put(f"/points/{point_id}", json={"status": "running"})
+    response = client.post(f"/points/{point_id}/finish", json={"won": True})
+
+    assert response.status_code == 400
+    assert "must have exactly 7 players" in response.json()["detail"]
+
+
 def test_finish_point_not_found_api(client):
     """Test finishing a non-existent point"""
     response = client.post("/points/999/finish", json={"won": True})
