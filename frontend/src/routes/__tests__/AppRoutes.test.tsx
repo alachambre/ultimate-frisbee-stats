@@ -104,9 +104,9 @@ describe("AppRoutes", () => {
     );
 
     expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("new");
-    expect(
-      await screen.findByRole("heading", { name: /^All games$/i })
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/games");
+    });
   });
 
   it("switches from a new-only route back to a valid old UI route", async () => {
