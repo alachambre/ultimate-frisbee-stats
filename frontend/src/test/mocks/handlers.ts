@@ -1,58 +1,64 @@
 import { http, HttpResponse } from "msw";
 import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate, GamePointTimeline, TeamEvolutionResponse } from "../../types";
+import { mockDb, resetMockData as resetMockDbData } from "./mockDb";
 
 const BASE_URL = "http://localhost:8000";
 
-// In-memory data store for tests
-let teams: Team[] = [];
-let players: Player[] = [];
-let competitions: Competition[] = [];
-let competitionPlayers: Map<number, number[]> = new Map(); // competitionId -> playerIds[]
-let lines: Line[] = [];
-let linePlayers: Map<number, number[]> = new Map(); // lineId -> playerIds[]
-let games: Game[] = [];
-let gamePlayers: Map<number, number[]> = new Map(); // gameId -> playerIds[]
-let strategies: Strategy[] = [];
-let points: PointWithPlayers[] = [];
-let halftimes: Halftime[] = [];
-let calls: Stoppage[] = [];
-let turnovers: TurnoverWithPlayer[] = [];
-let nextTeamId = 1;
-let nextPlayerId = 1;
-let nextCompetitionId = 1;
-let nextLineId = 1;
-let nextGameId = 1;
-let nextStrategyId = 1;
-let nextPointId = 1;
-let nextHalftimeId = 1;
-let nextCallId = 1;
-let nextTurnoverId = 1;
+let teams = mockDb.teams;
+let players = mockDb.players;
+let competitions = mockDb.competitions;
+let competitionPlayers = mockDb.competitionPlayers;
+let lines = mockDb.lines;
+let linePlayers = mockDb.linePlayers;
+let games = mockDb.games;
+let gamePlayers = mockDb.gamePlayers;
+let strategies = mockDb.strategies;
+let points = mockDb.points;
+let halftimes = mockDb.halftimes;
+let calls = mockDb.calls;
+let turnovers = mockDb.turnovers;
 
-// Helper to reset data between tests
+let nextTeamId = mockDb.nextTeamId;
+let nextPlayerId = mockDb.nextPlayerId;
+let nextCompetitionId = mockDb.nextCompetitionId;
+let nextLineId = mockDb.nextLineId;
+let nextGameId = mockDb.nextGameId;
+let nextStrategyId = mockDb.nextStrategyId;
+let nextPointId = mockDb.nextPointId;
+let nextHalftimeId = mockDb.nextHalftimeId;
+let nextCallId = mockDb.nextCallId;
+let nextTurnoverId = mockDb.nextTurnoverId;
+
+function syncMockDbAliases() {
+  teams = mockDb.teams;
+  players = mockDb.players;
+  competitions = mockDb.competitions;
+  competitionPlayers = mockDb.competitionPlayers;
+  lines = mockDb.lines;
+  linePlayers = mockDb.linePlayers;
+  games = mockDb.games;
+  gamePlayers = mockDb.gamePlayers;
+  strategies = mockDb.strategies;
+  points = mockDb.points;
+  halftimes = mockDb.halftimes;
+  calls = mockDb.calls;
+  turnovers = mockDb.turnovers;
+
+  nextTeamId = mockDb.nextTeamId;
+  nextPlayerId = mockDb.nextPlayerId;
+  nextCompetitionId = mockDb.nextCompetitionId;
+  nextLineId = mockDb.nextLineId;
+  nextGameId = mockDb.nextGameId;
+  nextStrategyId = mockDb.nextStrategyId;
+  nextPointId = mockDb.nextPointId;
+  nextHalftimeId = mockDb.nextHalftimeId;
+  nextCallId = mockDb.nextCallId;
+  nextTurnoverId = mockDb.nextTurnoverId;
+}
+
 export function resetMockData() {
-  teams = [];
-  players = [];
-  competitions = [];
-  competitionPlayers = new Map();
-  lines = [];
-  linePlayers = new Map();
-  games = [];
-  gamePlayers = new Map();
-  strategies = [];
-  points = [];
-  halftimes = [];
-  calls = [];
-  turnovers = [];
-  nextTeamId = 1;
-  nextPlayerId = 1;
-  nextCompetitionId = 1;
-  nextLineId = 1;
-  nextGameId = 1;
-  nextStrategyId = 1;
-  nextPointId = 1;
-  nextHalftimeId = 1;
-  nextCallId = 1;
-  nextTurnoverId = 1;
+  resetMockDbData();
+  syncMockDbAliases();
 }
 
 function buildEmptyPlayerStatsForPlayers(playersList: Player[]) {
