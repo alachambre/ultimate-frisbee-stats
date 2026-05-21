@@ -33,7 +33,37 @@
   "newUiPages": {
     "allGames": {
       "heading": "Tous les matchs",
-      "copy": "Le tableau de bord d'équipe, les compétitions, les prochains matchs et les résultats récents apparaîtront ici."
+      "copy": "Suivez l'équipe courante, ouvrez les matchs en direct et retrouvez les derniers résultats.",
+      "publicCopy": "Vue publique spectateur",
+      "publicNotice": "Vous voyez les informations publiques des matchs. Connectez-vous avec un accès équipe pour utiliser le tableau de bord.",
+      "selectedTeamEyebrow": "Tableau de bord {{teamName}}",
+      "globalEyebrow": "Matchs publics",
+      "actions": {
+        "record": "Saisir un match",
+        "live": "Matchs en direct",
+        "statistics": "Statistiques",
+        "openLive": "Ouvrir le direct",
+        "prepare": "Préparer",
+        "review": "Revoir"
+      },
+      "summary": {
+        "live": "En direct",
+        "upcoming": "À venir",
+        "completed": "Terminés",
+        "record": "Bilan"
+      },
+      "sections": {
+        "live": "En direct",
+        "upcoming": "Prochains matchs",
+        "recent": "Derniers résultats"
+      },
+      "empty": {
+        "team": "Aucun match pour cette équipe.",
+        "public": "Aucun match public disponible pour le moment.",
+        "section": "Rien à afficher pour le moment."
+      },
+      "loading": "Chargement des matchs...",
+      "error": "Impossible de charger les matchs."
     },
     "recordGame": {
       "heading": "Saisir un match",

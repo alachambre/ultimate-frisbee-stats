@@ -85,6 +85,32 @@ function getMockStatisticsData(): MockStatisticsData {
   };
 }
 
+function buildGameWithScore(game: Game): GameWithScore {
+  const competition = competitions.find((c) => c.id === game.competition_id);
+  const team = teams.find((t) => t.id === competition?.team_id);
+  const gamePoints = points.filter((point) => point.game_id === game.id);
+  let ourScore = 0;
+  let opponentScore = 0;
+
+  gamePoints.forEach((point) => {
+    if (point.status === "completed" && point.won !== null) {
+      if (point.won) {
+        ourScore += 1;
+      } else {
+        opponentScore += 1;
+      }
+    }
+  });
+
+  return {
+    ...game,
+    our_score: ourScore,
+    opponent_score: opponentScore,
+    team_name: team?.name || "Unknown",
+    competition_name: competition?.name || "Unknown",
+  };
+}
+
 export const handlers = [
   http.get(`${BASE_URL}/health`, () =>
     HttpResponse.json({
@@ -364,33 +390,12 @@ export const handlers = [
       );
     }
 
-    const team = teams.find((t) => t.id === competition.team_id);
     const competitionGames = games.filter(
       (g) => g.competition_id === competitionId
     );
 
-    const gamesWithScores: GameWithScore[] = competitionGames.map((game) => {
-      const gamePoints = points.filter((p) => p.game_id === game.id);
-      let ourScore = 0;
-      let opponentScore = 0;
-      gamePoints.forEach((point) => {
-        if (point.status === "completed" && point.won !== null) {
-          if (point.won) {
-            ourScore++;
-          } else {
-            opponentScore++;
-          }
-        }
-      });
-
-      return {
-        ...game,
-        our_score: ourScore,
-        opponent_score: opponentScore,
-        team_name: team?.name || "Unknown",
-        competition_name: competition.name,
-      };
-    });
+    const gamesWithScores: GameWithScore[] =
+      competitionGames.map(buildGameWithScore);
 
     return HttpResponse.json(gamesWithScores);
   }),
@@ -449,17 +454,7 @@ export const handlers = [
 
   // GET /games - List all games with scores
   http.get(`${BASE_URL}/games`, () => {
-    const gamesWithScores: GameWithScore[] = games.map((game) => {
-      const competition = competitions.find((c) => c.id === game.competition_id);
-      const team = teams.find((t) => t.id === competition?.team_id);
-      return {
-        ...game,
-        our_score: 0,
-        opponent_score: 0,
-        team_name: team?.name || "Unknown",
-        competition_name: competition?.name || "Unknown",
-      };
-    });
+    const gamesWithScores: GameWithScore[] = games.map(buildGameWithScore);
     return HttpResponse.json(gamesWithScores);
   }),
 
