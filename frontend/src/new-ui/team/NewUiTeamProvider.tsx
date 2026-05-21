@@ -58,6 +58,7 @@ export function NewUiTeamProvider({
   const {
     data: teams = [],
     isLoading: isLoadingTeams,
+    isSuccess: hasLoadedTeams,
     error: teamsError,
   } = useQuery({
     queryKey: queryKeys.teams,
@@ -65,8 +66,14 @@ export function NewUiTeamProvider({
     enabled: canLoadTeams,
   });
 
+  const visibleTeams = useMemo(
+    () => (canLoadTeams ? teams : []),
+    [canLoadTeams, teams]
+  );
+  const visibleSelectedTeamId = canLoadTeams ? selectedTeamId : undefined;
+
   useEffect(() => {
-    if (!canLoadTeams || isLoadingTeams) {
+    if (!canLoadTeams || isLoadingTeams || !hasLoadedTeams) {
       return;
     }
 
@@ -89,7 +96,7 @@ export function NewUiTeamProvider({
       setSelectedTeamIdState(undefined);
       window.localStorage.removeItem(SELECTED_TEAM_STORAGE_KEY);
     }
-  }, [canLoadTeams, isLoadingTeams, selectedTeamId, teams]);
+  }, [canLoadTeams, hasLoadedTeams, isLoadingTeams, selectedTeamId, teams]);
 
   const setSelectedTeamId = useCallback((teamId?: number) => {
     setSelectedTeamIdState(teamId);
@@ -102,15 +109,15 @@ export function NewUiTeamProvider({
   }, []);
 
   const selectedTeam =
-    selectedTeamId === undefined
+    visibleSelectedTeamId === undefined
       ? null
-      : teams.find((team) => team.id === selectedTeamId) ?? null;
+      : visibleTeams.find((team) => team.id === visibleSelectedTeamId) ?? null;
 
   const value = useMemo(
     () => ({
-      teams,
+      teams: visibleTeams,
       selectedTeam,
-      selectedTeamId,
+      selectedTeamId: visibleSelectedTeamId,
       setSelectedTeamId,
       isLoadingTeams,
       teamsError,
@@ -120,10 +127,10 @@ export function NewUiTeamProvider({
       canLoadTeams,
       isLoadingTeams,
       selectedTeam,
-      selectedTeamId,
       setSelectedTeamId,
-      teams,
       teamsError,
+      visibleSelectedTeamId,
+      visibleTeams,
     ]
   );
 
