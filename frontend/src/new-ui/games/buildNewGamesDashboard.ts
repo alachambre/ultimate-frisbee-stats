@@ -35,6 +35,18 @@ function sortAscendingByDate(a: GameWithScore, b: GameWithScore): number {
 }
 
 function sortDescendingByDate(a: GameWithScore, b: GameWithScore): number {
+  if (!a.date && !b.date) {
+    return 0;
+  }
+
+  if (!a.date) {
+    return 1;
+  }
+
+  if (!b.date) {
+    return -1;
+  }
+
   return getGameTime(b) - getGameTime(a);
 }
 

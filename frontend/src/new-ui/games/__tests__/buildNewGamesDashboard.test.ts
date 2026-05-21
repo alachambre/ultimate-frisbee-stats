@@ -10,7 +10,8 @@ function game(
     id: overrides.id,
     competition_id: overrides.competition_id,
     opponent_name: overrides.opponent_name ?? `Opponent ${overrides.id}`,
-    date: overrides.date ?? "2026-05-22T10:00:00Z",
+    date:
+      "date" in overrides ? overrides.date : "2026-05-22T10:00:00Z",
     comments: null,
     status: overrides.status,
     start_datetime: null,
@@ -119,5 +120,28 @@ describe("buildNewGamesDashboard", () => {
     expect(dashboard.summary.wins).toBe(1);
     expect(dashboard.summary.losses).toBe(1);
     expect(dashboard.summary.draws).toBe(0);
+  });
+
+  it("sorts undated recent games after dated recent games", () => {
+    const dashboard = buildNewGamesDashboard({
+      games: [
+        game({
+          id: 1,
+          competition_id: 10,
+          status: "ended",
+          date: null,
+        }),
+        game({
+          id: 2,
+          competition_id: 10,
+          status: "ended",
+          date: "2026-05-21T10:00:00Z",
+        }),
+      ],
+      selectedTeamId: 1,
+      teamCompetitions: [competition({ id: 10, team_id: 1 })],
+    });
+
+    expect(dashboard.recentGames.map((item) => item.id)).toEqual([2, 1]);
   });
 });
