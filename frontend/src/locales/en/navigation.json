@@ -29,5 +29,27 @@
   "team": {
     "selectedTeam": "Selected team",
     "noTeam": "No team selected"
+  },
+  "newUiPages": {
+    "allGames": {
+      "heading": "All games",
+      "copy": "Team dashboard, competitions, upcoming games, and recent results will live here."
+    },
+    "recordGame": {
+      "heading": "Record game",
+      "copy": "Ready games, quick game creation, and field recording will live here."
+    },
+    "liveGame": {
+      "heading": "Live game",
+      "copy": "Public spectator boards for currently running games will live here."
+    },
+    "statistics": {
+      "heading": "Statistics",
+      "copy": "Coach overview, presets, and advanced filters will live here."
+    },
+    "teamSetup": {
+      "heading": "Team setup",
+      "copy": "Roster, lines, strategies, and team configuration will live here."
+    }
   }
 }

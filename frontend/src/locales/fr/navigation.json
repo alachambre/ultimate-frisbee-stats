@@ -29,5 +29,27 @@
   "team": {
     "selectedTeam": "Équipe sélectionnée",
     "noTeam": "Aucune équipe sélectionnée"
+  },
+  "newUiPages": {
+    "allGames": {
+      "heading": "Tous les matchs",
+      "copy": "Le tableau de bord d'équipe, les compétitions, les prochains matchs et les résultats récents apparaîtront ici."
+    },
+    "recordGame": {
+      "heading": "Saisir un match",
+      "copy": "Les matchs prêts, la création rapide de match et la saisie terrain apparaîtront ici."
+    },
+    "liveGame": {
+      "heading": "Match en direct",
+      "copy": "Les tableaux publics pour spectateurs des matchs en cours apparaîtront ici."
+    },
+    "statistics": {
+      "heading": "Statistiques",
+      "copy": "La vue coach, les préréglages et les filtres avancés apparaîtront ici."
+    },
+    "teamSetup": {
+      "heading": "Configuration équipe",
+      "copy": "L'effectif, les lignes, les stratégies et la configuration de l'équipe apparaîtront ici."
+    }
   }
 }
