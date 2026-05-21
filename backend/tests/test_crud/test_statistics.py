@@ -14,7 +14,10 @@ from app.crud.statistics import (
     get_team_team_stats,
     get_team_strategy_stats,
 )
-from app.crud.statistics_calculations import build_turnover_type_stats
+from app.crud.statistics_calculations import (
+    PlayerStatsAccumulator,
+    build_turnover_type_stats,
+)
 from tests.builders import (
     CompetitionBuilder,
     GameBuilder,
@@ -95,6 +98,38 @@ def test_build_turnover_type_stats_returns_zeroed_distribution_for_empty_dataset
             for turnover_type in bucket["by_type"].values():
                 assert turnover_type["count"] == 0
                 assert turnover_type["percentage"] == 0.0
+
+
+def test_player_stats_accumulator_converts_to_existing_response_shape():
+    accumulator = PlayerStatsAccumulator(
+        player_id=12,
+        player_name="Alex",
+        player_number=7,
+    )
+    accumulator.record_point(
+        starting_on_offense=True,
+        won=True,
+        effective_time_seconds=42,
+        our_turnovers=0,
+        opponent_turnovers=1,
+        turnovers=[],
+    )
+
+    stats = accumulator.to_response()
+
+    assert stats["player_id"] == 12
+    assert stats["player_name"] == "Alex"
+    assert stats["player_number"] == 7
+    assert stats["points_played"] == 1
+    assert stats["effective_time_seconds"] == 42
+    assert stats["offense"]["points_played"] == 1
+    assert stats["offense"]["points_won"] == 1
+    assert stats["offense"]["hold_rate"] == 1.0
+    assert stats["offense"]["opponent_turnovers"] == 1
+    assert stats["defense"]["points_played"] == 0
+    assert stats["turnover_type_stats"]["all_points"]["our_possession_turnovers"][
+        "total_turnovers"
+    ] == 0
 
 
 def test_get_game_point_timeline_returns_cumulative_score_and_halftime_marker(db_session):

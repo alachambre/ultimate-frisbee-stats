@@ -1,7 +1,7 @@
 """
 Pure calculation helpers for statistics.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Tuple, Dict, Optional
 
 from app.models.stoppage import Stoppage
@@ -126,6 +126,298 @@ def finalize_turnover_type_stats(turnover_type_stats: Dict) -> Dict:
             for stats in bucket["by_type"].values():
                 stats["percentage"] = calculate_rate(stats["count"], total_turnovers)
     return turnover_type_stats
+
+
+@dataclass
+class PossessionPhaseAccumulator:
+    points_played: int = 0
+    points_won: int = 0
+    points_lost: int = 0
+    points_won_no_turnover: int = 0
+    points_lost_no_turnover: int = 0
+    points_with_turnover: int = 0
+    our_turnovers: int = 0
+    opponent_turnovers: int = 0
+
+    def record_point(
+        self,
+        won: bool,
+        our_turnovers: int,
+        opponent_turnovers: int,
+    ) -> None:
+        total_turnovers = our_turnovers + opponent_turnovers
+
+        self.points_played += 1
+        self.our_turnovers += our_turnovers
+        self.opponent_turnovers += opponent_turnovers
+
+        if won:
+            self.points_won += 1
+            if our_turnovers == 0:
+                self.points_won_no_turnover += 1
+        else:
+            self.points_lost += 1
+            if total_turnovers == 0:
+                self.points_lost_no_turnover += 1
+
+        if total_turnovers > 0:
+            self.points_with_turnover += 1
+
+    def to_offense_response(self, points_key: str) -> Dict:
+        return {
+            points_key: self.points_played,
+            "points_won": self.points_won,
+            "points_lost": self.points_lost,
+            "hold_rate": calculate_rate(self.points_won, self.points_played),
+            "points_won_no_turnover": self.points_won_no_turnover,
+            "clean_hold_rate": calculate_rate(
+                self.points_won_no_turnover,
+                self.points_played,
+            ),
+            "our_turnovers": self.our_turnovers,
+            "opponent_turnovers": self.opponent_turnovers,
+        }
+
+    def to_team_offense_response(self) -> Dict:
+        return {
+            **self.to_offense_response("points_started"),
+            "broken_rate": calculate_rate(self.points_lost, self.points_played),
+        }
+
+    def to_defense_response(self, points_key: str) -> Dict:
+        return {
+            points_key: self.points_played,
+            "points_won": self.points_won,
+            "points_lost": self.points_lost,
+            "break_rate": calculate_rate(self.points_won, self.points_played),
+            "points_with_turnover": self.points_with_turnover,
+            "turnover_rate": calculate_rate(
+                self.points_with_turnover,
+                self.points_played,
+            ),
+            "conversion_rate": calculate_rate(
+                self.points_won,
+                self.points_with_turnover,
+            ),
+            "points_won_no_turnover": self.points_won_no_turnover,
+            "clean_break_rate": calculate_rate(
+                self.points_won_no_turnover,
+                self.points_played,
+            ),
+            "clean_conversion_rate": calculate_rate(
+                self.points_won_no_turnover,
+                self.points_with_turnover,
+            ),
+            "points_lost_no_turnover": self.points_lost_no_turnover,
+            "our_turnovers": self.our_turnovers,
+            "opponent_turnovers": self.opponent_turnovers,
+        }
+
+
+@dataclass
+class PlayerStatsAccumulator:
+    player_id: int
+    player_name: str
+    player_number: Optional[int]
+    points_played: int = 0
+    effective_time_seconds: int = 0
+    turnover_type_stats: Dict = field(default_factory=build_empty_turnover_type_stats)
+    offense: PossessionPhaseAccumulator = field(
+        default_factory=PossessionPhaseAccumulator
+    )
+    defense: PossessionPhaseAccumulator = field(
+        default_factory=PossessionPhaseAccumulator
+    )
+
+    @classmethod
+    def from_player(cls, player: Player) -> "PlayerStatsAccumulator":
+        return cls(
+            player_id=player.id,
+            player_name=player.name,
+            player_number=player.number,
+        )
+
+    def record_point(
+        self,
+        starting_on_offense: bool,
+        won: bool,
+        effective_time_seconds: int,
+        our_turnovers: int,
+        opponent_turnovers: int,
+        turnovers: List[Turnover],
+    ) -> None:
+        self.points_played += 1
+        self.effective_time_seconds += effective_time_seconds
+        accumulate_turnover_type_stats(
+            self.turnover_type_stats,
+            starting_on_offense,
+            turnovers,
+        )
+
+        phase = self.offense if starting_on_offense else self.defense
+        phase.record_point(won, our_turnovers, opponent_turnovers)
+
+    def to_response(self) -> Dict:
+        return {
+            "player_id": self.player_id,
+            "player_name": self.player_name,
+            "player_number": self.player_number,
+            "points_played": self.points_played,
+            "effective_time_seconds": self.effective_time_seconds,
+            "turnover_type_stats": finalize_turnover_type_stats(
+                self.turnover_type_stats
+            ),
+            "offense": self.offense.to_offense_response("points_played"),
+            "defense": self.defense.to_defense_response("points_played"),
+        }
+
+
+@dataclass
+class TeamStatsAccumulator:
+    total_completed_points: int = 0
+    offense: PossessionPhaseAccumulator = field(
+        default_factory=PossessionPhaseAccumulator
+    )
+    defense: PossessionPhaseAccumulator = field(
+        default_factory=PossessionPhaseAccumulator
+    )
+    total_pulls: int = 0
+    inbound_pulls: int = 0
+    out_of_bounds_pulls: int = 0
+
+    def record_point_facts(self, facts: PointFacts) -> None:
+        self.total_completed_points += 1
+        phase = self.offense if facts.starting_on_offense else self.defense
+        phase.record_point(facts.won, facts.our_turnovers, facts.opponent_turnovers)
+
+        if not facts.starting_on_offense and facts.pull is not None:
+            self.total_pulls += 1
+            if facts.pull is True:
+                self.inbound_pulls += 1
+            else:
+                self.out_of_bounds_pulls += 1
+
+    def to_response(
+        self,
+        turnover_type_stats: Optional[Dict],
+        field_side_stats: Dict,
+    ) -> Dict:
+        defense_response = self.defense.to_defense_response("points_started")
+        defense_response["pull_stats"] = {
+            "total_pulls": self.total_pulls,
+            "inbound_pulls": self.inbound_pulls,
+            "out_of_bounds_pulls": self.out_of_bounds_pulls,
+            "inbound_rate": calculate_rate(self.inbound_pulls, self.total_pulls),
+        }
+
+        return {
+            "total_completed_points": self.total_completed_points,
+            "turnover_type_stats": (
+                turnover_type_stats or build_empty_turnover_type_stats()
+            ),
+            "offense": self.offense.to_team_offense_response(),
+            "defense": defense_response,
+            "field_side_stats": field_side_stats,
+        }
+
+
+@dataclass
+class OffenseStrategyStatsAccumulator:
+    strategy_id: int
+    strategy_name: str
+    points_played: int = 0
+    points_won: int = 0
+    clean_holds: int = 0
+    quick_scores: int = 0
+
+    @classmethod
+    def from_strategy(
+        cls,
+        strategy_id: int,
+        strategy: Strategy,
+    ) -> "OffenseStrategyStatsAccumulator":
+        return cls(strategy_id=strategy_id, strategy_name=strategy.name)
+
+    def record_point(self, point: Point, turnovers: List[Turnover]) -> None:
+        self.points_played += 1
+        if not point.won:
+            return
+
+        self.points_won += 1
+        our_turnovers, _their_turnovers = count_turnovers_by_possession(
+            True,
+            turnovers,
+        )
+        if our_turnovers == 0:
+            self.clean_holds += 1
+
+        if calculate_point_duration_seconds(point) < 90:
+            self.quick_scores += 1
+
+    def to_response(self) -> Dict:
+        points_lost = self.points_played - self.points_won
+        return {
+            "strategy_id": self.strategy_id,
+            "strategy_name": self.strategy_name,
+            "points_played": self.points_played,
+            "points_won": self.points_won,
+            "points_lost": points_lost,
+            "hold_rate": calculate_rate(self.points_won, self.points_played),
+            "clean_holds": self.clean_holds,
+            "clean_hold_rate": calculate_rate(self.clean_holds, self.points_played),
+            "quick_scores": self.quick_scores,
+            "quick_score_rate": calculate_rate(self.quick_scores, self.points_played),
+        }
+
+
+@dataclass
+class DefenseStrategyStatsAccumulator:
+    strategy_id: int
+    strategy_name: str
+    points_played: int = 0
+    points_won: int = 0
+    points_with_turnover: int = 0
+    turnover_type_stats: Dict = field(default_factory=build_empty_turnover_type_stats)
+
+    @classmethod
+    def from_strategy(
+        cls,
+        strategy_id: int,
+        strategy: Strategy,
+    ) -> "DefenseStrategyStatsAccumulator":
+        return cls(strategy_id=strategy_id, strategy_name=strategy.name)
+
+    def record_point(self, point: Point, turnovers: List[Turnover]) -> None:
+        self.points_played += 1
+        if point.won:
+            self.points_won += 1
+        if turnovers:
+            self.points_with_turnover += 1
+
+        accumulate_turnover_type_stats(
+            self.turnover_type_stats,
+            point.starting_on_offense,
+            turnovers,
+        )
+
+    def to_response(self) -> Dict:
+        points_lost = self.points_played - self.points_won
+        return {
+            "strategy_id": self.strategy_id,
+            "strategy_name": self.strategy_name,
+            "points_played": self.points_played,
+            "points_won": self.points_won,
+            "points_lost": points_lost,
+            "break_rate": calculate_rate(self.points_won, self.points_played),
+            "points_with_turnover": self.points_with_turnover,
+            "turnover_rate": calculate_rate(
+                self.points_with_turnover,
+                self.points_played,
+            ),
+            "turnover_type_stats": finalize_turnover_type_stats(
+                self.turnover_type_stats
+            ),
+        }
 
 
 def build_turnover_type_stats(
@@ -259,68 +551,10 @@ def build_live_player_stats(
     stoppages_by_point: Dict[int, List[Stoppage]],
     turnovers_by_point: Dict[int, List[Turnover]],
 ) -> List[Dict]:
-    if not completed_points:
-        return sorted([
-            {
-                "player_id": player.id,
-                "player_name": player.name,
-                "player_number": player.number,
-                "points_played": 0,
-                "effective_time_seconds": 0,
-                "turnover_type_stats": build_empty_turnover_type_stats(),
-                "offense": {
-                    "points_played": 0,
-                    "points_won": 0,
-                    "points_lost": 0,
-                    "hold_rate": 0.0,
-                    "points_won_no_turnover": 0,
-                    "clean_hold_rate": 0.0,
-                    "our_turnovers": 0,
-                    "opponent_turnovers": 0,
-                },
-                "defense": {
-                    "points_played": 0,
-                    "points_won": 0,
-                    "points_lost": 0,
-                    "break_rate": 0.0,
-                    "points_with_turnover": 0,
-                    "turnover_rate": 0.0,
-                    "conversion_rate": 0.0,
-                    "points_won_no_turnover": 0,
-                    "clean_break_rate": 0.0,
-                    "clean_conversion_rate": 0.0,
-                    "points_lost_no_turnover": 0,
-                    "our_turnovers": 0,
-                    "opponent_turnovers": 0,
-                },
-            }
-            for player in game_players
-        ], key=lambda x: (x["player_number"] is None, x["player_number"] or 0))
-
-    player_stats: Dict[int, Dict] = {}
-    for player in game_players:
-        player_stats[player.id] = {
-            "player_id": player.id,
-            "player_name": player.name,
-            "player_number": player.number,
-            "points_played": 0,
-            "effective_time_seconds": 0,
-            "turnover_type_stats": build_empty_turnover_type_stats(),
-            "offense_played": 0,
-            "offense_won": 0,
-            "offense_lost": 0,
-            "offense_won_no_turnover": 0,
-            "offense_our_turnovers": 0,
-            "offense_opponent_turnovers": 0,
-            "defense_played": 0,
-            "defense_won": 0,
-            "defense_lost": 0,
-            "defense_with_turnover": 0,
-            "defense_won_no_turnover": 0,
-            "defense_lost_no_turnover": 0,
-            "defense_our_turnovers": 0,
-            "defense_opponent_turnovers": 0,
-        }
+    player_stats: Dict[int, PlayerStatsAccumulator] = {
+        player.id: PlayerStatsAccumulator.from_player(player)
+        for player in game_players
+    }
 
     for point in completed_points:
         stoppages = stoppages_by_point.get(point.id, [])
@@ -331,216 +565,36 @@ def build_live_player_stats(
             point.starting_on_offense,
             turnovers,
         )
-        has_turnovers = (our_turnovers + opponent_turnovers) > 0
 
         for player in point.players:
             if player.id not in player_stats:
                 continue
-            stats = player_stats[player.id]
-            stats["points_played"] += 1
-            stats["effective_time_seconds"] += effective_time
-            accumulate_turnover_type_stats(
-                stats["turnover_type_stats"],
-                point.starting_on_offense,
-                turnovers,
+            player_stats[player.id].record_point(
+                starting_on_offense=point.starting_on_offense,
+                won=point.won is True,
+                effective_time_seconds=effective_time,
+                our_turnovers=our_turnovers,
+                opponent_turnovers=opponent_turnovers,
+                turnovers=turnovers,
             )
 
-            if point.starting_on_offense:
-                stats["offense_played"] += 1
-                stats["offense_our_turnovers"] += our_turnovers
-                stats["offense_opponent_turnovers"] += opponent_turnovers
-                if point.won:
-                    stats["offense_won"] += 1
-                    if our_turnovers == 0:
-                        stats["offense_won_no_turnover"] += 1
-                else:
-                    stats["offense_lost"] += 1
-            else:
-                stats["defense_played"] += 1
-                stats["defense_our_turnovers"] += our_turnovers
-                stats["defense_opponent_turnovers"] += opponent_turnovers
-                if point.won:
-                    stats["defense_won"] += 1
-                    if our_turnovers == 0:
-                        stats["defense_won_no_turnover"] += 1
-                else:
-                    stats["defense_lost"] += 1
-                    if not has_turnovers:
-                        stats["defense_lost_no_turnover"] += 1
-
-                if has_turnovers:
-                    stats["defense_with_turnover"] += 1
-
-    result = []
-    for stats in player_stats.values():
-        hold_rate = calculate_rate(stats["offense_won"], stats["offense_played"])
-        clean_hold_rate = calculate_rate(
-            stats["offense_won_no_turnover"],
-            stats["offense_played"],
-        )
-        break_rate = calculate_rate(stats["defense_won"], stats["defense_played"])
-        turnover_rate = calculate_rate(
-            stats["defense_with_turnover"],
-            stats["defense_played"],
-        )
-        conversion_rate = calculate_rate(
-            stats["defense_won"],
-            stats["defense_with_turnover"],
-        )
-        clean_break_rate = calculate_rate(
-            stats["defense_won_no_turnover"],
-            stats["defense_played"],
-        )
-        clean_conversion_rate = calculate_rate(
-            stats["defense_won_no_turnover"],
-            stats["defense_with_turnover"],
-        )
-
-        result.append({
-            "player_id": stats["player_id"],
-            "player_name": stats["player_name"],
-            "player_number": stats["player_number"],
-            "points_played": stats["points_played"],
-            "effective_time_seconds": stats["effective_time_seconds"],
-            "turnover_type_stats": finalize_turnover_type_stats(stats["turnover_type_stats"]),
-            "offense": {
-                "points_played": stats["offense_played"],
-                "points_won": stats["offense_won"],
-                "points_lost": stats["offense_lost"],
-                "hold_rate": hold_rate,
-                "points_won_no_turnover": stats["offense_won_no_turnover"],
-                "clean_hold_rate": clean_hold_rate,
-                "our_turnovers": stats["offense_our_turnovers"],
-                "opponent_turnovers": stats["offense_opponent_turnovers"],
-            },
-            "defense": {
-                "points_played": stats["defense_played"],
-                "points_won": stats["defense_won"],
-                "points_lost": stats["defense_lost"],
-                "break_rate": break_rate,
-                "points_with_turnover": stats["defense_with_turnover"],
-                "turnover_rate": turnover_rate,
-                "conversion_rate": conversion_rate,
-                "points_won_no_turnover": stats["defense_won_no_turnover"],
-                "clean_break_rate": clean_break_rate,
-                "clean_conversion_rate": clean_conversion_rate,
-                "points_lost_no_turnover": stats["defense_lost_no_turnover"],
-                "our_turnovers": stats["defense_our_turnovers"],
-                "opponent_turnovers": stats["defense_opponent_turnovers"],
-            },
-        })
-
-    return sorted(result, key=lambda x: (x["player_number"] is None, x["player_number"] or 0))
+    return sorted(
+        [stats.to_response() for stats in player_stats.values()],
+        key=lambda x: (x["player_number"] is None, x["player_number"] or 0),
+    )
 
 
 def build_team_stats_from_point_facts(
     point_facts: List[PointFacts],
     turnover_type_stats: Optional[Dict] = None,
 ) -> Dict:
-    offense_started = 0
-    offense_won = 0
-    offense_lost = 0
-    offense_won_no_turnover = 0
-    offense_our_turnovers = 0
-    offense_opponent_turnovers = 0
-
-    defense_started = 0
-    defense_won = 0
-    defense_lost = 0
-    defense_points_with_turnover = 0
-    defense_won_no_turnover = 0
-    defense_lost_no_turnover = 0
-    defense_our_turnovers = 0
-    defense_opponent_turnovers = 0
-
+    accumulator = TeamStatsAccumulator()
     for facts in point_facts:
-        total_turnovers = facts.our_turnovers + facts.opponent_turnovers
+        accumulator.record_point_facts(facts)
 
-        if facts.starting_on_offense:
-            offense_started += 1
-            offense_our_turnovers += facts.our_turnovers
-            offense_opponent_turnovers += facts.opponent_turnovers
-            if facts.won:
-                offense_won += 1
-                if facts.our_turnovers == 0:
-                    offense_won_no_turnover += 1
-            else:
-                offense_lost += 1
-        else:
-            defense_started += 1
-            defense_our_turnovers += facts.our_turnovers
-            defense_opponent_turnovers += facts.opponent_turnovers
-            if facts.won:
-                defense_won += 1
-                if facts.our_turnovers == 0:
-                    defense_won_no_turnover += 1
-            else:
-                defense_lost += 1
-                if total_turnovers == 0:
-                    defense_lost_no_turnover += 1
-
-            if total_turnovers > 0:
-                defense_points_with_turnover += 1
-
-    offense_hold_rate = calculate_rate(offense_won, offense_started)
-    offense_clean_hold_rate = calculate_rate(offense_won_no_turnover, offense_started)
-    offense_broken_rate = calculate_rate(offense_lost, offense_started)
-
-    defense_break_rate = calculate_rate(defense_won, defense_started)
-    defense_turnover_rate = calculate_rate(defense_points_with_turnover, defense_started)
-    defense_conversion_rate = calculate_rate(defense_won, defense_points_with_turnover)
-    defense_clean_break_rate = calculate_rate(defense_won_no_turnover, defense_started)
-    defense_clean_conversion_rate = calculate_rate(
-        defense_won_no_turnover,
-        defense_points_with_turnover,
-    )
-
-    defense_points_with_pull = [
-        point for point in point_facts if (not point.starting_on_offense and point.pull is not None)
-    ]
-    total_pulls = len(defense_points_with_pull)
-    inbound_pulls = len([point for point in defense_points_with_pull if point.pull is True])
-    out_of_bounds_pulls = len([point for point in defense_points_with_pull if point.pull is False])
-    inbound_rate = inbound_pulls / total_pulls if total_pulls > 0 else 0.0
     field_side_stats = build_field_side_stats_from_point_facts(point_facts)
 
-    return {
-        "total_completed_points": len(point_facts),
-        "turnover_type_stats": turnover_type_stats or build_empty_turnover_type_stats(),
-        "offense": {
-            "points_started": offense_started,
-            "points_won": offense_won,
-            "points_lost": offense_lost,
-            "hold_rate": offense_hold_rate,
-            "points_won_no_turnover": offense_won_no_turnover,
-            "clean_hold_rate": offense_clean_hold_rate,
-            "broken_rate": offense_broken_rate,
-            "our_turnovers": offense_our_turnovers,
-            "opponent_turnovers": offense_opponent_turnovers,
-        },
-        "defense": {
-            "points_started": defense_started,
-            "points_won": defense_won,
-            "points_lost": defense_lost,
-            "break_rate": defense_break_rate,
-            "points_with_turnover": defense_points_with_turnover,
-            "turnover_rate": defense_turnover_rate,
-            "conversion_rate": defense_conversion_rate,
-            "points_won_no_turnover": defense_won_no_turnover,
-            "clean_break_rate": defense_clean_break_rate,
-            "clean_conversion_rate": defense_clean_conversion_rate,
-            "points_lost_no_turnover": defense_lost_no_turnover,
-            "our_turnovers": defense_our_turnovers,
-            "opponent_turnovers": defense_opponent_turnovers,
-            "pull_stats": {
-                "total_pulls": total_pulls,
-                "inbound_pulls": inbound_pulls,
-                "out_of_bounds_pulls": out_of_bounds_pulls,
-                "inbound_rate": inbound_rate,
-            },
-        },
-        "field_side_stats": field_side_stats,
-    }
+    return accumulator.to_response(turnover_type_stats, field_side_stats)
 
 
 def build_scoped_team_stats(
@@ -591,101 +645,47 @@ def build_game_strategy_stats(
     strategies_by_id: Dict[int, Strategy],
     turnovers_by_point: Dict[int, List[Turnover]],
 ) -> Dict:
-    offense_strategy_points: Dict[int, List[Point]] = {}
-    defense_strategy_points: Dict[int, List[Point]] = {}
+    offense_strategy_stats: Dict[int, OffenseStrategyStatsAccumulator] = {}
+    defense_strategy_stats: Dict[int, DefenseStrategyStatsAccumulator] = {}
 
     for point in completed_points:
         if not point.strategy_id:
             continue
+
+        strategy_id = point.strategy_id
+        strategy = strategies_by_id.get(strategy_id)
+        if not strategy:
+            continue
+
+        turnovers = turnovers_by_point.get(point.id, [])
         if point.starting_on_offense:
-            offense_strategy_points.setdefault(point.strategy_id, []).append(point)
+            accumulator = offense_strategy_stats.setdefault(
+                strategy_id,
+                OffenseStrategyStatsAccumulator.from_strategy(strategy_id, strategy),
+            )
         else:
-            defense_strategy_points.setdefault(point.strategy_id, []).append(point)
+            accumulator = defense_strategy_stats.setdefault(
+                strategy_id,
+                DefenseStrategyStatsAccumulator.from_strategy(strategy_id, strategy),
+            )
+        accumulator.record_point(point, turnovers)
 
-    offense_strategies = []
-    for strategy_id, points in offense_strategy_points.items():
-        strategy = strategies_by_id.get(strategy_id)
-        if not strategy:
-            continue
-
-        points_played = len(points)
-        points_won = len([p for p in points if p.won])
-        points_lost = points_played - points_won
-        hold_rate = points_won / points_played if points_played > 0 else 0.0
-
-        clean_holds = 0
-        for point in points:
-            if not point.won:
-                continue
-            turnovers = turnovers_by_point.get(point.id, [])
-            our_turnovers, _their_turnovers = count_turnovers_by_possession(True, turnovers)
-            if our_turnovers == 0:
-                clean_holds += 1
-
-        clean_hold_rate = clean_holds / points_played if points_played > 0 else 0.0
-
-        quick_scores = 0
-        for point in points:
-            if not point.won:
-                continue
-            if calculate_point_duration_seconds(point) < 90:
-                quick_scores += 1
-
-        quick_score_rate = quick_scores / points_played if points_played > 0 else 0.0
-
-        offense_strategies.append({
-            "strategy_id": strategy_id,
-            "strategy_name": strategy.name,
-            "points_played": points_played,
-            "points_won": points_won,
-            "points_lost": points_lost,
-            "hold_rate": hold_rate,
-            "clean_holds": clean_holds,
-            "clean_hold_rate": clean_hold_rate,
-            "quick_scores": quick_scores,
-            "quick_score_rate": quick_score_rate,
-        })
-
-    defense_strategies = []
-    for strategy_id, points in defense_strategy_points.items():
-        strategy = strategies_by_id.get(strategy_id)
-        if not strategy:
-            continue
-
-        points_played = len(points)
-        points_won = len([p for p in points if p.won])
-        points_lost = points_played - points_won
-        break_rate = points_won / points_played if points_played > 0 else 0.0
-
-        points_with_turnover = 0
-        for point in points:
-            turnovers = turnovers_by_point.get(point.id, [])
-            if len(turnovers) > 0:
-                points_with_turnover += 1
-
-        turnover_rate = points_with_turnover / points_played if points_played > 0 else 0.0
-        strategy_turnovers_by_point = {
-            point.id: turnovers_by_point.get(point.id, [])
-            for point in points
-        }
-        turnover_type_stats = build_turnover_type_stats(points, strategy_turnovers_by_point)
-
-        defense_strategies.append({
-            "strategy_id": strategy_id,
-            "strategy_name": strategy.name,
-            "points_played": points_played,
-            "points_won": points_won,
-            "points_lost": points_lost,
-            "break_rate": break_rate,
-            "points_with_turnover": points_with_turnover,
-            "turnover_rate": turnover_rate,
-            "turnover_type_stats": turnover_type_stats,
-        })
-
-    offense_strategies.sort(key=lambda x: x["strategy_name"])
-    defense_strategies.sort(key=lambda x: x["strategy_name"])
+    offense_strategies = [
+        stats.to_response()
+        for stats in offense_strategy_stats.values()
+    ]
+    defense_strategies = [
+        stats.to_response()
+        for stats in defense_strategy_stats.values()
+    ]
 
     return {
-        "offense_strategies": offense_strategies,
-        "defense_strategies": defense_strategies,
+        "offense_strategies": sorted(
+            offense_strategies,
+            key=lambda x: x["strategy_name"],
+        ),
+        "defense_strategies": sorted(
+            defense_strategies,
+            key=lambda x: x["strategy_name"],
+        ),
     }
