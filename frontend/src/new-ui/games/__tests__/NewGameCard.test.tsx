@@ -22,21 +22,25 @@ function buildGame(overrides: Partial<GameWithScore> = {}): GameWithScore {
 }
 
 describe("NewGameCard", () => {
-  it("shows game identity, score, status, and navigation", () => {
+  it("routes live games to the spectator view", () => {
     render(<NewGameCard game={buildGame()} />);
 
     expect(screen.getByRole("link", { name: /Blue Tigers/i })).toHaveAttribute(
       "href",
-      "/games/42"
+      "/live/42"
     );
     expect(screen.getByText("Spring Cup")).toBeInTheDocument();
     expect(screen.getByText("5 - 4")).toBeInTheDocument();
     expect(screen.getByText("Ongoing")).toBeInTheDocument();
   });
 
-  it("uses a review label for completed games", () => {
+  it("routes completed games to the game detail route", () => {
     render(<NewGameCard game={buildGame({ status: "ended" })} />);
 
+    expect(screen.getByRole("link", { name: /Blue Tigers/i })).toHaveAttribute(
+      "href",
+      "/games/42"
+    );
     expect(screen.getByText("Review")).toBeInTheDocument();
   });
 });

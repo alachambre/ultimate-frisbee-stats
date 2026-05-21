@@ -42,6 +42,7 @@ function getActionLabel(
 export default function NewGameCard({ game }: NewGameCardProps) {
   const { t, i18n } = useTranslation(["games", "navigation"]);
   const actionLabel = getActionLabel(game.status, t);
+  const cardPath = game.status === "started" ? `/live/${game.id}` : `/games/${game.id}`;
 
   return (
     <Card
@@ -54,7 +55,7 @@ export default function NewGameCard({ game }: NewGameCardProps) {
     >
       <CardActionArea
         component={Link}
-        to={`/games/${game.id}`}
+        to={cardPath}
         sx={{
           alignItems: "stretch",
           display: "flex",
