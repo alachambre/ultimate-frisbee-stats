@@ -20,14 +20,14 @@ import {
 import type { Player, PlayerGameStats } from "../../types";
 import { invalidateQueryKeys } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
+import {
+  mergeStatisticsSelection,
+  parseStatisticsId,
+  parseStatisticsSelection,
+  serializeStatisticsSelection,
+  type StatisticsSelection,
+} from "../../utils/statisticsSelection";
 import type { CompetitionStatisticsTab } from "../../components/statistics/CompetitionStatisticsTabs";
-
-interface StatisticsSelection {
-  teamId?: number;
-  competitionIds: number[];
-  gameIds: number[];
-  playerIds: number[];
-}
 
 interface StatisticsPageAccess {
   canViewTeamStatistics: boolean;
@@ -44,55 +44,6 @@ interface StatisticsPageQueryOptions {
 
 const STICKY_TEAM_KEY = "statistics:selectedTeamId";
 const EMPTY_IDS: number[] = [];
-
-function parseOptionalId(value: string | null): number | undefined {
-  if (!value) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function normalizeIds(ids: number[]): number[] {
-  return Array.from(new Set(ids)).sort((a, b) => a - b);
-}
-
-function parseIds(value: string | null): number[] {
-  if (!value) {
-    return [];
-  }
-
-  return normalizeIds(
-    value
-      .split(",")
-      .map((entry) => Number(entry.trim()))
-      .filter((entry) => Number.isFinite(entry))
-  );
-}
-
-function buildSearchParams(selection: StatisticsSelection): URLSearchParams {
-  const params = new URLSearchParams();
-
-  if (selection.teamId !== undefined) {
-    params.set("teamId", String(selection.teamId));
-  }
-
-  if (selection.competitionIds.length > 0) {
-    params.set("competitionIds", selection.competitionIds.join(","));
-  }
-
-  if (selection.gameIds.length > 0) {
-    params.set("gameIds", selection.gameIds.join(","));
-  }
-
-  if (selection.playerIds.length > 0) {
-    params.set("playerIds", selection.playerIds.join(","));
-
-    if (selection.playerIds.length === 1) {
-      params.set("playerId", String(selection.playerIds[0]));
-    }
-  }
-
-  return params;
-}
 
 function buildDatasetFilters(selection: StatisticsSelection): StatisticsDatasetFilters {
   return {
@@ -111,34 +62,7 @@ export function useStatisticsPageData(
   const [isExporting, setIsExporting] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  const legacyCompetitionId = parseOptionalId(searchParams.get("competitionId"));
-  const legacyGameId = parseOptionalId(searchParams.get("gameId"));
-  const rawPlayerIds = parseIds(searchParams.get("playerIds"));
-  const legacyPlayerId = parseOptionalId(searchParams.get("playerId"));
-
-  const selection: StatisticsSelection = {
-    teamId: parseOptionalId(searchParams.get("teamId")),
-    competitionIds: (() => {
-      const ids = parseIds(searchParams.get("competitionIds"));
-      if (ids.length > 0) {
-        return ids;
-      }
-      return legacyCompetitionId !== undefined ? [legacyCompetitionId] : [];
-    })(),
-    gameIds: (() => {
-      const ids = parseIds(searchParams.get("gameIds"));
-      if (ids.length > 0) {
-        return ids;
-      }
-      return legacyGameId !== undefined ? [legacyGameId] : [];
-    })(),
-    playerIds:
-      rawPlayerIds.length > 0
-        ? rawPlayerIds
-        : legacyPlayerId !== undefined
-          ? [legacyPlayerId]
-          : [],
-  };
+  const selection = useMemo(() => parseStatisticsSelection(searchParams), [searchParams]);
 
   const teamId = selection.teamId;
   const competitionIds = selection.competitionIds;
@@ -151,25 +75,15 @@ export function useStatisticsPageData(
 
   const updateSelection = useCallback(
     (updates: Partial<StatisticsSelection>, options?: { replace?: boolean }) => {
-      const merged: StatisticsSelection = {
+      const currentSelection: StatisticsSelection = {
         teamId,
         competitionIds,
         gameIds,
         playerIds,
-        ...updates,
       };
+      const merged = mergeStatisticsSelection(currentSelection, updates);
 
-      merged.competitionIds = normalizeIds(merged.competitionIds ?? []);
-      merged.gameIds = normalizeIds(merged.gameIds ?? []);
-      merged.playerIds = normalizeIds(merged.playerIds ?? []);
-
-      if (merged.teamId === undefined) {
-        merged.competitionIds = [];
-        merged.gameIds = [];
-        merged.playerIds = [];
-      }
-
-      setSearchParams(buildSearchParams(merged), {
+      setSearchParams(serializeStatisticsSelection(merged), {
         replace: options?.replace,
       });
     },
@@ -467,7 +381,7 @@ export function useStatisticsPageData(
       return;
     }
 
-    const persistedTeamId = parseOptionalId(localStorage.getItem(STICKY_TEAM_KEY));
+    const persistedTeamId = parseStatisticsId(localStorage.getItem(STICKY_TEAM_KEY));
     if (
       persistedTeamId !== undefined &&
       teams.some((team) => team.id === persistedTeamId)
