@@ -16,7 +16,10 @@ from app.auth.redaction import (
 )
 from app.database import get_db
 from app.logging_config import get_logger
-from app.statistics_cache import clear_statistics_cache
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 logger = get_logger("routers.games")
 
@@ -70,7 +73,7 @@ def create_game(
         f"Game created: id={created_game.id}, competition={game.competition_id}, "
         f"opponent={game.opponent_name}, players={len(game.player_ids)}"
     )
-    clear_statistics_cache("game_created")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.GAME_CREATED)
     return created_game
 
 
@@ -138,7 +141,7 @@ def update_game(
     if game_update.status:
         logger.info(f"Game {game_id} status changed to {game_update.status.value}")
 
-    clear_statistics_cache("game_updated")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.GAME_UPDATED)
     return game
 
 
@@ -154,7 +157,7 @@ def finish_game(
         raise HTTPException(status_code=404, detail="Game not found")
 
     logger.info(f"Game {game_id} finished")
-    clear_statistics_cache("game_finished")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.GAME_FINISHED)
     return game
 
 
@@ -167,7 +170,7 @@ def delete_game(
     success = crud.delete_game(db, game_id)
     if not success:
         raise HTTPException(status_code=404, detail="Game not found")
-    clear_statistics_cache("game_deleted")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.GAME_DELETED)
 
 
 # Nested endpoints for game resources
@@ -229,7 +232,7 @@ def add_players_to_game(
             )
 
     game = crud.add_players_to_game(db, game_id, request.player_ids)
-    clear_statistics_cache("game_players_added")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.GAME_PLAYERS_ADDED)
     return game
 
 
@@ -247,7 +250,7 @@ def remove_players_from_game(
 
     try:
         game = crud.remove_players_from_game(db, game_id, request.player_ids)
-        clear_statistics_cache("game_players_removed")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.GAME_PLAYERS_REMOVED)
         return game
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

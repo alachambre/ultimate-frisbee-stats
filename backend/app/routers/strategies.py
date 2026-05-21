@@ -5,7 +5,10 @@ from typing import List, Optional
 from app import schemas, crud
 from app.auth.dependencies import require_team_member
 from app.database import get_db
-from app.statistics_cache import clear_statistics_cache
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 router = APIRouter(
     prefix="/strategies",
@@ -19,7 +22,7 @@ def create_strategy(strategy: schemas.StrategyCreate, db: Session = Depends(get_
     """Create a new strategy"""
     try:
         created_strategy = crud.create_strategy(db, strategy)
-        clear_statistics_cache("strategy_created")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.STRATEGY_CREATED)
         return created_strategy
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -56,7 +59,7 @@ def update_strategy(
         strategy = crud.update_strategy(db, strategy_id, strategy_update)
         if not strategy:
             raise HTTPException(status_code=404, detail="Strategy not found")
-        clear_statistics_cache("strategy_updated")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.STRATEGY_UPDATED)
         return strategy
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -68,4 +71,4 @@ def delete_strategy(strategy_id: int, db: Session = Depends(get_db)):
     success = crud.delete_strategy(db, strategy_id)
     if not success:
         raise HTTPException(status_code=404, detail="Strategy not found")
-    clear_statistics_cache("strategy_deleted")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.STRATEGY_DELETED)

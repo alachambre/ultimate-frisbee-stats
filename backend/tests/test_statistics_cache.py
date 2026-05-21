@@ -4,6 +4,10 @@ from app.statistics_cache import (
     get_or_set_statistics_cache,
     get_statistics_cache_size,
 )
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 
 def test_statistics_cache_key_normalizes_filter_order():
@@ -79,3 +83,23 @@ def test_statistics_cache_can_be_disabled(monkeypatch):
     assert get_or_set_statistics_cache("team_team", 1, loader) == {"value": 2}
     assert calls == 2
     assert get_statistics_cache_size() == 0
+
+
+def test_statistics_invalidation_uses_centralized_reasons(monkeypatch):
+    calls = []
+
+    def fake_clear_statistics_cache(reason):
+        calls.append(reason)
+        return 3
+
+    monkeypatch.setattr(
+        "app.statistics_invalidation.clear_statistics_cache",
+        fake_clear_statistics_cache,
+    )
+
+    cleared_entries = invalidate_statistics_cache(
+        StatisticsCacheInvalidationReason.POINT_FINISHED
+    )
+
+    assert cleared_entries == 3
+    assert calls == ["point_finished"]

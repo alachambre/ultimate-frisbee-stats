@@ -8,7 +8,10 @@ from app.auth.dependencies import get_request_access_context, require_team_membe
 from app.auth.redaction import serialize_stoppage, serialize_stoppages
 from app.database import get_db
 from app.logging_config import get_logger
-from app.statistics_cache import clear_statistics_cache
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 logger = get_logger("routers.stoppages")
 
@@ -32,7 +35,7 @@ def create_stoppage(
             f"type={stoppage.stoppage_type.value}, "
             f"resume={'resolved' if stoppage.resume_timestamp else 'pending'}"
         )
-        clear_statistics_cache("stoppage_created")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.STOPPAGE_CREATED)
         return created_stoppage
     except ValueError as e:
         logger.warning(f"Failed to create stoppage: {str(e)}")
@@ -70,7 +73,7 @@ def update_stoppage(
         if stoppage_update.resume_timestamp:
             logger.info(f"Stoppage {stoppage_id} resolved with resume timestamp")
 
-        clear_statistics_cache("stoppage_updated")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.STOPPAGE_UPDATED)
         return stoppage
     except ValueError as e:
         logger.warning(f"Failed to update stoppage {stoppage_id}: {str(e)}")
@@ -90,7 +93,7 @@ def delete_stoppage(
         raise HTTPException(status_code=404, detail="Stoppage not found")
 
     logger.info(f"Stoppage {stoppage_id} deleted")
-    clear_statistics_cache("stoppage_deleted")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.STOPPAGE_DELETED)
 
 
 @router.get("/points/{point_id}/stoppages", response_model=List[schemas.Stoppage])

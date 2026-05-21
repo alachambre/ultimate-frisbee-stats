@@ -7,7 +7,10 @@ from app.auth.dependencies import get_request_access_context, require_team_membe
 from app.auth.redaction import serialize_halftime
 from app.database import get_db
 from app.logging_config import get_logger
-from app.statistics_cache import clear_statistics_cache
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 logger = get_logger("routers.halftimes")
 
@@ -27,7 +30,7 @@ def create_halftime(
     try:
         created_halftime = crud.create_halftime(db, halftime)
         logger.info(f"Halftime created: id={created_halftime.id}, game={halftime.game_id}")
-        clear_statistics_cache("halftime_created")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.HALFTIME_CREATED)
         return created_halftime
     except ValueError as e:
         logger.warning(f"Failed to create halftime: {str(e)}")
@@ -63,7 +66,7 @@ def update_halftime(
         logger.warning(f"Failed to update halftime: halftime {halftime_id} not found")
         raise HTTPException(status_code=404, detail="Halftime not found")
     logger.info(f"Halftime updated: id={halftime_id}")
-    clear_statistics_cache("halftime_updated")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.HALFTIME_UPDATED)
     return halftime
 
 
@@ -79,4 +82,4 @@ def delete_halftime(
         logger.warning(f"Failed to delete halftime: halftime {halftime_id} not found")
         raise HTTPException(status_code=404, detail="Halftime not found")
     logger.info(f"Halftime deleted: id={halftime_id}")
-    clear_statistics_cache("halftime_deleted")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.HALFTIME_DELETED)

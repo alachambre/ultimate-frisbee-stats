@@ -5,7 +5,10 @@ from typing import List
 from app import schemas, crud
 from app.auth.dependencies import require_team_member
 from app.database import get_db
-from app.statistics_cache import clear_statistics_cache
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 router = APIRouter(
     prefix="/players",
@@ -21,7 +24,7 @@ def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     created_player = crud.create_player(db, player)
-    clear_statistics_cache("player_created")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.PLAYER_CREATED)
     return created_player
 
 
@@ -38,7 +41,7 @@ def update_player(player_id: int, player_update: schemas.PlayerUpdate, db: Sessi
     player = crud.update_player(db, player_id, player_update)
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
-    clear_statistics_cache("player_updated")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.PLAYER_UPDATED)
     return player
 
 
@@ -48,6 +51,6 @@ def delete_player(player_id: int, db: Session = Depends(get_db)):
         success = crud.delete_player(db, player_id)
         if not success:
             raise HTTPException(status_code=404, detail="Player not found")
-        clear_statistics_cache("player_deleted")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.PLAYER_DELETED)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

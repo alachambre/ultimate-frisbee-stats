@@ -8,7 +8,10 @@ from app.auth.context import AccessContext
 from app.auth.dependencies import get_request_access_context, require_team_member
 from app.auth.redaction import serialize_games_with_score
 from app.database import get_db
-from app.statistics_cache import clear_statistics_cache
+from app.statistics_invalidation import (
+    StatisticsCacheInvalidationReason,
+    invalidate_statistics_cache,
+)
 
 router = APIRouter(
     prefix="/competitions",
@@ -39,7 +42,7 @@ def create_competition(
             )
 
     created_competition = crud.create_competition(db, competition)
-    clear_statistics_cache("competition_created")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.COMPETITION_CREATED)
     return created_competition
 
 
@@ -76,7 +79,7 @@ def update_competition(
     competition = crud.update_competition(db, competition_id, competition_update)
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
-    clear_statistics_cache("competition_updated")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.COMPETITION_UPDATED)
     return competition
 
 
@@ -89,7 +92,7 @@ def delete_competition(
     success = crud.delete_competition(db, competition_id)
     if not success:
         raise HTTPException(status_code=404, detail="Competition not found")
-    clear_statistics_cache("competition_deleted")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.COMPETITION_DELETED)
 
 
 # Nested endpoints for competition resources
@@ -138,7 +141,7 @@ def add_players_to_roster(
         competition_id,
         request.player_ids,
     )
-    clear_statistics_cache("competition_players_added")
+    invalidate_statistics_cache(StatisticsCacheInvalidationReason.COMPETITION_PLAYERS_ADDED)
     return competition
 
 
@@ -160,7 +163,7 @@ def remove_players_from_roster(
             competition_id,
             request.player_ids,
         )
-        clear_statistics_cache("competition_players_removed")
+        invalidate_statistics_cache(StatisticsCacheInvalidationReason.COMPETITION_PLAYERS_REMOVED)
         return competition
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
