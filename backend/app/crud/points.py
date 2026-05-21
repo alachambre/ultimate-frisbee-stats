@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
-from datetime import datetime, timedelta, timezone
 from app import models, schemas
 from app.crud.statistics_calculations import count_turnovers_by_possession
 from app.crud.statistics_queries import get_turnovers_for_points
 from app.logging_config import get_logger
+from app.services import live_game
 
 logger = get_logger("crud.points")
 
@@ -45,16 +45,6 @@ def _annotate_point_turnover_counts_for_single(
 
     _annotate_points_turnover_counts(db, [point])
     return point
-
-
-def _ensure_timezone_aware(dt: Optional[datetime]) -> Optional[datetime]:
-    """Convert timezone-naive datetime to timezone-aware UTC."""
-    if dt is None:
-        return None
-    if dt.tzinfo is None:
-        # Assume naive datetime is UTC
-        return dt.replace(tzinfo=timezone.utc)
-    return dt
 
 
 def get_running_point_for_game(db: Session, game_id: int) -> Optional[models.Point]:
@@ -178,7 +168,6 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
     if db_point:
         try:
             new_status_enum = None
-            transitioned_ready_to_running = False
 
             # Update player_ids FIRST (before status validation)
             if point_update.player_ids is not None:
@@ -209,41 +198,17 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
                 # Convert schema enum to model enum for comparison
                 new_status_value = point_update.status.value if hasattr(point_update.status, 'value') else point_update.status
                 new_status_enum = models.PointStatusEnum(new_status_value)
-
-                # Validate status transitions
-                current = db_point.status
-                if new_status_enum == models.PointStatusEnum.running and current not in [
-                    models.PointStatusEnum.ready,
-                    models.PointStatusEnum.scored,
-                ]:
-                    raise ValueError(f"Invalid status transition: {current.value} -> running")
-                if new_status_enum == models.PointStatusEnum.scored and current != models.PointStatusEnum.running:
-                    raise ValueError(f"Invalid status transition: {current.value} -> scored")
-                if new_status_enum == models.PointStatusEnum.completed and current not in [
-                    models.PointStatusEnum.running,
-                    models.PointStatusEnum.scored,
-                ]:
-                    raise ValueError(f"Invalid status transition: {current.value} -> completed")
-
-                # Set start_datetime when transitioning from 'ready' to 'running' (if not already set)
-                if (new_status_enum == models.PointStatusEnum.running and
-                    db_point.status == models.PointStatusEnum.ready and
-                    db_point.start_datetime is None):
-                    transitioned_ready_to_running = True
-                    db_point.start_datetime = datetime.now(timezone.utc)
-                elif (
-                    new_status_enum == models.PointStatusEnum.running and
-                    db_point.status == models.PointStatusEnum.ready
-                ):
-                    transitioned_ready_to_running = True
-
-                # Validate player count when completing a point
-                if new_status_enum == models.PointStatusEnum.completed:
-                    player_count = len(db_point.players)
-                    if player_count != 7:
-                        db.rollback()
-                        raise ValueError(f"Cannot complete point: must have exactly 7 players (currently has {player_count})")
-                db_point.status = new_status_enum
+                requested_start_datetime = (
+                    point_update.start_datetime
+                    if "start_datetime" in point_update.model_fields_set
+                    else None
+                )
+                live_game.transition_point_status(
+                    db,
+                    db_point,
+                    new_status_enum,
+                    requested_start_datetime=requested_start_datetime,
+                )
             if point_update.strategy_id is not None:
                 # Validate strategy exists
                 strategy = db.query(models.Strategy).filter(models.Strategy.id == point_update.strategy_id).first()
@@ -256,27 +221,25 @@ def update_point(db: Session, point_id: int, point_update: schemas.PointUpdate) 
             if "end_datetime" in point_update.model_fields_set:
                 db_point.end_datetime = point_update.end_datetime
 
-            # Start game chrono when the first pull is launched (first ready -> running transition).
-            # Reuse the point start timestamp so both timers stay aligned.
-            if transitioned_ready_to_running:
-                game = db.query(models.Game).filter(models.Game.id == db_point.game_id).first()
-                if game and game.start_datetime is None:
-                    game.start_datetime = db_point.start_datetime or datetime.now(timezone.utc)
-
             # Prevent setting won unless scored/completed
-            if "won" in point_update.model_fields_set and point_update.won is not None:
-                target_status = new_status_enum if new_status_enum is not None else db_point.status
-                if target_status not in [models.PointStatusEnum.scored, models.PointStatusEnum.completed]:
-                    db.rollback()
-                    raise ValueError("Cannot set won unless point is scored or completed")
+            target_status = new_status_enum if new_status_enum is not None else db_point.status
+            try:
+                live_game.validate_point_result_allowed(
+                    db_point,
+                    "won" in point_update.model_fields_set,
+                    point_update.won,
+                    target_status,
+                )
+            except ValueError:
+                db.rollback()
+                raise
 
             # Validate end datetime is after start datetime
-            if db_point.start_datetime and db_point.end_datetime:
-                start_aware = _ensure_timezone_aware(db_point.start_datetime)
-                end_aware = _ensure_timezone_aware(db_point.end_datetime)
-                if start_aware and end_aware and end_aware <= start_aware:
-                    db.rollback()
-                    raise ValueError("end_datetime must be after start_datetime")
+            try:
+                live_game.validate_point_timestamps(db_point)
+            except ValueError:
+                db.rollback()
+                raise
 
             db.commit()
             db.refresh(db_point)
@@ -324,40 +287,18 @@ def finish_point(db: Session, point_id: int, finish_data: schemas.PointFinish) -
         return None
 
     try:
-        # Can only finish running or scored points
-        if db_point.status not in [models.PointStatusEnum.running, models.PointStatusEnum.scored]:
-            raise ValueError(
-                f"Point {point_id} cannot be finished (status: {db_point.status.value}). "
-                f"Only running or scored points can be finished."
-            )
-
-        # Set the result and end datetime
-        db_point.won = finish_data.won
-        if finish_data.end_datetime is not None:
-            db_point.end_datetime = finish_data.end_datetime
-        else:
-            candidate_end_datetime = datetime.now(timezone.utc)
-            start_aware = _ensure_timezone_aware(db_point.start_datetime)
-            if start_aware and candidate_end_datetime <= start_aware:
-                candidate_end_datetime = start_aware + timedelta(microseconds=1)
-            db_point.end_datetime = candidate_end_datetime
-        db_point.status = models.PointStatusEnum.completed
-
-        # Update comments if provided
-        if finish_data.comments is not None:
-            db_point.comments = finish_data.comments
-
-        # Validate end datetime is after start datetime
-        start_aware = _ensure_timezone_aware(db_point.start_datetime)
-        end_aware = _ensure_timezone_aware(db_point.end_datetime)
-        if start_aware and end_aware and end_aware <= start_aware:
-            db.rollback()
-            raise ValueError("end_datetime must be after start_datetime")
+        live_game.finish_point(
+            db_point,
+            won=finish_data.won,
+            end_datetime=finish_data.end_datetime,
+            comments=finish_data.comments,
+        )
 
         db.commit()
         db.refresh(db_point)
         return _annotate_point_turnover_counts_for_single(db, db_point)
     except ValueError:
+        db.rollback()
         # Re-raise ValueError (business logic errors) without logging as error
         raise
     except SQLAlchemyError as e:
@@ -375,12 +316,6 @@ def cancel_point(db: Session, point_id: int) -> bool:
     if not db_point:
         return False
 
-    # Can only cancel ready or running points
-    if db_point.status not in [models.PointStatusEnum.ready, models.PointStatusEnum.running]:
-        raise ValueError(
-            f"Can only cancel ready or running points. Point {point_id} has status: {db_point.status.value}"
-        )
-
-    db.delete(db_point)
+    live_game.cancel_point(db, db_point)
     db.commit()
     return True
