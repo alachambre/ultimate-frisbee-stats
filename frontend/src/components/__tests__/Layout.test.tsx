@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Route, Routes } from "react-router-dom";
 
 import { render, screen } from "../../test/test-utils";
+import { UiModeProvider } from "../../uiMode/UiModeProvider";
 import Layout from "../Layout";
 
 describe("Layout", () => {
@@ -12,11 +13,13 @@ describe("Layout", () => {
     hasAppAccess: boolean;
   }) {
     render(
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<div>Home content</div>} />
-        </Route>
-      </Routes>,
+      <UiModeProvider>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<div>Home content</div>} />
+          </Route>
+        </Routes>
+      </UiModeProvider>,
       {
         route: "/",
         auth: {
@@ -39,6 +42,9 @@ describe("Layout", () => {
     expect(screen.getByRole("link", { name: /^strategies$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^competitions$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^statistics$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^switch to new ui$/i })
+    ).toBeInTheDocument();
   });
 
   it("shows spectator navigation only for public users when permissions are enforced", () => {

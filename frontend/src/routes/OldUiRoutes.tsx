@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { RequireMinimumRole } from "../auth";
 import Layout from "../components/Layout";
@@ -71,6 +71,10 @@ export default function OldUiRoutes() {
             </RequireMinimumRole>
           )}
         />
+        <Route path="record" element={<Navigate replace to="/teams" />} />
+        <Route path="team-setup" element={<Navigate replace to="/teams" />} />
+        <Route path="live" element={<Navigate replace to="/competitions" />} />
+        <Route path="games" element={<Navigate replace to="/competitions" />} />
         <Route
           path="games/:gameId"
           element={renderLazyRoute(<GameDetailPage />)}

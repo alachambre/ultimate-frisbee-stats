@@ -68,10 +68,11 @@ export function NewUiTeamProvider({
   });
 
   const visibleTeams = useMemo(
-    () => (canLoadTeams ? teams : []),
-    [canLoadTeams, teams]
+    () => (canLoadTeams && !isFetchingTeams ? teams : []),
+    [canLoadTeams, isFetchingTeams, teams]
   );
-  const visibleSelectedTeamId = canLoadTeams ? selectedTeamId : undefined;
+  const visibleSelectedTeamId =
+    canLoadTeams && !isFetchingTeams ? selectedTeamId : undefined;
 
   useEffect(() => {
     if (!canLoadTeams || isLoadingTeams || isFetchingTeams || !hasLoadedTeams) {
@@ -127,12 +128,13 @@ export function NewUiTeamProvider({
       selectedTeam,
       selectedTeamId: visibleSelectedTeamId,
       setSelectedTeamId,
-      isLoadingTeams,
-      teamsError,
+      isLoadingTeams: canLoadTeams && (isLoadingTeams || isFetchingTeams),
+      teamsError: canLoadTeams ? teamsError : null,
       canLoadTeams,
     }),
     [
       canLoadTeams,
+      isFetchingTeams,
       isLoadingTeams,
       selectedTeam,
       setSelectedTeamId,

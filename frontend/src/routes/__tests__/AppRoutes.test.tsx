@@ -74,4 +74,40 @@ describe("AppRoutes", () => {
       await screen.findByRole("link", { name: /^Record game$/i })
     ).toBeInTheDocument();
   });
+
+  it("switches from old mode into the new UI route tree", async () => {
+    const user = userEvent.setup();
+    renderAppRoutes("old");
+
+    await user.click(
+      await screen.findByRole("button", { name: /^Switch to new UI$/i })
+    );
+
+    expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("new");
+    expect(
+      await screen.findByRole("heading", { name: /^All games$/i })
+    ).toBeInTheDocument();
+  });
+
+  it("switches from a new-only route back to a valid old UI route", async () => {
+    const user = userEvent.setup();
+    renderAppRoutes("new");
+
+    expect(
+      await screen.findByRole("heading", { name: /^All games$/i })
+    ).toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole("button", { name: /^Monkey Statistics$/i })
+    );
+    await user.click(
+      screen.getByRole("button", { name: /^Switch to old UI$/i })
+    );
+
+    expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("old");
+    expect(
+      await screen.findByRole("link", { name: /^Teams$/i })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/competitions");
+  });
 });

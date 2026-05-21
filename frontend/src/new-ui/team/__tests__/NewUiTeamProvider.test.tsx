@@ -143,6 +143,9 @@ describe("NewUiTeamProvider", () => {
     renderWithProvider(<Probe />, { queryClient });
 
     expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+    expect(screen.getByText("Loading teams")).toBeInTheDocument();
+    expect(screen.getByText("Selected team: none")).toBeInTheDocument();
+    expect(screen.queryByText("Selected team: Monkey Stats")).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(
