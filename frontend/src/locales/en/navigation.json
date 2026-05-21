@@ -5,7 +5,12 @@
     "competitions": "Competitions",
     "statistics": "Statistics",
     "users": "Users",
-    "home": "Home"
+    "home": "Home",
+    "recordGame": "Record game",
+    "liveGame": "Live game",
+    "allGames": "All games",
+    "teamSetup": "Team setup",
+    "admin": "Admin"
   },
   "drawer": {
     "title": "Monkey Statistics"
@@ -14,5 +19,15 @@
     "english": "English",
     "french": "Français",
     "select": "Select Language"
+  },
+  "uiMode": {
+    "old": "Old",
+    "new": "New",
+    "switchToOld": "Switch to old UI",
+    "switchToNew": "Switch to new UI"
+  },
+  "team": {
+    "selectedTeam": "Selected team",
+    "noTeam": "No team selected"
   }
 }
