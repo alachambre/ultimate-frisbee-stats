@@ -2,6 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createHalftime } from "../../../services/halftimes";
 import { updatePoint } from "../../../services/points";
 import type { PointWithPlayers } from "../../../types";
+import {
+  invalidateGameAfterPointMutation,
+  invalidateGameLiveState,
+} from "../../../utils/queryInvalidation";
 import { queryKeys } from "../../../utils/queryKeys";
 
 interface UseLivePointMutationsParams {
@@ -26,11 +30,8 @@ export function useLivePointMutations({
       if (!activePoint) throw new Error("No active point");
       return updatePoint(activePoint.id, { pull });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(gameId) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, gameId);
       onPointUpdated?.();
     },
   });
@@ -40,10 +41,8 @@ export function useLivePointMutations({
       if (!activePoint) throw new Error("No active point");
       return updatePoint(activePoint.id, { status: "running" });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+    onSuccess: async () => {
+      await invalidateGameLiveState(queryClient, gameId);
       onPointUpdated?.();
     },
   });
@@ -70,10 +69,7 @@ export function useLivePointMutations({
         };
       });
 
-      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(gameId) });
+      await invalidateGameAfterPointMutation(queryClient, gameId);
       onPointUpdated?.();
     },
   });
@@ -84,11 +80,9 @@ export function useLivePointMutations({
         game_id: gameId,
         halftime_timestamp: new Date().toISOString(),
       }),
-    onSuccess: () => {
+    onSuccess: async () => {
       onHalftimeCreated?.();
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+      await invalidateGameAfterPointMutation(queryClient, gameId);
       onPointUpdated?.();
     },
   });

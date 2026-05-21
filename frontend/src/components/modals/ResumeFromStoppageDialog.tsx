@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { updateStoppage } from '../../services/stoppages';
 import type { Stoppage, StoppageUpdate } from '../../types';
+import { invalidateGameAfterPointMutation } from '../../utils/queryInvalidation';
 import { queryKeys } from '../../utils/queryKeys';
 import { getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
@@ -35,10 +36,10 @@ export const ResumeFromStoppageDialog = ({
 
   const mutation = useMutation({
     mutationFn: (stoppageUpdate: StoppageUpdate) => updateStoppage(stoppage.id, stoppageUpdate),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(stoppage.point_id) });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(stoppage.point_id) });
       if (gameId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+        await invalidateGameAfterPointMutation(queryClient, gameId);
       }
       onClose();
     },

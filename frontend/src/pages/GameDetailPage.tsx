@@ -32,6 +32,11 @@ import LoadingState from "../components/shared/LoadingState";
 import PermissionNotice from "../components/shared/PermissionNotice";
 import type { Halftime, PointWithPlayers } from "../types";
 import { shouldEnforcePermissions, useAuth } from "../auth";
+import {
+  invalidateGameAfterPointMutation,
+  invalidateGameHistory,
+  invalidateGameLiveState,
+} from "../utils/queryInvalidation";
 import { queryKeys } from "../utils/queryKeys";
 import { buildGamePointTimelineFromPoints } from "../utils/gameTimeline";
 import { useGameDetailPageData } from "./hooks/useGameDetailPageData";
@@ -83,41 +88,33 @@ export default function GameDetailPage() {
 
   const startMutation = useMutation({
     mutationFn: () => updateGame(gameIdNumber, { status: "started" }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.games });
+    onSuccess: async () => {
+      await invalidateGameLiveState(queryClient, gameIdNumber);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
     },
   });
 
   const finishMutation = useMutation({
     mutationFn: () => finishGame(gameIdNumber),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.games });
+    onSuccess: async () => {
+      await invalidateGameHistory(queryClient, gameIdNumber);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
       setIsFinishConfirmOpen(false);
     },
   });
 
   const deletePointMutation = useMutation({
     mutationFn: (pointId: number) => deletePoint(pointId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, gameIdNumber);
       setDeletingPoint(null);
     },
   });
 
   const deleteHalftimeMutation = useMutation({
     mutationFn: (halftimeId: number) => deleteHalftime(halftimeId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, gameIdNumber);
     },
   });
 
@@ -138,10 +135,7 @@ export default function GameDetailPage() {
   };
 
   const handlePointUpdated = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.game(gameIdNumber) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameIdNumber) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.gameTurnovers(gameIdNumber) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameIdNumber) });
+    void invalidateGameAfterPointMutation(queryClient, gameIdNumber);
   };
 
   const handleDeletePoint = (point: PointWithPlayers) => {

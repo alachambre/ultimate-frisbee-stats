@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createTurnover } from '../../services/turnovers';
 import type { PointWithPlayers, TurnoverType, TurnoverWithPlayer, TurnoverCreate } from '../../types';
+import { invalidateGameAfterPointMutation } from '../../utils/queryInvalidation';
 import { queryKeys } from '../../utils/queryKeys';
 import { TURNOVER_TYPES, getTurnoverTypeLabel } from '../../utils/turnoverTypes';
 
@@ -43,9 +44,9 @@ export const RecordTurnoverDialog = ({ open, onClose, point, existingTurnovers }
 
   const mutation = useMutation({
     mutationFn: (newTurnover: TurnoverCreate) => createTurnover(newTurnover),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.turnovers(point.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(point.game_id) });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.turnovers(point.id) });
+      await invalidateGameAfterPointMutation(queryClient, point.game_id);
       setComments('');
       setTurnoverType('other');
       onClose();

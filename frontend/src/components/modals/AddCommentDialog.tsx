@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import type { PointWithPlayers } from "../../types";
-import { queryKeys } from "../../utils/queryKeys";
+import { invalidateGameLiveState } from "../../utils/queryInvalidation";
 
 interface AddCommentDialogProps {
   open: boolean;
@@ -38,13 +38,11 @@ export default function AddCommentDialog({
     mutationFn: () => {
       return updatePoint(point.id, { comments: comments || null });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Close dialog first before triggering query invalidations
       // to prevent race conditions with re-renders
       handleClose();
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+      await invalidateGameLiveState(queryClient, gameId);
       onSuccess?.();
     },
   });

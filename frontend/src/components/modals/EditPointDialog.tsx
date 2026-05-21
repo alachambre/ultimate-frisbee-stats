@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import PointPlayerSelection from "../points/PointPlayerSelection";
 import type { PointWithPlayers, Player, PointUpdate } from "../../types";
-import { queryKeys } from "../../utils/queryKeys";
+import { invalidateGameAfterPointMutation } from "../../utils/queryInvalidation";
 
 interface EditPointDialogProps {
   open: boolean;
@@ -59,13 +59,8 @@ export default function EditPointDialog({
 
       return updatePoint(point.id, updateData);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(point.game_id) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, point.game_id);
       handleClose();
       onSuccess?.();
     },

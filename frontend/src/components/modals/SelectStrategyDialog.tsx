@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { updatePoint } from "../../services/points";
 import { getStrategies } from "../../services/strategies";
 import type { PointWithPlayers, StrategyCategory } from "../../types";
+import { invalidateGameAfterPointMutation } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface SelectStrategyDialogProps {
@@ -56,11 +57,8 @@ export default function SelectStrategyDialog({
         strategy_id: typeof strategyId === "number" ? strategyId : null,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(gameId) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, gameId);
       handleClose();
       onSuccess?.();
     },

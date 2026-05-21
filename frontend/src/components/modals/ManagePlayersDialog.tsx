@@ -33,6 +33,7 @@ import {
   getRequiredGenderRatioForPoint,
   hasValidPointSelection,
 } from "../../utils/playerComposition";
+import { invalidateGameAfterPointMutation } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 
@@ -149,13 +150,8 @@ export default function ManagePlayersDialog({
         player_ids: selectedPlayerIds,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(point.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(point.game_id) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, point.game_id);
       handleClose();
       onSuccess?.();
     },

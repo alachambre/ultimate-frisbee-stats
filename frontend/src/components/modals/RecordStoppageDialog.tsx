@@ -17,6 +17,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { createStoppage } from '../../services/stoppages';
 import type { PointWithPlayers, StoppageCreate, StoppageType } from '../../types';
+import { invalidateGameAfterPointMutation } from '../../utils/queryInvalidation';
 import { queryKeys } from '../../utils/queryKeys';
 import { STOPPAGE_TYPES, getStoppageTypeLabel } from '../../utils/stoppageTypes';
 
@@ -35,10 +36,10 @@ export const RecordStoppageDialog = ({ open, onClose, point, gameId }: RecordSto
 
   const mutation = useMutation({
     mutationFn: (newStoppage: StoppageCreate) => createStoppage(newStoppage),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(point.id) });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.stoppages(point.id) });
       if (gameId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+        await invalidateGameAfterPointMutation(queryClient, gameId);
       }
       setComments('');
       setStoppageType('call');

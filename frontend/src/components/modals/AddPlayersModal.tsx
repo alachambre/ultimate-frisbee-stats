@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 import type { Player } from "../../types";
+import { invalidateQueryKeys } from "../../utils/queryInvalidation";
 
 interface AddPlayersModalProps {
   isOpen: boolean;
@@ -81,10 +82,8 @@ export default function AddPlayersModal({
         await removePlayers(playersToRemove);
       }
     },
-    onSuccess: () => {
-      invalidateQueries.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey });
-      });
+    onSuccess: async () => {
+      await invalidateQueryKeys(queryClient, invalidateQueries);
       handleClose();
     },
   });

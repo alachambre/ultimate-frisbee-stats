@@ -22,6 +22,7 @@ import { updatePoint } from "../../services/points";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import PointTimer from "../points/PointTimer";
 import type { PointWithPlayers, TurnoverWithPlayer } from "../../types";
+import { invalidateGameAfterPointMutation } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface FinishPointDialogProps {
@@ -82,13 +83,8 @@ export default function FinishPointDialog({
         end_datetime: new Date().toISOString(),
         status: "scored",
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(activePoint.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(activePoint.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(activePoint.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.liveStats(activePoint.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameTeamStatistics(activePoint.game_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameStrategyStatistics(activePoint.game_id) });
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, activePoint.game_id);
       handleClose();
       onSuccess?.();
     },

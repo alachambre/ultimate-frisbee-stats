@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { startPoint } from "../../services/points";
 import { getGame } from "../../services/games";
 import type { PointWithPlayers, FieldSide } from "../../types";
+import { invalidateGameLiveState } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 import { DEFAULT_FIELD_SIDE, inferNextFieldSide } from "../../utils/fieldSide";
 
@@ -125,10 +126,8 @@ export default function StartPointDialog({
       });
       return point;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.game(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.activePoint(gameId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.gameLiveState(gameId) });
+    onSuccess: async () => {
+      await invalidateGameLiveState(queryClient, gameId);
       handleClose();
       onSuccess?.();
     },

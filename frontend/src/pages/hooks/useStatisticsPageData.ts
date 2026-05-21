@@ -18,6 +18,7 @@ import {
   type StatisticsExportDetailMode,
 } from "../../services/statistics";
 import type { Player, PlayerGameStats } from "../../types";
+import { invalidateQueryKeys } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 import type { CompetitionStatisticsTab } from "../../components/statistics/CompetitionStatisticsTabs";
 
@@ -560,11 +561,7 @@ export function useStatisticsPageData(
 
     setIsManualRefreshing(true);
     try {
-      await Promise.all(
-        refreshQueryKeys.map((queryKey) =>
-          queryClient.invalidateQueries({ queryKey, exact: true })
-        )
-      );
+      await invalidateQueryKeys(queryClient, refreshQueryKeys, { exact: true });
     } finally {
       setIsManualRefreshing(false);
     }
