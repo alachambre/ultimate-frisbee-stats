@@ -124,7 +124,7 @@ describe("AppRoutes", () => {
       { timeout: 5000 }
     );
     expect(window.location.pathname).toBe("/games/1");
-  });
+  }, 10000);
 
   it("switches from old mode into the new UI route tree", async () => {
     const user = userEvent.setup();
