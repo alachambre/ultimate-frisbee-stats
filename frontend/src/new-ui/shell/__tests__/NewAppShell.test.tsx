@@ -34,6 +34,14 @@ function renderShell(role: "public" | "team_member" | "team_analyst" | "admin") 
   );
 }
 
+async function openDrawer() {
+  const user = userEvent.setup();
+  await user.click(
+    screen.getByRole("button", { name: /^Monkey Statistics$/i })
+  );
+  return user;
+}
+
 describe("NewAppShell", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -53,6 +61,7 @@ describe("NewAppShell", () => {
 
   it("shows team member navigation and the auto-selected team", async () => {
     renderShell("team_member");
+    await openDrawer();
 
     expect(
       screen.getByRole("link", { name: /^Record game$/i })
@@ -72,18 +81,20 @@ describe("NewAppShell", () => {
     expect(screen.queryByRole("link", { name: /^Admin$/i })).not.toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText("Monkey Stats")).toBeInTheDocument();
+      expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThan(0);
     });
   });
 
-  it("shows admin navigation for admins", () => {
+  it("shows admin navigation for admins", async () => {
     renderShell("admin");
+    await openDrawer();
 
     expect(screen.getByRole("link", { name: /^Admin$/i })).toBeInTheDocument();
   });
 
-  it("shows public navigation only for spectator-safe areas", () => {
+  it("shows public navigation only for spectator-safe areas", async () => {
     renderShell("public");
+    await openDrawer();
 
     expect(screen.getByRole("link", { name: /^Live game$/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^All games$/i })).toBeInTheDocument();
@@ -99,13 +110,30 @@ describe("NewAppShell", () => {
   });
 
   it("switches back to old UI from the mode toggle", async () => {
-    const user = userEvent.setup();
     renderShell("team_member");
+    const user = await openDrawer();
 
     await user.click(
       screen.getByRole("button", { name: /^Switch to old UI$/i })
     );
 
     expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("old");
+  });
+
+  it("shows drawer navigation, mode toggle, and auth action", async () => {
+    renderShell("public");
+    const user = await openDrawer();
+
+    expect(screen.getByRole("link", { name: /^Live game$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^Switch to old UI$/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Sign in$/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^Sign in$/i }));
+
+    expect(
+      screen.getByRole("heading", { name: /^Sign in$/i })
+    ).toBeInTheDocument();
   });
 });

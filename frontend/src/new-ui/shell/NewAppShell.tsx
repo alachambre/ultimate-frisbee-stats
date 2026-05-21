@@ -17,6 +17,7 @@ import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
+import LoginDialog from "../../components/auth/LoginDialog";
 import { APP_MONKEY_EMOJI } from "../../constants/branding";
 import NewTeamSelector from "./NewTeamSelector";
 import NewUiModeToggle from "./NewUiModeToggle";
@@ -35,6 +36,7 @@ export default function NewAppShell() {
   const location = useLocation();
   const { t } = useTranslation(["common", "navigation"]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const shouldProtectUi = shouldEnforcePermissions(
     auth.enforcementMode,
     auth.isLoading
@@ -73,6 +75,20 @@ export default function NewAppShell() {
     setIsDrawerOpen(false);
   };
 
+  const handleAuthAction = async () => {
+    if (!auth.isAuthenticated) {
+      setIsLoginDialogOpen(true);
+      return;
+    }
+
+    try {
+      await auth.signOut();
+      closeDrawer();
+    } catch (error) {
+      console.error("Failed to sign out", error);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -101,7 +117,7 @@ export default function NewAppShell() {
             aria-label={t("navigation:drawer.title")}
             edge="start"
             onClick={() => setIsDrawerOpen(true)}
-            sx={{ display: { xs: "inline-flex", md: "none" } }}
+            sx={{ display: { xs: "inline-flex", lg: "none" } }}
           >
             <MenuIcon />
           </IconButton>
@@ -130,7 +146,7 @@ export default function NewAppShell() {
           <Box
             component="nav"
             sx={{
-              display: { xs: "none", md: "flex" },
+              display: { xs: "none", lg: "flex" },
               flex: 1,
               gap: 0.5,
               minWidth: 0,
@@ -156,13 +172,26 @@ export default function NewAppShell() {
           <Box
             sx={{
               alignItems: "center",
-              display: { xs: "none", md: "flex" },
+              display: { xs: "none", lg: "flex" },
               flexShrink: 0,
               gap: 1.5,
             }}
           >
             <NewTeamSelector />
             <NewUiModeToggle />
+            {auth.isConfigured && (
+              <Button
+                disabled={auth.isLoading}
+                onClick={handleAuthAction}
+                sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
+                type="button"
+                variant="outlined"
+              >
+                {auth.isAuthenticated
+                  ? t("common:auth.signOut")
+                  : t("common:auth.signIn")}
+              </Button>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
@@ -246,6 +275,20 @@ export default function NewAppShell() {
           </List>
 
           <Box sx={{ mt: "auto", p: 2 }}>
+            {auth.isConfigured && (
+              <Button
+                disabled={auth.isLoading}
+                fullWidth
+                onClick={handleAuthAction}
+                sx={{ mb: 1 }}
+                type="button"
+                variant="outlined"
+              >
+                {auth.isAuthenticated
+                  ? t("common:auth.signOut")
+                  : t("common:auth.signIn")}
+              </Button>
+            )}
             <NewUiModeToggle />
           </Box>
         </Box>
@@ -254,6 +297,11 @@ export default function NewAppShell() {
       <Box component="main" sx={{ flex: 1 }}>
         <Outlet />
       </Box>
+
+      <LoginDialog
+        open={isLoginDialogOpen}
+        onClose={() => setIsLoginDialogOpen(false)}
+      />
     </Box>
   );
 }

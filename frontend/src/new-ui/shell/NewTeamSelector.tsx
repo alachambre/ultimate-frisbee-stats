@@ -1,3 +1,4 @@
+import { useId } from "react";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -9,6 +10,7 @@ import { useNewUiTeam } from "../team/useNewUiTeam";
 
 export default function NewTeamSelector() {
   const { t } = useTranslation(["navigation"]);
+  const labelId = useId();
   const {
     canLoadTeams,
     isLoadingTeams,
@@ -56,12 +58,12 @@ export default function NewTeamSelector() {
       size="small"
       sx={{ minWidth: { xs: 180, sm: 220 }, maxWidth: 280 }}
     >
-      <InputLabel id="new-team-selector-label">
+      <InputLabel id={labelId}>
         {t("navigation:team.selectedTeam")}
       </InputLabel>
       <Select
         label={t("navigation:team.selectedTeam")}
-        labelId="new-team-selector-label"
+        labelId={labelId}
         onChange={handleTeamChange}
         value={selectedTeamId ?? ""}
       >
