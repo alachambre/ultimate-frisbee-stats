@@ -117,7 +117,7 @@ export default function NewAppShell() {
             aria-label={t("navigation:drawer.title")}
             edge="start"
             onClick={() => setIsDrawerOpen(true)}
-            sx={{ display: { xs: "inline-flex", lg: "none" } }}
+            sx={{ display: { xs: "inline-flex", xl: "none" } }}
           >
             <MenuIcon />
           </IconButton>
@@ -146,7 +146,7 @@ export default function NewAppShell() {
           <Box
             component="nav"
             sx={{
-              display: { xs: "none", lg: "flex" },
+              display: { xs: "none", xl: "flex" },
               flex: 1,
               gap: 0.5,
               minWidth: 0,
