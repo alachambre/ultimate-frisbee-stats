@@ -99,6 +99,23 @@ describe("NewUiTeamProvider", () => {
     });
   });
 
+  it("clears a saved team when no teams are available", async () => {
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "2");
+    server.use(
+      http.get("http://localhost:8000/teams", () => HttpResponse.json([]))
+    );
+
+    renderWithProvider(<Probe />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Teams loaded")).toBeInTheDocument();
+      expect(screen.getByText("Selected team: none")).toBeInTheDocument();
+      expect(
+        localStorage.getItem("monkey-statistics-new-ui-team-id")
+      ).toBeNull();
+    });
+  });
+
   it("persists manual team selection", async () => {
     const user = userEvent.setup();
     server.use(

@@ -83,7 +83,6 @@ export function NewUiTeamProvider({
 
     if (
       selectedTeamId !== undefined &&
-      teams.length > 0 &&
       !teams.some((team) => team.id === selectedTeamId)
     ) {
       // Query data also invalidates stale persisted selections.
