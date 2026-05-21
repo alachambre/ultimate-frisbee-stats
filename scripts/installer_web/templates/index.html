@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monkey Statistics Agent Tools Installer</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121a2d;
+      --panel-2: #17223a;
+      --border: #2a3755;
+      --muted: #9aa8c7;
+      --text: #eef4ff;
+      --accent: #38bdf8;
+      --accent-2: #1e3a8a;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 34rem),
+        linear-gradient(180deg, #0b1020 0%, #101827 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(11, 16, 32, 0.82);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .shell {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+    }
+
+    .header-row {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 { font-size: 20px; letter-spacing: 0; }
+    h2 { font-size: 18px; letter-spacing: 0; }
+    h3 { font-size: 15px; letter-spacing: 0; }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 28px 0 44px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(18, 26, 45, 0.86);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+    }
+
+    .panel-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .panel-body { padding: 18px 20px; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .segmented button {
+      min-width: 92px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--muted);
+      background: transparent;
+      padding: 8px 12px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .segmented button.active {
+      color: white;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .item {
+      min-height: 144px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(23, 34, 58, 0.76);
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .item:hover {
+      border-color: rgba(56, 189, 248, 0.7);
+      background: rgba(23, 34, 58, 0.95);
+    }
+
+    .item input {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      accent-color: var(--accent);
+    }
+
+    .item-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .item-description {
+      color: #bdc8df;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .chip {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: #c7d2ea;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chip.skill { color: #bff0ff; border-color: rgba(56, 189, 248, 0.28); }
+
+    .stack { display: grid; gap: 20px; }
+
+    .summary {
+      position: sticky;
+      top: 92px;
+    }
+
+    .path-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .path {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.16);
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    code {
+      color: #d8e7ff;
+      overflow-wrap: anywhere;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button.primary, button.secondary {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    }
+
+    button.secondary {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #dbe7fb;
+    }
+
+    button:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .log {
+      max-height: 340px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.22);
+      margin-top: 14px;
+    }
+
+    .log-row {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 10px;
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      font-size: 12px;
+    }
+
+    .log-row:last-child { border-bottom: 0; }
+    .status { color: var(--accent); font-weight: 700; }
+    .status.copied { color: var(--good); }
+    .status.error { color: var(--danger); }
+
+    .notice {
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      border-radius: 8px;
+      background: rgba(245, 158, 11, 0.08);
+      color: #fde4b0;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .error {
+      border: 1px solid rgba(239, 68, 68, 0.34);
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.1);
+      color: #fecaca;
+      padding: 12px;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    .muted { color: var(--muted); }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .summary { position: static; }
+      .grid { grid-template-columns: 1fr; }
+      .header-row { align-items: flex-start; flex-direction: column; padding: 16px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell header-row">
+      <div>
+        <h1>Monkey Statistics Agent Tools Installer</h1>
+        <p class="subtitle">Install project skills and Codex subagent definitions from this repository.</p>
+      </div>
+      <div class="toolbar" aria-label="Install scope">
+        <div class="segmented">
+          <button id="scopeProject" class="active" type="button">Project</button>
+          <button id="scopeUser" type="button">User</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Skills</h2>
+            <p class="subtitle">Reusable workflows installed under the selected skills directory.</p>
+          </div>
+          <div class="toolbar">
+            <button class="secondary" id="selectAllSkills" type="button">Select all</button>
+            <button class="secondary" id="clearSkills" type="button">Clear</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="grid" id="skillsGrid"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Codex Agents</h2>
+            <p class="subtitle">Spawnable subagent definitions installed into the selected Codex agents directory.</p>
+          </div>
+          <div class="toolbar">
+            <button class="secondary" id="selectAllAgents" type="button">Select all</button>
+            <button class="secondary" id="clearAgents" type="button">Clear</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="grid" id="agentsGrid"></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="summary panel">
+      <div class="panel-header">
+        <div>
+          <h2>Review</h2>
+          <p class="subtitle" id="selectionSummary">Loading catalog...</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="notice">
+          Project scope writes ignored local files in this repo. User scope writes to your home Codex/agents folders.
+        </div>
+
+        <div class="path-list">
+          <div class="path">
+            <div class="label">Repository</div>
+            <code id="repoRoot">Loading...</code>
+          </div>
+          <div class="path">
+            <div class="label">Skills destination</div>
+            <code id="skillsDir">Loading...</code>
+          </div>
+          <div class="path">
+            <div class="label">Agents destination</div>
+            <code id="agentsDir">Loading...</code>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="previewButton" type="button">Preview</button>
+          <button class="primary" id="installButton" type="button">Install</button>
+        </div>
+
+        <div id="errorBox" class="error" hidden></div>
+
+        <div class="log" id="log" hidden></div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const state = {
+      scope: 'project',
+      skills: [],
+      agents: [],
+      selectedSkills: new Set(),
+      selectedAgents: new Set(),
+      repoRoot: '',
+      layout: null,
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with ${response.status}`);
+      }
+      return data;
+    }
+
+    async function loadCatalog() {
+      hideError();
+      const catalog = await fetchJson(`/api/catalog?scope=${encodeURIComponent(state.scope)}`);
+      state.skills = catalog.skills;
+      state.agents = catalog.agents;
+      state.repoRoot = catalog.repoRoot;
+      state.layout = catalog.layout;
+      state.selectedSkills = new Set(state.skills.map((skill) => skill.name));
+      state.selectedAgents = new Set(state.agents.map((agent) => agent.name));
+      render();
+    }
+
+    async function loadLayout() {
+      hideError();
+      state.layout = await fetchJson(`/api/layout?scope=${encodeURIComponent(state.scope)}`);
+      renderSummary();
+    }
+
+    function render() {
+      renderScope();
+      renderSkills();
+      renderAgents();
+      renderSummary();
+    }
+
+    function renderScope() {
+      el('scopeProject').classList.toggle('active', state.scope === 'project');
+      el('scopeUser').classList.toggle('active', state.scope === 'user');
+    }
+
+    function renderSkills() {
+      el('skillsGrid').innerHTML = state.skills.map((skill) => `
+        <label class="item">
+          <input type="checkbox" data-skill="${escapeHtml(skill.name)}" ${state.selectedSkills.has(skill.name) ? 'checked' : ''}>
+          <span>
+            <span class="item-title">${escapeHtml(skill.name)}</span>
+            <span class="item-description">${escapeHtml(skill.description || 'No description provided.')}</span>
+            <span class="chips">
+              <span class="chip">${escapeHtml(skill.path)}</span>
+              ${skill.hasLinks ? '<span class="chip skill">references</span>' : ''}
+              ${skill.hasManifest ? '<span class="chip skill">manifest</span>' : ''}
+            </span>
+          </span>
+        </label>
+      `).join('');
+
+      document.querySelectorAll('[data-skill]').forEach((input) => {
+        input.addEventListener('change', (event) => {
+          const name = event.target.dataset.skill;
+          if (event.target.checked) {
+            state.selectedSkills.add(name);
+          } else {
+            state.selectedSkills.delete(name);
+          }
+          clearLog();
+          renderSummary();
+        });
+      });
+    }
+
+    function renderAgents() {
+      el('agentsGrid').innerHTML = state.agents.map((agent) => `
+        <label class="item">
+          <input type="checkbox" data-agent="${escapeHtml(agent.name)}" ${state.selectedAgents.has(agent.name) ? 'checked' : ''}>
+          <span>
+            <span class="item-title">
+              ${escapeHtml(agent.name)}
+              ${agent.skill ? `<span class="chip skill">${escapeHtml(agent.skill)}</span>` : ''}
+            </span>
+            <span class="item-description">${escapeHtml(agent.description || 'No description provided.')}</span>
+            <span class="chips">
+              <span class="chip">${escapeHtml(agent.sandboxMode || 'sandbox unset')}</span>
+              <span class="chip">${escapeHtml(agent.model || 'model unset')}</span>
+              <span class="chip">${escapeHtml(agent.path)}</span>
+            </span>
+          </span>
+        </label>
+      `).join('');
+
+      document.querySelectorAll('[data-agent]').forEach((input) => {
+        input.addEventListener('change', (event) => {
+          const name = event.target.dataset.agent;
+          if (event.target.checked) {
+            state.selectedAgents.add(name);
+          } else {
+            state.selectedAgents.delete(name);
+          }
+          clearLog();
+          renderSummary();
+        });
+      });
+    }
+
+    function renderSummary() {
+      const skills = state.selectedSkills.size;
+      const agents = state.selectedAgents.size;
+      el('selectionSummary').textContent = `${skills} skill(s), ${agents} agent(s) selected`;
+      el('repoRoot').textContent = state.repoRoot || 'Loading...';
+      el('skillsDir').textContent = state.layout?.skillsDir || 'Loading...';
+      el('agentsDir').textContent = state.layout?.agentsDir || 'Loading...';
+      const disabled = skills + agents === 0;
+      el('previewButton').disabled = disabled;
+      el('installButton').disabled = disabled;
+    }
+
+    function payload() {
+      return {
+        scope: state.scope,
+        selectedSkills: Array.from(state.selectedSkills),
+        selectedAgents: Array.from(state.selectedAgents),
+      };
+    }
+
+    async function preview() {
+      hideError();
+      clearLog();
+      const result = await fetchJson('/api/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload()),
+      });
+      renderLog(result.actions);
+    }
+
+    async function install() {
+      hideError();
+      clearLog();
+      const result = await fetchJson('/api/install', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload()),
+      });
+      renderLog(result.actions);
+    }
+
+    function renderLog(actions) {
+      const log = el('log');
+      log.hidden = false;
+      log.innerHTML = actions.map((action) => `
+        <div class="log-row">
+          <span class="status ${escapeHtml(action.status)}">${escapeHtml(action.status)}</span>
+          <code>${escapeHtml(action.message)}</code>
+        </div>
+      `).join('');
+    }
+
+    function clearLog() {
+      el('log').hidden = true;
+      el('log').innerHTML = '';
+    }
+
+    function showError(error) {
+      const box = el('errorBox');
+      box.hidden = false;
+      box.textContent = error.message || String(error);
+    }
+
+    function hideError() {
+      const box = el('errorBox');
+      box.hidden = true;
+      box.textContent = '';
+    }
+
+    el('scopeProject').addEventListener('click', async () => {
+      state.scope = 'project';
+      clearLog();
+      await loadLayout().catch(showError);
+      renderScope();
+    });
+
+    el('scopeUser').addEventListener('click', async () => {
+      state.scope = 'user';
+      clearLog();
+      await loadLayout().catch(showError);
+      renderScope();
+    });
+
+    el('selectAllSkills').addEventListener('click', () => {
+      state.selectedSkills = new Set(state.skills.map((skill) => skill.name));
+      clearLog();
+      renderSkills();
+      renderSummary();
+    });
+
+    el('clearSkills').addEventListener('click', () => {
+      state.selectedSkills.clear();
+      clearLog();
+      renderSkills();
+      renderSummary();
+    });
+
+    el('selectAllAgents').addEventListener('click', () => {
+      state.selectedAgents = new Set(state.agents.map((agent) => agent.name));
+      clearLog();
+      renderAgents();
+      renderSummary();
+    });
+
+    el('clearAgents').addEventListener('click', () => {
+      state.selectedAgents.clear();
+      clearLog();
+      renderAgents();
+      renderSummary();
+    });
+
+    el('previewButton').addEventListener('click', () => preview().catch(showError));
+    el('installButton').addEventListener('click', () => install().catch(showError));
+
+    loadCatalog().catch(showError);
+  </script>
+</body>
+</html>

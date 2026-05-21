@@ -90,15 +90,23 @@ This repo contains project-specific Codex skills and subagent definitions:
 
 - `skills/<skill-name>/SKILL.md` contains the reusable workflow and local references.
 - `agents/<agent-name>.toml` defines spawnable Codex subagents that use those skills.
-- `scripts/install_agent_tools.py` copies them into Codex-compatible install locations.
+- `scripts/launch_installer.py` starts a small local web installer.
+- `scripts/install_agent_tools.py` is the direct CLI installer used by the web UI.
 
-Install for this repository only:
+Start the web installer:
+
+```bash
+python3 -m pip install -r scripts/requirements.txt
+python3 scripts/launch_installer.py
+```
+
+Direct CLI install for this repository only:
 
 ```bash
 python3 scripts/install_agent_tools.py --scope project
 ```
 
-Install for the current user:
+Direct CLI install for the current user:
 
 ```bash
 python3 scripts/install_agent_tools.py --scope user

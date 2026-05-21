@@ -24,7 +24,8 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 ## Local Agent Tooling
 - Project skills live under `skills/<skill-name>/SKILL.md` and should stay concise, with detailed local pointers in `references/links.md`.
 - Codex subagent definitions live under `agents/<agent-name>.toml`; they should name the skill they use in `developer_instructions`.
-- Use `python3 scripts/install_agent_tools.py --scope project` to install definitions into ignored local folders `.agents/skills/` and `.codex/agents/`.
+- Use `python3 scripts/launch_installer.py` for the local web installer, after `python3 -m pip install -r scripts/requirements.txt` if Flask is missing.
+- Use `python3 scripts/install_agent_tools.py --scope project` for direct CLI installation into ignored local folders `.agents/skills/` and `.codex/agents/`.
 - Use `--scope user` only when the definitions should be available outside this repository.
 - When adding or changing a durable workflow convention, update the relevant skill and this file if the convention should affect future agents.
 
