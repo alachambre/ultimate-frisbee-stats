@@ -71,7 +71,32 @@
     },
     "liveGame": {
       "heading": "Live game",
-      "copy": "Public spectator boards for currently running games will live here."
+      "eyebrow": "Public spectator mode",
+      "copy": "Follow currently running games with a clear public score board.",
+      "listTitle": "Live games",
+      "empty": "No games are live right now.",
+      "emptyCopy": "Started games will appear here automatically.",
+      "loading": "Loading live games...",
+      "error": "Unable to load live games.",
+      "liveStateLoading": "Loading live score...",
+      "liveStateError": "Unable to load the live score.",
+      "board": {
+        "live": "Live",
+        "currentScore": "Current score",
+        "pointNumber": "Point {{pointNumber}}",
+        "startingOffense": "Starting on offense",
+        "startingDefense": "Starting on defense",
+        "pointReady": "Line ready",
+        "pointRunning": "Point running",
+        "pointScored": "Point scored",
+        "pointCompleted": "Point completed",
+        "ourTurns": "Our turns",
+        "opponentTurns": "Opponent turns",
+        "turnovers": "Turnovers",
+        "stoppages": "Stoppages",
+        "waiting": "Waiting for the next point",
+        "waitingCopy": "The score is live. The next point will appear here."
+      }
     },
     "statistics": {
       "heading": "Statistics",

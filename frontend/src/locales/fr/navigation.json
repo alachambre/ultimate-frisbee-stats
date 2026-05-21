@@ -71,7 +71,32 @@
     },
     "liveGame": {
       "heading": "Match en direct",
-      "copy": "Les tableaux publics pour spectateurs des matchs en cours apparaîtront ici."
+      "eyebrow": "Mode spectateur public",
+      "copy": "Suivez les matchs en cours avec un tableau de score public et lisible.",
+      "listTitle": "Matchs en direct",
+      "empty": "Aucun match en direct pour le moment.",
+      "emptyCopy": "Les matchs démarrés apparaîtront ici automatiquement.",
+      "loading": "Chargement des matchs en direct...",
+      "error": "Impossible de charger les matchs en direct.",
+      "liveStateLoading": "Chargement du score en direct...",
+      "liveStateError": "Impossible de charger le score en direct.",
+      "board": {
+        "live": "En direct",
+        "currentScore": "Score actuel",
+        "pointNumber": "Point {{pointNumber}}",
+        "startingOffense": "Départ en attaque",
+        "startingDefense": "Départ en défense",
+        "pointReady": "Ligne prête",
+        "pointRunning": "Point en cours",
+        "pointScored": "Point marqué",
+        "pointCompleted": "Point terminé",
+        "ourTurns": "Nos Turnovers",
+        "opponentTurns": "Turnovers adverses",
+        "turnovers": "Turnovers",
+        "stoppages": "Stoppages",
+        "waiting": "En attente du prochain point",
+        "waitingCopy": "Le score est en direct. Le prochain point apparaîtra ici."
+      }
     },
     "statistics": {
       "heading": "Statistiques",

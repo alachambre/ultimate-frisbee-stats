@@ -86,6 +86,15 @@ describe("AppRoutes", () => {
     expect(window.location.pathname).toBe("/games/1");
   });
 
+  it("keeps new UI live spectator routes routable", async () => {
+    renderAppRoutes("new", "/live/1");
+
+    expect(
+      await screen.findByRole("heading", { name: /^Live game$/i })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/live/1");
+  });
+
   it("switches from old mode into the new UI route tree", async () => {
     const user = userEvent.setup();
     renderAppRoutes("old");

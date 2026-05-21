@@ -50,6 +50,10 @@ export default function NewUiRoutes() {
           />
           <Route path="live" element={renderLazyRoute(<NewLiveGamePage />)} />
           <Route
+            path="live/:gameId"
+            element={renderLazyRoute(<NewLiveGamePage />)}
+          />
+          <Route
             path="record"
             element={renderLazyRoute(
               <RequireMinimumRole minimumRole="team_member">
