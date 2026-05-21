@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
+import { HttpResponse, delay, http } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NewUiTeamProvider, useNewUiTeam } from "../NewUiTeamProvider";
 import { queryKeys } from "../../../utils/queryKeys";
@@ -34,13 +34,20 @@ function renderWithProvider(
 }
 
 function Probe() {
-  const { selectedTeam, teams, setSelectedTeamId, isLoadingTeams } =
+  const {
+    selectedTeam,
+    selectedTeamId,
+    teams,
+    setSelectedTeamId,
+    isLoadingTeams,
+  } =
     useNewUiTeam();
 
   return (
     <div>
       <p>{isLoadingTeams ? "Loading teams" : "Teams loaded"}</p>
       <p>Selected team: {selectedTeam?.name ?? "none"}</p>
+      <p>Selected team id: {selectedTeamId ?? "none"}</p>
       <p>Teams count: {teams.length}</p>
       <button type="button" onClick={() => setSelectedTeamId(2)}>
         Select second team
@@ -108,6 +115,44 @@ describe("NewUiTeamProvider", () => {
     });
   });
 
+  it("keeps a saved team while stale cached teams refetch", async () => {
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "2");
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(queryKeys.teams, [
+      {
+        id: 1,
+        name: "Monkey Stats",
+        created_at: "2026-01-01T00:00:00Z",
+        players: [],
+      },
+    ]);
+    server.use(
+      http.get("http://localhost:8000/teams", async () => {
+        await delay(25);
+        return HttpResponse.json([
+          {
+            id: 2,
+            name: "Banana Cutters",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ]);
+      })
+    );
+
+    renderWithProvider(<Probe />, { queryClient });
+
+    expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Selected team: Banana Cutters")
+      ).toBeInTheDocument();
+      expect(screen.getByText("Selected team id: 2")).toBeInTheDocument();
+      expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+    });
+  });
+
   it("clears a saved team when no teams are available", async () => {
     localStorage.setItem("monkey-statistics-new-ui-team-id", "2");
     server.use(
@@ -160,6 +205,7 @@ describe("NewUiTeamProvider", () => {
     await waitFor(() => {
       expect(screen.getByText("Teams count: 0")).toBeInTheDocument();
       expect(screen.getByText("Selected team: none")).toBeInTheDocument();
+      expect(screen.getByText("Selected team id: none")).toBeInTheDocument();
       expect(requestHandler).not.toHaveBeenCalled();
     });
   });

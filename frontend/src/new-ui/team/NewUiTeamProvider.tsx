@@ -58,6 +58,7 @@ export function NewUiTeamProvider({
   const {
     data: teams = [],
     isLoading: isLoadingTeams,
+    isFetching: isFetchingTeams,
     isSuccess: hasLoadedTeams,
     error: teamsError,
   } = useQuery({
@@ -73,7 +74,7 @@ export function NewUiTeamProvider({
   const visibleSelectedTeamId = canLoadTeams ? selectedTeamId : undefined;
 
   useEffect(() => {
-    if (!canLoadTeams || isLoadingTeams || !hasLoadedTeams) {
+    if (!canLoadTeams || isLoadingTeams || isFetchingTeams || !hasLoadedTeams) {
       return;
     }
 
@@ -96,7 +97,14 @@ export function NewUiTeamProvider({
       setSelectedTeamIdState(undefined);
       window.localStorage.removeItem(SELECTED_TEAM_STORAGE_KEY);
     }
-  }, [canLoadTeams, hasLoadedTeams, isLoadingTeams, selectedTeamId, teams]);
+  }, [
+    canLoadTeams,
+    hasLoadedTeams,
+    isFetchingTeams,
+    isLoadingTeams,
+    selectedTeamId,
+    teams,
+  ]);
 
   const setSelectedTeamId = useCallback((teamId?: number) => {
     setSelectedTeamIdState(teamId);
