@@ -16,6 +16,7 @@ const NewLiveGamePage = lazy(() => import("./pages/NewLiveGamePage"));
 const NewStatisticsPage = lazy(() => import("./pages/NewStatisticsPage"));
 const NewTeamSetupPage = lazy(() => import("./pages/NewTeamSetupPage"));
 const AdminUsersPage = lazy(() => import("../pages/AdminUsersPage"));
+const GameDetailPage = lazy(() => import("../pages/GameDetailPage"));
 
 function renderLazyRoute(content: ReactNode) {
   return (
@@ -43,6 +44,10 @@ export default function NewUiRoutes() {
         <Route path="/" element={<NewAppShell />}>
           <Route index element={<Navigate replace to="/games" />} />
           <Route path="games" element={renderLazyRoute(<NewAllGamesPage />)} />
+          <Route
+            path="games/:gameId"
+            element={renderLazyRoute(<GameDetailPage />)}
+          />
           <Route path="live" element={renderLazyRoute(<NewLiveGamePage />)} />
           <Route
             path="record"
