@@ -17,7 +17,7 @@ import {
   type StatisticsDatasetFilters,
   type StatisticsExportDetailMode,
 } from "../../services/statistics";
-import type { Player, PlayerGameStats } from "../../types";
+import { buildStatisticsDatasetView } from "../../utils/statisticsDatasetView";
 import { invalidateQueryKeys } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 import {
@@ -119,80 +119,6 @@ export function useStatisticsPageData(
     enabled: teamId !== undefined,
   });
 
-  const sortedTeams = useMemo(
-    () => (teams ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)),
-    [teams]
-  );
-
-  const selectedTeam = teams?.find((team) => team.id === teamId);
-
-  const competitionsForTeam = useMemo(
-    () =>
-      (competitions ?? []).slice().sort((a, b) => {
-        const startA = new Date(a.start_date).getTime();
-        const startB = new Date(b.start_date).getTime();
-        return startB - startA;
-      }),
-    [competitions]
-  );
-
-  const competitionIdsForTeam = useMemo(
-    () => new Set(competitionsForTeam.map((competition) => competition.id)),
-    [competitionsForTeam]
-  );
-
-  const teamGames = useMemo(() => {
-    if (!allGames || competitionIdsForTeam.size === 0) {
-      return [];
-    }
-
-    return allGames
-      .filter((game) => competitionIdsForTeam.has(game.competition_id))
-      .slice()
-      .sort((a, b) => {
-        const dateA = a.date ? new Date(a.date).getTime() : 0;
-        const dateB = b.date ? new Date(b.date).getTime() : 0;
-        return dateB - dateA;
-      });
-  }, [allGames, competitionIdsForTeam]);
-
-  const selectedCompetitionIdsSet = useMemo(() => new Set(competitionIds), [competitionIds]);
-  const selectedGameIdsSet = useMemo(() => new Set(gameIds), [gameIds]);
-  const selectedPlayerIdsSet = useMemo(() => new Set(playerIds), [playerIds]);
-
-  const availableGames = useMemo(() => {
-    if (competitionIds.length === 0) {
-      return teamGames;
-    }
-
-    return teamGames.filter((game) => selectedCompetitionIdsSet.has(game.competition_id));
-  }, [competitionIds.length, selectedCompetitionIdsSet, teamGames]);
-
-  const selectedCompetitions = useMemo(
-    () => competitionsForTeam.filter((competition) => selectedCompetitionIdsSet.has(competition.id)),
-    [competitionsForTeam, selectedCompetitionIdsSet]
-  );
-
-  const selectedGames = useMemo(
-    () => teamGames.filter((game) => selectedGameIdsSet.has(game.id)),
-    [selectedGameIdsSet, teamGames]
-  );
-
-  const selectedGame = selectedGames.length === 1 ? selectedGames[0] : undefined;
-  const selectedCompetition = selectedCompetitions.length === 1 ? selectedCompetitions[0] : undefined;
-
-  const selectedDatasetGames = useMemo(() => {
-    if (selectedGames.length > 0) {
-      return selectedGames;
-    }
-
-    if (competitionIds.length > 0) {
-      return teamGames.filter((game) => selectedCompetitionIdsSet.has(game.competition_id));
-    }
-
-    return teamGames;
-  }, [competitionIds.length, selectedCompetitionIdsSet, selectedGames, teamGames]);
-
   const shouldLoadTeamStats =
     teamId !== undefined &&
     access.canViewTeamStatistics &&
@@ -234,10 +160,6 @@ export function useStatisticsPageData(
     gameIds,
     playerIds
   );
-  const gamePointTimelineQueryKey = queryKeys.gamePointTimeline(
-    selectedGame?.id ?? 0,
-    playerIds
-  );
 
   const {
     data: teamStats,
@@ -275,6 +197,46 @@ export function useStatisticsPageData(
     placeholderData: keepPreviousData,
   });
 
+  const statisticsView = useMemo(
+    () =>
+      buildStatisticsDatasetView({
+        teams,
+        competitions,
+        allGames,
+        teamPlayerStats,
+        selection: {
+          teamId,
+          competitionIds,
+          gameIds,
+          playerIds,
+        },
+      }),
+    [allGames, competitionIds, competitions, gameIds, playerIds, teamId, teamPlayerStats, teams]
+  );
+
+  const {
+    sortedTeams,
+    selectedTeam,
+    competitionsForTeam,
+    competitionIdsForTeam,
+    teamGames,
+    availableGames,
+    selectedCompetitions,
+    selectedCompetition,
+    selectedGames,
+    selectedGame,
+    selectedDatasetGames,
+    playersForTeam,
+    selectedPlayers,
+    selectedPlayer,
+    playerStatsById,
+  } = statisticsView;
+
+  const gamePointTimelineQueryKey = queryKeys.gamePointTimeline(
+    selectedGame?.id ?? 0,
+    playerIds
+  );
+
   const {
     data: teamStrategyStats,
     isLoading: isLoadingTeamStrategyStats,
@@ -298,58 +260,6 @@ export function useStatisticsPageData(
     enabled: selectedGame !== undefined && access.canViewTeamStatistics,
     placeholderData: keepPreviousData,
   });
-
-  const playerStatsById = useMemo(() => {
-    const map = new Map<number, PlayerGameStats>();
-    for (const playerStat of teamPlayerStats ?? []) {
-      map.set(playerStat.player_id, playerStat);
-    }
-    return map;
-  }, [teamPlayerStats]);
-
-  const teamPlayersById = useMemo(
-    () => new Map((selectedTeam?.players ?? []).map((player) => [player.id, player])),
-    [selectedTeam?.players]
-  );
-
-  const filteredPlayerIdsFromStats = useMemo(() => {
-    const shouldScopePlayerOptions =
-      competitionIds.length > 0 || gameIds.length > 0 || playerIds.length > 0;
-
-    if (!shouldScopePlayerOptions || !teamPlayerStats) {
-      return null;
-    }
-
-    return teamPlayerStats
-      .filter((playerStat) => {
-        if (playerIds.length === 0) {
-          return true;
-        }
-
-        return (
-          playerStat.points_played > 0 || selectedPlayerIdsSet.has(playerStat.player_id)
-        );
-      })
-      .map((playerStat) => playerStat.player_id);
-  }, [competitionIds.length, gameIds.length, playerIds.length, selectedPlayerIdsSet, teamPlayerStats]);
-
-  const playersForTeam = useMemo(() => {
-    const sourcePlayers =
-      filteredPlayerIdsFromStats === null
-        ? selectedTeam?.players ?? []
-        : filteredPlayerIdsFromStats
-            .map((playerId) => teamPlayersById.get(playerId))
-            .filter((player): player is Player => player !== undefined);
-
-    return sourcePlayers.slice().sort((a, b) => a.name.localeCompare(b.name));
-  }, [filteredPlayerIdsFromStats, selectedTeam?.players, teamPlayersById]);
-
-  const selectedPlayers = useMemo(
-    () => playersForTeam.filter((player) => selectedPlayerIdsSet.has(player.id)),
-    [playersForTeam, selectedPlayerIdsSet]
-  );
-
-  const selectedPlayer = selectedPlayers.length === 1 ? selectedPlayers[0] : undefined;
 
   const controlsError = competitionsError || allGamesError;
   const controlsLoading =
