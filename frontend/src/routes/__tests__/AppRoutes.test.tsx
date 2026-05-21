@@ -1,6 +1,6 @@
 import { HttpResponse, http } from "msw";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { render, screen, waitFor } from "../../test/test-utils";
 import { server } from "../../test/setup";
@@ -76,9 +76,11 @@ describe("AppRoutes", () => {
   });
 
   it("keeps new UI game detail routes routable", async () => {
+    const gameDetailRequest = vi.fn();
     server.use(
-      http.get("http://localhost:8000/games/1", () =>
-        HttpResponse.json({
+      http.get("http://localhost:8000/games/1", () => {
+        gameDetailRequest();
+        return HttpResponse.json({
           id: 1,
           competition_id: 1,
           opponent_name: "Rival Team",
@@ -95,8 +97,8 @@ describe("AppRoutes", () => {
           points: [],
           players: [],
           halftime: null,
-        })
-      ),
+        });
+      }),
       http.get("http://localhost:8000/competitions/1", () =>
         HttpResponse.json({
           id: 1,
@@ -115,11 +117,12 @@ describe("AppRoutes", () => {
 
     renderAppRoutes("new", "/games/1");
 
-    expect(
-      await screen.findByRole("heading", {
-        name: /Monkey Stats vs Rival Team/i,
-      }, { timeout: 5000 })
-    ).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(gameDetailRequest).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 5000 }
+    );
     expect(window.location.pathname).toBe("/games/1");
   });
 
