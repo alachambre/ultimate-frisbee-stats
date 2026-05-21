@@ -4,7 +4,6 @@ import {
   keepPreviousData,
   useQuery,
   useQueryClient,
-  type QueryKey,
 } from "@tanstack/react-query";
 import { getAllGames, getCompetitions, getTeams } from "../../services";
 import {
@@ -19,6 +18,10 @@ import {
 } from "../../services/statistics";
 import { buildStatisticsDatasetView } from "../../utils/statisticsDatasetView";
 import { invalidateQueryKeys } from "../../utils/queryInvalidation";
+import {
+  buildStatisticsQueryPlan,
+  buildStatisticsRefreshQueryKeys,
+} from "../../utils/statisticsQueryPlan";
 import { queryKeys } from "../../utils/queryKeys";
 import {
   mergeStatisticsSelection,
@@ -119,46 +122,27 @@ export function useStatisticsPageData(
     enabled: teamId !== undefined,
   });
 
-  const shouldLoadTeamStats =
-    teamId !== undefined &&
-    access.canViewTeamStatistics &&
-    queryOptions.activeTab === "team";
-  const shouldLoadTeamEvolution =
-    teamId !== undefined &&
-    access.canViewTeamStatistics &&
-    queryOptions.activeTab === "evolution";
-  const shouldLoadTeamPlayerStats =
-    teamId !== undefined &&
-    access.canViewPlayerStatistics &&
-    (queryOptions.activeTab === "players" || queryOptions.isPlayerFilterOpen);
-  const shouldLoadTeamStrategyStats =
-    teamId !== undefined &&
-    access.canViewStrategyStatistics &&
-    queryOptions.activeTab === "strategies";
-
-  const teamStatsQueryKey = queryKeys.teamTeamStatistics(
-    teamId ?? 0,
-    competitionIds,
-    gameIds,
-    playerIds
-  );
-  const teamEvolutionQueryKey = queryKeys.teamEvolutionStatistics(
-    teamId ?? 0,
-    competitionIds,
-    gameIds,
-    playerIds
-  );
-  const teamPlayerStatsQueryKey = queryKeys.teamPlayerStatistics(
-    teamId ?? 0,
-    competitionIds,
-    gameIds,
-    playerIds
-  );
-  const teamStrategyStatsQueryKey = queryKeys.teamStrategyStatistics(
-    teamId ?? 0,
-    competitionIds,
-    gameIds,
-    playerIds
+  const baseStatisticsQueryPlan = useMemo(
+    () =>
+      buildStatisticsQueryPlan({
+        teamId,
+        competitionIds,
+        gameIds,
+        playerIds,
+        selectedGameId: undefined,
+        activeTab: queryOptions.activeTab,
+        isPlayerFilterOpen: queryOptions.isPlayerFilterOpen,
+        access,
+      }),
+    [
+      access,
+      competitionIds,
+      gameIds,
+      playerIds,
+      queryOptions.activeTab,
+      queryOptions.isPlayerFilterOpen,
+      teamId,
+    ]
   );
 
   const {
@@ -167,9 +151,9 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamStats,
     error: teamStatsError,
   } = useQuery({
-    queryKey: teamStatsQueryKey,
+    queryKey: baseStatisticsQueryPlan.queryKeys.teamStats,
     queryFn: () => getTeamTeamStatistics(teamId as number, statisticsFilters),
-    enabled: shouldLoadTeamStats,
+    enabled: baseStatisticsQueryPlan.enabled.teamStats,
     placeholderData: keepPreviousData,
   });
 
@@ -179,9 +163,9 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamEvolution,
     error: teamEvolutionError,
   } = useQuery({
-    queryKey: teamEvolutionQueryKey,
+    queryKey: baseStatisticsQueryPlan.queryKeys.teamEvolution,
     queryFn: () => getTeamEvolutionStatistics(teamId as number, statisticsFilters),
-    enabled: shouldLoadTeamEvolution,
+    enabled: baseStatisticsQueryPlan.enabled.teamEvolution,
     placeholderData: keepPreviousData,
   });
 
@@ -191,9 +175,9 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamPlayerStats,
     error: teamPlayerStatsError,
   } = useQuery({
-    queryKey: teamPlayerStatsQueryKey,
+    queryKey: baseStatisticsQueryPlan.queryKeys.teamPlayerStats,
     queryFn: () => getTeamPlayerStatistics(teamId as number, statisticsFilters),
-    enabled: shouldLoadTeamPlayerStats,
+    enabled: baseStatisticsQueryPlan.enabled.teamPlayerStats,
     placeholderData: keepPreviousData,
   });
 
@@ -232,9 +216,28 @@ export function useStatisticsPageData(
     playerStatsById,
   } = statisticsView;
 
-  const gamePointTimelineQueryKey = queryKeys.gamePointTimeline(
-    selectedGame?.id ?? 0,
-    playerIds
+  const statisticsQueryPlan = useMemo(
+    () =>
+      buildStatisticsQueryPlan({
+        teamId,
+        competitionIds,
+        gameIds,
+        playerIds,
+        selectedGameId: selectedGame?.id,
+        activeTab: queryOptions.activeTab,
+        isPlayerFilterOpen: queryOptions.isPlayerFilterOpen,
+        access,
+      }),
+    [
+      access,
+      competitionIds,
+      gameIds,
+      playerIds,
+      queryOptions.activeTab,
+      queryOptions.isPlayerFilterOpen,
+      selectedGame?.id,
+      teamId,
+    ]
   );
 
   const {
@@ -243,9 +246,9 @@ export function useStatisticsPageData(
     isFetching: isFetchingTeamStrategyStats,
     error: teamStrategyStatsError,
   } = useQuery({
-    queryKey: teamStrategyStatsQueryKey,
+    queryKey: statisticsQueryPlan.queryKeys.teamStrategyStats,
     queryFn: () => getTeamStrategyStatistics(teamId as number, statisticsFilters),
-    enabled: shouldLoadTeamStrategyStats,
+    enabled: statisticsQueryPlan.enabled.teamStrategyStats,
     placeholderData: keepPreviousData,
   });
 
@@ -255,9 +258,9 @@ export function useStatisticsPageData(
     isFetching: isFetchingGamePointTimeline,
     error: gamePointTimelineError,
   } = useQuery({
-    queryKey: gamePointTimelineQueryKey,
+    queryKey: statisticsQueryPlan.queryKeys.gamePointTimeline,
     queryFn: () => getGamePointTimeline(selectedGame!.id, playerIds),
-    enabled: selectedGame !== undefined && access.canViewTeamStatistics,
+    enabled: statisticsQueryPlan.enabled.gamePointTimeline,
     placeholderData: keepPreviousData,
   });
 
@@ -369,35 +372,18 @@ export function useStatisticsPageData(
       return;
     }
 
-    const refreshQueryKeys: QueryKey[] = [
-      queryKeys.teams,
-      queryKeys.competitionsByTeam(teamId),
-      queryKeys.games,
-      teamStatsQueryKey,
-      teamEvolutionQueryKey,
-      teamPlayerStatsQueryKey,
-      teamStrategyStatsQueryKey,
-    ];
-
-    if (selectedGame !== undefined) {
-      refreshQueryKeys.push(gamePointTimelineQueryKey);
-    }
-
     setIsManualRefreshing(true);
     try {
-      await invalidateQueryKeys(queryClient, refreshQueryKeys, { exact: true });
+      await invalidateQueryKeys(queryClient, buildStatisticsRefreshQueryKeys(statisticsQueryPlan), {
+        exact: true,
+      });
     } finally {
       setIsManualRefreshing(false);
     }
   }, [
-    gamePointTimelineQueryKey,
     queryClient,
-    selectedGame,
-    teamEvolutionQueryKey,
+    statisticsQueryPlan,
     teamId,
-    teamPlayerStatsQueryKey,
-    teamStatsQueryKey,
-    teamStrategyStatsQueryKey,
   ]);
 
   return {
