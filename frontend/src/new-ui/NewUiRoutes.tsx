@@ -19,7 +19,15 @@ const NewLiveGamePage = lazy(() => import("./pages/NewLiveGamePage"));
 const NewStatisticsPage = lazy(() => import("./pages/NewStatisticsPage"));
 const NewTeamSetupPage = lazy(() => import("./pages/NewTeamSetupPage"));
 const AdminUsersPage = lazy(() => import("../pages/AdminUsersPage"));
+const CompetitionsPage = lazy(() => import("../pages/CompetitionsPage"));
+const CompetitionDetailPage = lazy(
+  () => import("../pages/CompetitionDetailPage")
+);
 const GameDetailPage = lazy(() => import("../pages/GameDetailPage"));
+const LineDetailPage = lazy(() => import("../pages/LineDetailPage"));
+const StrategiesPage = lazy(() => import("../pages/StrategiesPage"));
+const TeamsPage = lazy(() => import("../pages/TeamsPage"));
+const TeamDetailPage = lazy(() => import("../pages/TeamDetailPage"));
 
 function renderLazyRoute(content: ReactNode) {
   return (
@@ -85,6 +93,46 @@ export default function NewUiRoutes() {
             element={renderLazyRoute(
               <RequireMinimumRole minimumRole="team_member">
                 <NewTeamSetupPage />
+              </RequireMinimumRole>
+            )}
+          />
+          <Route
+            path="teams"
+            element={renderLazyRoute(
+              <RequireMinimumRole minimumRole="team_member">
+                <TeamsPage />
+              </RequireMinimumRole>
+            )}
+          />
+          <Route
+            path="teams/:teamId"
+            element={renderLazyRoute(
+              <RequireMinimumRole minimumRole="team_member">
+                <TeamDetailPage />
+              </RequireMinimumRole>
+            )}
+          />
+          <Route
+            path="competitions"
+            element={renderLazyRoute(<CompetitionsPage />)}
+          />
+          <Route
+            path="competitions/:competitionId"
+            element={renderLazyRoute(<CompetitionDetailPage />)}
+          />
+          <Route
+            path="lines/:lineId"
+            element={renderLazyRoute(
+              <RequireMinimumRole minimumRole="team_member">
+                <LineDetailPage />
+              </RequireMinimumRole>
+            )}
+          />
+          <Route
+            path="strategies"
+            element={renderLazyRoute(
+              <RequireMinimumRole minimumRole="team_member">
+                <StrategiesPage />
               </RequireMinimumRole>
             )}
           />

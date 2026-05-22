@@ -11,6 +11,30 @@ vi.mock("../../pages/GameDetailPage", () => ({
   default: () => <div>New UI game detail route</div>,
 }));
 
+vi.mock("../../pages/TeamsPage", () => ({
+  default: () => <div>New UI teams route</div>,
+}));
+
+vi.mock("../../pages/TeamDetailPage", () => ({
+  default: () => <div>New UI team detail route</div>,
+}));
+
+vi.mock("../../pages/CompetitionsPage", () => ({
+  default: () => <div>New UI competitions route</div>,
+}));
+
+vi.mock("../../pages/CompetitionDetailPage", () => ({
+  default: () => <div>New UI competition detail route</div>,
+}));
+
+vi.mock("../../pages/LineDetailPage", () => ({
+  default: () => <div>New UI line detail route</div>,
+}));
+
+vi.mock("../../pages/StrategiesPage", () => ({
+  default: () => <div>New UI strategies route</div>,
+}));
+
 vi.mock("../../new-ui/pages/NewRecordGameDetailPage", () => ({
   default: () => <div>New UI record game detail route</div>,
 }));
@@ -106,6 +130,22 @@ describe("AppRoutes", () => {
       await screen.findByText("New UI record game detail route")
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/record/1");
+  });
+
+  it("keeps new UI setup routes routable", async () => {
+    renderAppRoutes("new", "/teams/1");
+
+    expect(
+      await screen.findByText("New UI team detail route")
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/teams/1");
+  });
+
+  it("keeps new UI strategy setup routable", async () => {
+    renderAppRoutes("new", "/strategies");
+
+    expect(await screen.findByText("New UI strategies route")).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/strategies");
   });
 
   it("switches from old mode into the new UI route tree", async () => {

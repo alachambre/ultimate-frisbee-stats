@@ -135,7 +135,39 @@
     },
     "teamSetup": {
       "heading": "Team setup",
-      "copy": "Roster, lines, strategies, and team configuration will live here."
+      "copy": "Keep roster, lines, competitions, and strategies easy to reach without making setup the center of the app.",
+      "selectedTeamEyebrow": "{{teamName}} configuration",
+      "noTeamEyebrow": "No team selected",
+      "noTeamTitle": "No team selected",
+      "noTeamCopy": "Pick a team from the header or open the teams page to choose one.",
+      "noTeamsCopy": "Create a team before configuring roster, lines, and competitions.",
+      "playerCount": {
+        "one": "{{count}} player",
+        "other": "{{count}} players"
+      },
+      "loading": "Loading team setup...",
+      "error": "Unable to load team setup.",
+      "mobileNote": "These setup screens stay available on mobile for quick sideline updates, such as adding a strategy during a game.",
+      "actions": {
+        "openTeams": "Open teams",
+        "openRosterLines": "Open roster and lines",
+        "openCompetitions": "Open competitions",
+        "openStrategies": "Open strategies"
+      },
+      "cards": {
+        "rosterLines": {
+          "title": "Roster and lines",
+          "copy": "Manage players, edit player details, and maintain line groups for the selected team."
+        },
+        "competitions": {
+          "title": "Competitions and games",
+          "copy": "Create competitions, prepare games, adjust rosters, and open existing game setup."
+        },
+        "strategies": {
+          "title": "Strategies",
+          "copy": "Maintain offensive and defensive strategies, including quick additions during a game."
+        }
+      }
     }
   }
 }

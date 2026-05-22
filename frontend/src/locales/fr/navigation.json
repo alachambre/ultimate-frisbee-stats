@@ -135,7 +135,39 @@
     },
     "teamSetup": {
       "heading": "Configuration équipe",
-      "copy": "L'effectif, les lignes, les stratégies et la configuration de l'équipe apparaîtront ici."
+      "copy": "Gardez l'effectif, les lignes, les compétitions et les stratégies faciles d'accès sans faire de la configuration le centre de l'application.",
+      "selectedTeamEyebrow": "Configuration {{teamName}}",
+      "noTeamEyebrow": "Aucune équipe sélectionnée",
+      "noTeamTitle": "Aucune équipe sélectionnée",
+      "noTeamCopy": "Choisissez une équipe dans l'en-tête ou ouvrez la page des équipes pour en sélectionner une.",
+      "noTeamsCopy": "Créez une équipe avant de configurer l'effectif, les lignes et les compétitions.",
+      "playerCount": {
+        "one": "{{count}} joueur",
+        "other": "{{count}} joueurs"
+      },
+      "loading": "Chargement de la configuration équipe...",
+      "error": "Impossible de charger la configuration équipe.",
+      "mobileNote": "Ces écrans de configuration restent disponibles sur mobile pour les mises à jour rapides au bord du terrain, comme ajouter une stratégie pendant un match.",
+      "actions": {
+        "openTeams": "Ouvrir les équipes",
+        "openRosterLines": "Ouvrir effectif et lignes",
+        "openCompetitions": "Ouvrir les compétitions",
+        "openStrategies": "Ouvrir les stratégies"
+      },
+      "cards": {
+        "rosterLines": {
+          "title": "Effectif et lignes",
+          "copy": "Gérez les joueurs, modifiez leurs informations et maintenez les groupes de lignes de l'équipe sélectionnée."
+        },
+        "competitions": {
+          "title": "Compétitions et matchs",
+          "copy": "Créez des compétitions, préparez les matchs, ajustez les rosters et ouvrez la configuration des matchs existants."
+        },
+        "strategies": {
+          "title": "Stratégies",
+          "copy": "Maintenez les stratégies offensives et défensives, y compris les ajouts rapides pendant un match."
+        }
+      }
     }
   }
 }
