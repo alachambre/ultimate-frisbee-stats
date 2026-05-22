@@ -64,12 +64,6 @@ describe("NewAppShell", () => {
     await openDrawer();
 
     expect(
-      screen.getByRole("link", { name: /^Record game$/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /^Live game$/i })
-    ).toBeInTheDocument();
-    expect(
       screen.getByRole("link", { name: /^All games$/i })
     ).toBeInTheDocument();
     expect(
@@ -78,7 +72,15 @@ describe("NewAppShell", () => {
     expect(
       screen.getByRole("link", { name: /^Team setup$/i })
     ).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^Admin$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Record game$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Live game$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Admin$/i })
+    ).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThan(0);
@@ -96,10 +98,14 @@ describe("NewAppShell", () => {
     renderShell("public");
     await openDrawer();
 
-    expect(screen.getByRole("link", { name: /^Live game$/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^All games$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /^All games$/i })
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Record game$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Live game$/i })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Team setup$/i })
@@ -124,7 +130,9 @@ describe("NewAppShell", () => {
     renderShell("public");
     const user = await openDrawer();
 
-    expect(screen.getByRole("link", { name: /^Live game$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /^All games$/i })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /^Switch to old UI$/i })
     ).toBeInTheDocument();

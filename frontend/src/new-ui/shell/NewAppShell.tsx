@@ -43,15 +43,11 @@ export default function NewAppShell() {
   );
 
   const navigationItems = useMemo<NavigationItem[]>(() => {
-    const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
     const canViewStatistics =
       !shouldProtectUi || auth.capabilities.canViewStatistics;
+    const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
 
     return [
-      ...(canEditData
-        ? [{ label: t("navigation:menu.recordGame"), path: "/record" }]
-        : []),
-      { label: t("navigation:menu.liveGame"), path: "/live" },
       { label: t("navigation:menu.allGames"), path: "/games" },
       ...(canViewStatistics
         ? [{ label: t("navigation:menu.statistics"), path: "/statistics" }]
