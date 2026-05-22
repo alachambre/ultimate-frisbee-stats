@@ -80,23 +80,19 @@ function setupHandlers(game: GameDetail) {
   server.use(
     http.get(`${BASE_URL}/games/1`, () => HttpResponse.json(game)),
     http.get(`${BASE_URL}/games/1/live-state`, () =>
-      HttpResponse.json(liveState)
+      HttpResponse.json(liveState),
     ),
     http.get(`${BASE_URL}/games/1/turnovers`, () => HttpResponse.json([])),
     http.get(`${BASE_URL}/competitions/10`, () =>
-      HttpResponse.json(competition)
+      HttpResponse.json(competition),
     ),
     http.get(`${BASE_URL}/statistics/games/1/live`, () =>
-      HttpResponse.json([])
-    )
+      HttpResponse.json([]),
+    ),
   );
 }
 
-function renderPage({
-  role,
-}: {
-  role: "public" | "team_member";
-}) {
+function renderPage({ role }: { role: "public" | "team_member" }) {
   return render(
     <Routes>
       <Route path="/live/:gameId" element={<NewGameTrackerPage />} />
@@ -109,7 +105,7 @@ function renderPage({
         hasAppAccess: role !== "public",
         enforcementMode: "enforced",
       },
-    }
+    },
   );
 }
 
@@ -120,16 +116,21 @@ describe("NewGameTrackerPage", () => {
     renderPage({ role: "public" });
 
     expect(
-      await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" })
+      await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" }),
     ).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
-    expect(screen.getByText(/No live point is currently active/i)).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^Start Point$/i })
+      screen.getByRole("heading", { name: /^No active point$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^Start Point$/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^Complete$/i })
+      screen.queryByRole("button", { name: /^New point$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^Complete$/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -139,20 +140,24 @@ describe("NewGameTrackerPage", () => {
     renderPage({ role: "team_member" });
 
     expect(
-      await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" })
+      await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^Roster$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^Roster$/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Stats$/i })).toHaveAttribute(
       "href",
-      "/statistics?teamId=1&gameIds=1"
+      "/statistics?teamId=1&gameIds=1",
     );
     expect(screen.getByRole("button", { name: /^Edit$/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^Complete$/i })
+      screen.getByRole("button", { name: /^Complete$/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Live Point Tracking/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^Start Point$/i })
+      screen.getByRole("heading", { name: /^No active point$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^New point$/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Game history/i)).not.toBeInTheDocument();
   });
@@ -163,14 +168,16 @@ describe("NewGameTrackerPage", () => {
     renderPage({ role: "team_member" });
 
     expect(
-      await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" })
+      await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^Start Game$/i })
+      screen.getByRole("button", { name: /^Start Game$/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Live Point Tracking/i)).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^Start Point$/i })
+      screen.getByRole("heading", { name: /^No active point$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^New point$/i }),
     ).not.toBeInTheDocument();
   });
 });

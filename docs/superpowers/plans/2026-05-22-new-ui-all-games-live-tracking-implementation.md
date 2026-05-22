@@ -794,7 +794,7 @@ git commit -m "Route new UI games to shared tracker"
 - Modify: `frontend/src/locales/en/points.json`
 - Modify: `frontend/src/locales/fr/points.json`
 
-- [ ] **Step 1: Add failing tracker UI tests**
+- [x] **Step 1: Add failing tracker UI tests**
 
 Extend `LivePointTracker.test.tsx` with a new describe block for the New UI variant:
 
@@ -835,7 +835,7 @@ expect(screen.getByRole("button", { name: /^Half time$/i })).toBeInTheDocument()
 expect(screen.queryByText(/Game history/i)).not.toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Run tracker tests and confirm they fail**
+- [x] **Step 2: Run tracker tests and confirm they fail**
 
 Run:
 
@@ -845,7 +845,7 @@ cd frontend && npm test -- LivePointTracker.test.tsx
 
 Expected before implementation: fail because `variant="field"` does not exist and current labels differ.
 
-- [ ] **Step 3: Add an optional variant prop**
+- [x] **Step 3: Add an optional variant prop**
 
 In `LivePointTracker.tsx`, extend the existing props interface with only the new optional field:
 
@@ -871,7 +871,7 @@ variant = "classic",
 
 Keep current behavior for `classic` so Old UI and existing New UI pages are not broken.
 
-- [ ] **Step 4: Render field no-active state**
+- [x] **Step 4: Render field no-active state**
 
 When `variant === "field"` and `!currentPoint`, render a field-style card:
 
@@ -901,7 +901,7 @@ For recorder mobile actions, use the same existing `Start Point` dialog trigger 
 
 Do not duplicate these buttons inside the no-active card on mobile. For desktop, inline actions are acceptable if the sticky mobile deck is hidden by breakpoint.
 
-- [ ] **Step 5: Render field active state**
+- [x] **Step 5: Render field active state**
 
 For `variant === "field"` and `currentPoint`, render:
 
@@ -921,7 +921,7 @@ Do not render:
 
 Keep pull inbound mutation available through dialogs or future More menu if current behavior still needs it. If existing pull prompt is required to launch defensive points, place it behind `More` for this first implementation only if tests show the old prompt blocks normal use.
 
-- [ ] **Step 6: Update field action labels**
+- [x] **Step 6: Update field action labels**
 
 For running points in the field variant:
 
@@ -935,7 +935,7 @@ secondary: t("common:action.moreActions", "More")
 
 Keep the existing button handlers.
 
-- [ ] **Step 7: Update EN/FR point copy**
+- [x] **Step 7: Update EN/FR point copy**
 
 Add English:
 
@@ -959,7 +959,7 @@ Add French equivalents while keeping sport terms from `GLOSSARY.md` in English w
 }
 ```
 
-- [ ] **Step 8: Use the field variant in `NewGameTrackerPage`**
+- [x] **Step 8: Use the field variant in `NewGameTrackerPage`**
 
 Pass:
 
@@ -977,7 +977,7 @@ Pass:
 />
 ```
 
-- [ ] **Step 9: Run tracker tests**
+- [x] **Step 9: Run tracker tests**
 
 Run:
 
@@ -987,7 +987,7 @@ cd frontend && npm test -- LivePointTracker.test.tsx NewGameTrackerPage.test.tsx
 
 Expected: pass.
 
-- [ ] **Step 10: Commit field tracker UI**
+- [x] **Step 10: Commit field tracker UI**
 
 ```bash
 git add frontend/src/components/points frontend/src/new-ui/pages/NewGameTrackerPage.tsx frontend/src/locales/en/points.json frontend/src/locales/fr/points.json

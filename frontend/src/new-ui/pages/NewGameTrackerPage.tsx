@@ -55,7 +55,7 @@ export default function NewGameTrackerPage() {
 
   const shouldProtectUi = shouldEnforcePermissions(
     auth.enforcementMode,
-    auth.isLoading
+    auth.isLoading,
   );
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
   const canViewStatistics =
@@ -177,7 +177,10 @@ export default function NewGameTrackerPage() {
                   flexItem
                   orientation="vertical"
                   sx={(theme) => ({
-                    borderColor: alpha(theme.palette.primary.contrastText, 0.35),
+                    borderColor: alpha(
+                      theme.palette.primary.contrastText,
+                      0.35,
+                    ),
                   })}
                 />
               }
@@ -283,6 +286,7 @@ export default function NewGameTrackerPage() {
             renderWhenReady
             readOnly={!canEditData}
             teamId={competition?.team_id ?? 0}
+            variant="field"
           />
         )}
       </Stack>
@@ -310,7 +314,9 @@ export default function NewGameTrackerPage() {
       >
         <DialogTitle>{t("games:detail.endGameConfirmTitle")}</DialogTitle>
         <DialogContent>
-          <Typography gutterBottom>{t("games:detail.endGameConfirm")}</Typography>
+          <Typography gutterBottom>
+            {t("games:detail.endGameConfirm")}
+          </Typography>
           {finishMutation.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {t("common:messages.error")}
