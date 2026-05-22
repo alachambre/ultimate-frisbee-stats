@@ -138,6 +138,14 @@ describe("NewRecordGameDetailPage", () => {
     expect(
       screen.getByText("No points yet. Start tracking points above.")
     ).toBeInTheDocument();
+    const startPointButton = screen.getByRole("button", {
+      name: /start point/i,
+    });
+    const rosterButton = screen.getByRole("button", { name: /game roster/i });
+    expect(
+      startPointButton.compareDocumentPosition(rosterButton) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
     expect(
       screen.getByRole("button", { name: /end game/i })
     ).toBeInTheDocument();

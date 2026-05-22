@@ -239,52 +239,66 @@ export default function NewRecordGameDetailPage() {
               )}
             </Box>
 
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-              <Button
-                fullWidth
-                onClick={() => setIsRosterDialogOpen(true)}
-                startIcon={<GroupIcon />}
-                variant="outlined"
-              >
-                {t("games:detail.roster")}
-              </Button>
-              {canEditData && (
-                <Button
-                  fullWidth
-                  onClick={() => setIsEditModalOpen(true)}
-                  startIcon={<EditIcon />}
-                  variant="outlined"
-                >
-                  {t("common:action.edit")}
-                </Button>
-              )}
-              {canEditData && game.status === "ready" && (
-                <Button
-                  disabled={startMutation.isPending}
-                  fullWidth
-                  onClick={() => startMutation.mutate()}
-                  startIcon={<PlayArrowIcon />}
-                  variant="contained"
-                >
-                  {startMutation.isPending
-                    ? t("common:action.loading")
-                    : t("games:detail.startGame")}
-                </Button>
-              )}
-              {canEditData && game.status === "started" && (
-                <Button
-                  color="success"
-                  fullWidth
-                  onClick={() => setIsFinishConfirmOpen(true)}
-                  startIcon={<CheckCircleIcon />}
-                  variant="outlined"
-                >
-                  {t("games:detail.endGame")}
-                </Button>
-              )}
-            </Stack>
           </Stack>
         </Paper>
+
+        {competition && (
+          <LivePointTracker
+            activePoint={activePoint || null}
+            activePointStoppages={activePointStoppages}
+            activePointTurnovers={activePointTurnovers}
+            game={game}
+            onPointUpdated={handlePointUpdated}
+            players={game.players}
+            readOnly={!canEditData}
+            teamId={competition.team_id}
+          />
+        )}
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Button
+            fullWidth
+            onClick={() => setIsRosterDialogOpen(true)}
+            startIcon={<GroupIcon />}
+            variant="outlined"
+          >
+            {t("games:detail.roster")}
+          </Button>
+          {canEditData && (
+            <Button
+              fullWidth
+              onClick={() => setIsEditModalOpen(true)}
+              startIcon={<EditIcon />}
+              variant="outlined"
+            >
+              {t("common:action.edit")}
+            </Button>
+          )}
+          {canEditData && game.status === "ready" && (
+            <Button
+              disabled={startMutation.isPending}
+              fullWidth
+              onClick={() => startMutation.mutate()}
+              startIcon={<PlayArrowIcon />}
+              variant="contained"
+            >
+              {startMutation.isPending
+                ? t("common:action.loading")
+                : t("games:detail.startGame")}
+            </Button>
+          )}
+          {canEditData && game.status === "started" && (
+            <Button
+              color="success"
+              fullWidth
+              onClick={() => setIsFinishConfirmOpen(true)}
+              startIcon={<CheckCircleIcon />}
+              variant="outlined"
+            >
+              {t("games:detail.endGame")}
+            </Button>
+          )}
+        </Stack>
 
         {competition && (
           <GameRosterDialog
@@ -298,19 +312,6 @@ export default function NewRecordGameDetailPage() {
             }
             open={isRosterDialogOpen}
             players={rosterPlayersForTabs}
-          />
-        )}
-
-        {competition && (
-          <LivePointTracker
-            activePoint={activePoint || null}
-            activePointStoppages={activePointStoppages}
-            activePointTurnovers={activePointTurnovers}
-            game={game}
-            onPointUpdated={handlePointUpdated}
-            players={game.players}
-            readOnly={!canEditData}
-            teamId={competition.team_id}
           />
         )}
 
