@@ -139,7 +139,7 @@ export default function LivePointTracker({
     <>
       <Paper
         sx={{
-          p: 3,
+          p: { xs: 2, sm: 3 },
           mb: 3,
           ...(currentPoint && {
             borderTop: 3,

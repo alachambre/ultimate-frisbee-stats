@@ -5,7 +5,12 @@
     "competitions": "Compétitions",
     "statistics": "Statistiques",
     "users": "Utilisateurs",
-    "home": "Accueil"
+    "home": "Accueil",
+    "recordGame": "Saisir un match",
+    "liveGame": "Match en direct",
+    "allGames": "Tous les matchs",
+    "teamSetup": "Configuration équipe",
+    "admin": "Admin"
   },
   "drawer": {
     "title": "Monkey Statistics"
@@ -14,5 +19,157 @@
     "english": "English",
     "french": "Français",
     "select": "Sélectionner la langue"
+  },
+  "uiMode": {
+    "old": "Ancienne",
+    "new": "Nouvelle",
+    "switchToOld": "Basculer vers l'ancienne UI",
+    "switchToNew": "Basculer vers la nouvelle UI"
+  },
+  "team": {
+    "selectedTeam": "Équipe sélectionnée",
+    "noTeam": "Aucune équipe sélectionnée"
+  },
+  "newUiPages": {
+    "allGames": {
+      "heading": "Tous les matchs",
+      "copy": "Suivez l'équipe courante, ouvrez les matchs en direct et retrouvez les derniers résultats.",
+      "publicCopy": "Vue publique spectateur",
+      "publicNotice": "Vous voyez les informations publiques des matchs. Connectez-vous avec un accès équipe pour utiliser le tableau de bord.",
+      "selectedTeamEyebrow": "Tableau de bord {{teamName}}",
+      "globalEyebrow": "Matchs publics",
+      "actions": {
+        "record": "Saisir un match",
+        "live": "Matchs en direct",
+        "statistics": "Statistiques",
+        "openLive": "Ouvrir le direct",
+        "prepare": "Préparer",
+        "review": "Revoir"
+      },
+      "summary": {
+        "live": "En direct",
+        "upcoming": "À venir",
+        "completed": "Terminés",
+        "record": "Bilan"
+      },
+      "sections": {
+        "live": "En direct",
+        "upcoming": "Prochains matchs",
+        "recent": "Derniers résultats"
+      },
+      "empty": {
+        "team": "Aucun match pour cette équipe.",
+        "public": "Aucun match public disponible pour le moment.",
+        "section": "Rien à afficher pour le moment."
+      },
+      "loading": "Chargement des matchs...",
+      "error": "Impossible de charger les matchs."
+    },
+    "recordGame": {
+      "heading": "Saisir un match",
+      "copy": "Commencez par les matchs utiles sur le terrain : reprendre le match en cours ou préparer le prochain.",
+      "selectedTeamEyebrow": "Saisie terrain {{teamName}}",
+      "globalEyebrow": "Saisie terrain",
+      "sections": {
+        "started": "En cours de saisie",
+        "ready": "Prêts à démarrer"
+      },
+      "actions": {
+        "continue": "Continuer la saisie",
+        "prepare": "Préparer le match"
+      },
+      "empty": {
+        "page": "Aucun match prêt à saisir.",
+        "section": "Rien à saisir ici pour le moment."
+      },
+      "loading": "Chargement des matchs à saisir...",
+      "error": "Impossible de charger les matchs à saisir.",
+      "detail": {
+        "back": "Retour à la file de saisie",
+        "eyebrow": "Saisie terrain",
+        "heading": "{{teamName}} vs {{opponentName}}",
+        "score": "Score actuel",
+        "history": "Historique du match"
+      }
+    },
+    "liveGame": {
+      "heading": "Match en direct",
+      "eyebrow": "Mode spectateur public",
+      "copy": "Suivez les matchs en cours avec un tableau de score public et lisible.",
+      "listTitle": "Matchs en direct",
+      "empty": "Aucun match en direct pour le moment.",
+      "emptyCopy": "Les matchs démarrés apparaîtront ici automatiquement.",
+      "loading": "Chargement des matchs en direct...",
+      "error": "Impossible de charger les matchs en direct.",
+      "liveStateLoading": "Chargement du score en direct...",
+      "liveStateError": "Impossible de charger le score en direct.",
+      "requestedGameUnavailable": "Ce match n'est pas en direct pour le moment.",
+      "requestedGameUnavailableCopy": "Ouvrez la liste des matchs en direct pour choisir un match en cours.",
+      "board": {
+        "live": "En direct",
+        "currentScore": "Score actuel",
+        "pointNumber": "Point {{pointNumber}}",
+        "startingOffense": "Départ en attaque",
+        "startingDefense": "Départ en défense",
+        "pointReady": "Ligne prête",
+        "pointRunning": "Point en cours",
+        "pointScored": "Point marqué",
+        "pointCompleted": "Point terminé",
+        "ourTurns": "Nos Turnovers",
+        "opponentTurns": "Turnovers adverses",
+        "turnovers": "Turnovers",
+        "stoppages": "Stoppages",
+        "waiting": "En attente du prochain point",
+        "waitingCopy": "Le score est en direct. Le prochain point apparaîtra ici."
+      }
+    },
+    "statistics": {
+      "heading": "Statistiques",
+      "copy": "Commencez par la vue coach, puis affinez le même jeu de données par compétition, match et joueur.",
+      "selectedTeamEyebrow": "Vue coach {{teamName}}",
+      "globalEyebrow": "Vue coach",
+      "overview": {
+        "title": "Vue coach",
+        "holdRate": "Taux de hold",
+        "breakRate": "Taux de break",
+        "turnRate": "Création de turns"
+      }
+    },
+    "teamSetup": {
+      "heading": "Configuration équipe",
+      "copy": "Gardez l'effectif, les lignes, les compétitions et les stratégies faciles d'accès sans faire de la configuration le centre de l'application.",
+      "selectedTeamEyebrow": "Configuration {{teamName}}",
+      "noTeamEyebrow": "Aucune équipe sélectionnée",
+      "noTeamTitle": "Aucune équipe sélectionnée",
+      "noTeamCopy": "Choisissez une équipe dans l'en-tête ou ouvrez la page des équipes pour en sélectionner une.",
+      "noTeamsCopy": "Créez une équipe avant de configurer l'effectif, les lignes et les compétitions.",
+      "playerCount": {
+        "one": "{{count}} joueur",
+        "other": "{{count}} joueurs"
+      },
+      "loading": "Chargement de la configuration équipe...",
+      "error": "Impossible de charger la configuration équipe.",
+      "mobileNote": "Ces écrans de configuration restent disponibles sur mobile pour les mises à jour rapides au bord du terrain, comme ajouter une stratégie pendant un match.",
+      "actions": {
+        "openTeams": "Ouvrir les équipes",
+        "openRosterLines": "Ouvrir effectif et lignes",
+        "openCompetitions": "Ouvrir les compétitions",
+        "openStrategies": "Ouvrir les stratégies"
+      },
+      "cards": {
+        "rosterLines": {
+          "title": "Effectif et lignes",
+          "copy": "Gérez les joueurs, modifiez leurs informations et maintenez les groupes de lignes de l'équipe sélectionnée."
+        },
+        "competitions": {
+          "title": "Compétitions et matchs",
+          "copy": "Créez des compétitions, préparez les matchs, ajustez les rosters et ouvrez la configuration des matchs existants."
+        },
+        "strategies": {
+          "title": "Stratégies",
+          "copy": "Maintenez les stratégies offensives et défensives, y compris les ajouts rapides pendant un match."
+        }
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   Collapse,
   ListItemText,
   Paper,
@@ -40,8 +41,10 @@ function areSameIds(left: number[], right: number[]): boolean {
 }
 
 interface StatisticsConfigurationPanelProps {
+  density?: "standard" | "compact";
   isConfigurationExpanded: boolean;
   onToggleConfigurationExpanded: () => void;
+  summaryItems?: string[];
   teamId?: number;
   selectedPlayerIds: number[];
   sortedTeams: TeamWithPlayers[];
@@ -64,8 +67,10 @@ interface StatisticsConfigurationPanelProps {
 }
 
 export default function StatisticsConfigurationPanel({
+  density = "standard",
   isConfigurationExpanded,
   onToggleConfigurationExpanded,
+  summaryItems = [],
   teamId,
   selectedPlayerIds,
   sortedTeams,
@@ -108,6 +113,7 @@ export default function StatisticsConfigurationPanel({
       onSelectPlayerIds(nextPlayerIds);
     }
   }, [draftPlayerIds, onSelectPlayerIds, selectedPlayerIds]);
+  const isCompact = density === "compact";
 
   return (
     <Paper
@@ -115,26 +121,36 @@ export default function StatisticsConfigurationPanel({
         border: "1px solid",
         borderColor: "divider",
         backgroundColor: "background.paper",
-        p: 2,
-        mb: 3,
+        p: { xs: isCompact ? 1.5 : 2, sm: 2 },
+        mb: isCompact ? 0 : 3,
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" gap={1} mb={1.25}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
-          <TuneIcon
-            sx={{
-              fontSize: 16,
-              color: (theme) => theme.colors.women.main,
-            }}
-          />
-          <Typography variant="subtitle2" fontWeight="bold">
-            {t("statistics:workflow.configurationSection")}
-          </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="flex-start" width="100%" gap={1} mb={isCompact ? 0 : 1.25}>
+        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <TuneIcon
+              sx={{
+                fontSize: 16,
+                color: (theme) => theme.colors.women.main,
+              }}
+            />
+            <Typography variant="subtitle2" fontWeight="bold">
+              {t("statistics:workflow.configurationSection")}
+            </Typography>
+          </Stack>
+          {isCompact && summaryItems.length > 0 && (
+            <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+              {summaryItems.map((item) => (
+                <Chip key={item} label={item} size="small" variant="outlined" />
+              ))}
+            </Stack>
+          )}
         </Stack>
         <Button
           size="small"
           onClick={onToggleConfigurationExpanded}
           endIcon={isConfigurationExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          sx={{ flexShrink: 0 }}
         >
           {isConfigurationExpanded ? t("common:action.hide") : t("common:action.show")}
         </Button>
@@ -142,16 +158,21 @@ export default function StatisticsConfigurationPanel({
 
       <Collapse in={isConfigurationExpanded} timeout="auto">
         <Box
-          sx={{
-            position: "sticky",
-            top: { xs: 8, sm: 16 },
-            zIndex: 10,
-            p: 2,
-            borderRadius: 1.5,
-            backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.96),
-            border: "1px solid",
-            borderColor: "divider",
-          }}
+          sx={
+            isCompact
+              ? { pt: 1.5 }
+              : {
+                  position: "sticky",
+                  top: { xs: 8, sm: 16 },
+                  zIndex: 10,
+                  p: 2,
+                  borderRadius: 1.5,
+                  backgroundColor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.96),
+                  border: "1px solid",
+                  borderColor: "divider",
+                }
+          }
         >
           <Stack spacing={2}>
             {canFilterStatisticsByPlayers && selectedPlayerIds.length > 0 && (

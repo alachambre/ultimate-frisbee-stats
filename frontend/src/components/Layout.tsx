@@ -27,6 +27,7 @@ import {
   ENGLISH_FLAG_EMOJI,
   FRENCH_FLAG_EMOJI,
 } from "../constants/branding";
+import NewUiModeToggle from "../new-ui/shell/NewUiModeToggle";
 
 export default function Layout() {
   const location = useLocation();
@@ -221,6 +222,17 @@ export default function Layout() {
                   : t("common:auth.signIn")}
               </Button>
             )}
+            <NewUiModeToggle
+              variant="outlined"
+              sx={(theme) => ({
+                color: theme.palette.common.white,
+                borderColor: alpha(theme.palette.common.white, 0.35),
+                "&:hover": {
+                  borderColor: alpha(theme.palette.common.white, 0.5),
+                  backgroundColor: alpha(theme.palette.common.white, 0.1),
+                },
+              })}
+            />
           </Box>
         </Toolbar>
       </AppBar>
@@ -315,6 +327,20 @@ export default function Layout() {
               </Button>
             </Box>
           )}
+          <Box sx={{ px: 2, pb: 2 }}>
+            <NewUiModeToggle
+              fullWidth
+              variant="outlined"
+              sx={(theme) => ({
+                color: theme.palette.common.white,
+                borderColor: alpha(theme.palette.common.white, 0.35),
+                "&:hover": {
+                  borderColor: alpha(theme.palette.common.white, 0.5),
+                  backgroundColor: alpha(theme.palette.common.white, 0.1),
+                },
+              })}
+            />
+          </Box>
         </Box>
       </Drawer>
 
