@@ -187,6 +187,7 @@ describe("NewStatisticsPage", () => {
     expect(screen.getByText("Break rate")).toBeInTheDocument();
     expect(screen.getAllByText("75%").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("50%").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByLabelText("Statistics summary")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
 
     await waitFor(() => {

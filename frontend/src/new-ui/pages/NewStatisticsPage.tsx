@@ -303,6 +303,7 @@ export default function NewStatisticsPage() {
                 playerStatsError={teamPlayerStatsError}
                 strategyStats={teamStrategyStats}
                 strategyStatsError={teamStrategyStatsError}
+                summaryVariant="compact"
                 teamEvolution={teamEvolution}
                 teamEvolutionError={teamEvolutionError}
                 teamStats={teamStats}
