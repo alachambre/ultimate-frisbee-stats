@@ -123,7 +123,15 @@
     },
     "statistics": {
       "heading": "Statistiques",
-      "copy": "La vue coach, les préréglages et les filtres avancés apparaîtront ici."
+      "copy": "Commencez par la vue coach, puis affinez le même jeu de données par compétition, match et joueur.",
+      "selectedTeamEyebrow": "Vue coach {{teamName}}",
+      "globalEyebrow": "Vue coach",
+      "overview": {
+        "title": "Vue coach",
+        "holdRate": "Taux de hold",
+        "breakRate": "Taux de break",
+        "turnRate": "Création de turns"
+      }
     },
     "teamSetup": {
       "heading": "Configuration équipe",

@@ -123,7 +123,15 @@
     },
     "statistics": {
       "heading": "Statistics",
-      "copy": "Coach overview, presets, and advanced filters will live here."
+      "copy": "Start with the coach overview, then refine the same dataset with competitions, games, and players.",
+      "selectedTeamEyebrow": "{{teamName}} coach overview",
+      "globalEyebrow": "Coach overview",
+      "overview": {
+        "title": "Coach overview",
+        "holdRate": "Hold rate",
+        "breakRate": "Break rate",
+        "turnRate": "Turn creation"
+      }
     },
     "teamSetup": {
       "heading": "Team setup",
