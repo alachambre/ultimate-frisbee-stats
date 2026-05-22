@@ -67,7 +67,23 @@
     },
     "recordGame": {
       "heading": "Saisir un match",
-      "copy": "Les matchs prêts, la création rapide de match et la saisie terrain apparaîtront ici."
+      "copy": "Commencez par les matchs utiles sur le terrain : reprendre le match en cours ou préparer le prochain.",
+      "selectedTeamEyebrow": "Saisie terrain {{teamName}}",
+      "globalEyebrow": "Saisie terrain",
+      "sections": {
+        "started": "En cours de saisie",
+        "ready": "Prêts à démarrer"
+      },
+      "actions": {
+        "continue": "Continuer la saisie",
+        "prepare": "Préparer le match"
+      },
+      "empty": {
+        "page": "Aucun match prêt à saisir.",
+        "section": "Rien à saisir ici pour le moment."
+      },
+      "loading": "Chargement des matchs à saisir...",
+      "error": "Impossible de charger les matchs à saisir."
     },
     "liveGame": {
       "heading": "Match en direct",

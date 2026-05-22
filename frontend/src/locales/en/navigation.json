@@ -67,7 +67,23 @@
     },
     "recordGame": {
       "heading": "Record game",
-      "copy": "Ready games, quick game creation, and field recording will live here."
+      "copy": "Start from the games that matter on the sideline: continue the live game or prepare the next one.",
+      "selectedTeamEyebrow": "{{teamName}} field recording",
+      "globalEyebrow": "Field recording",
+      "sections": {
+        "started": "Currently recording",
+        "ready": "Ready to start"
+      },
+      "actions": {
+        "continue": "Continue recording",
+        "prepare": "Prepare game"
+      },
+      "empty": {
+        "page": "No games are ready to record.",
+        "section": "Nothing to record here right now."
+      },
+      "loading": "Loading games to record...",
+      "error": "Unable to load games to record."
     },
     "liveGame": {
       "heading": "Live game",

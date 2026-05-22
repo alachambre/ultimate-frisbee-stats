@@ -62,6 +62,14 @@ export default function NewUiRoutes() {
             )}
           />
           <Route
+            path="record/:gameId"
+            element={renderLazyRoute(
+              <RequireMinimumRole minimumRole="team_member">
+                <GameDetailPage />
+              </RequireMinimumRole>
+            )}
+          />
+          <Route
             path="statistics"
             element={renderLazyRoute(
               <RequireMinimumRole minimumRole="team_member">

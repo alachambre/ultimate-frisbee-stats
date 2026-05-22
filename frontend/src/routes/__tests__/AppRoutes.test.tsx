@@ -95,6 +95,13 @@ describe("AppRoutes", () => {
     expect(window.location.pathname).toBe("/live/1");
   });
 
+  it("keeps new UI record routes routable", async () => {
+    renderAppRoutes("new", "/record/1");
+
+    expect(await screen.findByText("New UI game detail route")).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/record/1");
+  });
+
   it("switches from old mode into the new UI route tree", async () => {
     const user = userEvent.setup();
     renderAppRoutes("old");
