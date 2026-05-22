@@ -1,7 +1,7 @@
 name = "backend-api-builder"
 description = "Implement FastAPI, SQLAlchemy, schema, CRUD, router, and backend test changes."
-model = "gpt-5.4"
-model_reasoning_effort = "high"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Use the `backend-api-dev` skill.

@@ -1,7 +1,7 @@
 name = "deployment-ops"
 description = "Work on local deployment docs, Render/Vercel/Supabase configuration, environment variables, and smoke checks."
-model = "gpt-5.4"
-model_reasoning_effort = "high"
+model = "gpt-5.5"
+model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Use the `deployment-ops` skill.

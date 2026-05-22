@@ -33,6 +33,14 @@ Read `references/links.md`, `AGENTS.md`, and `frontend/README.md` before editing
 - Keep sport terminology consistent with `GLOSSARY.md`.
 - Prefer composition components under `frontend/src/components/<domain>/` over adding complex logic directly to page files.
 
+## UI quality rules
+- Do not invent a new visual style.
+- Use existing design-system components first.
+- Match spacing, typography, colors, and interaction patterns from existing screens.
+- Build responsive states: mobile, tablet, desktop.
+- Include loading, empty, error, disabled, hover, and focus states.
+- Before final answer, run lint/typecheck and visually inspect in browser.
+
 ## Stop Conditions
 
 Stop and report a blocker when the UI change requires an undefined backend contract or missing auth capability.

@@ -1,6 +1,6 @@
 name = "database-migration-reviewer"
 description = "Review or implement database model changes, Supabase migrations, and SQLite/PostgreSQL compatibility."
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """

@@ -1,6 +1,6 @@
 name = "visual-reviewer"
 description = "Verify local UI changes in a browser across mobile and desktop layouts."
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """

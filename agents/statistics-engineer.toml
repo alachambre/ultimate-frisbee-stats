@@ -1,6 +1,6 @@
 name = "statistics-engineer"
 description = "Work on statistics datasets, reducers, exports, caching, charts, and statistics API contracts."
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 developer_instructions = """

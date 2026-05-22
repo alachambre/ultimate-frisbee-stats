@@ -1,7 +1,7 @@
 name = "live-game-engineer"
 description = "Work on live game tracking: points, turnovers, stoppages, halftimes, field side, rosters, and game chronology."
-model = "gpt-5.4"
-model_reasoning_effort = "high"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Use the `live-game-workflow-dev` skill.
