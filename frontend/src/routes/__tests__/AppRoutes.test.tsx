@@ -11,6 +11,10 @@ vi.mock("../../pages/GameDetailPage", () => ({
   default: () => <div>New UI game detail route</div>,
 }));
 
+vi.mock("../../new-ui/pages/NewRecordGameDetailPage", () => ({
+  default: () => <div>New UI record game detail route</div>,
+}));
+
 function renderAppRoutes(uiMode: "old" | "new", route = "/") {
   localStorage.setItem("monkey-statistics-ui-mode", uiMode);
 
@@ -98,7 +102,9 @@ describe("AppRoutes", () => {
   it("keeps new UI record routes routable", async () => {
     renderAppRoutes("new", "/record/1");
 
-    expect(await screen.findByText("New UI game detail route")).toBeInTheDocument();
+    expect(
+      await screen.findByText("New UI record game detail route")
+    ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/record/1");
   });
 

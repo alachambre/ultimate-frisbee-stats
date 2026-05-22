@@ -12,6 +12,9 @@ import { NewUiTeamProvider } from "./team/NewUiTeamProvider";
 
 const NewAllGamesPage = lazy(() => import("./pages/NewAllGamesPage"));
 const NewRecordGamePage = lazy(() => import("./pages/NewRecordGamePage"));
+const NewRecordGameDetailPage = lazy(
+  () => import("./pages/NewRecordGameDetailPage")
+);
 const NewLiveGamePage = lazy(() => import("./pages/NewLiveGamePage"));
 const NewStatisticsPage = lazy(() => import("./pages/NewStatisticsPage"));
 const NewTeamSetupPage = lazy(() => import("./pages/NewTeamSetupPage"));
@@ -65,7 +68,7 @@ export default function NewUiRoutes() {
             path="record/:gameId"
             element={renderLazyRoute(
               <RequireMinimumRole minimumRole="team_member">
-                <GameDetailPage />
+                <NewRecordGameDetailPage />
               </RequireMinimumRole>
             )}
           />

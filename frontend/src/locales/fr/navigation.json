@@ -83,7 +83,14 @@
         "section": "Rien à saisir ici pour le moment."
       },
       "loading": "Chargement des matchs à saisir...",
-      "error": "Impossible de charger les matchs à saisir."
+      "error": "Impossible de charger les matchs à saisir.",
+      "detail": {
+        "back": "Retour à la file de saisie",
+        "eyebrow": "Saisie terrain",
+        "heading": "{{teamName}} vs {{opponentName}}",
+        "score": "Score actuel",
+        "history": "Historique du match"
+      }
     },
     "liveGame": {
       "heading": "Match en direct",

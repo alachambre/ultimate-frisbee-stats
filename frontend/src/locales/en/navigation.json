@@ -83,7 +83,14 @@
         "section": "Nothing to record here right now."
       },
       "loading": "Loading games to record...",
-      "error": "Unable to load games to record."
+      "error": "Unable to load games to record.",
+      "detail": {
+        "back": "Back to record queue",
+        "eyebrow": "Field recording",
+        "heading": "{{teamName}} vs {{opponentName}}",
+        "score": "Current score",
+        "history": "Game history"
+      }
     },
     "liveGame": {
       "heading": "Live game",
