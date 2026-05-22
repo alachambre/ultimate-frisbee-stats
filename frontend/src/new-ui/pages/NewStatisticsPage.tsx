@@ -212,6 +212,7 @@ export default function NewStatisticsPage() {
           hasControlsError={Boolean(controlsError)}
           isConfigurationExpanded={isConfigurationExpanded}
           isPlayerOptionsLoading={isPlayerOptionsLoading}
+          density="compact"
           onClearPlayersSelection={() => updateSelection({ playerIds: [] })}
           onPlayerFilterOpenChange={setIsPlayerFilterOpen}
           onSelectCompetitionIds={(nextCompetitionIds) => {
@@ -243,6 +244,7 @@ export default function NewStatisticsPage() {
           selectedPlayerIds={playerIds}
           selectedPlayers={selectedPlayers}
           sortedTeams={sortedTeams}
+          summaryItems={statisticsContextItems}
           teamId={teamId}
         />
 

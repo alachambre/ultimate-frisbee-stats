@@ -181,6 +181,8 @@ describe("NewStatisticsPage", () => {
       await screen.findByRole("heading", { name: "Statistics" })
     ).toBeInTheDocument();
     expect(screen.getByText("Monkey Stats coach overview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByText("Hold rate")).toBeInTheDocument();
     expect(screen.getByText("Break rate")).toBeInTheDocument();
     expect(screen.getAllByText("75%").length).toBeGreaterThanOrEqual(2);
