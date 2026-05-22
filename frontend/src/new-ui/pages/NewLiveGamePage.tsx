@@ -38,6 +38,9 @@ export default function NewLiveGamePage() {
   } = useQuery({
     queryKey: queryKeys.games,
     queryFn: getAllGames,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const liveView = useMemo(
@@ -72,6 +75,7 @@ export default function NewLiveGamePage() {
 
   const shouldShowBoard = liveView.selectedGame !== null;
   const isBoardLoading = shouldShowBoard && isLoadingLiveState;
+  const isSelectedGameLive = liveState?.status === "started";
 
   if (liveStateError) {
     return <ErrorState message={t("newUiPages.liveGame.liveStateError")} />;
@@ -109,7 +113,7 @@ export default function NewLiveGamePage() {
           <Grid size={{ xs: 12, md: 8 }}>
             {isBoardLoading ? (
               <LoadingState message={t("newUiPages.liveGame.liveStateLoading")} />
-            ) : liveView.selectedGame && liveState ? (
+            ) : liveView.selectedGame && liveState && isSelectedGameLive ? (
               <NewLiveGameBoard
                 game={liveView.selectedGame}
                 liveState={liveState}

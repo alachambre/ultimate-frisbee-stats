@@ -130,7 +130,15 @@ export default function NewStatisticsPage() {
   });
 
   useEffect(() => {
-    if (appSelectedTeamId === undefined || teamId === appSelectedTeamId) {
+    if (teamId !== undefined) {
+      if (appSelectedTeamId !== teamId) {
+        setAppSelectedTeamId(teamId);
+      }
+
+      return;
+    }
+
+    if (appSelectedTeamId === undefined) {
       return;
     }
 
@@ -143,7 +151,7 @@ export default function NewStatisticsPage() {
       },
       { replace: true }
     );
-  }, [appSelectedTeamId, teamId, updateSelection]);
+  }, [appSelectedTeamId, setAppSelectedTeamId, teamId, updateSelection]);
 
   const overview = useMemo(
     () => buildScopeOverview(selectedDatasetGames),
@@ -181,7 +189,7 @@ export default function NewStatisticsPage() {
     return <ErrorState message={t("common:messages.error")} />;
   }
 
-  const displayTeamName = appSelectedTeam?.name ?? selectedTeam?.name;
+  const displayTeamName = selectedTeam?.name ?? appSelectedTeam?.name;
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>

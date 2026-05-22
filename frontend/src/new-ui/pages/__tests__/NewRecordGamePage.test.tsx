@@ -1,4 +1,5 @@
 import { HttpResponse, http } from "msw";
+import { afterEach, vi } from "vitest";
 
 import { render, screen, waitFor } from "../../../test/test-utils";
 import { server } from "../../../test/setup";
@@ -24,6 +25,10 @@ function renderPage() {
 }
 
 describe("NewRecordGamePage", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("shows selected-team started and ready games only", async () => {
     localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
     server.use(
@@ -143,5 +148,41 @@ describe("NewRecordGamePage", () => {
     expect(
       await screen.findByText("No games are ready to record.")
     ).toBeInTheDocument();
+  });
+
+  it("shows the page error when the selected team context cannot load", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json({ detail: "Teams unavailable" }, { status: 500 })
+      ),
+      http.get(`${BASE_URL}/games`, () =>
+        HttpResponse.json([
+          {
+            id: 3,
+            competition_id: 99,
+            opponent_name: "Other Team",
+            date: "2026-05-22T12:00:00Z",
+            comments: null,
+            status: "started",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 0,
+            opponent_score: 0,
+            team_name: "Other",
+            competition_name: "Other Cup",
+          },
+        ])
+      )
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Unable to load games to record.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Other Team")).not.toBeInTheDocument();
   });
 });

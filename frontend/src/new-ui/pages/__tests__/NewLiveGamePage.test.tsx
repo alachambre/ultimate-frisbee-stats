@@ -1,8 +1,8 @@
 import { HttpResponse, http } from "msw";
 import { Route, Routes } from "react-router-dom";
-import { expect, vi } from "vitest";
+import { afterEach, expect, vi } from "vitest";
 
-import { render, screen } from "../../../test/test-utils";
+import { act, render, screen } from "../../../test/test-utils";
 import { server } from "../../../test/setup";
 import type { GameLiveState, GameWithScore, PointWithPlayers } from "../../../types";
 import NewLiveGamePage from "../NewLiveGamePage";
@@ -88,6 +88,10 @@ function renderPage(route = "/live") {
 }
 
 describe("NewLiveGamePage", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("shows the first live game on the public spectator page", async () => {
     server.use(
       http.get(`${BASE_URL}/games`, () =>
@@ -164,6 +168,68 @@ describe("NewLiveGamePage", () => {
       await screen.findByText("Started games will appear here automatically.")
     ).toBeInTheDocument();
     expect(screen.getAllByText("No games are live right now.")).toHaveLength(2);
+  });
+
+  it("polls the live games list while the spectator page is open", async () => {
+    vi.useFakeTimers();
+    const gamesRequest = vi.fn();
+
+    server.use(
+      http.get(`${BASE_URL}/games`, () => {
+        gamesRequest();
+        return HttpResponse.json([buildGame()]);
+      }),
+      http.get(`${BASE_URL}/games/1/live-state`, () =>
+        HttpResponse.json(buildLiveState())
+      )
+    );
+
+    renderPage();
+
+    await act(async () => {
+      await vi.waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: "Blue Tigers" })
+        ).toBeInTheDocument();
+      });
+    });
+    expect(gamesRequest).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+      await vi.waitFor(() => {
+        expect(gamesRequest).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  it("does not render the live board when the selected game has ended", async () => {
+    server.use(
+      http.get(`${BASE_URL}/games`, () =>
+        HttpResponse.json([buildGame({ id: 1, opponent_name: "Blue Tigers" })])
+      ),
+      http.get(`${BASE_URL}/games/1/live-state`, () =>
+        HttpResponse.json(
+          buildLiveState({
+            status: "ended",
+            active_point: null,
+            active_point_turnovers: [],
+            active_point_stoppages: [],
+          })
+        )
+      )
+    );
+
+    renderPage("/live/1");
+
+    expect(
+      await screen.findByText("This game is not live right now.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Open the live games list to choose a currently running game.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
+    expect(screen.queryByText("8 - 7")).not.toBeInTheDocument();
   });
 
   it("does not fall back to a different live game for a stale route link", async () => {
