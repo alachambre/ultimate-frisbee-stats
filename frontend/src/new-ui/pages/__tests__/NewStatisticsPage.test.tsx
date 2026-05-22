@@ -1,4 +1,5 @@
 import { HttpResponse, http } from "msw";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { render, screen, waitFor } from "../../../test/test-utils";
@@ -78,6 +79,12 @@ function setupHandlers() {
           created_at: "2026-01-01T00:00:00Z",
           players: [],
         },
+        {
+          id: 2,
+          name: "Flying Foxes",
+          created_at: "2026-01-01T00:00:00Z",
+          players: [],
+        },
       ])
     ),
     http.get(`${BASE_URL}/competitions`, ({ request }) => {
@@ -121,6 +128,24 @@ function setupHandlers() {
     ),
     http.get(`${BASE_URL}/statistics/teams/1/team`, () =>
       HttpResponse.json(teamStats)
+    ),
+    http.get(`${BASE_URL}/statistics/teams/2/team`, () =>
+      HttpResponse.json({ ...teamStats, team_id: 2 })
+    ),
+    http.get(`${BASE_URL}/statistics/teams/2/evolution`, () =>
+      HttpResponse.json({
+        team_id: 2,
+        filters: {
+          competition_ids: [],
+          game_ids: [],
+          player_ids: [],
+        },
+        default_preset_id: "turnover_battle",
+        omitted_games_count: 0,
+        games: [],
+        metrics: [],
+        presets: [],
+      })
     )
   );
 }
@@ -175,5 +200,23 @@ describe("NewStatisticsPage", () => {
     expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Players" })).not.toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
+  });
+
+  it("updates the app selected team from the statistics team selector", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(
+      await screen.findByText("Monkey Stats coach overview")
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Show" }));
+    await user.click(screen.getByLabelText("1. Team"));
+    await user.click(await screen.findByRole("option", { name: "Flying Foxes" }));
+
+    await waitFor(() => {
+      expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+      expect(window.location.search).toContain("teamId=2");
+    });
   });
 });

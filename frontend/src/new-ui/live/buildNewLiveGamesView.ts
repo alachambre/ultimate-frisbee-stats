@@ -39,8 +39,8 @@ export function buildNewLiveGamesView({
   return {
     liveGames,
     selectedGame:
-      liveGames.find((game) => game.id === selectedGameId) ??
-      liveGames[0] ??
-      null,
+      selectedGameId === undefined
+        ? liveGames[0] ?? null
+        : liveGames.find((game) => game.id === selectedGameId) ?? null,
   };
 }

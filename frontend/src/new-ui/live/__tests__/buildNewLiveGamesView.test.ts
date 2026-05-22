@@ -44,7 +44,7 @@ describe("buildNewLiveGamesView", () => {
     expect(view.selectedGame?.id).toBe(2);
   });
 
-  it("falls back to the first live game when the requested game is not live", () => {
+  it("does not select another game when the requested game is not live", () => {
     const view = buildNewLiveGamesView({
       games: [
         buildGame({ id: 1, status: "started" }),
@@ -53,6 +53,7 @@ describe("buildNewLiveGamesView", () => {
       selectedGameId: 2,
     });
 
-    expect(view.selectedGame?.id).toBe(1);
+    expect(view.liveGames.map((game) => game.id)).toEqual([1]);
+    expect(view.selectedGame).toBeNull();
   });
 });

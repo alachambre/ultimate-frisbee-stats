@@ -1,5 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { Route, Routes } from "react-router-dom";
+import { expect, vi } from "vitest";
 
 import { render, screen } from "../../../test/test-utils";
 import { server } from "../../../test/setup";
@@ -163,5 +164,30 @@ describe("NewLiveGamePage", () => {
       await screen.findByText("Started games will appear here automatically.")
     ).toBeInTheDocument();
     expect(screen.getAllByText("No games are live right now.")).toHaveLength(2);
+  });
+
+  it("does not fall back to a different live game for a stale route link", async () => {
+    const liveStateRequest = vi.fn();
+    server.use(
+      http.get(`${BASE_URL}/games`, () =>
+        HttpResponse.json([buildGame({ id: 1, opponent_name: "Blue Tigers" })])
+      ),
+      http.get(`${BASE_URL}/games/1/live-state`, () => {
+        liveStateRequest();
+        return HttpResponse.json(buildLiveState());
+      })
+    );
+
+    renderPage("/live/99");
+
+    expect(
+      await screen.findByText("This game is not live right now.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Open the live games list to choose a currently running game.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
+    expect(screen.queryByText("8 - 7")).not.toBeInTheDocument();
+    expect(liveStateRequest).not.toHaveBeenCalled();
   });
 });

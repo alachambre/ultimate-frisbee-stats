@@ -103,6 +103,8 @@
       "error": "Unable to load live games.",
       "liveStateLoading": "Loading live score...",
       "liveStateError": "Unable to load the live score.",
+      "requestedGameUnavailable": "This game is not live right now.",
+      "requestedGameUnavailableCopy": "Open the live games list to choose a currently running game.",
       "board": {
         "live": "Live",
         "currentScore": "Current score",

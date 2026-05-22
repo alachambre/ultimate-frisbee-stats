@@ -47,6 +47,7 @@ export default function NewStatisticsPage() {
   const {
     selectedTeam: appSelectedTeam,
     selectedTeamId: appSelectedTeamId,
+    setSelectedTeamId: setAppSelectedTeamId,
     isLoadingTeams: isLoadingAppTeams,
     teamsError: appTeamsError,
   } = useNewUiTeam();
@@ -225,6 +226,7 @@ export default function NewStatisticsPage() {
             updateSelection({ playerIds: nextPlayerIds });
           }}
           onSelectTeam={(nextTeamId) => {
+            setAppSelectedTeamId(nextTeamId);
             updateSelection({
               competitionIds: [],
               gameIds: [],

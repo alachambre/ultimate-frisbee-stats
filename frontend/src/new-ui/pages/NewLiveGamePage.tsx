@@ -126,10 +126,14 @@ export default function NewLiveGamePage() {
                 })}
               >
                 <Typography fontWeight={800} variant="h6">
-                  {t("newUiPages.liveGame.empty")}
+                  {routeGameId === undefined
+                    ? t("newUiPages.liveGame.empty")
+                    : t("newUiPages.liveGame.requestedGameUnavailable")}
                 </Typography>
                 <Typography variant="body2">
-                  {t("newUiPages.liveGame.emptyCopy")}
+                  {routeGameId === undefined
+                    ? t("newUiPages.liveGame.emptyCopy")
+                    : t("newUiPages.liveGame.requestedGameUnavailableCopy")}
                 </Typography>
               </Paper>
             )}

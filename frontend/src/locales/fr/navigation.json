@@ -103,6 +103,8 @@
       "error": "Impossible de charger les matchs en direct.",
       "liveStateLoading": "Chargement du score en direct...",
       "liveStateError": "Impossible de charger le score en direct.",
+      "requestedGameUnavailable": "Ce match n'est pas en direct pour le moment.",
+      "requestedGameUnavailableCopy": "Ouvrez la liste des matchs en direct pour choisir un match en cours.",
       "board": {
         "live": "En direct",
         "currentScore": "Score actuel",
