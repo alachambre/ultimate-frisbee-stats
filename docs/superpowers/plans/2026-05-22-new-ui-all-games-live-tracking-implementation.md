@@ -1003,7 +1003,7 @@ git commit -m "Implement field live tracking states"
 - If focused tests or visual QA expose a defect, modify only the affected New UI file and its matching test.
 - Do not delete Old UI code.
 
-- [ ] **Step 1: Run focused New UI tests**
+- [x] **Step 1: Run focused New UI tests**
 
 Run:
 
@@ -1013,7 +1013,7 @@ cd frontend && npm test -- NewAppShell.test.tsx buildNewGamesDashboard.test.ts N
 
 Expected: pass.
 
-- [ ] **Step 2: Run full frontend tests**
+- [x] **Step 2: Run full frontend tests**
 
 Run:
 
@@ -1023,7 +1023,7 @@ cd frontend && npm test
 
 Expected: pass.
 
-- [ ] **Step 3: Run frontend build**
+- [x] **Step 3: Run frontend build**
 
 Run:
 
@@ -1033,7 +1033,7 @@ cd frontend && npm run build
 
 Expected: pass.
 
-- [ ] **Step 4: Run browser visual checks**
+- [x] **Step 4: Run browser visual checks**
 
 Start the frontend if needed:
 
@@ -1058,7 +1058,7 @@ Confirm:
 - game actions and point actions are visually separate
 - no hardcoded pink/blue gender stereotypes are introduced
 
-- [ ] **Step 5: Decide whether stale New UI entry points stay**
+- [x] **Step 5: Decide whether stale New UI entry points stay**
 
 Run:
 
@@ -1072,7 +1072,7 @@ Decision for this implementation:
 - Do not delete `NewRecordGamePage` or `NewLiveGamePage` in this implementation.
 - File a follow-up note in the final answer if they remain as non-primary fallback routes.
 
-- [ ] **Step 6: Commit final cleanup only when files changed**
+- [x] **Step 6: Commit final cleanup only when files changed**
 
 ```bash
 git add frontend/src

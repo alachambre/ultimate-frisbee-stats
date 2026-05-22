@@ -8,6 +8,7 @@ describe("GameTimer", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 

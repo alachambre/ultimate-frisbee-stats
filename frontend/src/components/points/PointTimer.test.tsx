@@ -8,6 +8,7 @@ describe("PointTimer", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 

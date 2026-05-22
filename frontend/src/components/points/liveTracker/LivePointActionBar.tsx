@@ -148,7 +148,7 @@ export function LivePointActionBar({
               onClick={onOpenRecordTurnover}
               sx={{ ...fieldButtonSx, ...accentOutlinedSx }}
             >
-              {t("points:recordTurnover", "Record Turnover")}
+              {t("points:tracker.turnover", "Turnover")}
             </Button>
             <Button
               variant="outlined"
@@ -156,7 +156,7 @@ export function LivePointActionBar({
               onClick={onOpenRecordStoppage}
               sx={{ ...fieldButtonSx, ...accentOutlinedSx }}
             >
-              {t("points:recordCall", "Record stoppage")}
+              {t("points:tracker.stoppage", "Stoppage")}
             </Button>
           </>
         )}

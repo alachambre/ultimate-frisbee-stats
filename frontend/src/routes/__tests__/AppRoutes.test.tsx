@@ -43,6 +43,10 @@ vi.mock("../../new-ui/pages/NewGameTrackerPage", () => ({
   default: () => <div>New UI game tracker route</div>,
 }));
 
+vi.mock("../../new-ui/pages/NewAllGamesPage", () => ({
+  default: () => <h1>All games</h1>,
+}));
+
 function renderAppRoutes(uiMode: "old" | "new", route = "/") {
   localStorage.setItem("monkey-statistics-ui-mode", uiMode);
 

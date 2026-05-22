@@ -138,12 +138,12 @@ export default function NewGameTrackerPage() {
         >
           <Box sx={{ p: { xs: 2, sm: 3 } }}>
             <Stack
-              alignItems={{ xs: "flex-start", sm: "center" }}
-              direction={{ xs: "column", sm: "row" }}
+              alignItems="flex-start"
+              direction="row"
               justifyContent="space-between"
               spacing={1.5}
             >
-              <Box>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography
                   component="p"
                   sx={{ opacity: 0.78 }}
@@ -151,7 +151,12 @@ export default function NewGameTrackerPage() {
                 >
                   {t("navigation:newUiPages.liveGame.tracker.eyebrow")}
                 </Typography>
-                <Typography component="h1" fontWeight={900} variant="h5">
+                <Typography
+                  component="h1"
+                  fontWeight={900}
+                  variant="h5"
+                  sx={{ overflowWrap: "anywhere" }}
+                >
                   {t("navigation:newUiPages.liveGame.tracker.heading", {
                     teamName: game.team_name,
                     opponentName: game.opponent_name,
@@ -186,13 +191,16 @@ export default function NewGameTrackerPage() {
               }
               justifyContent="center"
               spacing={{ xs: 2, sm: 4 }}
-              sx={{ mt: 3 }}
+              sx={{ mt: { xs: 2, sm: 3 } }}
             >
               <Box sx={{ minWidth: 96, textAlign: "center" }}>
                 <Typography sx={{ opacity: 0.78 }} variant="body2">
                   {game.team_name}
                 </Typography>
-                <Typography fontWeight={900} variant="h3">
+                <Typography
+                  fontWeight={900}
+                  sx={{ typography: { xs: "h4", sm: "h3" } }}
+                >
                   {game.our_score}
                 </Typography>
               </Box>
@@ -200,7 +208,10 @@ export default function NewGameTrackerPage() {
                 <Typography sx={{ opacity: 0.78 }} variant="body2">
                   {game.opponent_name}
                 </Typography>
-                <Typography fontWeight={900} variant="h3">
+                <Typography
+                  fontWeight={900}
+                  sx={{ typography: { xs: "h4", sm: "h3" } }}
+                >
                   {game.opponent_score}
                 </Typography>
               </Box>
@@ -217,7 +228,16 @@ export default function NewGameTrackerPage() {
           </Box>
         </Paper>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 1,
+            gridTemplateColumns: {
+              xs: "repeat(2, minmax(0, 1fr))",
+              sm: "repeat(4, minmax(0, 1fr))",
+            },
+          }}
+        >
           {(canEditData || canViewStatistics) && (
             <Button
               fullWidth
@@ -273,7 +293,7 @@ export default function NewGameTrackerPage() {
               {t("navigation:newUiPages.liveGame.tracker.actions.complete")}
             </Button>
           )}
-        </Stack>
+        </Box>
 
         {canShowTracker && (
           <LivePointTracker
