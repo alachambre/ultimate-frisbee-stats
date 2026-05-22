@@ -1,31 +1,37 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
+import CreateCompetitionModal from "../../components/modals/CreateCompetitionModal";
+import CreateGameModal from "../../components/modals/CreateGameModal";
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
 import PermissionNotice from "../../components/shared/PermissionNotice";
 import { getCompetitions } from "../../services/competitions";
 import { getAllGames } from "../../services/games";
+import { formatDateTime } from "../../utils/dateFormatting";
 import { queryKeys } from "../../utils/queryKeys";
 import { buildNewGamesDashboard } from "../games/buildNewGamesDashboard";
-import NewGamesSection from "../games/NewGamesSection";
+import NewCompetitionGamesAccordion from "../games/NewCompetitionGamesAccordion";
 import NewGamesSummaryStrip from "../games/NewGamesSummaryStrip";
 import { useNewUiTeam } from "../team/useNewUiTeam";
 
 export default function NewAllGamesPage() {
   const auth = useAuth();
-  const { t } = useTranslation("navigation");
+  const { t, i18n } = useTranslation(["navigation", "games"]);
+  const [opponentSearch, setOpponentSearch] = useState("");
+  const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
+  const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
   const {
     selectedTeam,
     selectedTeamId,
@@ -38,8 +44,6 @@ export default function NewAllGamesPage() {
     auth.isLoading
   );
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
-  const canViewStatistics =
-    !shouldProtectUi || auth.capabilities.canViewStatistics;
   const effectiveSelectedTeamId = teamsError ? undefined : selectedTeamId;
 
   const {
@@ -70,8 +74,9 @@ export default function NewAllGamesPage() {
         games,
         selectedTeamId: effectiveSelectedTeamId,
         teamCompetitions,
+        opponentSearch,
       }),
-    [effectiveSelectedTeamId, games, teamCompetitions]
+    [effectiveSelectedTeamId, games, opponentSearch, teamCompetitions]
   );
 
   const isLoading =
@@ -91,6 +96,15 @@ export default function NewAllGamesPage() {
 
   const isPublicFallback =
     !canLoadTeams || Boolean(teamsError) || effectiveSelectedTeamId === undefined;
+  const emptyMessage = opponentSearch.trim()
+    ? t("newUiPages.allGames.empty.filtered")
+    : effectiveSelectedTeamId === undefined
+      ? t("newUiPages.allGames.empty.public")
+      : t("newUiPages.allGames.empty.team");
+  const formatCompetitionDate = (value: string | null) =>
+    value
+      ? formatDateTime(value, i18n.resolvedLanguage)
+      : t("games:detail.dateNotSet");
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
@@ -124,32 +138,24 @@ export default function NewAllGamesPage() {
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
             {canEditData && (
-              <Button
-                component={Link}
-                startIcon={<PlayArrowIcon />}
-                to="/record"
-                variant="contained"
-              >
-                {t("newUiPages.allGames.actions.record")}
-              </Button>
-            )}
-            <Button
-              component={Link}
-              startIcon={<RadioButtonCheckedIcon />}
-              to="/live"
-              variant="outlined"
-            >
-              {t("newUiPages.allGames.actions.live")}
-            </Button>
-            {canViewStatistics && effectiveSelectedTeamId !== undefined && (
-              <Button
-                component={Link}
-                startIcon={<BarChartIcon />}
-                to={`/statistics?teamId=${effectiveSelectedTeamId}`}
-                variant="outlined"
-              >
-                {t("newUiPages.allGames.actions.statistics")}
-              </Button>
+              <>
+                <Button
+                  onClick={() => setIsCreateGameOpen(true)}
+                  startIcon={<AddIcon />}
+                  type="button"
+                  variant="contained"
+                >
+                  {t("newUiPages.allGames.actions.newGame")}
+                </Button>
+                <Button
+                  onClick={() => setIsCreateCompetitionOpen(true)}
+                  startIcon={<AddIcon />}
+                  type="button"
+                  variant="outlined"
+                >
+                  {t("newUiPages.allGames.actions.newCompetition")}
+                </Button>
+              </>
             )}
           </Stack>
         </Box>
@@ -167,11 +173,27 @@ export default function NewAllGamesPage() {
             live: t("newUiPages.allGames.summary.live"),
             upcoming: t("newUiPages.allGames.summary.upcoming"),
             completed: t("newUiPages.allGames.summary.completed"),
-            record: t("newUiPages.allGames.summary.record"),
+            results: t("newUiPages.allGames.summary.results"),
           }}
         />
 
-        {dashboard.allGames.length === 0 ? (
+        <TextField
+          fullWidth
+          label={t("newUiPages.allGames.filters.opponent")}
+          onChange={(event) => setOpponentSearch(event.target.value)}
+          value={opponentSearch}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+
+        {dashboard.competitionGroups.length === 0 ? (
           <Box
             sx={(theme) => ({
               border: `1px dashed ${theme.palette.divider}`,
@@ -181,32 +203,39 @@ export default function NewAllGamesPage() {
               textAlign: "center",
             })}
           >
-            <Typography variant="body1">
-              {effectiveSelectedTeamId === undefined
-                ? t("newUiPages.allGames.empty.public")
-                : t("newUiPages.allGames.empty.team")}
-            </Typography>
+            <Typography variant="body1">{emptyMessage}</Typography>
           </Box>
         ) : (
-          <Stack spacing={4}>
-            <NewGamesSection
-              emptyLabel={t("newUiPages.allGames.empty.section")}
-              games={dashboard.liveGames}
-              title={t("newUiPages.allGames.sections.live")}
-            />
-            <NewGamesSection
-              emptyLabel={t("newUiPages.allGames.empty.section")}
-              games={dashboard.upcomingGames}
-              title={t("newUiPages.allGames.sections.upcoming")}
-            />
-            <NewGamesSection
-              emptyLabel={t("newUiPages.allGames.empty.section")}
-              games={dashboard.recentGames}
-              title={t("newUiPages.allGames.sections.recent")}
-            />
+          <Stack spacing={2}>
+            {dashboard.competitionGroups.map((group) => (
+              <NewCompetitionGamesAccordion
+                formatDate={formatCompetitionDate}
+                group={group}
+                key={group.competitionId}
+                labels={{
+                  live: t("newUiPages.allGames.summary.live"),
+                  upcoming: t("newUiPages.allGames.summary.upcoming"),
+                  completed: t("newUiPages.allGames.summary.completed"),
+                  results: t("newUiPages.allGames.summary.results"),
+                }}
+              />
+            ))}
           </Stack>
         )}
       </Stack>
+
+      {canEditData && (
+        <>
+          <CreateGameModal
+            isOpen={isCreateGameOpen}
+            onClose={() => setIsCreateGameOpen(false)}
+          />
+          <CreateCompetitionModal
+            isOpen={isCreateCompetitionOpen}
+            onClose={() => setIsCreateCompetitionOpen(false)}
+          />
+        </>
+      )}
     </Container>
   );
 }

@@ -10,7 +10,7 @@ interface NewGamesSummaryStripProps {
     live: string;
     upcoming: string;
     completed: string;
-    record: string;
+    results: string;
   };
 }
 
@@ -23,7 +23,7 @@ export default function NewGamesSummaryStrip({
     { label: labels.upcoming, value: summary.upcomingGames },
     { label: labels.completed, value: summary.completedGames },
     {
-      label: labels.record,
+      label: labels.results,
       value: `${summary.wins}-${summary.losses}-${summary.draws}`,
     },
   ];

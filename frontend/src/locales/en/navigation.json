@@ -33,24 +33,32 @@
   "newUiPages": {
     "allGames": {
       "heading": "All games",
-      "copy": "Follow the current team, jump into live games, and review recent results.",
+      "copy": "Competitions and games for the selected team.",
       "publicCopy": "Public spectator view",
       "publicNotice": "You are seeing public game information. Sign in with team access to use the team dashboard.",
       "selectedTeamEyebrow": "{{teamName}} dashboard",
       "globalEyebrow": "Public games",
       "actions": {
-        "record": "Record game",
-        "live": "Live games",
-        "statistics": "Statistics",
-        "openLive": "Open live",
-        "prepare": "Prepare",
+        "newGame": "New game",
+        "newCompetition": "New competition",
+        "go": "Go",
         "review": "Review"
       },
       "summary": {
         "live": "Live",
         "upcoming": "Upcoming",
         "completed": "Completed",
-        "record": "Record"
+        "results": "Results"
+      },
+      "status": {
+        "live": "Live",
+        "ready": "Ready",
+        "won": "Won",
+        "lost": "Lost",
+        "draw": "Draw"
+      },
+      "filters": {
+        "opponent": "Opponent search"
       },
       "sections": {
         "live": "Live now",
@@ -60,6 +68,7 @@
       "empty": {
         "team": "No games for this team yet.",
         "public": "No public games are available yet.",
+        "filtered": "No games match this opponent search.",
         "section": "Nothing to show here right now."
       },
       "loading": "Loading games...",
@@ -105,6 +114,17 @@
       "liveStateError": "Unable to load the live score.",
       "requestedGameUnavailable": "This game is not live right now.",
       "requestedGameUnavailableCopy": "Open the live games list to choose a currently running game.",
+      "tracker": {
+        "back": "All games",
+        "eyebrow": "Live tracking",
+        "heading": "{{teamName}} vs {{opponentName}}",
+        "actions": {
+          "roster": "Roster",
+          "stats": "Stats",
+          "edit": "Edit",
+          "complete": "Complete"
+        }
+      },
       "board": {
         "live": "Live",
         "currentScore": "Current score",

@@ -1,4 +1,5 @@
 import { HttpResponse, http } from "msw";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { render, screen, waitFor } from "../../../test/test-utils";
@@ -100,6 +101,21 @@ describe("NewAllGamesPage", () => {
             team_name: "Other Team",
             competition_name: "Other Cup",
           },
+          {
+            id: 3,
+            competition_id: 10,
+            opponent_name: "Red Hawks",
+            date: "2026-05-21T10:00:00Z",
+            comments: null,
+            status: "ended",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 13,
+            opponent_score: 8,
+            team_name: "Monkey Stats",
+            competition_name: "Spring Cup",
+          },
         ])
       )
     );
@@ -112,9 +128,108 @@ describe("NewAllGamesPage", () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByText("Monkey Stats dashboard")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /New game/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /New competition/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Results")).toBeInTheDocument();
+    expect(screen.queryByText("Record")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Spring Cup/i })
+    ).toBeInTheDocument();
     expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
+    expect(screen.getByText("Red Hawks")).toBeInTheDocument();
     expect(screen.queryByText("Other Team Game")).not.toBeInTheDocument();
     expect(screen.getByText("5 - 4")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Go$/i })).toHaveAttribute(
+      "href",
+      "/live/1"
+    );
+    expect(screen.getByRole("link", { name: /^Review$/i })).toHaveAttribute(
+      "href",
+      "/games/3"
+    );
+  });
+
+  it("filters grouped games by opponent search", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, () =>
+        HttpResponse.json([
+          {
+            id: 10,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Spring Cup",
+            description: null,
+            start_date: "2026-05-01",
+            end_date: "2026-05-31",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/games`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            competition_id: 10,
+            opponent_name: "Blue Tigers",
+            date: "2026-05-22T10:00:00Z",
+            comments: null,
+            status: "started",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 5,
+            opponent_score: 4,
+            team_name: "Monkey Stats",
+            competition_name: "Spring Cup",
+          },
+          {
+            id: 2,
+            competition_id: 10,
+            opponent_name: "Red Hawks",
+            date: "2026-05-23T10:00:00Z",
+            comments: null,
+            status: "ready",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 0,
+            opponent_score: 0,
+            team_name: "Monkey Stats",
+            competition_name: "Spring Cup",
+          },
+        ])
+      )
+    );
+
+    renderPage();
+
+    expect(await screen.findByText("Blue Tigers")).toBeInTheDocument();
+    expect(screen.getByText("Red Hawks")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole("textbox", { name: /Opponent search/i }),
+      "Blue"
+    );
+
+    expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
+    expect(screen.queryByText("Red Hawks")).not.toBeInTheDocument();
   });
 
   it("shows public fallback games when teams cannot be loaded", async () => {

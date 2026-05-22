@@ -33,24 +33,32 @@
   "newUiPages": {
     "allGames": {
       "heading": "Tous les matchs",
-      "copy": "Suivez l'équipe courante, ouvrez les matchs en direct et retrouvez les derniers résultats.",
+      "copy": "Compétitions et matchs de l'équipe sélectionnée.",
       "publicCopy": "Vue publique spectateur",
       "publicNotice": "Vous voyez les informations publiques des matchs. Connectez-vous avec un accès équipe pour utiliser le tableau de bord.",
       "selectedTeamEyebrow": "Tableau de bord {{teamName}}",
       "globalEyebrow": "Matchs publics",
       "actions": {
-        "record": "Saisir un match",
-        "live": "Matchs en direct",
-        "statistics": "Statistiques",
-        "openLive": "Ouvrir le direct",
-        "prepare": "Préparer",
+        "newGame": "Nouveau match",
+        "newCompetition": "Nouvelle compétition",
+        "go": "Go",
         "review": "Revoir"
       },
       "summary": {
         "live": "En direct",
         "upcoming": "À venir",
         "completed": "Terminés",
-        "record": "Bilan"
+        "results": "Résultats"
+      },
+      "status": {
+        "live": "En direct",
+        "ready": "Prêt",
+        "won": "Gagné",
+        "lost": "Perdu",
+        "draw": "Égalité"
+      },
+      "filters": {
+        "opponent": "Rechercher un adversaire"
       },
       "sections": {
         "live": "En direct",
@@ -60,6 +68,7 @@
       "empty": {
         "team": "Aucun match pour cette équipe.",
         "public": "Aucun match public disponible pour le moment.",
+        "filtered": "Aucun match ne correspond à cette recherche d'adversaire.",
         "section": "Rien à afficher pour le moment."
       },
       "loading": "Chargement des matchs...",
@@ -105,6 +114,17 @@
       "liveStateError": "Impossible de charger le score en direct.",
       "requestedGameUnavailable": "Ce match n'est pas en direct pour le moment.",
       "requestedGameUnavailableCopy": "Ouvrez la liste des matchs en direct pour choisir un match en cours.",
+      "tracker": {
+        "back": "Tous les matchs",
+        "eyebrow": "Suivi en direct",
+        "heading": "{{teamName}} vs {{opponentName}}",
+        "actions": {
+          "roster": "Roster",
+          "stats": "Stats",
+          "edit": "Modifier",
+          "complete": "Terminer"
+        }
+      },
       "board": {
         "live": "En direct",
         "currentScore": "Score actuel",

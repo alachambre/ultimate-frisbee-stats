@@ -56,6 +56,7 @@ interface LivePointTrackerProps {
   teamId: number;
   onPointUpdated?: () => void;
   readOnly?: boolean;
+  renderWhenReady?: boolean;
 }
 
 export default function LivePointTracker({
@@ -67,6 +68,7 @@ export default function LivePointTracker({
   teamId,
   onPointUpdated,
   readOnly = false,
+  renderWhenReady = false,
 }: LivePointTrackerProps) {
   const { t } = useTranslation(["points", "common"]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
@@ -130,8 +132,12 @@ export default function LivePointTracker({
     },
   });
 
-  // Only show live tracker for started games (hide for ready and ended)
-  if (game.status !== "started") {
+  const canRenderReadyState = renderWhenReady && game.status === "ready";
+  const canRecordPoint = !readOnly && game.status === "started";
+
+  // Only show live tracker for started games by default. New UI tracker routes
+  // can opt into rendering the shared shell for ready games.
+  if (game.status !== "started" && !canRenderReadyState) {
     return null;
   }
 
@@ -170,12 +176,12 @@ export default function LivePointTracker({
                 <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
               </Box>
             )}
-            {!readOnly && createHalftimeMutation.isError && (
+            {canRecordPoint && createHalftimeMutation.isError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {t("common:error.generic")}
               </Alert>
             )}
-            {!readOnly && (
+            {canRecordPoint && (
               <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap">
                 <Button
                   variant="contained"
@@ -376,7 +382,7 @@ export default function LivePointTracker({
       </Paper>
 
       {/* Dialogs */}
-      {!readOnly && (
+      {canRecordPoint && (
         <StartPointDialog
           open={isStartDialogOpen}
           onClose={() => setIsStartDialogOpen(false)}

@@ -16,6 +16,7 @@ const NewRecordGameDetailPage = lazy(
   () => import("./pages/NewRecordGameDetailPage")
 );
 const NewLiveGamePage = lazy(() => import("./pages/NewLiveGamePage"));
+const NewGameTrackerPage = lazy(() => import("./pages/NewGameTrackerPage"));
 const NewStatisticsPage = lazy(() => import("./pages/NewStatisticsPage"));
 const NewTeamSetupPage = lazy(() => import("./pages/NewTeamSetupPage"));
 const AdminUsersPage = lazy(() => import("../pages/AdminUsersPage"));
@@ -62,7 +63,7 @@ export default function NewUiRoutes() {
           <Route path="live" element={renderLazyRoute(<NewLiveGamePage />)} />
           <Route
             path="live/:gameId"
-            element={renderLazyRoute(<NewLiveGamePage />)}
+            element={renderLazyRoute(<NewGameTrackerPage />)}
           />
           <Route
             path="record"

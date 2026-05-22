@@ -39,6 +39,10 @@ vi.mock("../../new-ui/pages/NewRecordGameDetailPage", () => ({
   default: () => <div>New UI record game detail route</div>,
 }));
 
+vi.mock("../../new-ui/pages/NewGameTrackerPage", () => ({
+  default: () => <div>New UI game tracker route</div>,
+}));
+
 function renderAppRoutes(uiMode: "old" | "new", route = "/") {
   localStorage.setItem("monkey-statistics-ui-mode", uiMode);
 
@@ -103,8 +107,11 @@ describe("AppRoutes", () => {
     );
 
     expect(
-      await screen.findByRole("link", { name: /^Record game$/i })
+      await screen.findByRole("link", { name: /^All games$/i })
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Record game$/i })
+    ).not.toBeInTheDocument();
   });
 
   it("keeps new UI game detail routes routable", async () => {
@@ -114,11 +121,11 @@ describe("AppRoutes", () => {
     expect(window.location.pathname).toBe("/games/1");
   });
 
-  it("keeps new UI live spectator routes routable", async () => {
+  it("keeps new UI live tracker routes routable", async () => {
     renderAppRoutes("new", "/live/1");
 
     expect(
-      await screen.findByRole("heading", { name: /^Live game$/i })
+      await screen.findByText("New UI game tracker route")
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/live/1");
   });

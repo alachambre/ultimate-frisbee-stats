@@ -390,6 +390,28 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(container.firstChild).toBeNull();
     });
 
+    it("can render the shared shell for ready games when explicitly enabled", async () => {
+      const game = createMockGame("ready");
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          renderWhenReady
+          teamId={1}
+        />
+      );
+
+      expect(screen.getByText(/live point tracking/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /start point/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /half time/i })
+      ).not.toBeInTheDocument();
+    });
+
     it("renders start point button when no active point", async () => {
       const game = createMockGame();
 
