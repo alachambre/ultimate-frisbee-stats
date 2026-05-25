@@ -246,6 +246,7 @@ export function LivePointActionBar({
         </Button>
       ) : null;
 
+    const isLineIncomplete = currentPoint.players.length < 7;
     const readyPlayerActionLabel =
       currentPoint.players.length >= 7
         ? t("points:tracker.managePlayers", "Manage Players")
@@ -267,6 +268,7 @@ export function LivePointActionBar({
           icon: <GroupIcon />,
           onClick: onOpenManagePlayers,
           disabled: !onOpenManagePlayers,
+          color: isLineIncomplete ? "warning" : undefined,
         }),
         renderFieldSecondaryButton({
           actionKey: "strategy",
@@ -325,6 +327,7 @@ export function LivePointActionBar({
           icon: <GroupIcon />,
           onClick: onOpenManagePlayers,
           disabled: !onOpenManagePlayers,
+          color: isLineIncomplete ? "warning" : undefined,
         }),
       );
     }

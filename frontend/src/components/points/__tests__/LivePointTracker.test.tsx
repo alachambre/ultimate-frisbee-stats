@@ -908,13 +908,17 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(
         screen.getByRole("button", { name: /Launch Pull/i }),
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /Select Players/i }),
-      ).toBeInTheDocument();
+      const selectPlayersButton = screen.getByRole("button", {
+        name: /Select Players/i,
+      });
+      expect(selectPlayersButton).toBeInTheDocument();
+      expect(selectPlayersButton).toHaveClass("MuiButton-colorWarning");
       expect(screen.getByText("Select Players")).toBeVisible();
-      expect(
-        screen.getByRole("button", { name: /Select Strategy/i }),
-      ).toBeInTheDocument();
+      const selectStrategyButton = screen.getByRole("button", {
+        name: /Select Strategy/i,
+      });
+      expect(selectStrategyButton).toBeInTheDocument();
+      expect(selectStrategyButton).not.toHaveClass("MuiButton-colorWarning");
       expect(screen.getByText("Select Strategy")).toBeVisible();
       expect(
         screen.getByRole("button", { name: /Add Comment/i }),
@@ -962,6 +966,33 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(screen.queryByText("Select Players")).not.toBeInTheDocument();
       expect(screen.queryByText("Select Strategy")).not.toBeInTheDocument();
       expect(screen.queryByText("Add Comment")).not.toBeInTheDocument();
+    });
+
+    it("highlights the line action after pull launch while players are incomplete", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        players: [],
+        pull: true,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      const lineButton = screen.getByRole("button", { name: /Line/i });
+      expect(lineButton).toBeInTheDocument();
+      expect(lineButton).toHaveClass("MuiButton-colorWarning");
     });
   });
 });
