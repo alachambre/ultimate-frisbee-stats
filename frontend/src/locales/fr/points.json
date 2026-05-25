@@ -14,6 +14,7 @@
     "score": "Score !",
     "turnover": "Turnover",
     "stoppage": "Arrêt",
+    "stoppages": "Arr\u00eats",
     "complete": "Terminer le point",
     "finish": "Terminer le point",
     "finishPoint": "Terminer le point",
@@ -213,7 +214,9 @@
   "turnoverSequence": "Turnover #{{number}}",
   "events": {
     "call": "Call",
+    "opponentTurnover": "Turnover adverse",
     "pullPrefix": "Pull : ",
-    "strategy": "Strat\u00e9gie"
+    "strategy": "Strat\u00e9gie",
+    "ourTurnover": "Notre turnover"
   }
 }

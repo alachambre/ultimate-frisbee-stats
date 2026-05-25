@@ -49,6 +49,7 @@ import { queryKeys } from "../../utils/queryKeys";
 import { LIVE_TRACKER_REFRESH_INTERVAL_MS } from "../../utils/refreshIntervals";
 import { LivePointHeader } from "./liveTracker/LivePointHeader";
 import { LivePointActionBar } from "./liveTracker/LivePointActionBar";
+import { LivePointActivitySummary } from "./liveTracker/LivePointActivitySummary";
 import { LivePointContextCards } from "./liveTracker/LivePointContextCards";
 import { LivePointMixityIndicator } from "./liveTracker/LivePointMixityIndicator";
 import { useLivePointMutations } from "./liveTracker/useLivePointMutations";
@@ -494,6 +495,15 @@ export default function LivePointTracker({
 
             {!isFieldVariant && (
               <LivePointContextCards currentPoint={currentPoint} />
+            )}
+
+            {isFieldVariant && currentPoint && (
+              <LivePointActivitySummary
+                activePointId={activePoint?.id}
+                currentPoint={currentPoint}
+                stoppages={liveStoppages}
+                turnovers={liveTurnovers}
+              />
             )}
 
             {!readOnly && (

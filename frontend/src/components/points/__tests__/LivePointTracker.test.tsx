@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "../../../test/test-utils";
+import { render, screen, waitFor, within } from "../../../test/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -10,6 +10,7 @@ import type {
   PointWithPlayers,
   Stoppage,
   Halftime,
+  TurnoverWithPlayer,
 } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
@@ -156,6 +157,33 @@ const createMockPoint = ({
 
 const createMockRunningPoint = () =>
   createMockPoint({ id: 1, pointNumber: 1, status: "running" });
+
+const createMockTurnover = (
+  id: number,
+  timestamp: string,
+): TurnoverWithPlayer => ({
+  id,
+  point_id: 3,
+  player_id: null,
+  turnover_type: "other",
+  timestamp,
+  comments: null,
+  created_at: timestamp,
+  player: null,
+});
+
+const createMockStoppage = (
+  id: number,
+  timestamp: string,
+): Stoppage => ({
+  id,
+  point_id: 3,
+  stoppage_type: "call",
+  call_timestamp: timestamp,
+  resume_timestamp: null,
+  comments: null,
+  created_at: timestamp,
+});
 
 describe("LivePointTracker - Pending Stoppage Feature", () => {
   beforeEach(() => {
@@ -813,6 +841,126 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(screen.queryByText(/Line valid/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Field side/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Pull inbound/i)).not.toBeInTheDocument();
+    });
+
+    it("renders current point counters and a compact chronology table above field actions", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        startingOnOffense: true,
+        pull: true,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[createMockStoppage(1, "2024-01-01T10:07:00Z")]}
+          activePointTurnovers={[
+            createMockTurnover(1, "2024-01-01T10:06:00Z"),
+            createMockTurnover(2, "2024-01-01T10:08:00Z"),
+          ]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(screen.getByText("Our turns")).toBeInTheDocument();
+      expect(screen.getByText("Opponent turns")).toBeInTheDocument();
+      expect(screen.getByText("Stoppages")).toBeInTheDocument();
+      expect(
+        screen.getByRole("group", { name: "Our turns: 1" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("group", { name: "Opponent turns: 1" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("group", { name: "Stoppages: 1" }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Chronology \(4\)/i)).toBeInTheDocument();
+      const chronologyRegion = screen.getByRole("region", {
+        name: /Chronology/i,
+      });
+      expect(chronologyRegion).toHaveStyle({ overflowY: "auto" });
+
+      const chronologyTable = within(chronologyRegion).getByRole("table", {
+        name: /Chronology/i,
+      });
+      expect(
+        within(chronologyTable)
+          .getAllByRole("row")
+          .map((row) => row.textContent),
+      ).toEqual([
+        "Opponent turnoverOther3:00",
+        "Call2:00",
+        "Our turnoverOther1:00",
+        "Point start in offense0:00",
+      ]);
+      expect(screen.queryByText(/Turnover #1/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Turnover #2/i)).not.toBeInTheDocument();
+    });
+
+    it("keeps counters and chronology for a scored point awaiting completion", async () => {
+      const scoredPoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "scored",
+        startingOnOffense: true,
+        pull: true,
+      });
+      scoredPoint.won = true;
+      const game = createMockGame("started", null, [scoredPoint]);
+
+      server.use(
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () =>
+          HttpResponse.json([createMockStoppage(1, "2024-01-01T10:07:00Z")]),
+        ),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () =>
+          HttpResponse.json([createMockTurnover(1, "2024-01-01T10:06:00Z")]),
+        ),
+      );
+
+      render(
+        <LivePointTracker
+          activePoint={null}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      const chronologyRegion = await screen.findByRole("region", {
+        name: /Chronology/i,
+      });
+      const chronologyTable = within(chronologyRegion).getByRole("table", {
+        name: /Chronology/i,
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("group", { name: "Our turns: 1" }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("group", { name: "Opponent turns: 0" }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("group", { name: "Stoppages: 1" }),
+        ).toBeInTheDocument();
+        expect(
+          within(chronologyTable)
+            .getAllByRole("row")
+            .map((row) => row.textContent),
+        ).toEqual([
+          "We scored!10:00",
+          "Call2:00",
+          "Our turnoverOther1:00",
+          "Point start in offense0:00",
+        ]);
+      });
     });
 
     it("renders the no-active state with recorder actions and no game history", async () => {
