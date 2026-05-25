@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -6,12 +7,17 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
-import type { NewGamesCompetitionGroup } from "./buildNewGamesDashboard";
+import {
+  getCompetitionGroupStatusKind,
+  type NewGamesCompetitionGroup,
+  type NewGamesCompetitionStatusKind,
+} from "./buildNewGamesDashboard";
 import NewGameCard from "./NewGameCard";
 
 interface NewCompetitionGamesAccordionProps {
@@ -40,6 +46,24 @@ function renderResultsLabel(
   return `${label}: ${group.summary.wins}-${group.summary.losses}-${group.summary.draws}`;
 }
 
+function renderStatusChipLabel(
+  statusKind: NewGamesCompetitionStatusKind,
+  group: NewGamesCompetitionGroup,
+  labels: NewCompetitionGamesAccordionProps["labels"]
+): string {
+  if (statusKind === "results") {
+    return renderResultsLabel(group, labels.results);
+  }
+
+  const countByKind = {
+    completed: group.summary.completed,
+    live: group.summary.live,
+    upcoming: group.summary.upcoming,
+  };
+
+  return `${labels[statusKind]}: ${countByKind[statusKind]}`;
+}
+
 export default function NewCompetitionGamesAccordion({
   canManageCompetition = false,
   group,
@@ -52,6 +76,7 @@ export default function NewCompetitionGamesAccordion({
     group.nextRelevantDate ?? group.mostRecentDate ?? group.startDate;
   const canShowCompetitionActions =
     canManageCompetition && group.competition !== null;
+  const statusKind = getCompetitionGroupStatusKind(group);
   const handleEditCompetition = () => {
     onEditCompetition?.(group);
   };
@@ -71,7 +96,16 @@ export default function NewCompetitionGamesAccordion({
         "&:before": { display: "none" },
       })}
     >
-      <Box sx={{ alignItems: "stretch", display: "flex" }}>
+      <Box
+        sx={(theme) => ({
+          alignItems: "stretch",
+          bgcolor: {
+            xs: theme.palette.action.hover,
+            sm: theme.palette.background.paper,
+          },
+          display: "flex",
+        })}
+      >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           sx={{
@@ -98,41 +132,14 @@ export default function NewCompetitionGamesAccordion({
             </Typography>
           </Stack>
 
-          <Stack
-            direction="row"
-            spacing={0.75}
-            sx={{
-              flexWrap: "wrap",
-              gap: 0.75,
-              ml: { md: "auto" },
-            }}
-          >
-            {group.summary.live > 0 && (
-              <Chip
-                label={`${labels.live}: ${group.summary.live}`}
-                size="small"
-              />
-            )}
-            {group.summary.upcoming > 0 && (
-              <Chip
-                label={`${labels.upcoming}: ${group.summary.upcoming}`}
-                size="small"
-              />
-            )}
-            {group.summary.completed > 0 && (
-              <Chip
-                label={`${labels.completed}: ${group.summary.completed}`}
-                size="small"
-              />
-            )}
-            {group.summary.completed > 0 && (
-              <Chip
-                label={renderResultsLabel(group, labels.results)}
-                size="small"
-                variant="outlined"
-              />
-            )}
-          </Stack>
+          {statusKind && (
+            <Chip
+              label={renderStatusChipLabel(statusKind, group, labels)}
+              size="small"
+              sx={{ ml: { md: "auto" } }}
+              variant={statusKind === "results" ? "outlined" : "filled"}
+            />
+          )}
         </AccordionSummary>
         {canShowCompetitionActions && (
           <Stack
@@ -168,18 +175,41 @@ export default function NewCompetitionGamesAccordion({
 
       <AccordionDetails
         sx={(theme) => ({
-          bgcolor: theme.palette.background.default,
+          bgcolor: {
+            xs: theme.palette.background.paper,
+            sm: theme.palette.background.default,
+          },
           borderTop: `1px solid ${theme.palette.divider}`,
-          p: { xs: 1.5, sm: 2 },
+          p: { xs: 0, sm: 2 },
         })}
       >
-        <Stack spacing={1.25}>
+        <Stack
+          spacing={{ xs: 0, sm: 1.25 }}
+        >
           {group.games.length === 0 ? (
-            <Typography color="text.secondary" variant="body2">
+            <Typography
+              color="text.secondary"
+              sx={{ p: { xs: 2, sm: 0 } }}
+              variant="body2"
+            >
               {labels.emptyCompetition}
             </Typography>
           ) : (
-            group.games.map((game) => <NewGameCard game={game} key={game.id} />)
+            group.games.map((game, index) => (
+              <Fragment key={game.id}>
+                {index > 0 && (
+                  <Divider
+                    data-testid="competition-game-row-divider"
+                    flexItem
+                    sx={(theme) => ({
+                      borderColor: theme.palette.divider,
+                      display: { xs: "block", sm: "none" },
+                    })}
+                  />
+                )}
+                <NewGameCard game={game} variant="row" />
+              </Fragment>
+            ))
           )}
         </Stack>
       </AccordionDetails>

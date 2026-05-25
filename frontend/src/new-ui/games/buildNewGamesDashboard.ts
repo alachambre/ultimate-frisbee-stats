@@ -40,6 +40,12 @@ export interface NewGamesCompetitionGroup {
   summary: NewGamesCompetitionGroupSummary;
 }
 
+export type NewGamesCompetitionStatusKind =
+  | "live"
+  | "upcoming"
+  | "completed"
+  | "results";
+
 export interface NewGamesDashboardView {
   allGames: GameWithScore[];
   liveGames: GameWithScore[];
@@ -52,6 +58,70 @@ export interface NewGamesDashboardView {
 
 function getDateTime(value: string | null | undefined): number {
   return value ? new Date(value).getTime() : Number.POSITIVE_INFINITY;
+}
+
+function isDateOnly(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function isCompetitionEndDateOver(
+  endDate: string | null | undefined,
+  now: Date
+): boolean {
+  if (!endDate) {
+    return false;
+  }
+
+  if (isDateOnly(endDate)) {
+    return endDate < toLocalDateKey(now);
+  }
+
+  return new Date(endDate).getTime() < now.getTime();
+}
+
+export function isCompetitionOpenForNewGames(
+  competition: Pick<CompetitionWithTeam, "end_date" | "status">,
+  now = new Date()
+): boolean {
+  return (
+    competition.status !== "completed" &&
+    !isCompetitionEndDateOver(competition.end_date, now)
+  );
+}
+
+export function getCompetitionGroupStatusKind(
+  group: NewGamesCompetitionGroup,
+  now = new Date()
+): NewGamesCompetitionStatusKind | null {
+  if (group.summary.live > 0) {
+    return "live";
+  }
+
+  if (group.summary.upcoming > 0) {
+    return "upcoming";
+  }
+
+  const isOver =
+    group.competition?.status === "completed" ||
+    isCompetitionEndDateOver(group.endDate, now);
+
+  if (isOver) {
+    return "results";
+  }
+
+  if (group.summary.completed > 0) {
+    return "completed";
+  }
+
+  return null;
 }
 
 function getGameTime(game: GameWithScore): number {

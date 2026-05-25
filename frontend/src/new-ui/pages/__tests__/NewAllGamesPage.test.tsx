@@ -9,6 +9,16 @@ import NewAllGamesPage from "../NewAllGamesPage";
 
 const BASE_URL = "http://localhost:8000";
 
+function shiftedLocalDateKey(daysFromToday: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromToday);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function renderPage({
   role = "team_member",
   canLoadTeams = true,
@@ -442,6 +452,71 @@ describe("NewAllGamesPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("Alex")).toBeInTheDocument();
+  });
+
+  it("excludes over competitions from the New game competition dropdown", async () => {
+    const user = userEvent.setup();
+    const activeCompetitionStartDate = shiftedLocalDateKey(-1);
+    const activeCompetitionEndDate = shiftedLocalDateKey(1);
+    const endedCompetitionStartDate = shiftedLocalDateKey(-3);
+    const endedCompetitionEndDate = shiftedLocalDateKey(-2);
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, ({ request }) => {
+        const teamId = new URL(request.url).searchParams.get("team_id");
+        if (teamId === "1" || teamId === null) {
+          return HttpResponse.json([
+            {
+              id: 10,
+              team_id: 1,
+              team_name: "Monkey Stats",
+              name: "Active Cup",
+              description: null,
+              start_date: activeCompetitionStartDate,
+              end_date: activeCompetitionEndDate,
+              status: "ongoing",
+              created_at: "2026-05-01T00:00:00Z",
+            },
+            {
+              id: 20,
+              team_id: 1,
+              team_name: "Monkey Stats",
+              name: "Ended Cup",
+              description: null,
+              start_date: endedCompetitionStartDate,
+              end_date: endedCompetitionEndDate,
+              status: "ongoing",
+              created_at: "2026-04-01T00:00:00Z",
+            },
+          ]);
+        }
+
+        return HttpResponse.json([]);
+      }),
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json([]))
+    );
+
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /New game/i }));
+    expect(
+      await screen.findByRole("heading", { name: "Create New Game" })
+    ).toBeInTheDocument();
+    await user.click(await screen.findByRole("combobox", { name: "Competition" }));
+
+    const listbox = await screen.findByRole("listbox");
+    expect(listbox).toHaveTextContent("Active Cup");
+    expect(listbox).not.toHaveTextContent("Ended Cup");
   });
 
   it("does not show privileged competition actions without edit access", async () => {

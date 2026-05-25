@@ -32,7 +32,10 @@ import { getAllGames } from "../../services/games";
 import type { CompetitionWithTeam } from "../../types";
 import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 import { queryKeys } from "../../utils/queryKeys";
-import { buildNewGamesDashboard } from "../games/buildNewGamesDashboard";
+import {
+  buildNewGamesDashboard,
+  isCompetitionOpenForNewGames,
+} from "../games/buildNewGamesDashboard";
 import NewCompetitionGamesAccordion from "../games/NewCompetitionGamesAccordion";
 import NewGamesSummaryStrip from "../games/NewGamesSummaryStrip";
 import { useNewUiTeam } from "../team/useNewUiTeam";
@@ -283,8 +286,10 @@ export default function NewAllGamesPage() {
       {canEditData && (
         <>
           <CreateGameModal
+            competitionFilter={isCompetitionOpenForNewGames}
             isOpen={isCreateGameOpen}
             onClose={() => setIsCreateGameOpen(false)}
+            teamId={effectiveSelectedTeamId}
           />
           <CreateCompetitionModal
             isOpen={isCreateCompetitionOpen}

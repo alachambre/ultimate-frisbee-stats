@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { CompetitionWithTeam, GameWithScore } from "../../../types";
-import { buildNewGamesDashboard } from "../buildNewGamesDashboard";
+import {
+  buildNewGamesDashboard,
+  getCompetitionGroupStatusKind,
+  isCompetitionOpenForNewGames,
+} from "../buildNewGamesDashboard";
 
 function game(
   overrides: Partial<GameWithScore> &
@@ -36,7 +40,7 @@ function competition(
     description: null,
     start_date: overrides.start_date ?? "2026-05-01",
     end_date: overrides.end_date ?? "2026-05-31",
-    status: "ongoing",
+    status: overrides.status ?? "ongoing",
     created_at: "2026-05-01T00:00:00Z",
   };
 }
@@ -400,5 +404,149 @@ describe("buildNewGamesDashboard", () => {
         games: [expect.objectContaining({ opponent_name: "Blue Tigers" })],
       })
     );
+  });
+});
+
+describe("getCompetitionGroupStatusKind", () => {
+  const now = new Date("2026-05-25T12:00:00Z");
+
+  function firstCompetitionGroup({
+    competitions,
+    games,
+  }: {
+    competitions: CompetitionWithTeam[];
+    games: GameWithScore[];
+  }) {
+    return buildNewGamesDashboard({
+      games,
+      selectedTeamId: 1,
+      teamCompetitions: competitions,
+    }).competitionGroups[0];
+  }
+
+  it("uses one prioritized status for each competition group", () => {
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [competition({ id: 10, team_id: 1 })],
+          games: [
+            game({ id: 1, competition_id: 10, status: "started" }),
+            game({ id: 2, competition_id: 10, status: "ready" }),
+            game({ id: 3, competition_id: 10, status: "ended" }),
+          ],
+        }),
+        now
+      )
+    ).toBe("live");
+
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [competition({ id: 20, team_id: 1 })],
+          games: [
+            game({ id: 4, competition_id: 20, status: "ready" }),
+            game({ id: 5, competition_id: 20, status: "ended" }),
+          ],
+        }),
+        now
+      )
+    ).toBe("upcoming");
+
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [
+            competition({
+              id: 30,
+              team_id: 1,
+              start_date: "2026-05-01",
+              end_date: "2026-05-31",
+            }),
+          ],
+          games: [game({ id: 6, competition_id: 30, status: "ended" })],
+        }),
+        now
+      )
+    ).toBe("completed");
+
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [
+            competition({
+              id: 40,
+              team_id: 1,
+              start_date: "2026-04-01",
+              end_date: "2026-04-30",
+            }),
+          ],
+          games: [
+            game({
+              id: 7,
+              competition_id: 40,
+              status: "ended",
+              our_score: 12,
+              opponent_score: 10,
+            }),
+          ],
+        }),
+        now
+      )
+    ).toBe("results");
+  });
+});
+
+describe("isCompetitionOpenForNewGames", () => {
+  const now = new Date("2026-05-25T12:00:00Z");
+
+  it("keeps active and future competitions eligible but excludes over competitions", () => {
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 10,
+          team_id: 1,
+          start_date: "2026-05-01",
+          end_date: "2026-05-31",
+        }),
+        now
+      )
+    ).toBe(true);
+
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 20,
+          team_id: 1,
+          start_date: "2026-06-01",
+          end_date: "2026-06-02",
+        }),
+        now
+      )
+    ).toBe(true);
+
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 30,
+          team_id: 1,
+          start_date: "2026-04-01",
+          end_date: "2026-04-30",
+        }),
+        now
+      )
+    ).toBe(false);
+
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 40,
+          team_id: 1,
+          start_date: "2026-05-01",
+          end_date: "2026-05-31",
+          status: "completed",
+        }),
+        now
+      )
+    ).toBe(false);
   });
 });

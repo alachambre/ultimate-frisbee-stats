@@ -23,18 +23,23 @@ import { createGame, getCompetitions, getCompetition } from "../../services";
 import { getCompetitionPlayers } from "../../services/competitions";
 import { queryKeys } from "../../utils/queryKeys";
 import { dateTimeLocalInputValueToUtcIso } from "../../utils/dateTimeLocal";
+import type { CompetitionWithTeam } from "../../types";
 import PlayerSelectionList from "../shared/PlayerSelectionList";
 
 interface CreateGameModalProps {
   isOpen: boolean;
   onClose: () => void;
   competitionId?: number; // Optional: if provided, competition is pre-selected
+  competitionFilter?: (competition: CompetitionWithTeam) => boolean;
+  teamId?: number;
 }
 
 export default function CreateGameModal({
   isOpen,
   onClose,
   competitionId,
+  competitionFilter,
+  teamId,
 }: CreateGameModalProps) {
   const { t } = useTranslation(["games", "players", "common"]);
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<number | "">("");
@@ -45,10 +50,20 @@ export default function CreateGameModal({
   const queryClient = useQueryClient();
 
   const { data: competitions } = useQuery({
-    queryKey: queryKeys.competitions,
-    queryFn: () => getCompetitions(),
+    queryKey:
+      teamId === undefined
+        ? queryKeys.competitions
+        : queryKeys.competitionsByTeam(teamId),
+    queryFn: () => getCompetitions(teamId),
     enabled: !competitionId, // Only fetch if no competitionId provided
   });
+  const availableCompetitions = useMemo(
+    () =>
+      competitions?.filter((competition) =>
+        competitionFilter ? competitionFilter(competition) : true
+      ) ?? [],
+    [competitionFilter, competitions]
+  );
 
   const finalCompetitionId = competitionId || selectedCompetitionId;
   const competitionIdNumber = finalCompetitionId ? Number(finalCompetitionId) : null;
@@ -150,7 +165,7 @@ export default function CreateGameModal({
                 onChange={(e) => setSelectedCompetitionId(e.target.value as number)}
                 label={t("games:form.competition")}
               >
-                {competitions?.map((competition) => (
+                {availableCompetitions.map((competition) => (
                   <MenuItem key={competition.id} value={competition.id}>
                     {competition.name}
                   </MenuItem>
