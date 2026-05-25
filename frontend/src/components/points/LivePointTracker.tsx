@@ -171,13 +171,15 @@ export default function LivePointTracker({
             borderColor: "divider",
             borderRadius: 1,
           }),
-          ...(currentPoint && {
-            borderTop: 3,
-            borderColor: (theme) =>
-              currentPoint.starting_on_offense
-                ? theme.colors.offense.main
-                : theme.colors.defense.main,
-          }),
+          ...(currentPoint && !isFieldVariant
+            ? {
+                borderTop: 3,
+                borderColor: (theme) =>
+                  currentPoint.starting_on_offense
+                    ? theme.colors.offense.main
+                    : theme.colors.defense.main,
+              }
+            : {}),
         }}
       >
         {!isFieldVariant && (
@@ -252,9 +254,8 @@ export default function LivePointTracker({
                   isFieldVariant
                     ? {
                         bgcolor: "background.paper",
-                        borderColor: "divider",
-                        borderTop: { xs: 1, sm: 0 },
                         bottom: 0,
+                        boxShadow: { xs: 3, sm: 0 },
                         mx: { xs: -2, sm: 0 },
                         pb: { xs: 1, sm: 0 },
                         position: { xs: "sticky", sm: "static" },
@@ -484,6 +485,17 @@ export default function LivePointTracker({
               ].filter(Boolean)}
             </Menu>
 
+            {isFieldVariant && (
+              <LivePointContextCards
+                currentPoint={currentPoint}
+                variant={variant}
+              />
+            )}
+
+            {!isFieldVariant && (
+              <LivePointContextCards currentPoint={currentPoint} />
+            )}
+
             {!readOnly && (
               <LivePointActionBar
                 currentPoint={currentPoint}
@@ -503,17 +515,6 @@ export default function LivePointTracker({
                 onOpenManagePlayers={() => setIsManagePlayersDialogOpen(true)}
                 variant={variant}
               />
-            )}
-
-            {isFieldVariant && (
-              <LivePointContextCards
-                currentPoint={currentPoint}
-                variant={variant}
-              />
-            )}
-
-            {!isFieldVariant && (
-              <LivePointContextCards currentPoint={currentPoint} />
             )}
 
             {/* Divider before chronology */}

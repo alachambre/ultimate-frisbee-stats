@@ -118,8 +118,7 @@ describe("NewGameTrackerPage", () => {
     expect(
       await screen.findByRole("heading", { name: "Monkey vs Blue Tigers" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("5")).toBeInTheDocument();
-    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("5 - 4")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /^No active point$/i }),
     ).toBeInTheDocument();

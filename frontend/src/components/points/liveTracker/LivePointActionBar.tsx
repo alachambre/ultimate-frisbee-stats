@@ -10,7 +10,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { Box, Button, Tooltip } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import type { PointWithPlayers } from "../../../types";
 
 interface LivePointActionBarProps {
@@ -65,28 +65,75 @@ export function LivePointActionBar({
   };
 
   if (variant === "field") {
-    const fieldButtonSx = {
+    const fieldPrimaryButtonSx = {
       minHeight: 44,
-      flex: { xs: "1 1 calc(50% - 8px)", sm: "0 0 auto" },
-    };
+      minWidth: 0,
+      flex: "1 1 auto",
+      whiteSpace: "nowrap",
+      px: { xs: 1.5, sm: 2.5 },
+      "& .MuiButton-startIcon": {
+        mr: { xs: 0, sm: 1 },
+      },
+    } satisfies SxProps<Theme>;
+    const fieldIconButtonSx = {
+      minHeight: 44,
+      minWidth: 44,
+      flex: "0 0 44px",
+      px: 0,
+    } satisfies SxProps<Theme>;
+
+    const renderFieldIconButton = ({
+      label,
+      icon,
+      onClick,
+      disabled = false,
+      color,
+    }: {
+      label: string;
+      icon: ReactNode;
+      onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+      disabled?: boolean;
+      color?: "success" | "warning";
+    }) => (
+      <Tooltip title={label}>
+        <span>
+          <Button
+            variant="outlined"
+            color={color}
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={label}
+            sx={
+              color ? fieldIconButtonSx : [fieldIconButtonSx, accentOutlinedSx]
+            }
+          >
+            {icon}
+          </Button>
+        </span>
+      </Tooltip>
+    );
 
     return (
       <Box
         sx={{
           bgcolor: "background.paper",
-          borderColor: "divider",
-          borderTop: { xs: 1, sm: 0 },
           bottom: 0,
+          boxShadow: { xs: 3, sm: 0 },
           display: "flex",
-          flexWrap: "wrap",
-          gap: 1,
-          justifyContent: { xs: "stretch", sm: "center" },
+          flexWrap: "nowrap",
+          gap: { xs: 0.75, sm: 1 },
+          justifyContent: { xs: "flex-start", sm: "center" },
           mt: 2,
           mx: { xs: -2, sm: 0 },
+          overflowX: { xs: "auto", sm: "visible" },
           pb: { xs: 1, sm: 0 },
           position: { xs: "sticky", sm: "static" },
           pt: { xs: 1.5, sm: 0 },
           px: { xs: 2, sm: 0 },
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
           zIndex: 1,
         }}
       >
@@ -96,8 +143,13 @@ export function LivePointActionBar({
             startIcon={<RocketLaunchIcon />}
             onClick={onLaunchPull}
             disabled={isLaunchPullPending}
+            aria-label={
+              isLaunchPullPending
+                ? t("points:tracker.launching", "Launching...")
+                : t("points:tracker.launchPull", "Launch Pull")
+            }
             sx={{
-              ...fieldButtonSx,
+              ...fieldPrimaryButtonSx,
               bgcolor: (theme) =>
                 currentPoint.starting_on_offense
                   ? theme.colors.offense.main
@@ -110,9 +162,14 @@ export function LivePointActionBar({
               },
             }}
           >
-            {isLaunchPullPending
-              ? t("points:tracker.launching", "Launching...")
-              : t("points:tracker.launchPull", "Launch Pull")}
+            <Box
+              component="span"
+              sx={{ display: { xs: "none", sm: "inline" } }}
+            >
+              {isLaunchPullPending
+                ? t("points:tracker.launching", "Launching...")
+                : t("points:tracker.launchPull", "Launch Pull")}
+            </Box>
           </Button>
         )}
 
@@ -122,9 +179,15 @@ export function LivePointActionBar({
             color="warning"
             startIcon={<PlayArrowIcon />}
             onClick={onOpenResume}
-            sx={fieldButtonSx}
+            aria-label={t("points:tracker.resume", "Resume")}
+            sx={fieldPrimaryButtonSx}
           >
-            {t("points:tracker.resume", "Resume")}
+            <Box
+              component="span"
+              sx={{ display: { xs: "none", sm: "inline" } }}
+            >
+              {t("points:tracker.resume", "Resume")}
+            </Box>
           </Button>
         )}
 
@@ -135,29 +198,26 @@ export function LivePointActionBar({
               color="success"
               startIcon={<CheckCircleIcon />}
               onClick={onOpenFinish}
-              sx={{
-                ...fieldButtonSx,
-                flex: { xs: "1 1 100%", sm: "0 0 auto" },
-              }}
+              aria-label={t("points:tracker.finishPoint", "Finish point")}
+              sx={fieldPrimaryButtonSx}
             >
-              {t("points:tracker.finishPoint", "Finish point")}
+              <Box
+                component="span"
+                sx={{ display: { xs: "none", sm: "inline" } }}
+              >
+                {t("points:tracker.finishPoint", "Finish point")}
+              </Box>
             </Button>
-            <Button
-              variant="outlined"
-              startIcon={<SwapHorizIcon />}
-              onClick={onOpenRecordTurnover}
-              sx={{ ...fieldButtonSx, ...accentOutlinedSx }}
-            >
-              {t("points:tracker.turnover", "Turnover")}
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<PauseCircleIcon />}
-              onClick={onOpenRecordStoppage}
-              sx={{ ...fieldButtonSx, ...accentOutlinedSx }}
-            >
-              {t("points:tracker.stoppage", "Stoppage")}
-            </Button>
+            {renderFieldIconButton({
+              label: t("points:tracker.turnover", "Turnover"),
+              icon: <SwapHorizIcon />,
+              onClick: onOpenRecordTurnover,
+            })}
+            {renderFieldIconButton({
+              label: t("points:tracker.stoppage", "Stoppage"),
+              icon: <PauseCircleIcon />,
+              onClick: onOpenRecordStoppage,
+            })}
           </>
         )}
 
@@ -168,42 +228,39 @@ export function LivePointActionBar({
               color="success"
               startIcon={<DoneAllIcon />}
               onClick={onOpenComplete}
-              sx={fieldButtonSx}
+              aria-label={t("points:tracker.complete", "Complete Point")}
+              sx={fieldPrimaryButtonSx}
             >
-              {t("points:tracker.complete", "Complete Point")}
+              <Box
+                component="span"
+                sx={{ display: { xs: "none", sm: "inline" } }}
+              >
+                {t("points:tracker.complete", "Complete Point")}
+              </Box>
             </Button>
-            <Button
-              variant="outlined"
-              color="warning"
-              startIcon={<RestartAltIcon />}
-              onClick={onRestartPoint}
-              disabled={isRestartPending}
-              sx={fieldButtonSx}
-            >
-              {isRestartPending
+            {renderFieldIconButton({
+              label: isRestartPending
                 ? t("points:tracker.resuming", "Resuming...")
-                : t("points:tracker.resume", "Resume Point")}
-            </Button>
+                : t("points:tracker.resume", "Resume Point"),
+              icon: <RestartAltIcon />,
+              onClick: onRestartPoint,
+              disabled: isRestartPending,
+              color: "warning",
+            })}
           </>
         )}
 
-        <Button
-          variant="outlined"
-          startIcon={<GroupIcon />}
-          onClick={onOpenManagePlayers}
-          disabled={!onOpenManagePlayers}
-          sx={{ ...fieldButtonSx, ...accentOutlinedSx }}
-        >
-          {t("points:tracker.line", "Line")}
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<MoreVertIcon />}
-          onClick={onOpenMoreActions}
-          sx={{ ...fieldButtonSx, ...accentOutlinedSx }}
-        >
-          {t("points:tracker.more", "More")}
-        </Button>
+        {renderFieldIconButton({
+          label: t("points:tracker.line", "Line"),
+          icon: <GroupIcon />,
+          onClick: onOpenManagePlayers,
+          disabled: !onOpenManagePlayers,
+        })}
+        {renderFieldIconButton({
+          label: t("points:tracker.more", "More"),
+          icon: <MoreVertIcon />,
+          onClick: onOpenMoreActions,
+        })}
       </Box>
     );
   }

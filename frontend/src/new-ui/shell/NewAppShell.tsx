@@ -41,6 +41,7 @@ export default function NewAppShell() {
     auth.enforcementMode,
     auth.isLoading
   );
+  const isLiveTrackerRoute = location.pathname.startsWith("/live/");
 
   const navigationItems = useMemo<NavigationItem[]>(() => {
     const canViewStatistics =
@@ -101,6 +102,10 @@ export default function NewAppShell() {
         sx={(theme) => ({
           bgcolor: "background.paper",
           borderBottom: `1px solid ${theme.palette.divider}`,
+          display: {
+            xs: isLiveTrackerRoute ? "none" : "block",
+            sm: "block",
+          },
         })}
       >
         <Toolbar

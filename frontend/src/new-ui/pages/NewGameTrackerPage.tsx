@@ -11,14 +11,15 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -31,7 +32,6 @@ import EditGameModal from "../../components/modals/EditGameModal";
 import LivePointTracker from "../../components/points/LivePointTracker";
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
-import StatusChip from "../../components/shared/StatusChip";
 import { finishGame, updateGame } from "../../services";
 import { formatDateTime } from "../../utils/dateFormatting";
 import {
@@ -111,204 +111,293 @@ export default function NewGameTrackerPage() {
   const canShowTracker =
     (game.status === "ready" || game.status === "started") &&
     (!canEditData || competition);
+  const gameActionButtonSx = {
+    minHeight: { xs: 48, sm: 44 },
+    minWidth: 0,
+    px: { xs: 0.5, sm: 2 },
+    "& .MuiButton-startIcon": {
+      ml: 0,
+      mr: { xs: 0, sm: 1 },
+    },
+  };
+  const mobileHiddenLabelSx = {
+    display: { xs: "none", sm: "inline" },
+  };
 
   return (
     <Container
+      disableGutters
       maxWidth="md"
-      sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, md: 4 } }}
+      sx={{ px: { xs: 0, sm: 3 }, py: { xs: 0, md: 4 } }}
     >
       <Stack spacing={2.5}>
-        <Button
-          component={Link}
-          startIcon={<ArrowBackIcon />}
-          sx={{ alignSelf: "flex-start" }}
-          to="/games"
-        >
-          {t("navigation:newUiPages.liveGame.tracker.back")}
-        </Button>
-
         <Paper
+          component="header"
           elevation={0}
           sx={(theme) => ({
             bgcolor: theme.colors.newUi.primary,
-            borderRadius: 1,
+            borderRadius: { xs: 0, sm: 1 },
             color: theme.palette.primary.contrastText,
             overflow: "hidden",
           })}
         >
           <Box sx={{ p: { xs: 2, sm: 3 } }}>
             <Stack
-              alignItems="flex-start"
+              alignItems="center"
               direction="row"
               justifyContent="space-between"
               spacing={1.5}
             >
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  component="p"
-                  sx={{ opacity: 0.78 }}
-                  variant="overline"
-                >
-                  {t("navigation:newUiPages.liveGame.tracker.eyebrow")}
-                </Typography>
-                <Typography
-                  component="h1"
-                  fontWeight={900}
-                  variant="h5"
-                  sx={{ overflowWrap: "anywhere" }}
-                >
-                  {t("navigation:newUiPages.liveGame.tracker.heading", {
-                    teamName: game.team_name,
-                    opponentName: game.opponent_name,
-                  })}
-                </Typography>
-                <Typography sx={{ opacity: 0.78 }} variant="body2">
-                  {game.competition_name}
-                </Typography>
-              </Box>
-              <StatusChip
-                kind="game"
-                opponentScore={game.opponent_score}
-                ourScore={game.our_score}
-                status={game.status}
+              <Button
+                color="inherit"
+                component={Link}
+                startIcon={<ArrowBackIcon />}
+                sx={{
+                  color: "inherit",
+                  fontWeight: 800,
+                  minWidth: 0,
+                  opacity: 0.9,
+                  px: 0,
+                  textTransform: "none",
+                  "&:hover": {
+                    bgcolor: "transparent",
+                    opacity: 1,
+                  },
+                }}
+                to="/games"
+              >
+                {t("navigation:newUiPages.liveGame.tracker.back")}
+              </Button>
+              <Chip
+                label={
+                  game.status === "started"
+                    ? t("navigation:newUiPages.liveGame.board.live")
+                    : t("games:status.ready")
+                }
+                size="small"
+                sx={(theme) => ({
+                  bgcolor: alpha(theme.palette.common.white, 0.16),
+                  color: theme.palette.common.white,
+                  fontWeight: 800,
+                  "& .MuiChip-label": {
+                    px: 1.25,
+                  },
+                })}
               />
             </Stack>
+
+            <Typography
+              component="h1"
+              sx={{
+                border: 0,
+                clip: "rect(0 0 0 0)",
+                height: 1,
+                m: -1,
+                overflow: "hidden",
+                p: 0,
+                position: "absolute",
+                left: 0,
+                top: 0,
+                whiteSpace: "nowrap",
+                width: 1,
+              }}
+            >
+              {t("navigation:newUiPages.liveGame.tracker.heading", {
+                teamName: game.team_name,
+                opponentName: game.opponent_name,
+              })}
+            </Typography>
 
             <Stack
               alignItems="center"
               direction="row"
-              divider={
-                <Divider
-                  flexItem
-                  orientation="vertical"
-                  sx={(theme) => ({
-                    borderColor: alpha(
-                      theme.palette.primary.contrastText,
-                      0.35,
-                    ),
-                  })}
-                />
-              }
               justifyContent="center"
               spacing={{ xs: 2, sm: 4 }}
               sx={{ mt: { xs: 2, sm: 3 } }}
             >
-              <Box sx={{ minWidth: 96, textAlign: "center" }}>
-                <Typography sx={{ opacity: 0.78 }} variant="body2">
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                <Typography
+                  fontWeight={800}
+                  sx={{ opacity: 0.9, overflowWrap: "anywhere" }}
+                  variant="body2"
+                >
                   {game.team_name}
                 </Typography>
-                <Typography
-                  fontWeight={900}
-                  sx={{ typography: { xs: "h4", sm: "h3" } }}
-                >
-                  {game.our_score}
-                </Typography>
               </Box>
-              <Box sx={{ minWidth: 96, textAlign: "center" }}>
-                <Typography sx={{ opacity: 0.78 }} variant="body2">
-                  {game.opponent_name}
-                </Typography>
+              <Typography
+                aria-label={t(
+                  "navigation:newUiPages.liveGame.board.currentScore",
+                )}
+                fontWeight={900}
+                sx={{
+                  typography: { xs: "h3", sm: "h2" },
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {game.our_score} - {game.opponent_score}
+              </Typography>
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: "right" }}>
                 <Typography
-                  fontWeight={900}
-                  sx={{ typography: { xs: "h4", sm: "h3" } }}
+                  fontWeight={800}
+                  sx={{ opacity: 0.9, overflowWrap: "anywhere" }}
+                  variant="body2"
                 >
-                  {game.opponent_score}
+                  {game.opponent_name}
                 </Typography>
               </Box>
             </Stack>
-            {game.date && (
-              <Typography
-                sx={{ mt: 1, opacity: 0.78 }}
-                textAlign="center"
-                variant="body2"
-              >
-                {formatDateTime(game.date, i18n.resolvedLanguage)}
-              </Typography>
-            )}
+            <Typography
+              sx={{ mt: 1, opacity: 0.78 }}
+              textAlign="center"
+              variant="body2"
+            >
+              {game.competition_name}
+              {game.date
+                ? ` · ${formatDateTime(game.date, i18n.resolvedLanguage)}`
+                : ""}
+            </Typography>
           </Box>
         </Paper>
 
-        <Box
-          sx={{
-            display: "grid",
-            gap: 1,
-            gridTemplateColumns: {
-              xs: "repeat(2, minmax(0, 1fr))",
-              sm: "repeat(4, minmax(0, 1fr))",
-            },
-          }}
+        <Stack
+          spacing={2.5}
+          sx={{ px: { xs: 1.5, sm: 0 }, pb: { xs: 2, sm: 0 } }}
         >
-          {(canEditData || canViewStatistics) && (
-            <Button
-              fullWidth
-              onClick={() => setIsRosterDialogOpen(true)}
-              startIcon={<GroupIcon />}
-              variant="outlined"
-            >
-              {t("navigation:newUiPages.liveGame.tracker.actions.roster")}
-            </Button>
-          )}
-          {canViewStatistics && (
-            <Button
-              component={Link}
-              fullWidth
-              startIcon={<BarChartIcon />}
-              to={statisticsPath}
-              variant="outlined"
-            >
-              {t("navigation:newUiPages.liveGame.tracker.actions.stats")}
-            </Button>
-          )}
-          {canEditData && (
-            <Button
-              fullWidth
-              onClick={() => setIsEditModalOpen(true)}
-              startIcon={<EditIcon />}
-              variant="outlined"
-            >
-              {t("navigation:newUiPages.liveGame.tracker.actions.edit")}
-            </Button>
-          )}
-          {canEditData && game.status === "ready" && (
-            <Button
-              disabled={startMutation.isPending}
-              fullWidth
-              onClick={() => startMutation.mutate()}
-              startIcon={<PlayArrowIcon />}
-              variant="contained"
-            >
-              {startMutation.isPending
-                ? t("common:action.loading")
-                : t("games:detail.startGame")}
-            </Button>
-          )}
-          {canEditData && game.status === "started" && (
-            <Button
-              color="success"
-              fullWidth
-              onClick={() => setIsFinishConfirmOpen(true)}
-              startIcon={<CheckCircleIcon />}
-              variant="outlined"
-            >
-              {t("navigation:newUiPages.liveGame.tracker.actions.complete")}
-            </Button>
-          )}
-        </Box>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 1,
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+            }}
+          >
+            {(canEditData || canViewStatistics) && (
+              <Tooltip
+                title={t(
+                  "navigation:newUiPages.liveGame.tracker.actions.roster",
+                )}
+              >
+                <Button
+                  aria-label={t(
+                    "navigation:newUiPages.liveGame.tracker.actions.roster",
+                  )}
+                  fullWidth
+                  onClick={() => setIsRosterDialogOpen(true)}
+                  startIcon={<GroupIcon />}
+                  sx={gameActionButtonSx}
+                  variant="outlined"
+                >
+                  <Box component="span" sx={mobileHiddenLabelSx}>
+                    {t("navigation:newUiPages.liveGame.tracker.actions.roster")}
+                  </Box>
+                </Button>
+              </Tooltip>
+            )}
+            {canViewStatistics && (
+              <Tooltip
+                title={t(
+                  "navigation:newUiPages.liveGame.tracker.actions.stats",
+                )}
+              >
+                <Button
+                  aria-label={t(
+                    "navigation:newUiPages.liveGame.tracker.actions.stats",
+                  )}
+                  component={Link}
+                  fullWidth
+                  startIcon={<BarChartIcon />}
+                  sx={gameActionButtonSx}
+                  to={statisticsPath}
+                  variant="outlined"
+                >
+                  <Box component="span" sx={mobileHiddenLabelSx}>
+                    {t("navigation:newUiPages.liveGame.tracker.actions.stats")}
+                  </Box>
+                </Button>
+              </Tooltip>
+            )}
+            {canEditData && (
+              <Tooltip
+                title={t(
+                  "navigation:newUiPages.liveGame.tracker.actions.edit",
+                )}
+              >
+                <Button
+                  aria-label={t(
+                    "navigation:newUiPages.liveGame.tracker.actions.edit",
+                  )}
+                  fullWidth
+                  onClick={() => setIsEditModalOpen(true)}
+                  startIcon={<EditIcon />}
+                  sx={gameActionButtonSx}
+                  variant="outlined"
+                >
+                  <Box component="span" sx={mobileHiddenLabelSx}>
+                    {t("navigation:newUiPages.liveGame.tracker.actions.edit")}
+                  </Box>
+                </Button>
+              </Tooltip>
+            )}
+            {canEditData && game.status === "ready" && (
+              <Tooltip title={t("games:detail.startGame")}>
+                <span>
+                  <Button
+                    aria-label={t("games:detail.startGame")}
+                    disabled={startMutation.isPending}
+                    fullWidth
+                    onClick={() => startMutation.mutate()}
+                    startIcon={<PlayArrowIcon />}
+                    sx={gameActionButtonSx}
+                    variant="contained"
+                  >
+                    <Box component="span" sx={mobileHiddenLabelSx}>
+                      {startMutation.isPending
+                        ? t("common:action.loading")
+                        : t("games:detail.startGame")}
+                    </Box>
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+            {canEditData && game.status === "started" && (
+              <Tooltip
+                title={t(
+                  "navigation:newUiPages.liveGame.tracker.actions.complete",
+                )}
+              >
+                <Button
+                  aria-label={t(
+                    "navigation:newUiPages.liveGame.tracker.actions.complete",
+                  )}
+                  color="success"
+                  fullWidth
+                  onClick={() => setIsFinishConfirmOpen(true)}
+                  startIcon={<CheckCircleIcon />}
+                  sx={gameActionButtonSx}
+                  variant="outlined"
+                >
+                  <Box component="span" sx={mobileHiddenLabelSx}>
+                    {t("navigation:newUiPages.liveGame.tracker.actions.complete")}
+                  </Box>
+                </Button>
+              </Tooltip>
+            )}
+          </Box>
 
-        {canShowTracker && (
-          <LivePointTracker
-            activePoint={activePoint || null}
-            activePointStoppages={activePointStoppages}
-            activePointTurnovers={activePointTurnovers}
-            game={game}
-            onPointUpdated={handlePointUpdated}
-            players={game.players}
-            renderWhenReady
-            readOnly={!canEditData}
-            teamId={competition?.team_id ?? 0}
-            variant="field"
-          />
-        )}
+          {canShowTracker && (
+            <LivePointTracker
+              activePoint={activePoint || null}
+              activePointStoppages={activePointStoppages}
+              activePointTurnovers={activePointTurnovers}
+              game={game}
+              onPointUpdated={handlePointUpdated}
+              players={game.players}
+              renderWhenReady
+              readOnly={!canEditData}
+              teamId={competition?.team_id ?? 0}
+              variant="field"
+            />
+          )}
+        </Stack>
       </Stack>
 
       {(canEditData || canViewStatistics) && competition && (
