@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -31,6 +30,7 @@ interface NewCompetitionGamesAccordionProps {
     results: string;
   };
   onEditCompetition?: (group: NewGamesCompetitionGroup) => void;
+  onManageRoster?: (group: NewGamesCompetitionGroup) => void;
 }
 
 function renderResultsLabel(
@@ -46,6 +46,7 @@ export default function NewCompetitionGamesAccordion({
   formatDate,
   labels,
   onEditCompetition,
+  onManageRoster,
 }: NewCompetitionGamesAccordionProps) {
   const relevantDate =
     group.nextRelevantDate ?? group.mostRecentDate ?? group.startDate;
@@ -53,6 +54,9 @@ export default function NewCompetitionGamesAccordion({
     canManageCompetition && group.competition !== null;
   const handleEditCompetition = () => {
     onEditCompetition?.(group);
+  };
+  const handleManageRoster = () => {
+    onManageRoster?.(group);
   };
 
   return (
@@ -152,9 +156,8 @@ export default function NewCompetitionGamesAccordion({
             <Tooltip title={labels.manageRoster}>
               <IconButton
                 aria-label={labels.manageRosterAria}
-                component={Link}
+                onClick={handleManageRoster}
                 size="small"
-                to={`/competitions/${group.competitionId}`}
               >
                 <GroupsIcon fontSize="small" />
               </IconButton>

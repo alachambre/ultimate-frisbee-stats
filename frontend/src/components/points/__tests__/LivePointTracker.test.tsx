@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "../../../test/test-utils";
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
@@ -13,6 +13,24 @@ import type {
 } from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
+const originalMatchMedia = window.matchMedia;
+
+function mockSmallViewport(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("max-width") ? matches : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
 
 const mockPlayers: Player[] = [
   {
@@ -143,6 +161,14 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
   beforeEach(() => {
     // Reset any runtime request handlers we add during tests
     server.resetHandlers();
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia,
+    });
   });
 
   describe("Finish Point Button - Pending Stoppage Validation", () => {
@@ -885,12 +911,57 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(
         screen.getByRole("button", { name: /Select Players/i }),
       ).toBeInTheDocument();
+      expect(screen.getByText("Select Players")).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: /Select Strategy/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Select Strategy")).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: /Add Comment/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Add Comment")).toBeVisible();
+    });
+
+    it("hides ready-point setup labels on mobile while keeping accessible names", async () => {
+      mockSmallViewport(true);
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "ready",
+        players: [],
+        strategy: null,
+        comments: null,
+        pull: null,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Launch Pull/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Select Players/i }),
+      ).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /Select Strategy/i }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /Add Comment/i }),
       ).toBeInTheDocument();
+      expect(screen.queryByText("Select Players")).not.toBeInTheDocument();
+      expect(screen.queryByText("Select Strategy")).not.toBeInTheDocument();
+      expect(screen.queryByText("Add Comment")).not.toBeInTheDocument();
     });
   });
 });

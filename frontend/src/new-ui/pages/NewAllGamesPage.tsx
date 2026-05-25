@@ -2,9 +2,14 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -12,13 +17,17 @@ import Typography from "@mui/material/Typography";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
+import AddPlayersToRosterModal from "../../components/modals/AddPlayersToRosterModal";
 import CreateCompetitionModal from "../../components/modals/CreateCompetitionModal";
 import CreateGameModal from "../../components/modals/CreateGameModal";
 import EditCompetitionModal from "../../components/modals/EditCompetitionModal";
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
 import PermissionNotice from "../../components/shared/PermissionNotice";
-import { getCompetitions } from "../../services/competitions";
+import {
+  getCompetitionPlayers,
+  getCompetitions,
+} from "../../services/competitions";
 import { getAllGames } from "../../services/games";
 import type { CompetitionWithTeam } from "../../types";
 import { formatDate, formatDateTime } from "../../utils/dateFormatting";
@@ -30,11 +39,13 @@ import { useNewUiTeam } from "../team/useNewUiTeam";
 
 export default function NewAllGamesPage() {
   const auth = useAuth();
-  const { t, i18n } = useTranslation(["navigation", "games"]);
+  const { t, i18n } = useTranslation(["navigation", "games", "common"]);
   const [opponentSearch, setOpponentSearch] = useState("");
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
   const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
   const [editingCompetition, setEditingCompetition] =
+    useState<CompetitionWithTeam | null>(null);
+  const [rosterCompetition, setRosterCompetition] =
     useState<CompetitionWithTeam | null>(null);
   const {
     selectedTeam,
@@ -70,6 +81,17 @@ export default function NewAllGamesPage() {
         : queryKeys.competitionsByTeam(effectiveSelectedTeamId),
     queryFn: () => getCompetitions(effectiveSelectedTeamId),
     enabled: effectiveSelectedTeamId !== undefined,
+  });
+
+  const rosterCompetitionId = rosterCompetition?.id ?? 0;
+  const {
+    data: rosterPlayers = [],
+    isLoading: isLoadingRosterPlayers,
+    error: rosterPlayersError,
+  } = useQuery({
+    queryKey: queryKeys.competitionPlayers(rosterCompetitionId),
+    queryFn: () => getCompetitionPlayers(rosterCompetitionId),
+    enabled: canEditData && rosterCompetition !== null,
   });
 
   const dashboard = useMemo(
@@ -114,6 +136,7 @@ export default function NewAllGamesPage() {
       ? formatDate(value, i18n.resolvedLanguage)
       : formatDateTime(value, i18n.resolvedLanguage);
   };
+  const closeRosterDialog = () => setRosterCompetition(null);
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
@@ -246,6 +269,11 @@ export default function NewAllGamesPage() {
                 onEditCompetition={(editableGroup) =>
                   setEditingCompetition(editableGroup.competition)
                 }
+                onManageRoster={(editableGroup) => {
+                  if (editableGroup.competition) {
+                    setRosterCompetition(editableGroup.competition);
+                  }
+                }}
               />
             ))}
           </Stack>
@@ -270,6 +298,50 @@ export default function NewAllGamesPage() {
               onClose={() => setEditingCompetition(null)}
             />
           )}
+          {rosterCompetition && isLoadingRosterPlayers && (
+            <Dialog open onClose={closeRosterDialog} maxWidth="sm" fullWidth>
+              <DialogTitle>
+                {t("newUiPages.allGames.actions.manageRoster")}
+              </DialogTitle>
+              <DialogContent>
+                <Typography color="text.secondary">
+                  {t("common:action.loading")}
+                </Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={closeRosterDialog}>
+                  {t("common:action.cancel")}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+          {rosterCompetition && rosterPlayersError && (
+            <Dialog open onClose={closeRosterDialog} maxWidth="sm" fullWidth>
+              <DialogTitle>
+                {t("newUiPages.allGames.actions.manageRoster")}
+              </DialogTitle>
+              <DialogContent>
+                <Alert severity="error">{t("common:error.loading")}</Alert>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={closeRosterDialog}>
+                  {t("common:action.close")}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+          {rosterCompetition &&
+            !isLoadingRosterPlayers &&
+            !rosterPlayersError && (
+              <AddPlayersToRosterModal
+                key={rosterCompetition.id}
+                competitionId={rosterCompetition.id}
+                currentRosterIds={rosterPlayers.map((player) => player.id)}
+                isOpen
+                onClose={closeRosterDialog}
+                teamId={rosterCompetition.team_id}
+              />
+            )}
         </>
       )}
     </Container>

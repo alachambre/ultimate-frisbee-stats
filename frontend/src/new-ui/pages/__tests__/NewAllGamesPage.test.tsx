@@ -373,6 +373,38 @@ describe("NewAllGamesPage", () => {
           },
         ])
       ),
+      http.get(`${BASE_URL}/competitions/10/players`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Alex",
+            number: 7,
+            gender: "M",
+            team_id: 1,
+            created_at: "2026-01-01T00:00:00Z",
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/teams/1/players`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Alex",
+            number: 7,
+            gender: "M",
+            team_id: 1,
+            created_at: "2026-01-01T00:00:00Z",
+          },
+          {
+            id: 2,
+            name: "Camille",
+            number: 11,
+            gender: "W",
+            team_id: 1,
+            created_at: "2026-01-01T00:00:00Z",
+          },
+        ])
+      ),
       http.get(`${BASE_URL}/games`, () => HttpResponse.json([]))
     );
 
@@ -383,15 +415,33 @@ describe("NewAllGamesPage", () => {
       name: "Edit Spring Cup competition",
     });
     expect(editButton).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Manage Spring Cup roster" })
-    ).toHaveAttribute("href", "/competitions/10");
+    const rosterButton = screen.getByRole("button", {
+      name: "Manage Spring Cup roster",
+    });
+    expect(rosterButton).toBeInTheDocument();
 
     await user.click(editButton);
 
     expect(
       screen.getByRole("heading", { name: "Edit Competition" })
     ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Cancel/i }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Edit Competition" })
+      ).not.toBeInTheDocument()
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Manage Spring Cup roster" })
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Manage Competition Roster",
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Alex")).toBeInTheDocument();
   });
 
   it("does not show privileged competition actions without edit access", async () => {
@@ -432,7 +482,7 @@ describe("NewAllGamesPage", () => {
       screen.queryByRole("button", { name: "Edit Spring Cup competition" })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: "Manage Spring Cup roster" })
+      screen.queryByRole("button", { name: "Manage Spring Cup roster" })
     ).not.toBeInTheDocument();
   });
 });

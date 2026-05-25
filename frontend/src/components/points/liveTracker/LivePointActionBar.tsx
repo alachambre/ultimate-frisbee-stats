@@ -10,7 +10,8 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { Box, Button, Tooltip } from "@mui/material";
-import type { SxProps, Theme } from "@mui/material/styles";
+import { useTheme, type SxProps, type Theme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTranslation } from "react-i18next";
 import type { MouseEvent, ReactNode } from "react";
 import type { PointWithPlayers } from "../../../types";
@@ -53,6 +54,8 @@ export function LivePointActionBar({
   variant = "classic",
 }: LivePointActionBarProps) {
   const { t } = useTranslation(["points", "common"]);
+  const theme = useTheme();
+  const isMobileActionLayout = useMediaQuery(theme.breakpoints.down("sm"));
   const accentOutlinedSx: SxProps<Theme> = {
     borderColor: (theme) =>
       currentPoint.starting_on_offense
@@ -135,7 +138,6 @@ export function LivePointActionBar({
       onClick,
       disabled = false,
       color,
-      mobileLabel,
       showLabelOnMobile = false,
     }: {
       actionKey: string;
@@ -144,10 +146,9 @@ export function LivePointActionBar({
       onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
       disabled?: boolean;
       color?: "success" | "warning";
-      mobileLabel?: string;
       showLabelOnMobile?: boolean;
     }) => {
-      const resolvedMobileLabel = mobileLabel ?? label;
+      const shouldRenderLabel = showLabelOnMobile || !isMobileActionLayout;
 
       return (
         <Tooltip key={actionKey} title={label}>
@@ -168,26 +169,11 @@ export function LivePointActionBar({
               <Box
                 component="span"
                 sx={{
-                  display: {
-                    xs: showLabelOnMobile ? "inline" : "none",
-                    sm: "inline",
-                  },
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
               >
-                <Box
-                  component="span"
-                  sx={{ display: { xs: "none", sm: "inline" } }}
-                >
-                  {label}
-                </Box>
-                <Box
-                  component="span"
-                  sx={{ display: { xs: "inline", sm: "none" } }}
-                >
-                  {resolvedMobileLabel}
-                </Box>
+                {shouldRenderLabel ? label : null}
               </Box>
             </Button>
           </Box>
@@ -278,29 +264,23 @@ export function LivePointActionBar({
         renderFieldSecondaryButton({
           actionKey: "manage-players",
           label: readyPlayerActionLabel,
-          mobileLabel: t("points:tracker.playersShort", "Players"),
           icon: <GroupIcon />,
           onClick: onOpenManagePlayers,
           disabled: !onOpenManagePlayers,
-          showLabelOnMobile: true,
         }),
         renderFieldSecondaryButton({
           actionKey: "strategy",
           label: strategyActionLabel,
-          mobileLabel: t("points:tracker.strategyShort", "Strategy"),
           icon: <EmojiObjectsIcon />,
           onClick: onOpenStrategy,
           disabled: !onOpenStrategy,
-          showLabelOnMobile: true,
         }),
         renderFieldSecondaryButton({
           actionKey: "comment",
           label: commentActionLabel,
-          mobileLabel: t("points:tracker.commentShort", "Comment"),
           icon: <CommentIcon />,
           onClick: onOpenComment,
           disabled: !onOpenComment,
-          showLabelOnMobile: true,
         }),
       );
     }
