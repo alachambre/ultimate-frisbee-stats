@@ -513,6 +513,8 @@ export default function LivePointTracker({
                   setMoreActionsAnchor(event.currentTarget)
                 }
                 onOpenManagePlayers={() => setIsManagePlayersDialogOpen(true)}
+                onOpenStrategy={() => setIsStrategyDialogOpen(true)}
+                onOpenComment={() => setIsCommentDialogOpen(true)}
                 variant={variant}
               />
             )}

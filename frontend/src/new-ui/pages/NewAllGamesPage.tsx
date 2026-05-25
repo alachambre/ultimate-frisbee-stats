@@ -14,12 +14,14 @@ import { useTranslation } from "react-i18next";
 import { shouldEnforcePermissions, useAuth } from "../../auth";
 import CreateCompetitionModal from "../../components/modals/CreateCompetitionModal";
 import CreateGameModal from "../../components/modals/CreateGameModal";
+import EditCompetitionModal from "../../components/modals/EditCompetitionModal";
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
 import PermissionNotice from "../../components/shared/PermissionNotice";
 import { getCompetitions } from "../../services/competitions";
 import { getAllGames } from "../../services/games";
-import { formatDateTime } from "../../utils/dateFormatting";
+import type { CompetitionWithTeam } from "../../types";
+import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 import { queryKeys } from "../../utils/queryKeys";
 import { buildNewGamesDashboard } from "../games/buildNewGamesDashboard";
 import NewCompetitionGamesAccordion from "../games/NewCompetitionGamesAccordion";
@@ -32,6 +34,8 @@ export default function NewAllGamesPage() {
   const [opponentSearch, setOpponentSearch] = useState("");
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
   const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
+  const [editingCompetition, setEditingCompetition] =
+    useState<CompetitionWithTeam | null>(null);
   const {
     selectedTeam,
     selectedTeamId,
@@ -101,10 +105,15 @@ export default function NewAllGamesPage() {
     : effectiveSelectedTeamId === undefined
       ? t("newUiPages.allGames.empty.public")
       : t("newUiPages.allGames.empty.team");
-  const formatCompetitionDate = (value: string | null) =>
-    value
-      ? formatDateTime(value, i18n.resolvedLanguage)
-      : t("games:detail.dateNotSet");
+  const formatCompetitionDate = (value: string | null) => {
+    if (!value) {
+      return t("games:detail.dateNotSet");
+    }
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? formatDate(value, i18n.resolvedLanguage)
+      : formatDateTime(value, i18n.resolvedLanguage);
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
@@ -209,15 +218,34 @@ export default function NewAllGamesPage() {
           <Stack spacing={2}>
             {dashboard.competitionGroups.map((group) => (
               <NewCompetitionGamesAccordion
+                canManageCompetition={canEditData}
                 formatDate={formatCompetitionDate}
                 group={group}
                 key={group.competitionId}
                 labels={{
+                  editCompetition: t(
+                    "newUiPages.allGames.actions.editCompetition"
+                  ),
+                  editCompetitionAria: t(
+                    "newUiPages.allGames.actions.editCompetitionAria",
+                    { competitionName: group.competitionName }
+                  ),
+                  emptyCompetition: t(
+                    "newUiPages.allGames.empty.competition"
+                  ),
                   live: t("newUiPages.allGames.summary.live"),
+                  manageRoster: t("newUiPages.allGames.actions.manageRoster"),
+                  manageRosterAria: t(
+                    "newUiPages.allGames.actions.manageRosterAria",
+                    { competitionName: group.competitionName }
+                  ),
                   upcoming: t("newUiPages.allGames.summary.upcoming"),
                   completed: t("newUiPages.allGames.summary.completed"),
                   results: t("newUiPages.allGames.summary.results"),
                 }}
+                onEditCompetition={(editableGroup) =>
+                  setEditingCompetition(editableGroup.competition)
+                }
               />
             ))}
           </Stack>
@@ -234,6 +262,14 @@ export default function NewAllGamesPage() {
             isOpen={isCreateCompetitionOpen}
             onClose={() => setIsCreateCompetitionOpen(false)}
           />
+          {editingCompetition && (
+            <EditCompetitionModal
+              key={editingCompetition.id}
+              competition={editingCompetition}
+              isOpen={editingCompetition !== null}
+              onClose={() => setEditingCompetition(null)}
+            />
+          )}
         </>
       )}
     </Container>

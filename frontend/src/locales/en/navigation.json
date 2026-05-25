@@ -41,6 +41,10 @@
       "actions": {
         "newGame": "New game",
         "newCompetition": "New competition",
+        "editCompetition": "Edit competition",
+        "editCompetitionAria": "Edit {{competitionName}} competition",
+        "manageRoster": "Manage roster",
+        "manageRosterAria": "Manage {{competitionName}} roster",
         "go": "Go",
         "review": "Review"
       },
@@ -69,6 +73,7 @@
         "team": "No games for this team yet.",
         "public": "No public games are available yet.",
         "filtered": "No games match this opponent search.",
+        "competition": "No games in this competition yet.",
         "section": "Nothing to show here right now."
       },
       "loading": "Loading games...",

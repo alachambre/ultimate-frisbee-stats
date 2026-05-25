@@ -854,5 +854,43 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         screen.queryByRole("button", { name: /Half time/i }),
       ).not.toBeInTheDocument();
     });
+
+    it("keeps launch pull as the primary ready-point action with setup actions below", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "ready",
+        players: [],
+        strategy: null,
+        comments: null,
+        pull: null,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Launch Pull/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Select Players/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Select Strategy/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Add Comment/i }),
+      ).toBeInTheDocument();
+    });
   });
 });

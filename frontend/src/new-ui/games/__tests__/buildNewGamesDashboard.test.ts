@@ -34,8 +34,8 @@ function competition(
     team_name: overrides.team_name ?? "Monkey Stats",
     name: overrides.name ?? `Competition ${overrides.id}`,
     description: null,
-    start_date: "2026-05-01",
-    end_date: "2026-05-31",
+    start_date: overrides.start_date ?? "2026-05-01",
+    end_date: overrides.end_date ?? "2026-05-31",
     status: "ongoing",
     created_at: "2026-05-01T00:00:00Z",
   };
@@ -278,6 +278,83 @@ describe("buildNewGamesDashboard", () => {
         }),
       })
     );
+  });
+
+  it("includes selected-team competitions that do not have games", () => {
+    const emptyCompetition = competition({
+      id: 20,
+      team_id: 1,
+      name: "Fresh Tournament",
+      start_date: "2026-06-01",
+      end_date: "2026-06-02",
+    });
+    const dashboard = buildNewGamesDashboard({
+      games: [game({ id: 1, competition_id: 10, status: "ready" })],
+      selectedTeamId: 1,
+      teamCompetitions: [
+        competition({ id: 10, team_id: 1, name: "Spring Cup" }),
+        emptyCompetition,
+      ],
+    });
+
+    expect(
+      dashboard.competitionGroups.map((group) => group.competitionId)
+    ).toContain(20);
+    expect(
+      dashboard.competitionGroups.find((group) => group.competitionId === 20)
+    ).toEqual(
+      expect.objectContaining({
+        competition: emptyCompetition,
+        competitionName: "Fresh Tournament",
+        games: [],
+        startDate: "2026-06-01",
+        endDate: "2026-06-02",
+        summary: {
+          live: 0,
+          upcoming: 0,
+          completed: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+        },
+      })
+    );
+    expect(dashboard.summary.totalGames).toBe(1);
+    expect(dashboard.summary.competitions).toBe(2);
+  });
+
+  it("does not include empty competitions during opponent search", () => {
+    const dashboard = buildNewGamesDashboard({
+      games: [
+        game({
+          id: 1,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          opponent_name: "Blue Tigers",
+          status: "ready",
+        }),
+        game({
+          id: 2,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          opponent_name: "Red Hawks",
+          status: "ready",
+        }),
+      ],
+      selectedTeamId: 1,
+      teamCompetitions: [
+        competition({ id: 10, team_id: 1, name: "Spring Cup" }),
+        competition({ id: 20, team_id: 1, name: "Empty Cup" }),
+      ],
+      opponentSearch: "blue",
+    });
+
+    expect(
+      dashboard.competitionGroups.map((group) => group.competitionId)
+    ).toEqual([10]);
+    expect(dashboard.competitionGroups[0].games.map((item) => item.id)).toEqual([
+      1,
+    ]);
   });
 
   it("filters competition groups by opponent search", () => {

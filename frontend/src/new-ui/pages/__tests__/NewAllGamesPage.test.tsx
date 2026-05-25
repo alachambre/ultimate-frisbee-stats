@@ -137,7 +137,7 @@ describe("NewAllGamesPage", () => {
     expect(screen.getByText("Results")).toBeInTheDocument();
     expect(screen.queryByText("Record")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Spring Cup/i })
+      screen.getByRole("heading", { name: "Spring Cup" })
     ).toBeInTheDocument();
     expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
     expect(screen.getByText("Red Hawks")).toBeInTheDocument();
@@ -177,6 +177,17 @@ describe("NewAllGamesPage", () => {
             description: null,
             start_date: "2026-05-01",
             end_date: "2026-05-31",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+          {
+            id: 20,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Empty Cup",
+            description: null,
+            start_date: "2026-06-01",
+            end_date: "2026-06-02",
             status: "ongoing",
             created_at: "2026-05-01T00:00:00Z",
           },
@@ -222,6 +233,7 @@ describe("NewAllGamesPage", () => {
 
     expect(await screen.findByText("Blue Tigers")).toBeInTheDocument();
     expect(screen.getByText("Red Hawks")).toBeInTheDocument();
+    expect(screen.getByText("Empty Cup")).toBeInTheDocument();
 
     await user.type(
       screen.getByRole("textbox", { name: /Opponent search/i }),
@@ -230,6 +242,7 @@ describe("NewAllGamesPage", () => {
 
     expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
     expect(screen.queryByText("Red Hawks")).not.toBeInTheDocument();
+    expect(screen.queryByText("Empty Cup")).not.toBeInTheDocument();
   });
 
   it("shows public fallback games when teams cannot be loaded", async () => {
@@ -283,5 +296,143 @@ describe("NewAllGamesPage", () => {
     expect(
       await screen.findByText("No games for this team yet.")
     ).toBeInTheDocument();
+  });
+
+  it("shows selected-team competitions that have no games", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, () =>
+        HttpResponse.json([
+          {
+            id: 10,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Fresh Tournament",
+            description: null,
+            start_date: "2026-06-01",
+            end_date: "2026-06-02",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json([]))
+    );
+
+    renderPage();
+
+    expect(await screen.findByText("Fresh Tournament")).toBeInTheDocument();
+    expect(
+      screen.queryByText("No games for this team yet.")
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("Fresh Tournament"));
+
+    expect(
+      screen.getByText("No games in this competition yet.")
+    ).toBeInTheDocument();
+  });
+
+  it("shows competition edit and roster actions for users with edit access", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, () =>
+        HttpResponse.json([
+          {
+            id: 10,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Spring Cup",
+            description: null,
+            start_date: "2026-05-01",
+            end_date: "2026-05-31",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json([]))
+    );
+
+    renderPage();
+
+    expect(await screen.findByText("Spring Cup")).toBeInTheDocument();
+    const editButton = screen.getByRole("button", {
+      name: "Edit Spring Cup competition",
+    });
+    expect(editButton).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Manage Spring Cup roster" })
+    ).toHaveAttribute("href", "/competitions/10");
+
+    await user.click(editButton);
+
+    expect(
+      screen.getByRole("heading", { name: "Edit Competition" })
+    ).toBeInTheDocument();
+  });
+
+  it("does not show privileged competition actions without edit access", async () => {
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, () =>
+        HttpResponse.json([
+          {
+            id: 10,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Spring Cup",
+            description: null,
+            start_date: "2026-05-01",
+            end_date: "2026-05-31",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json([]))
+    );
+
+    renderPage({ role: "public" });
+
+    expect(await screen.findByText("Spring Cup")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit Spring Cup competition" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Manage Spring Cup roster" })
+    ).not.toBeInTheDocument();
   });
 });

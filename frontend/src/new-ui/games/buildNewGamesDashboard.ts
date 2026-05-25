@@ -30,6 +30,7 @@ export interface NewGamesCompetitionGroupSummary {
 export interface NewGamesCompetitionGroup {
   competitionId: number;
   competitionName: string;
+  competition: CompetitionWithTeam | null;
   startDate: string | null;
   endDate: string | null;
   nextRelevantDate: string | null;
@@ -119,7 +120,7 @@ function filterByOpponentSearch(
   games: GameWithScore[],
   opponentSearch?: string
 ): GameWithScore[] {
-  const normalizedSearch = opponentSearch?.trim().toLocaleLowerCase();
+  const normalizedSearch = normalizeOpponentSearch(opponentSearch);
   if (!normalizedSearch) {
     return games;
   }
@@ -127,6 +128,10 @@ function filterByOpponentSearch(
   return games.filter((game) =>
     game.opponent_name.toLocaleLowerCase().includes(normalizedSearch)
   );
+}
+
+function normalizeOpponentSearch(opponentSearch?: string): string {
+  return opponentSearch?.trim().toLocaleLowerCase() ?? "";
 }
 
 function buildScopedGames({
@@ -198,14 +203,22 @@ function sortCompetitionGroups(
 function buildCompetitionGroups({
   games,
   teamCompetitions,
+  includeEmptyCompetitions,
 }: {
   games: GameWithScore[];
   teamCompetitions?: CompetitionWithTeam[];
+  includeEmptyCompetitions: boolean;
 }): NewGamesCompetitionGroup[] {
   const competitionById = new Map(
     (teamCompetitions ?? []).map((competition) => [competition.id, competition])
   );
   const gamesByCompetitionId = new Map<number, GameWithScore[]>();
+
+  if (includeEmptyCompetitions) {
+    competitionById.forEach((_, competitionId) => {
+      gamesByCompetitionId.set(competitionId, []);
+    });
+  }
 
   games.forEach((game) => {
     const competitionGames = gamesByCompetitionId.get(game.competition_id) ?? [];
@@ -225,6 +238,7 @@ function buildCompetitionGroups({
 
       return {
         competitionId,
+        competition: competition ?? null,
         competitionName:
           competition?.name ?? sortedGames[0]?.competition_name ?? "Competition",
         startDate: competition?.start_date ?? null,
@@ -243,6 +257,7 @@ export function buildNewGamesDashboard(
   args: BuildNewGamesDashboardArgs
 ): NewGamesDashboardView {
   const { selectedTeamId, teamCompetitions } = args;
+  const hasOpponentSearch = Boolean(normalizeOpponentSearch(args.opponentSearch));
   const scopedGames = filterByOpponentSearch(
     buildScopedGames(args),
     args.opponentSearch
@@ -259,6 +274,7 @@ export function buildNewGamesDashboard(
   const competitionGroups = buildCompetitionGroups({
     games: scopedGames,
     teamCompetitions,
+    includeEmptyCompetitions: selectedTeamId !== undefined && !hasOpponentSearch,
   });
 
   const wins = recentGames.filter(
