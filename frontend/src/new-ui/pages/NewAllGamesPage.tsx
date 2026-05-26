@@ -5,6 +5,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -142,36 +143,82 @@ export default function NewAllGamesPage() {
   const closeRosterDialog = () => setRosterCompetition(null);
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 5 } }}>
       <Stack spacing={3}>
         <Box
-          sx={{
+          sx={(theme) => ({
             alignItems: { xs: "stretch", md: "flex-start" },
+            borderBottom: {
+              xs: `1px solid ${theme.palette.divider}`,
+              md: "none",
+            },
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
-            gap: 2,
+            gap: { xs: 1.5, md: 2 },
             justifyContent: "space-between",
-          }}
+            pb: { xs: 2, md: 0 },
+          })}
         >
-          <Box sx={{ maxWidth: 720 }}>
-            <Typography color="text.secondary" variant="overline">
+          <Stack spacing={0.75} sx={{ maxWidth: 720 }}>
+            <Typography
+              color="text.secondary"
+              sx={{ display: { xs: "none", sm: "block" }, lineHeight: 1.2 }}
+              variant="overline"
+            >
               {selectedTeam && effectiveSelectedTeamId !== undefined
                 ? t("newUiPages.allGames.selectedTeamEyebrow", {
                     teamName: selectedTeam.name,
                   })
                 : t("newUiPages.allGames.globalEyebrow")}
             </Typography>
-            <Typography component="h1" gutterBottom variant="h4">
-              {t("newUiPages.allGames.heading")}
-            </Typography>
-            <Typography color="text.secondary" variant="body1">
+            <Stack
+              alignItems="center"
+              direction="row"
+              justifyContent={{ xs: "space-between", sm: "flex-start" }}
+              spacing={1}
+            >
+              <Typography
+                component="h1"
+                fontWeight={800}
+                sx={{ lineHeight: 1.1 }}
+                variant="h4"
+              >
+                {t("newUiPages.allGames.heading")}
+              </Typography>
+              {selectedTeam && effectiveSelectedTeamId !== undefined && (
+                <Chip
+                  label={selectedTeam.name}
+                  size="small"
+                  sx={{ flexShrink: 0 }}
+                  variant="outlined"
+                />
+              )}
+            </Stack>
+            <Typography
+              color="text.secondary"
+              sx={{ display: { xs: "none", sm: "block" } }}
+              variant="body1"
+            >
               {isPublicFallback
                 ? t("newUiPages.allGames.publicNotice")
                 : t("newUiPages.allGames.copy")}
             </Typography>
-          </Box>
+          </Stack>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{
+              alignSelf: { md: "flex-start" },
+              width: { xs: "100%", md: "auto" },
+              "& .MuiButton-root": {
+                flex: { sm: 1, md: "initial" },
+                minWidth: { xs: 0, md: 168 },
+                px: { xs: 1, sm: 2 },
+                whiteSpace: "nowrap",
+              },
+            }}
+          >
             {canEditData && (
               <>
                 <Button

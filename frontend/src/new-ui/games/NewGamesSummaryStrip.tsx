@@ -31,10 +31,10 @@ export default function NewGamesSummaryStrip({
   return (
     <Box
       sx={{
-        display: "grid",
+        display: { xs: "none", sm: "grid" },
         gap: 1.5,
         gridTemplateColumns: {
-          xs: "repeat(2, minmax(0, 1fr))",
+          sm: "repeat(2, minmax(0, 1fr))",
           md: "repeat(4, minmax(0, 1fr))",
         },
       }}
