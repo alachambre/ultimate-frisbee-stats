@@ -1,31 +1,57 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
+import AddPlayersToRosterModal from "../../components/modals/AddPlayersToRosterModal";
+import CreateCompetitionModal from "../../components/modals/CreateCompetitionModal";
+import CreateGameModal from "../../components/modals/CreateGameModal";
+import EditCompetitionModal from "../../components/modals/EditCompetitionModal";
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
 import PermissionNotice from "../../components/shared/PermissionNotice";
-import { getCompetitions } from "../../services/competitions";
+import {
+  getCompetitionPlayers,
+  getCompetitions,
+} from "../../services/competitions";
 import { getAllGames } from "../../services/games";
+import type { CompetitionWithTeam } from "../../types";
+import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 import { queryKeys } from "../../utils/queryKeys";
-import { buildNewGamesDashboard } from "../games/buildNewGamesDashboard";
-import NewGamesSection from "../games/NewGamesSection";
+import {
+  buildNewGamesDashboard,
+  isCompetitionOpenForNewGames,
+} from "../games/buildNewGamesDashboard";
+import NewCompetitionGamesAccordion from "../games/NewCompetitionGamesAccordion";
 import NewGamesSummaryStrip from "../games/NewGamesSummaryStrip";
 import { useNewUiTeam } from "../team/useNewUiTeam";
 
 export default function NewAllGamesPage() {
   const auth = useAuth();
-  const { t } = useTranslation("navigation");
+  const { t, i18n } = useTranslation(["navigation", "games", "common"]);
+  const [opponentSearch, setOpponentSearch] = useState("");
+  const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
+  const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
+  const [editingCompetition, setEditingCompetition] =
+    useState<CompetitionWithTeam | null>(null);
+  const [rosterCompetition, setRosterCompetition] =
+    useState<CompetitionWithTeam | null>(null);
   const {
     selectedTeam,
     selectedTeamId,
@@ -38,8 +64,6 @@ export default function NewAllGamesPage() {
     auth.isLoading
   );
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
-  const canViewStatistics =
-    !shouldProtectUi || auth.capabilities.canViewStatistics;
   const effectiveSelectedTeamId = teamsError ? undefined : selectedTeamId;
 
   const {
@@ -64,14 +88,26 @@ export default function NewAllGamesPage() {
     enabled: effectiveSelectedTeamId !== undefined,
   });
 
+  const rosterCompetitionId = rosterCompetition?.id ?? 0;
+  const {
+    data: rosterPlayers = [],
+    isLoading: isLoadingRosterPlayers,
+    error: rosterPlayersError,
+  } = useQuery({
+    queryKey: queryKeys.competitionPlayers(rosterCompetitionId),
+    queryFn: () => getCompetitionPlayers(rosterCompetitionId),
+    enabled: canEditData && rosterCompetition !== null,
+  });
+
   const dashboard = useMemo(
     () =>
       buildNewGamesDashboard({
         games,
         selectedTeamId: effectiveSelectedTeamId,
         teamCompetitions,
+        opponentSearch,
       }),
-    [effectiveSelectedTeamId, games, teamCompetitions]
+    [effectiveSelectedTeamId, games, opponentSearch, teamCompetitions]
   );
 
   const isLoading =
@@ -91,65 +127,133 @@ export default function NewAllGamesPage() {
 
   const isPublicFallback =
     !canLoadTeams || Boolean(teamsError) || effectiveSelectedTeamId === undefined;
+  const emptyMessage = opponentSearch.trim()
+    ? t("newUiPages.allGames.empty.filtered")
+    : effectiveSelectedTeamId === undefined
+      ? t("newUiPages.allGames.empty.public")
+      : t("newUiPages.allGames.empty.team");
+  const formatCompetitionDate = (value: string | null) => {
+    if (!value) {
+      return t("games:detail.dateNotSet");
+    }
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? formatDate(value, i18n.resolvedLanguage)
+      : formatDateTime(value, i18n.resolvedLanguage);
+  };
+  const closeRosterDialog = () => setRosterCompetition(null);
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 5 } }}>
       <Stack spacing={3}>
         <Box
-          sx={{
+          sx={(theme) => ({
             alignItems: { xs: "stretch", md: "flex-start" },
+            borderBottom: {
+              xs: `1px solid ${theme.palette.divider}`,
+              md: "none",
+            },
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
-            gap: 2,
+            gap: { xs: 1.5, md: 2 },
             justifyContent: "space-between",
-          }}
+            pb: { xs: 2, md: 0 },
+          })}
         >
-          <Box sx={{ maxWidth: 720 }}>
-            <Typography color="text.secondary" variant="overline">
+          <Stack spacing={0.75} sx={{ maxWidth: 720 }}>
+            <Typography
+              color="text.secondary"
+              sx={{ display: { xs: "none", sm: "block" }, lineHeight: 1.2 }}
+              variant="overline"
+            >
               {selectedTeam && effectiveSelectedTeamId !== undefined
                 ? t("newUiPages.allGames.selectedTeamEyebrow", {
                     teamName: selectedTeam.name,
                   })
                 : t("newUiPages.allGames.globalEyebrow")}
             </Typography>
-            <Typography component="h1" gutterBottom variant="h4">
-              {t("newUiPages.allGames.heading")}
-            </Typography>
-            <Typography color="text.secondary" variant="body1">
+            <Stack
+              alignItems="center"
+              direction="row"
+              justifyContent={{ xs: "space-between", sm: "flex-start" }}
+              spacing={1}
+            >
+              <Typography
+                component="h1"
+                fontWeight={800}
+                sx={{ lineHeight: 1.1 }}
+                variant="h4"
+              >
+                {t("newUiPages.allGames.heading")}
+              </Typography>
+              {selectedTeam && effectiveSelectedTeamId !== undefined && (
+                <Chip
+                  label={selectedTeam.name}
+                  size="small"
+                  sx={{ flexShrink: 0 }}
+                  variant="outlined"
+                />
+              )}
+            </Stack>
+            <Typography
+              color="text.secondary"
+              sx={{ display: { xs: "none", sm: "block" } }}
+              variant="body1"
+            >
               {isPublicFallback
                 ? t("newUiPages.allGames.publicNotice")
                 : t("newUiPages.allGames.copy")}
             </Typography>
-          </Box>
+          </Stack>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{
+              alignSelf: { md: "flex-start" },
+              width: { xs: "100%", md: "auto" },
+              "& .MuiButton-root": {
+                flex: { sm: 1, md: "initial" },
+                minWidth: { xs: 0, md: 168 },
+                px: { xs: 1, sm: 2 },
+                whiteSpace: "nowrap",
+              },
+            }}
+          >
             {canEditData && (
-              <Button
-                component={Link}
-                startIcon={<PlayArrowIcon />}
-                to="/record"
-                variant="contained"
-              >
-                {t("newUiPages.allGames.actions.record")}
-              </Button>
-            )}
-            <Button
-              component={Link}
-              startIcon={<RadioButtonCheckedIcon />}
-              to="/live"
-              variant="outlined"
-            >
-              {t("newUiPages.allGames.actions.live")}
-            </Button>
-            {canViewStatistics && effectiveSelectedTeamId !== undefined && (
-              <Button
-                component={Link}
-                startIcon={<BarChartIcon />}
-                to={`/statistics?teamId=${effectiveSelectedTeamId}`}
-                variant="outlined"
-              >
-                {t("newUiPages.allGames.actions.statistics")}
-              </Button>
+              <>
+                <Button
+                  onClick={() => setIsCreateGameOpen(true)}
+                  startIcon={<AddIcon />}
+                  sx={(theme) => ({
+                    bgcolor: theme.colors.newUi.primary,
+                    color: theme.palette.common.white,
+                    "&:hover": {
+                      bgcolor: theme.colors.newUi.primary,
+                    },
+                  })}
+                  type="button"
+                  variant="contained"
+                >
+                  {t("newUiPages.allGames.actions.newGame")}
+                </Button>
+                <Button
+                  onClick={() => setIsCreateCompetitionOpen(true)}
+                  startIcon={<AddIcon />}
+                  sx={(theme) => ({
+                    borderColor: theme.colors.newUi.primaryBorder,
+                    color: theme.colors.newUi.primary,
+                    "&:hover": {
+                      bgcolor: alpha(theme.colors.newUi.primary, 0.08),
+                      borderColor: theme.colors.newUi.primary,
+                    },
+                  })}
+                  type="button"
+                  variant="outlined"
+                >
+                  {t("newUiPages.allGames.actions.newCompetition")}
+                </Button>
+              </>
             )}
           </Stack>
         </Box>
@@ -167,11 +271,36 @@ export default function NewAllGamesPage() {
             live: t("newUiPages.allGames.summary.live"),
             upcoming: t("newUiPages.allGames.summary.upcoming"),
             completed: t("newUiPages.allGames.summary.completed"),
-            record: t("newUiPages.allGames.summary.record"),
+            results: t("newUiPages.allGames.summary.results"),
           }}
         />
 
-        {dashboard.allGames.length === 0 ? (
+        <TextField
+          fullWidth
+          label={t("newUiPages.allGames.filters.opponent")}
+          onChange={(event) => setOpponentSearch(event.target.value)}
+          sx={(theme) => ({
+            "& label.Mui-focused": {
+              color: theme.colors.newUi.primary,
+            },
+            "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+              {
+                borderColor: theme.colors.newUi.primary,
+              },
+          })}
+          value={opponentSearch}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+
+        {dashboard.competitionGroups.length === 0 ? (
           <Box
             sx={(theme) => ({
               border: `1px dashed ${theme.palette.divider}`,
@@ -181,32 +310,118 @@ export default function NewAllGamesPage() {
               textAlign: "center",
             })}
           >
-            <Typography variant="body1">
-              {effectiveSelectedTeamId === undefined
-                ? t("newUiPages.allGames.empty.public")
-                : t("newUiPages.allGames.empty.team")}
-            </Typography>
+            <Typography variant="body1">{emptyMessage}</Typography>
           </Box>
         ) : (
-          <Stack spacing={4}>
-            <NewGamesSection
-              emptyLabel={t("newUiPages.allGames.empty.section")}
-              games={dashboard.liveGames}
-              title={t("newUiPages.allGames.sections.live")}
-            />
-            <NewGamesSection
-              emptyLabel={t("newUiPages.allGames.empty.section")}
-              games={dashboard.upcomingGames}
-              title={t("newUiPages.allGames.sections.upcoming")}
-            />
-            <NewGamesSection
-              emptyLabel={t("newUiPages.allGames.empty.section")}
-              games={dashboard.recentGames}
-              title={t("newUiPages.allGames.sections.recent")}
-            />
+          <Stack spacing={2}>
+            {dashboard.competitionGroups.map((group) => (
+              <NewCompetitionGamesAccordion
+                canEditData={canEditData}
+                canManageCompetition={canEditData}
+                formatDate={formatCompetitionDate}
+                group={group}
+                key={group.competitionId}
+                labels={{
+                  editCompetition: t(
+                    "newUiPages.allGames.actions.editCompetition"
+                  ),
+                  editCompetitionAria: t(
+                    "newUiPages.allGames.actions.editCompetitionAria",
+                    { competitionName: group.competitionName }
+                  ),
+                  emptyCompetition: t(
+                    "newUiPages.allGames.empty.competition"
+                  ),
+                  live: t("newUiPages.allGames.summary.live"),
+                  manageRoster: t("newUiPages.allGames.actions.manageRoster"),
+                  manageRosterAria: t(
+                    "newUiPages.allGames.actions.manageRosterAria",
+                    { competitionName: group.competitionName }
+                  ),
+                  upcoming: t("newUiPages.allGames.summary.upcoming"),
+                  completed: t("newUiPages.allGames.summary.completed"),
+                  results: t("newUiPages.allGames.summary.results"),
+                }}
+                onEditCompetition={(editableGroup) =>
+                  setEditingCompetition(editableGroup.competition)
+                }
+                onManageRoster={(editableGroup) => {
+                  if (editableGroup.competition) {
+                    setRosterCompetition(editableGroup.competition);
+                  }
+                }}
+              />
+            ))}
           </Stack>
         )}
       </Stack>
+
+      {canEditData && (
+        <>
+          <CreateGameModal
+            competitionFilter={isCompetitionOpenForNewGames}
+            isOpen={isCreateGameOpen}
+            onClose={() => setIsCreateGameOpen(false)}
+            teamId={effectiveSelectedTeamId}
+          />
+          <CreateCompetitionModal
+            isOpen={isCreateCompetitionOpen}
+            onClose={() => setIsCreateCompetitionOpen(false)}
+          />
+          {editingCompetition && (
+            <EditCompetitionModal
+              key={editingCompetition.id}
+              competition={editingCompetition}
+              isOpen={editingCompetition !== null}
+              onClose={() => setEditingCompetition(null)}
+            />
+          )}
+          {rosterCompetition && isLoadingRosterPlayers && (
+            <Dialog open onClose={closeRosterDialog} maxWidth="sm" fullWidth>
+              <DialogTitle>
+                {t("newUiPages.allGames.actions.manageRoster")}
+              </DialogTitle>
+              <DialogContent>
+                <Typography color="text.secondary">
+                  {t("common:action.loading")}
+                </Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={closeRosterDialog}>
+                  {t("common:action.cancel")}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+          {rosterCompetition && rosterPlayersError && (
+            <Dialog open onClose={closeRosterDialog} maxWidth="sm" fullWidth>
+              <DialogTitle>
+                {t("newUiPages.allGames.actions.manageRoster")}
+              </DialogTitle>
+              <DialogContent>
+                <Alert severity="error">{t("common:error.loading")}</Alert>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={closeRosterDialog}>
+                  {t("common:action.close")}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          )}
+          {rosterCompetition &&
+            !isLoadingRosterPlayers &&
+            !rosterPlayersError && (
+              <AddPlayersToRosterModal
+                key={rosterCompetition.id}
+                competitionId={rosterCompetition.id}
+                currentRosterIds={rosterPlayers.map((player) => player.id)}
+                isOpen
+                onClose={closeRosterDialog}
+                teamId={rosterCompetition.team_id}
+              />
+            )}
+        </>
+      )}
     </Container>
   );
 }

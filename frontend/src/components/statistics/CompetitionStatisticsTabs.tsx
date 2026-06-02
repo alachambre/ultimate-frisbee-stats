@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Alert, Box, Tab, Tabs, Typography } from "@mui/material";
+import { Alert, Box, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type {
   PlayerGameStats,
@@ -19,6 +19,7 @@ type TeamStatsScope = "team" | "competition" | "game";
 interface CompetitionStatisticsTabsProps {
   activeTab: CompetitionStatisticsTab;
   onTabChange: (tab: CompetitionStatisticsTab) => void;
+  summaryVariant?: "none" | "compact";
   teamStats?: TeamStatsBase;
   isLoadingTeamStats?: boolean;
   teamStatsError?: Error | null;
@@ -39,6 +40,11 @@ interface CompetitionStatisticsTabsProps {
 
 const TAB_ORDER: CompetitionStatisticsTab[] = ["team", "evolution", "strategies", "players"];
 
+interface SummaryItem {
+  label: string;
+  value: number;
+}
+
 function hasTeamStatsData(teamStats?: TeamStatsBase): boolean {
   return Boolean(teamStats && teamStats.total_completed_points > 0);
 }
@@ -54,9 +60,61 @@ function hasStrategyStatsData(strategyStats?: StrategyStatsBase): boolean {
   );
 }
 
+function CompactSummaryStrip({ items }: { items: SummaryItem[] }) {
+  const { t } = useTranslation("statistics");
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <Box
+      aria-label={t("workflow.tabSummary")}
+      sx={{
+        mb: 2,
+        overflowX: "auto",
+        pb: 0.5,
+      }}
+    >
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          minWidth: "max-content",
+        }}
+      >
+        {items.map((item) => (
+          <Box
+            key={item.label}
+            sx={{
+              alignItems: "baseline",
+              bgcolor: "background.paper",
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 2,
+              display: "flex",
+              gap: 0.75,
+              px: 1.25,
+              py: 0.75,
+            }}
+          >
+            <Typography component="span" fontWeight={800} variant="body2">
+              {item.value}
+            </Typography>
+            <Typography component="span" color="text.secondary" variant="caption">
+              {item.label}
+            </Typography>
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
+}
+
 export default function CompetitionStatisticsTabs({
   activeTab,
   onTabChange,
+  summaryVariant = "none",
   teamStats,
   isLoadingTeamStats = false,
   teamStatsError = null,
@@ -97,6 +155,74 @@ export default function CompetitionStatisticsTabs({
     ? activeTab
     : (TAB_ORDER.find((tab) => tabEnabledState[tab]) ?? "team");
 
+  const summaryItems = useMemo<SummaryItem[]>(() => {
+    if (summaryVariant !== "compact") {
+      return [];
+    }
+
+    if (visibleActiveTab === "team" && teamStats) {
+      return [
+        {
+          label: t("statistics:teamStats.totalPoints"),
+          value: teamStats.total_completed_points,
+        },
+        {
+          label: t("statistics:teamStats.offensePoints"),
+          value: teamStats.offense.points_started,
+        },
+        {
+          label: t("statistics:teamStats.defensePoints"),
+          value: teamStats.defense.points_started,
+        },
+      ];
+    }
+
+    if (visibleActiveTab === "evolution" && teamEvolution) {
+      return [
+        {
+          label: t("statistics:workflow.completedGames"),
+          value: teamEvolution.games.length,
+        },
+        {
+          label: t("statistics:workflow.omittedGames"),
+          value: teamEvolution.omitted_games_count,
+        },
+      ];
+    }
+
+    if (visibleActiveTab === "strategies" && strategyStats) {
+      return [
+        {
+          label: t("statistics:strategyStats.offenseStrategies"),
+          value: strategyStats.offense_strategies.length,
+        },
+        {
+          label: t("statistics:strategyStats.defenseStrategies"),
+          value: strategyStats.defense_strategies.length,
+        },
+      ];
+    }
+
+    if (visibleActiveTab === "players" && playerStats) {
+      return [
+        {
+          label: t("statistics:playerStats.playersCount"),
+          value: playerStats.length,
+        },
+      ];
+    }
+
+    return [];
+  }, [
+    playerStats,
+    strategyStats,
+    summaryVariant,
+    t,
+    teamEvolution,
+    teamStats,
+    visibleActiveTab,
+  ]);
+
   const renderNoData = () => (
     <Box sx={{ px: { xs: 0.5, sm: 1 }, py: 1 }}>
       <Typography variant="body2" color="text.secondary">
@@ -135,6 +261,8 @@ export default function CompetitionStatisticsTabs({
           )}
         </Tabs>
       </Box>
+
+      <CompactSummaryStrip items={summaryItems} />
 
       {visibleActiveTab === "team" &&
         (isLoadingTeamStats ? (

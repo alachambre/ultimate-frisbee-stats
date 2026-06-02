@@ -65,6 +65,14 @@ export default function NewTeamSelector() {
         label={t("navigation:team.selectedTeam")}
         labelId={labelId}
         onChange={handleTeamChange}
+        sx={(theme) => ({
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: theme.colors.newUi.primary,
+          },
+          "& .MuiSelect-icon": {
+            color: theme.colors.newUi.primary,
+          },
+        })}
         value={selectedTeamId ?? ""}
       >
         {teams.map((team) => (

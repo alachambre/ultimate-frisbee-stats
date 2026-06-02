@@ -9,9 +9,15 @@ import {
   LIVE_TRACKER_REFRESH_INTERVAL_MS,
 } from "../../utils/refreshIntervals";
 
+interface UseGameDetailPageDataOptions {
+  includeGameTurnovers?: boolean;
+  includeLiveState?: boolean;
+}
+
 export function useGameDetailPageData(
   gameId: string | undefined,
-  includeLiveStats = true
+  includeLiveStats = true,
+  options: UseGameDetailPageDataOptions = {}
 ) {
   const gameIdNumber = Number(gameId);
   const gameIdValid = Number.isFinite(gameIdNumber);
@@ -31,13 +37,14 @@ export function useGameDetailPageData(
         : GAME_DETAIL_REFRESH_INTERVAL_MS;
     },
   });
+  const shouldIncludeLiveState = options.includeLiveState ?? true;
 
   const { data: liveState } = useQuery({
     queryKey: queryKeys.gameLiveState(gameIdValid ? gameIdNumber : 0),
     queryFn: () => getGameLiveState(gameIdNumber),
-    enabled: gameIdValid && game?.status === "started",
+    enabled: shouldIncludeLiveState && gameIdValid && game?.status === "started",
     refetchInterval:
-      game?.status === "started"
+      shouldIncludeLiveState && game?.status === "started"
         ? LIVE_TRACKER_REFRESH_INTERVAL_MS
         : false,
     refetchIntervalInBackground: true,
@@ -49,9 +56,12 @@ export function useGameDetailPageData(
     enabled:
       gameIdValid &&
       Boolean(game) &&
-      Boolean(game?.halftime || game?.status === "ended"),
+      Boolean(
+        options.includeGameTurnovers || game?.halftime || game?.status === "ended"
+      ),
     refetchInterval:
-      game?.status === "started" && Boolean(game?.halftime)
+      game?.status === "started" &&
+      Boolean(options.includeGameTurnovers || game?.halftime)
         ? GAME_DETAIL_REFRESH_INTERVAL_MS
         : false,
   });

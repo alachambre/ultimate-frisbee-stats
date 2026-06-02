@@ -6,10 +6,76 @@ import type { PointWithPlayers } from "../../../types";
 
 interface LivePointContextCardsProps {
   currentPoint: PointWithPlayers;
+  variant?: "classic" | "field";
 }
 
-export function LivePointContextCards({ currentPoint }: LivePointContextCardsProps) {
+export function LivePointContextCards({
+  currentPoint,
+  variant = "classic",
+}: LivePointContextCardsProps) {
   const { t } = useTranslation(["points"]);
+
+  if (variant === "field") {
+    return (
+      <Box sx={{ display: "grid", gap: 1, mt: 2 }}>
+        {currentPoint.strategy && (
+          <Box
+            sx={{
+              alignItems: "center",
+              bgcolor: "action.hover",
+              borderRadius: 1,
+              display: "flex",
+              gap: 1,
+              px: 1.5,
+              py: 1,
+            }}
+          >
+            <EmojiObjectsIcon
+              fontSize="small"
+              sx={(theme) => ({ color: theme.colors.newUi.primary })}
+            />
+            <Typography variant="body2" fontWeight="medium">
+              {currentPoint.starting_on_offense
+                ? t("points:tracker.offense", "Offense")
+                : t("points:tracker.defense", "Defense")}
+              {" / "}
+              {currentPoint.strategy.name}
+            </Typography>
+          </Box>
+        )}
+
+        {currentPoint.comments && (
+          <Box
+            sx={{
+              bgcolor: "action.hover",
+              borderRadius: 1,
+              px: 1.5,
+              py: 1,
+            }}
+          >
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
+            >
+              <CommentIcon
+                fontSize="small"
+                sx={(theme) => ({ color: theme.colors.newUi.primary })}
+              />
+              <Typography variant="body2" fontWeight="medium">
+                {t("points:tracker.comment", "Comment")}
+              </Typography>
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ whiteSpace: "pre-wrap" }}
+            >
+              {currentPoint.comments}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -94,7 +160,11 @@ export function LivePointContextCards({ currentPoint }: LivePointContextCardsPro
               {t("points:tracker.comment", "Comment")}
             </Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ whiteSpace: "pre-wrap" }}
+          >
             {currentPoint.comments}
           </Typography>
         </Box>

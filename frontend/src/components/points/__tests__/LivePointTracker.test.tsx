@@ -1,27 +1,101 @@
-import { render, screen, waitFor } from "../../../test/test-utils";
-import { describe, it, expect, beforeEach } from "vitest";
+import { render, screen, waitFor, within } from "../../../test/test-utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { server } from "../../../test/setup";
 import LivePointTracker from "../LivePointTracker";
-import type { GameDetail, Player, PointWithPlayers, Stoppage, Halftime } from "../../../types";
+import type {
+  GameDetail,
+  Player,
+  PointWithPlayers,
+  Stoppage,
+  Halftime,
+  TurnoverWithPlayer,
+} from "../../../types";
 
 const BASE_URL = "http://localhost:8000";
+const originalMatchMedia = window.matchMedia;
+
+function mockSmallViewport(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("max-width") ? matches : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
 
 const mockPlayers: Player[] = [
-  { id: 1, name: "Alice", number: 10, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
-  { id: 2, name: "Bob", number: 20, gender: "M", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
-  { id: 3, name: "Charlie", number: 30, gender: "M", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
-  { id: 4, name: "Diana", number: 40, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
-  { id: 5, name: "Eve", number: 50, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
-  { id: 6, name: "Frank", number: 60, gender: "M", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
-  { id: 7, name: "Grace", number: 70, gender: "W", team_id: 1, created_at: "2024-01-01T00:00:00Z" },
+  {
+    id: 1,
+    name: "Alice",
+    number: 10,
+    gender: "W",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 2,
+    name: "Bob",
+    number: 20,
+    gender: "M",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 3,
+    name: "Charlie",
+    number: 30,
+    gender: "M",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 4,
+    name: "Diana",
+    number: 40,
+    gender: "W",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 5,
+    name: "Eve",
+    number: 50,
+    gender: "W",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 6,
+    name: "Frank",
+    number: 60,
+    gender: "M",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 7,
+    name: "Grace",
+    number: 70,
+    gender: "W",
+    team_id: 1,
+    created_at: "2024-01-01T00:00:00Z",
+  },
 ];
 
 const createMockGame = (
   status: "ready" | "started" | "ended" = "started",
   halftime: Halftime | null = null,
-  points: PointWithPlayers[] = []
+  points: PointWithPlayers[] = [],
 ): GameDetail => ({
   id: 1,
   competition_id: 1,
@@ -46,36 +120,83 @@ const createMockPoint = ({
   pointNumber,
   status = "running",
   players = mockPlayers,
+  startingOnOffense = true,
+  strategy = null,
+  comments = null,
+  pull = true,
 }: {
   id: number;
   pointNumber: number;
   status?: "ready" | "running" | "scored" | "completed";
   players?: Player[];
+  startingOnOffense?: boolean;
+  strategy?: PointWithPlayers["strategy"];
+  comments?: string | null;
+  pull?: boolean | null;
 }): PointWithPlayers => ({
   id,
   game_id: 1,
   point_number: pointNumber,
-  starting_on_offense: true,
+  starting_on_offense: startingOnOffense,
   won: null,
   field_side: null,
-  pull: true,
-  strategy_id: null,
-  comments: null,
+  pull,
+  strategy_id: strategy?.id ?? null,
+  comments,
   start_datetime: status === "ready" ? null : "2024-01-01T10:05:00Z",
-  end_datetime: status === "scored" || status === "completed" ? "2024-01-01T10:15:00Z" : null,
+  end_datetime:
+    status === "scored" || status === "completed"
+      ? "2024-01-01T10:15:00Z"
+      : null,
   status,
   created_at: "2024-01-01T10:05:00Z",
   players,
-  strategy: null,
+  strategy,
   duration_seconds: null,
 });
 
-const createMockRunningPoint = () => createMockPoint({ id: 1, pointNumber: 1, status: "running" });
+const createMockRunningPoint = () =>
+  createMockPoint({ id: 1, pointNumber: 1, status: "running" });
+
+const createMockTurnover = (
+  id: number,
+  timestamp: string,
+): TurnoverWithPlayer => ({
+  id,
+  point_id: 3,
+  player_id: null,
+  turnover_type: "other",
+  timestamp,
+  comments: null,
+  created_at: timestamp,
+  player: null,
+});
+
+const createMockStoppage = (
+  id: number,
+  timestamp: string,
+): Stoppage => ({
+  id,
+  point_id: 3,
+  stoppage_type: "call",
+  call_timestamp: timestamp,
+  resume_timestamp: null,
+  comments: null,
+  created_at: timestamp,
+});
 
 describe("LivePointTracker - Pending Stoppage Feature", () => {
   beforeEach(() => {
     // Reset any runtime request handlers we add during tests
     server.resetHandlers();
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia,
+    });
   });
 
   describe("Finish Point Button - Pending Stoppage Validation", () => {
@@ -90,7 +211,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -99,12 +220,14 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       // Wait for the component to load and queries to complete
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        const finishButton = screen.getByRole("button", {
+          name: /finish point/i,
+        });
         expect(finishButton).toBeInTheDocument();
         expect(finishButton).not.toBeDisabled();
       });
@@ -140,7 +263,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -149,11 +272,13 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        const finishButton = screen.getByRole("button", {
+          name: /finish point/i,
+        });
         expect(finishButton).toBeInTheDocument();
         expect(finishButton).not.toBeDisabled();
       });
@@ -181,7 +306,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -190,14 +315,18 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
         // Finish button should not be present when there's a pending call
-        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: /finish point/i }),
+        ).not.toBeInTheDocument();
         // Resume button should be present instead
-        expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /resume/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -231,7 +360,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -240,14 +369,18 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
         // Finish button should not be present when there are pending calls
-        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: /finish point/i }),
+        ).not.toBeInTheDocument();
         // Resume button should be present instead
-        expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /resume/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -281,7 +414,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -290,14 +423,18 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
         // Finish button should not be present even with resolved calls if there's any pending
-        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: /finish point/i }),
+        ).not.toBeInTheDocument();
         // Resume button should be present instead
-        expect(screen.getByRole("button", { name: /resume/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /resume/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -322,7 +459,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -331,12 +468,14 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
         // Finish button should not be present
-        expect(screen.queryByRole("button", { name: /finish point/i })).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: /finish point/i }),
+        ).not.toBeInTheDocument();
         // Resume button should be present instead
         const resumeButton = screen.getByRole("button", { name: /resume/i });
         expect(resumeButton).toBeInTheDocument();
@@ -353,7 +492,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -362,11 +501,13 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
-        const finishButton = screen.getByRole("button", { name: /finish point/i });
+        const finishButton = screen.getByRole("button", {
+          name: /finish point/i,
+        });
         expect(finishButton).toBeInTheDocument();
         expect(finishButton).not.toBeDisabled();
       });
@@ -383,11 +524,33 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={null}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       // Component should return null for non-started games
       expect(container.firstChild).toBeNull();
+    });
+
+    it("can render the shared shell for ready games when explicitly enabled", async () => {
+      const game = createMockGame("ready");
+
+      render(
+        <LivePointTracker
+          game={game}
+          activePoint={null}
+          players={mockPlayers}
+          renderWhenReady
+          teamId={1}
+        />,
+      );
+
+      expect(screen.getByText(/live point tracking/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /start point/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /half time/i }),
+      ).not.toBeInTheDocument();
     });
 
     it("renders start point button when no active point", async () => {
@@ -399,12 +562,16 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={null}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /start point/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /half time/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /start point/i }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /half time/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -422,7 +589,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={null}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       expect(await screen.findByText("Men")).toBeInTheDocument();
@@ -445,11 +612,13 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={null}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /half time/i })).toBeDisabled();
+        expect(
+          screen.getByRole("button", { name: /half time/i }),
+        ).toBeDisabled();
       });
     });
 
@@ -463,14 +632,18 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={null}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
-      const halfTimeButton = await screen.findByRole("button", { name: /half time/i });
+      const halfTimeButton = await screen.findByRole("button", {
+        name: /half time/i,
+      });
       await user.click(halfTimeButton);
 
       expect(screen.getByText(/record half time\?/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /confirm/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /confirm/i }),
+      ).toBeInTheDocument();
     });
 
     it("renders finish point button when point is running", async () => {
@@ -483,7 +656,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -492,11 +665,13 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /finish point/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /finish point/i }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -511,7 +686,10 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         pointNumber: 2,
         status: "ready",
       });
-      const game = createMockGame("started", null, [previousPoint, activePoint]);
+      const game = createMockGame("started", null, [
+        previousPoint,
+        activePoint,
+      ]);
 
       server.use(
         http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
@@ -519,7 +697,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -528,7 +706,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       expect(await screen.findByText("Men")).toBeInTheDocument();
@@ -547,7 +725,10 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         pointNumber: 2,
         status: "running",
       });
-      const game = createMockGame("started", null, [previousPoint, activePoint]);
+      const game = createMockGame("started", null, [
+        previousPoint,
+        activePoint,
+      ]);
 
       server.use(
         http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () => {
@@ -555,7 +736,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -564,7 +745,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       expect(await screen.findByText("Men")).toBeInTheDocument();
@@ -585,7 +766,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         }),
         http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () => {
           return HttpResponse.json([]);
-        })
+        }),
       );
 
       render(
@@ -594,13 +775,372 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           activePoint={activePoint}
           players={mockPlayers}
           teamId={1}
-        />
+        />,
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/point start in offense - left side/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/point start in offense - left side/i),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("field variant", () => {
+    it("renders the compact current point state without classic validation rows", async () => {
+      const previousPoint = createMockPoint({
+        id: 2,
+        pointNumber: 2,
+        status: "completed",
+        players: [
+          mockPlayers[0],
+          mockPlayers[3],
+          mockPlayers[4],
+          mockPlayers[6],
+          mockPlayers[1],
+          mockPlayers[2],
+          mockPlayers[5],
+        ],
+      });
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        startingOnOffense: false,
+        pull: null,
+        strategy: {
+          id: 9,
+          name: "Zone defense",
+          description: null,
+          category: "defense",
+          created_at: "2024-01-01T00:00:00Z",
+        },
+      });
+      const game = createMockGame("started", null, [
+        previousPoint,
+        activePoint,
+      ]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(screen.getByText("Current point")).toBeInTheDocument();
+      expect(screen.getByText("Point 3")).toBeInTheDocument();
+      expect(screen.getByText("Defense")).toBeInTheDocument();
+      expect(screen.getByText("Women")).toBeInTheDocument();
+      expect(screen.getByText("Defense / Zone defense")).toBeInTheDocument();
+      expect(screen.queryByText(/Line valid/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Field side/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Pull inbound/i)).not.toBeInTheDocument();
+    });
+
+    it("renders current point counters and a compact chronology table above field actions", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        startingOnOffense: true,
+        pull: true,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[createMockStoppage(1, "2024-01-01T10:07:00Z")]}
+          activePointTurnovers={[
+            createMockTurnover(1, "2024-01-01T10:06:00Z"),
+            createMockTurnover(2, "2024-01-01T10:08:00Z"),
+          ]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(screen.getByText("Our turns")).toBeInTheDocument();
+      expect(screen.getByText("Opponent turns")).toBeInTheDocument();
+      expect(screen.getByText("Stoppages")).toBeInTheDocument();
+      expect(
+        screen.getByRole("group", { name: "Our turns: 1" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("group", { name: "Opponent turns: 1" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("group", { name: "Stoppages: 1" }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Chronology \(4\)/i)).toBeInTheDocument();
+      const chronologyRegion = screen.getByRole("region", {
+        name: /Chronology/i,
+      });
+      expect(chronologyRegion).toHaveStyle({ overflowY: "auto" });
+
+      const chronologyTable = within(chronologyRegion).getByRole("table", {
+        name: /Chronology/i,
+      });
+      expect(
+        within(chronologyTable)
+          .getAllByRole("row")
+          .map((row) => row.textContent),
+      ).toEqual([
+        "Opponent turnoverOther3:00",
+        "Call2:00",
+        "Our turnoverOther1:00",
+        "Point start in offense0:00",
+      ]);
+      expect(screen.queryByText(/Turnover #1/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Turnover #2/i)).not.toBeInTheDocument();
+    });
+
+    it("keeps counters and chronology for a scored point awaiting completion", async () => {
+      const scoredPoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "scored",
+        startingOnOffense: true,
+        pull: true,
+      });
+      scoredPoint.won = true;
+      const game = createMockGame("started", null, [scoredPoint]);
+
+      server.use(
+        http.get(`${BASE_URL}/stoppages/points/:pointId/stoppages`, () =>
+          HttpResponse.json([createMockStoppage(1, "2024-01-01T10:07:00Z")]),
+        ),
+        http.get(`${BASE_URL}/turnovers/points/:pointId/turnovers`, () =>
+          HttpResponse.json([createMockTurnover(1, "2024-01-01T10:06:00Z")]),
+        ),
+      );
+
+      render(
+        <LivePointTracker
+          activePoint={null}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      const chronologyRegion = await screen.findByRole("region", {
+        name: /Chronology/i,
+      });
+      const chronologyTable = within(chronologyRegion).getByRole("table", {
+        name: /Chronology/i,
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("group", { name: "Our turns: 1" }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("group", { name: "Opponent turns: 0" }),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("group", { name: "Stoppages: 1" }),
+        ).toBeInTheDocument();
+        expect(
+          within(chronologyTable)
+            .getAllByRole("row")
+            .map((row) => row.textContent),
+        ).toEqual([
+          "We scored!10:00",
+          "Call2:00",
+          "Our turnoverOther1:00",
+          "Point start in offense0:00",
+        ]);
       });
     });
 
+    it("renders the no-active state with recorder actions and no game history", async () => {
+      const game = createMockGame();
+
+      render(
+        <LivePointTracker
+          activePoint={null}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(screen.getByText("Live tracking")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "No active point" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "No point is currently running. The next action is available at the bottom of the screen.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /New point/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Half time/i }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Game history/i)).not.toBeInTheDocument();
+    });
+
+    it("renders a waiting copy without recorder guidance for read-only users", async () => {
+      const game = createMockGame();
+
+      render(
+        <LivePointTracker
+          activePoint={null}
+          game={game}
+          players={mockPlayers}
+          readOnly
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(
+        screen.getByRole("heading", { name: "No active point" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "No live point is currently active. The tracker will update here when play starts.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(
+          "No point is currently running. The next action is available at the bottom of the screen.",
+        ),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /New point/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Half time/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("keeps launch pull as the primary ready-point action with setup actions below", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "ready",
+        players: [],
+        strategy: null,
+        comments: null,
+        pull: null,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Launch Pull/i }),
+      ).toBeInTheDocument();
+      const playersButton = screen.getByRole("button", {
+        name: /Players/i,
+      });
+      expect(playersButton).toBeInTheDocument();
+      expect(playersButton).toHaveClass("MuiButton-colorWarning");
+      expect(screen.getByText("Players")).toBeVisible();
+      const strategyButton = screen.getByRole("button", {
+        name: /Strategy/i,
+      });
+      expect(strategyButton).toBeInTheDocument();
+      expect(strategyButton).not.toHaveClass("MuiButton-colorWarning");
+      expect(screen.getByText("Strategy")).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: /^Comment$/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Comment")).toBeVisible();
+    });
+
+    it("hides ready-point setup labels on mobile while keeping accessible names", async () => {
+      mockSmallViewport(true);
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "ready",
+        players: [],
+        strategy: null,
+        comments: null,
+        pull: null,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(
+        screen.getByRole("button", { name: /Launch Pull/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Players/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Strategy/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /^Comment$/i }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Players")).not.toBeInTheDocument();
+      expect(screen.queryByText("Strategy")).not.toBeInTheDocument();
+      expect(screen.queryByText("Comment")).not.toBeInTheDocument();
+    });
+
+    it("highlights the line action after pull launch while players are incomplete", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        players: [],
+        pull: true,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      const playersButton = screen.getByRole("button", { name: /Players/i });
+      expect(playersButton).toBeInTheDocument();
+      expect(playersButton).toHaveClass("MuiButton-colorWarning");
+    });
   });
 });

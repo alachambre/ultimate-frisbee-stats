@@ -1,6 +1,6 @@
 name = "project-knowledge-update"
 description = "Update project-owned docs and agent guidance after a proven convention, workflow, or architecture change."
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """

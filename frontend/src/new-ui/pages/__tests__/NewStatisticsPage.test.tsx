@@ -150,13 +150,16 @@ function setupHandlers() {
   );
 }
 
-function renderPage(role: "team_member" | "team_analyst" = "team_analyst") {
+function renderPage(
+  role: "team_member" | "team_analyst" = "team_analyst",
+  route = "/statistics"
+) {
   return render(
     <NewUiTeamProvider canLoadTeams>
       <NewStatisticsPage />
     </NewUiTeamProvider>,
     {
-      route: "/statistics",
+      route,
       auth: {
         role,
         isAuthenticated: true,
@@ -187,10 +190,25 @@ describe("NewStatisticsPage", () => {
     expect(screen.getByText("Break rate")).toBeInTheDocument();
     expect(screen.getAllByText("75%").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("50%").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByLabelText("Statistics summary")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(window.location.search).toContain("teamId=1");
+    });
+  });
+
+  it("uses an explicit statistics team link before the persisted app team", async () => {
+    renderPage("team_analyst", "/statistics?teamId=2");
+
+    expect(
+      await screen.findByText("Flying Foxes coach overview")
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+      expect(window.location.search).toContain("teamId=2");
+      expect(window.location.search).not.toContain("teamId=1");
     });
   });
 

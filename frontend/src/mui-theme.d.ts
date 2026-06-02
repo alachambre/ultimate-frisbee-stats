@@ -36,6 +36,11 @@ declare module "@mui/material/styles" {
         high: string;
         veryHigh: string;
       };
+      newUi: {
+        primary: string;
+        primarySoft: string;
+        primaryBorder: string;
+      };
     };
   }
   interface ThemeOptions {
@@ -71,6 +76,11 @@ declare module "@mui/material/styles" {
         medium?: string;
         high?: string;
         veryHigh?: string;
+      };
+      newUi?: {
+        primary?: string;
+        primarySoft?: string;
+        primaryBorder?: string;
       };
     };
   }
@@ -111,6 +121,11 @@ declare module "@mui/system" {
         medium: string;
         high: string;
         veryHigh: string;
+      };
+      newUi: {
+        primary: string;
+        primarySoft: string;
+        primaryBorder: string;
       };
     };
   }

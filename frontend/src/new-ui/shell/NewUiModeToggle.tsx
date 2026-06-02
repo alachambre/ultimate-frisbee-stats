@@ -1,4 +1,5 @@
 import Button, { type ButtonProps } from "@mui/material/Button";
+import IconButton, { type IconButtonProps } from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { useTranslation } from "react-i18next";
@@ -10,7 +11,10 @@ import type { UiMode } from "../../uiMode/useUiMode";
 type NewUiModeToggleProps = Pick<
   ButtonProps,
   "color" | "fullWidth" | "sx" | "variant"
->;
+> & {
+  iconOnly?: boolean;
+  iconButtonProps?: Pick<IconButtonProps, "edge" | "size" | "sx">;
+};
 
 function getModeSwitchTarget(nextMode: UiMode, currentPath: string) {
   if (nextMode === "new") {
@@ -51,6 +55,8 @@ function getModeSwitchTarget(nextMode: UiMode, currentPath: string) {
 export default function NewUiModeToggle({
   color,
   fullWidth,
+  iconButtonProps,
+  iconOnly = false,
   sx,
   variant,
 }: NewUiModeToggleProps = {}) {
@@ -69,6 +75,23 @@ export default function NewUiModeToggle({
     setUiMode(nextMode);
     navigate(getModeSwitchTarget(nextMode, location.pathname));
   };
+
+  if (iconOnly) {
+    return (
+      <Tooltip title={label}>
+        <IconButton
+          aria-label={label}
+          edge={iconButtonProps?.edge}
+          onClick={handleModeSwitch}
+          size={iconButtonProps?.size ?? "medium"}
+          sx={iconButtonProps?.sx}
+          type="button"
+        >
+          <SwapHorizIcon />
+        </IconButton>
+      </Tooltip>
+    );
+  }
 
   return (
     <Tooltip title={label}>

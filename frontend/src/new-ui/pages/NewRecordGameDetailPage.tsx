@@ -20,6 +20,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
@@ -72,6 +73,21 @@ export default function NewRecordGameDetailPage() {
   const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
   const canViewPlayerStatistics =
     !shouldProtectUi || auth.capabilities.canViewPlayerStatistics;
+  const newUiOutlinedButtonSx = (theme: import("@mui/material/styles").Theme) => ({
+    borderColor: theme.colors.newUi.primaryBorder,
+    color: theme.colors.newUi.primary,
+    "&:hover": {
+      bgcolor: alpha(theme.colors.newUi.primary, 0.08),
+      borderColor: theme.colors.newUi.primary,
+    },
+  });
+  const newUiContainedButtonSx = (theme: import("@mui/material/styles").Theme) => ({
+    bgcolor: theme.colors.newUi.primary,
+    color: theme.palette.common.white,
+    "&:hover": {
+      bgcolor: theme.colors.newUi.primary,
+    },
+  });
 
   const {
     gameIdNumber,
@@ -256,12 +272,13 @@ export default function NewRecordGameDetailPage() {
         )}
 
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <Button
-            fullWidth
-            onClick={() => setIsRosterDialogOpen(true)}
-            startIcon={<GroupIcon />}
-            variant="outlined"
-          >
+            <Button
+              fullWidth
+              onClick={() => setIsRosterDialogOpen(true)}
+              startIcon={<GroupIcon />}
+              sx={newUiOutlinedButtonSx}
+              variant="outlined"
+            >
             {t("games:detail.roster")}
           </Button>
           {canEditData && (
@@ -269,6 +286,7 @@ export default function NewRecordGameDetailPage() {
               fullWidth
               onClick={() => setIsEditModalOpen(true)}
               startIcon={<EditIcon />}
+              sx={newUiOutlinedButtonSx}
               variant="outlined"
             >
               {t("common:action.edit")}
@@ -280,6 +298,7 @@ export default function NewRecordGameDetailPage() {
               fullWidth
               onClick={() => startMutation.mutate()}
               startIcon={<PlayArrowIcon />}
+              sx={newUiContainedButtonSx}
               variant="contained"
             >
               {startMutation.isPending

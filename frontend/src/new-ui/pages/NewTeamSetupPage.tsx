@@ -10,7 +10,7 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 
@@ -55,7 +55,16 @@ function SetupCard({
         </Typography>
         <Button
           component={Link}
-          sx={{ alignSelf: "flex-start", mt: "auto" }}
+          sx={(theme) => ({
+            alignSelf: "flex-start",
+            borderColor: theme.colors.newUi.primaryBorder,
+            color: theme.colors.newUi.primary,
+            mt: "auto",
+            "&:hover": {
+              bgcolor: alpha(theme.colors.newUi.primary, 0.08),
+              borderColor: theme.colors.newUi.primary,
+            },
+          })}
           to={href}
           variant="outlined"
         >
@@ -138,7 +147,18 @@ export default function NewTeamSetupPage() {
                   {playerCountLabel}
                 </Typography>
               </Box>
-              <Button component={Link} to={teamDetailHref} variant="contained">
+              <Button
+                component={Link}
+                sx={(innerTheme) => ({
+                  bgcolor: innerTheme.colors.newUi.primary,
+                  color: innerTheme.palette.common.white,
+                  "&:hover": {
+                    bgcolor: innerTheme.colors.newUi.primary,
+                  },
+                })}
+                to={teamDetailHref}
+                variant="contained"
+              >
                 {t("newUiPages.teamSetup.actions.openRosterLines")}
               </Button>
             </Stack>
@@ -154,7 +174,14 @@ export default function NewTeamSetupPage() {
               </Typography>
               <Button
                 component={Link}
-                sx={{ alignSelf: "flex-start" }}
+                sx={(innerTheme) => ({
+                  alignSelf: "flex-start",
+                  bgcolor: innerTheme.colors.newUi.primary,
+                  color: innerTheme.palette.common.white,
+                  "&:hover": {
+                    bgcolor: innerTheme.colors.newUi.primary,
+                  },
+                })}
                 to="/teams"
                 variant="contained"
               >
@@ -170,7 +197,7 @@ export default function NewTeamSetupPage() {
               actionLabel={t("newUiPages.teamSetup.actions.openRosterLines")}
               description={t("newUiPages.teamSetup.cards.rosterLines.copy")}
               href={teamDetailHref}
-              icon={<GroupsIcon sx={{ color: theme.palette.primary.main }} />}
+              icon={<GroupsIcon sx={{ color: theme.colors.newUi.primary }} />}
               title={t("newUiPages.teamSetup.cards.rosterLines.title")}
             />
           </Grid>
@@ -191,7 +218,7 @@ export default function NewTeamSetupPage() {
               description={t("newUiPages.teamSetup.cards.strategies.copy")}
               href="/strategies"
               icon={
-                <LightbulbIcon sx={{ color: theme.colors.offense.main }} />
+                <LightbulbIcon sx={{ color: theme.colors.newUi.primary }} />
               }
               title={t("newUiPages.teamSetup.cards.strategies.title")}
             />

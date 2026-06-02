@@ -22,25 +22,43 @@ function buildGame(overrides: Partial<GameWithScore> = {}): GameWithScore {
 }
 
 describe("NewGameCard", () => {
-  it("routes live games to the spectator view", () => {
+  it("routes live games to the shared tracker", () => {
     render(<NewGameCard game={buildGame()} />);
 
-    expect(screen.getByRole("link", { name: /Blue Tigers/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Go$/i })).toHaveAttribute(
       "href",
       "/live/42"
     );
     expect(screen.getByText("Spring Cup")).toBeInTheDocument();
     expect(screen.getByText("5 - 4")).toBeInTheDocument();
-    expect(screen.getByText("Ongoing")).toBeInTheDocument();
+    expect(screen.getByText("Live")).toBeInTheDocument();
+  });
+
+  it("routes ready games to the shared tracker", () => {
+    render(<NewGameCard game={buildGame({ status: "ready" })} />);
+
+    expect(screen.getByRole("link", { name: /^Go$/i })).toHaveAttribute(
+      "href",
+      "/live/42"
+    );
+    expect(screen.getByText("Ready")).toBeInTheDocument();
   });
 
   it("routes completed games to the game detail route", () => {
     render(<NewGameCard game={buildGame({ status: "ended" })} />);
 
-    expect(screen.getByRole("link", { name: /Blue Tigers/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /^Review$/i })).toHaveAttribute(
       "href",
       "/games/42"
     );
-    expect(screen.getByText("Review")).toBeInTheDocument();
+  });
+
+  it("routes read-only live games to the game history route", () => {
+    render(<NewGameCard canEditData={false} game={buildGame()} />);
+
+    expect(screen.getByRole("link", { name: /^Go$/i })).toHaveAttribute(
+      "href",
+      "/games/42"
+    );
   });
 });

@@ -1,0 +1,8 @@
+name = "critical-ui-reviewer"
+description = "Candid UI/UX critique with builder-ready fixes."
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Use the `critical-ui-reviewer` skill.
+"""

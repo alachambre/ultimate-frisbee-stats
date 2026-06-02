@@ -52,6 +52,11 @@ export function createAppTheme() {
         high: "#84cc16",
         veryHigh: "#16a34a",
       },
+      newUi: {
+        primary: "#2F6690",
+        primarySoft: "#EAF3F8",
+        primaryBorder: "#B9D5E5",
+      },
     },
   });
 }

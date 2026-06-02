@@ -1,6 +1,6 @@
 name = "test-runner"
 description = "Select and run the right backend and frontend tests for a proposed change."
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 developer_instructions = """

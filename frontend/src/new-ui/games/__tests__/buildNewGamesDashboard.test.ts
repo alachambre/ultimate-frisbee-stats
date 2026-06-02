@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { CompetitionWithTeam, GameWithScore } from "../../../types";
-import { buildNewGamesDashboard } from "../buildNewGamesDashboard";
+import {
+  buildNewGamesDashboard,
+  getCompetitionGroupStatusKind,
+  isCompetitionOpenForNewGames,
+} from "../buildNewGamesDashboard";
 
 function game(
   overrides: Partial<GameWithScore> &
@@ -34,9 +38,9 @@ function competition(
     team_name: overrides.team_name ?? "Monkey Stats",
     name: overrides.name ?? `Competition ${overrides.id}`,
     description: null,
-    start_date: "2026-05-01",
-    end_date: "2026-05-31",
-    status: "ongoing",
+    start_date: overrides.start_date ?? "2026-05-01",
+    end_date: overrides.end_date ?? "2026-05-31",
+    status: overrides.status ?? "ongoing",
     created_at: "2026-05-01T00:00:00Z",
   };
 }
@@ -143,5 +147,406 @@ describe("buildNewGamesDashboard", () => {
     });
 
     expect(dashboard.recentGames.map((item) => item.id)).toEqual([2, 1]);
+  });
+
+  it("groups games by competition with active competitions first", () => {
+    const dashboard = buildNewGamesDashboard({
+      games: [
+        game({
+          id: 1,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          status: "ended",
+          date: "2026-05-20T10:00:00Z",
+          our_score: 13,
+          opponent_score: 8,
+        }),
+        game({
+          id: 2,
+          competition_id: 20,
+          competition_name: "Winter League",
+          status: "ended",
+          date: "2026-04-18T10:00:00Z",
+          our_score: 7,
+          opponent_score: 8,
+        }),
+        game({
+          id: 3,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          status: "started",
+          date: "2026-05-22T10:00:00Z",
+          our_score: 4,
+          opponent_score: 3,
+        }),
+        game({
+          id: 4,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          status: "ready",
+          date: "2026-05-23T10:00:00Z",
+        }),
+        game({
+          id: 5,
+          competition_id: 30,
+          competition_name: "Summer Open",
+          status: "ready",
+          date: "2026-05-21T10:00:00Z",
+        }),
+        game({
+          id: 6,
+          competition_id: 40,
+          competition_name: "Old Cup",
+          status: "ended",
+          date: "2026-05-01T10:00:00Z",
+          our_score: 9,
+          opponent_score: 9,
+        }),
+      ],
+      selectedTeamId: 1,
+      teamCompetitions: [
+        competition({
+          id: 10,
+          team_id: 1,
+          name: "Spring Cup",
+          start_date: "2026-05-01",
+          end_date: "2026-05-31",
+        }),
+        competition({
+          id: 20,
+          team_id: 1,
+          name: "Winter League",
+          start_date: "2026-04-01",
+          end_date: "2026-04-30",
+        }),
+        competition({
+          id: 30,
+          team_id: 1,
+          name: "Summer Open",
+          start_date: "2026-05-20",
+          end_date: "2026-05-28",
+        }),
+        competition({
+          id: 40,
+          team_id: 1,
+          name: "Old Cup",
+          start_date: "2026-05-01",
+          end_date: "2026-05-02",
+        }),
+      ],
+    });
+
+    expect(
+      dashboard.competitionGroups.map((group) => group.competitionId)
+    ).toEqual([30, 10, 40, 20]);
+    expect(dashboard.competitionGroups[0]).toEqual(
+      expect.objectContaining({
+        competitionId: 30,
+        competitionName: "Summer Open",
+        isInitiallyExpanded: true,
+        nextRelevantDate: "2026-05-21T10:00:00Z",
+      })
+    );
+    expect(dashboard.competitionGroups[1]).toEqual(
+      expect.objectContaining({
+        competitionId: 10,
+        competitionName: "Spring Cup",
+        isInitiallyExpanded: true,
+        games: [
+          expect.objectContaining({ id: 3 }),
+          expect.objectContaining({ id: 4 }),
+          expect.objectContaining({ id: 1 }),
+        ],
+        summary: expect.objectContaining({
+          live: 1,
+          upcoming: 1,
+          completed: 1,
+          wins: 1,
+          losses: 0,
+          draws: 0,
+        }),
+      })
+    );
+    expect(dashboard.competitionGroups[2]).toEqual(
+      expect.objectContaining({
+        competitionId: 40,
+        isInitiallyExpanded: false,
+        mostRecentDate: "2026-05-01T10:00:00Z",
+        summary: expect.objectContaining({
+          live: 0,
+          upcoming: 0,
+          completed: 1,
+          wins: 0,
+          losses: 0,
+          draws: 1,
+        }),
+      })
+    );
+  });
+
+  it("includes selected-team competitions that do not have games", () => {
+    const emptyCompetition = competition({
+      id: 20,
+      team_id: 1,
+      name: "Fresh Tournament",
+      start_date: "2026-06-01",
+      end_date: "2026-06-02",
+    });
+    const dashboard = buildNewGamesDashboard({
+      games: [game({ id: 1, competition_id: 10, status: "ready" })],
+      selectedTeamId: 1,
+      teamCompetitions: [
+        competition({ id: 10, team_id: 1, name: "Spring Cup" }),
+        emptyCompetition,
+      ],
+    });
+
+    expect(
+      dashboard.competitionGroups.map((group) => group.competitionId)
+    ).toContain(20);
+    expect(
+      dashboard.competitionGroups.find((group) => group.competitionId === 20)
+    ).toEqual(
+      expect.objectContaining({
+        competition: emptyCompetition,
+        competitionName: "Fresh Tournament",
+        games: [],
+        startDate: "2026-06-01",
+        endDate: "2026-06-02",
+        summary: {
+          live: 0,
+          upcoming: 0,
+          completed: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+        },
+      })
+    );
+    expect(dashboard.summary.totalGames).toBe(1);
+    expect(dashboard.summary.competitions).toBe(2);
+  });
+
+  it("does not include empty competitions during opponent search", () => {
+    const dashboard = buildNewGamesDashboard({
+      games: [
+        game({
+          id: 1,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          opponent_name: "Blue Tigers",
+          status: "ready",
+        }),
+        game({
+          id: 2,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          opponent_name: "Red Hawks",
+          status: "ready",
+        }),
+      ],
+      selectedTeamId: 1,
+      teamCompetitions: [
+        competition({ id: 10, team_id: 1, name: "Spring Cup" }),
+        competition({ id: 20, team_id: 1, name: "Empty Cup" }),
+      ],
+      opponentSearch: "blue",
+    });
+
+    expect(
+      dashboard.competitionGroups.map((group) => group.competitionId)
+    ).toEqual([10]);
+    expect(dashboard.competitionGroups[0].games.map((item) => item.id)).toEqual([
+      1,
+    ]);
+  });
+
+  it("filters competition groups by opponent search", () => {
+    const dashboard = buildNewGamesDashboard({
+      games: [
+        game({
+          id: 1,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          opponent_name: "Blue Tigers",
+          status: "started",
+        }),
+        game({
+          id: 2,
+          competition_id: 10,
+          competition_name: "Spring Cup",
+          opponent_name: "Red Hawks",
+          status: "ready",
+        }),
+        game({
+          id: 3,
+          competition_id: 20,
+          competition_name: "Winter League",
+          opponent_name: "Green Foxes",
+          status: "ended",
+        }),
+      ],
+      selectedTeamId: 1,
+      teamCompetitions: [
+        competition({ id: 10, team_id: 1, name: "Spring Cup" }),
+        competition({ id: 20, team_id: 1, name: "Winter League" }),
+      ],
+      opponentSearch: "blue",
+    });
+
+    expect(dashboard.allGames.map((item) => item.id)).toEqual([1]);
+    expect(dashboard.summary.totalGames).toBe(1);
+    expect(dashboard.summary.wins).toBe(0);
+    expect(dashboard.competitionGroups).toHaveLength(1);
+    expect(dashboard.competitionGroups[0]).toEqual(
+      expect.objectContaining({
+        competitionId: 10,
+        games: [expect.objectContaining({ opponent_name: "Blue Tigers" })],
+      })
+    );
+  });
+});
+
+describe("getCompetitionGroupStatusKind", () => {
+  const now = new Date("2026-05-25T12:00:00Z");
+
+  function firstCompetitionGroup({
+    competitions,
+    games,
+  }: {
+    competitions: CompetitionWithTeam[];
+    games: GameWithScore[];
+  }) {
+    return buildNewGamesDashboard({
+      games,
+      selectedTeamId: 1,
+      teamCompetitions: competitions,
+    }).competitionGroups[0];
+  }
+
+  it("uses one prioritized status for each competition group", () => {
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [competition({ id: 10, team_id: 1 })],
+          games: [
+            game({ id: 1, competition_id: 10, status: "started" }),
+            game({ id: 2, competition_id: 10, status: "ready" }),
+            game({ id: 3, competition_id: 10, status: "ended" }),
+          ],
+        }),
+        now
+      )
+    ).toBe("live");
+
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [competition({ id: 20, team_id: 1 })],
+          games: [
+            game({ id: 4, competition_id: 20, status: "ready" }),
+            game({ id: 5, competition_id: 20, status: "ended" }),
+          ],
+        }),
+        now
+      )
+    ).toBe("upcoming");
+
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [
+            competition({
+              id: 30,
+              team_id: 1,
+              start_date: "2026-05-01",
+              end_date: "2026-05-31",
+            }),
+          ],
+          games: [game({ id: 6, competition_id: 30, status: "ended" })],
+        }),
+        now
+      )
+    ).toBe("completed");
+
+    expect(
+      getCompetitionGroupStatusKind(
+        firstCompetitionGroup({
+          competitions: [
+            competition({
+              id: 40,
+              team_id: 1,
+              start_date: "2026-04-01",
+              end_date: "2026-04-30",
+            }),
+          ],
+          games: [
+            game({
+              id: 7,
+              competition_id: 40,
+              status: "ended",
+              our_score: 12,
+              opponent_score: 10,
+            }),
+          ],
+        }),
+        now
+      )
+    ).toBe("results");
+  });
+});
+
+describe("isCompetitionOpenForNewGames", () => {
+  const now = new Date("2026-05-25T12:00:00Z");
+
+  it("keeps active and future competitions eligible but excludes over competitions", () => {
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 10,
+          team_id: 1,
+          start_date: "2026-05-01",
+          end_date: "2026-05-31",
+        }),
+        now
+      )
+    ).toBe(true);
+
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 20,
+          team_id: 1,
+          start_date: "2026-06-01",
+          end_date: "2026-06-02",
+        }),
+        now
+      )
+    ).toBe(true);
+
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 30,
+          team_id: 1,
+          start_date: "2026-04-01",
+          end_date: "2026-04-30",
+        }),
+        now
+      )
+    ).toBe(false);
+
+    expect(
+      isCompetitionOpenForNewGames(
+        competition({
+          id: 40,
+          team_id: 1,
+          start_date: "2026-05-01",
+          end_date: "2026-05-31",
+          status: "completed",
+        }),
+        now
+      )
+    ).toBe(false);
   });
 });

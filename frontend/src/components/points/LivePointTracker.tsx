@@ -15,6 +15,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Stack,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
@@ -33,8 +34,15 @@ import { RecordTurnoverDialog } from "../modals/RecordTurnoverDialog";
 import { ResumeFromStoppageDialog } from "../modals/ResumeFromStoppageDialog";
 import ManagePlayersDialog from "../modals/ManagePlayersDialog";
 import { PointEventsHistory } from "./PointEventsHistory";
-import type { GameDetail, PointWithPlayers, Player, TurnoverWithPlayer, Stoppage } from "../../types";
+import type {
+  GameDetail,
+  PointWithPlayers,
+  Player,
+  TurnoverWithPlayer,
+  Stoppage,
+} from "../../types";
 import { useQuery } from "@tanstack/react-query";
+import { alpha, type SxProps, type Theme } from "@mui/material/styles";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import { getStoppagesByPoint } from "../../services/stoppages";
 import GroupIcon from "@mui/icons-material/Group";
@@ -42,6 +50,7 @@ import { queryKeys } from "../../utils/queryKeys";
 import { LIVE_TRACKER_REFRESH_INTERVAL_MS } from "../../utils/refreshIntervals";
 import { LivePointHeader } from "./liveTracker/LivePointHeader";
 import { LivePointActionBar } from "./liveTracker/LivePointActionBar";
+import { LivePointActivitySummary } from "./liveTracker/LivePointActivitySummary";
 import { LivePointContextCards } from "./liveTracker/LivePointContextCards";
 import { LivePointMixityIndicator } from "./liveTracker/LivePointMixityIndicator";
 import { useLivePointMutations } from "./liveTracker/useLivePointMutations";
@@ -56,6 +65,8 @@ interface LivePointTrackerProps {
   teamId: number;
   onPointUpdated?: () => void;
   readOnly?: boolean;
+  renderWhenReady?: boolean;
+  variant?: "classic" | "field";
 }
 
 export default function LivePointTracker({
@@ -67,6 +78,8 @@ export default function LivePointTracker({
   teamId,
   onPointUpdated,
   readOnly = false,
+  renderWhenReady = false,
+  variant = "classic",
 }: LivePointTrackerProps) {
   const { t } = useTranslation(["points", "common"]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
@@ -77,9 +90,11 @@ export default function LivePointTracker({
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
   const [isTurnoverDialogOpen, setIsTurnoverDialogOpen] = useState(false);
   const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
-  const [isManagePlayersDialogOpen, setIsManagePlayersDialogOpen] = useState(false);
+  const [isManagePlayersDialogOpen, setIsManagePlayersDialogOpen] =
+    useState(false);
   const [isHalftimeConfirmOpen, setIsHalftimeConfirmOpen] = useState(false);
-  const [moreActionsAnchor, setMoreActionsAnchor] = useState<null | HTMLElement>(null);
+  const [moreActionsAnchor, setMoreActionsAnchor] =
+    useState<null | HTMLElement>(null);
   const hasHalftime = Boolean(game.halftime);
 
   // Fetch turnovers for active point (needed for possession logic)
@@ -130,72 +145,182 @@ export default function LivePointTracker({
     },
   });
 
-  // Only show live tracker for started games (hide for ready and ended)
-  if (game.status !== "started") {
+  const canRenderReadyState = renderWhenReady && game.status === "ready";
+  const canRecordPoint = !readOnly && game.status === "started";
+  const isFieldVariant = variant === "field";
+  const newUiContainedButtonSx: SxProps<Theme> | undefined = isFieldVariant
+    ? {
+        bgcolor: (theme) => theme.colors.newUi.primary,
+        color: (theme) => theme.palette.common.white,
+        "&:hover": {
+          bgcolor: (theme) => theme.colors.newUi.primary,
+        },
+      }
+    : undefined;
+  const newUiOutlinedButtonSx: SxProps<Theme> | undefined = isFieldVariant
+    ? {
+        borderColor: (theme) => theme.colors.newUi.primaryBorder,
+        color: (theme) => theme.colors.newUi.primary,
+        "&:hover": {
+          bgcolor: (theme) => alpha(theme.colors.newUi.primary, 0.08),
+          borderColor: (theme) => theme.colors.newUi.primary,
+        },
+      }
+    : undefined;
+  const shouldShowPullResolution =
+    !readOnly &&
+    activePoint &&
+    activePoint.status === "running" &&
+    !activePoint.starting_on_offense &&
+    activePoint.pull === null;
+
+  // Only show live tracker for started games by default. New UI tracker routes
+  // can opt into rendering the shared shell for ready games.
+  if (game.status !== "started" && !canRenderReadyState) {
     return null;
   }
 
   return (
     <>
       <Paper
+        elevation={isFieldVariant ? 0 : 1}
         sx={{
           p: { xs: 2, sm: 3 },
           mb: 3,
-          ...(currentPoint && {
-            borderTop: 3,
-            borderColor: (theme) => currentPoint.starting_on_offense
-              ? theme.colors.offense.main
-              : theme.colors.defense.main
-          })
+          ...(isFieldVariant && {
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1,
+          }),
+          ...(currentPoint && !isFieldVariant
+            ? {
+                borderTop: 3,
+                borderColor: (theme) =>
+                  currentPoint.starting_on_offense
+                    ? theme.colors.offense.main
+                    : theme.colors.defense.main,
+              }
+            : {}),
         }}
       >
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          {t("points:tracker.title", "Live Point Tracking")}
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
+        {!isFieldVariant && (
+          <>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              {t("points:tracker.title", "Live Point Tracking")}
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+          </>
+        )}
 
         {!currentPoint ? (
           // No active or scored point - show start button
-          <Box textAlign="center" py={2}>
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              {readOnly
-                ? t(
-                    "points:tracker.spectatorIdle",
-                    "No live point is currently active. The tracker will update here when play starts."
-                  )
-                : t("points:empty.noPoints")}
-            </Typography>
+          <Box
+            py={isFieldVariant ? 0 : 2}
+            textAlign={isFieldVariant ? "left" : "center"}
+          >
+            {isFieldVariant ? (
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  color="text.secondary"
+                  component="p"
+                  variant="overline"
+                >
+                  {t("points:tracker.liveTracking", "Live tracking")}
+                </Typography>
+                <Typography
+                  component="h2"
+                  fontWeight={900}
+                  gutterBottom
+                  variant="h6"
+                >
+                  {t("points:tracker.noActivePoint", "No active point")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {readOnly
+                    ? t(
+                        "points:tracker.spectatorIdle",
+                        "No live point is currently active. The tracker will update here when play starts.",
+                      )
+                    : t(
+                        "points:tracker.noActivePointCopy",
+                        "No point is currently running. The next action is available at the bottom of the screen.",
+                      )}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                {readOnly
+                  ? t(
+                      "points:tracker.spectatorIdle",
+                      "No live point is currently active. The tracker will update here when play starts.",
+                    )
+                  : t("points:empty.noPoints")}
+              </Typography>
+            )}
             {expectedGenderRatio && (
               <Box mb={2} display="flex" justifyContent="center">
-                <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
+                <LivePointMixityIndicator
+                  requiredGenderRatio={expectedGenderRatio}
+                />
               </Box>
             )}
-            {!readOnly && createHalftimeMutation.isError && (
+            {canRecordPoint && createHalftimeMutation.isError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {t("common:error.generic")}
               </Alert>
             )}
-            {!readOnly && (
-              <Box display="flex" justifyContent="center" gap={1.5} flexWrap="wrap">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setIsStartDialogOpen(true)}
-                  size="large"
+            {canRecordPoint && (
+              <Box
+                sx={
+                  isFieldVariant
+                    ? {
+                        bgcolor: "background.paper",
+                        bottom: 0,
+                        boxShadow: { xs: 3, sm: 0 },
+                        mx: { xs: -2, sm: 0 },
+                        pb: { xs: 1, sm: 0 },
+                        position: { xs: "sticky", sm: "static" },
+                        pt: { xs: 1.5, sm: 0 },
+                        px: { xs: 2, sm: 0 },
+                        zIndex: 1,
+                      }
+                    : {
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: 1.5,
+                        flexWrap: "wrap",
+                      }
+                }
+              >
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1.5}
+                  sx={isFieldVariant ? {} : { display: "contents" }}
                 >
-                  {t("points:tracker.newPoint")}
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<AccessTimeFilledIcon />}
-                  onClick={() => setIsHalftimeConfirmOpen(true)}
-                  disabled={hasHalftime || createHalftimeMutation.isPending}
-                  size="large"
-                >
-                  {createHalftimeMutation.isPending
-                    ? t("points:tracker.recordingHalftime", "Recording...")
-                    : t("points:tracker.halfTime", "Half time")}
-                </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setIsStartDialogOpen(true)}
+                    size="large"
+                    sx={newUiContainedButtonSx}
+                  >
+                    {isFieldVariant
+                      ? t("points:tracker.fieldNewPoint", "New point")
+                      : t("points:tracker.newPoint")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AccessTimeFilledIcon />}
+                    onClick={() => setIsHalftimeConfirmOpen(true)}
+                    disabled={hasHalftime || createHalftimeMutation.isPending}
+                    size="large"
+                    sx={newUiOutlinedButtonSx}
+                  >
+                    {createHalftimeMutation.isPending
+                      ? t("points:tracker.recordingHalftime", "Recording...")
+                      : t("points:tracker.halfTime", "Half time")}
+                  </Button>
+                </Stack>
               </Box>
             )}
           </Box>
@@ -205,19 +330,22 @@ export default function LivePointTracker({
             <LivePointHeader
               currentPoint={currentPoint}
               expectedGenderRatio={expectedGenderRatio}
+              variant={variant}
             />
 
             {/* Pull tracking - only for running defensive points */}
-            {!readOnly &&
-             activePoint &&
-             activePoint.status === "running" &&
-             !activePoint.starting_on_offense &&
-             activePoint.pull === null && (
+            {!isFieldVariant && shouldShowPullResolution && (
               <Box mt={2} textAlign="center">
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {t("points:tracker.pullQuestion", "Did the pull land inbound?")}
+                  {t(
+                    "points:tracker.pullQuestion",
+                    "Did the pull land inbound?",
+                  )}
                 </Typography>
-                <ButtonGroup variant="outlined" disabled={updatePullMutation.isPending}>
+                <ButtonGroup
+                  variant="outlined"
+                  disabled={updatePullMutation.isPending}
+                >
                   <Button
                     startIcon={<CheckIcon />}
                     onClick={() => updatePullMutation.mutate(true)}
@@ -237,43 +365,54 @@ export default function LivePointTracker({
             )}
 
             {/* Configuration buttons - Select Strategy and Select Players (when not set) */}
-            {!readOnly && (!currentPoint.strategy || !hasValidPlayerComposition) && (
-              <Box display="flex" justifyContent="center" gap={2} mt={2} flexWrap="wrap">
-                {!currentPoint.strategy && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<EmojiObjectsIcon />}
-                    onClick={() => setIsStrategyDialogOpen(true)}
-                    size="medium"
-                  >
-                    {t("points:tracker.selectStrategy", "Select Strategy")}
-                  </Button>
-                )}
-                {!hasValidPlayerComposition && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<GroupIcon />}
-                    onClick={() => setIsManagePlayersDialogOpen(true)}
-                    size="medium"
-                    sx={{
-                      borderColor: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      color: (theme) => currentPoint.starting_on_offense
-                        ? theme.colors.offense.main
-                        : theme.colors.defense.main,
-                      '&:hover': {
-                        borderColor: (theme) => currentPoint.starting_on_offense
-                          ? theme.colors.offense.dark
-                          : theme.colors.defense.dark,
-                      }
-                    }}
-                  >
-                    {t("points:tracker.selectPlayers", "Select Players")}
-                  </Button>
-                )}
-              </Box>
-            )}
+            {!isFieldVariant &&
+              !readOnly &&
+              (!currentPoint.strategy || !hasValidPlayerComposition) && (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  gap={2}
+                  mt={2}
+                  flexWrap="wrap"
+                >
+                  {!currentPoint.strategy && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<EmojiObjectsIcon />}
+                      onClick={() => setIsStrategyDialogOpen(true)}
+                      size="medium"
+                    >
+                      {t("points:tracker.selectStrategy", "Select Strategy")}
+                    </Button>
+                  )}
+                  {!hasValidPlayerComposition && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<GroupIcon />}
+                      onClick={() => setIsManagePlayersDialogOpen(true)}
+                      size="medium"
+                      sx={{
+                        borderColor: (theme) =>
+                          currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                        color: (theme) =>
+                          currentPoint.starting_on_offense
+                            ? theme.colors.offense.main
+                            : theme.colors.defense.main,
+                        "&:hover": {
+                          borderColor: (theme) =>
+                            currentPoint.starting_on_offense
+                              ? theme.colors.offense.dark
+                              : theme.colors.defense.dark,
+                        },
+                      }}
+                    >
+                      {t("points:tracker.selectPlayers", "Select Players")}
+                    </Button>
+                  )}
+                </Box>
+              )}
 
             {/* More Actions Menu */}
             <Menu
@@ -282,7 +421,7 @@ export default function LivePointTracker({
               onClose={() => setMoreActionsAnchor(null)}
             >
               {[
-                currentPoint.strategy && (
+                (isFieldVariant || currentPoint.strategy) && (
                   <MenuItem
                     key="change-strategy"
                     onClick={() => {
@@ -294,11 +433,13 @@ export default function LivePointTracker({
                       <EmojiObjectsIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText>
-                      {t("points:tracker.changeStrategy", "Change Strategy")}
+                      {currentPoint.strategy
+                        ? t("points:tracker.changeStrategy", "Change Strategy")
+                        : t("points:tracker.selectStrategy", "Select Strategy")}
                     </ListItemText>
                   </MenuItem>
                 ),
-                hasValidPlayerComposition && (
+                (isFieldVariant || hasValidPlayerComposition) && (
                   <MenuItem
                     key="manage-players"
                     onClick={() => {
@@ -311,6 +452,40 @@ export default function LivePointTracker({
                     </ListItemIcon>
                     <ListItemText>
                       {t("points:tracker.managePlayers", "Manage Players")}
+                    </ListItemText>
+                  </MenuItem>
+                ),
+                isFieldVariant && shouldShowPullResolution && (
+                  <MenuItem
+                    key="pull-inbounds"
+                    disabled={updatePullMutation.isPending}
+                    onClick={() => {
+                      updatePullMutation.mutate(true);
+                      setMoreActionsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <CheckIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>
+                      {t("points:dialog.start.inbounds")}
+                    </ListItemText>
+                  </MenuItem>
+                ),
+                isFieldVariant && shouldShowPullResolution && (
+                  <MenuItem
+                    key="pull-out-of-bounds"
+                    disabled={updatePullMutation.isPending}
+                    onClick={() => {
+                      updatePullMutation.mutate(false);
+                      setMoreActionsAnchor(null);
+                    }}
+                  >
+                    <ListItemIcon>
+                      <CloseIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>
+                      {t("points:dialog.start.outOfBounds")}
                     </ListItemText>
                   </MenuItem>
                 ),
@@ -329,9 +504,29 @@ export default function LivePointTracker({
                       ? t("points:tracker.editComment", "Edit Comment")
                       : t("points:tracker.addComment", "Add Comment")}
                   </ListItemText>
-                </MenuItem>
+                </MenuItem>,
               ].filter(Boolean)}
             </Menu>
+
+            {isFieldVariant && (
+              <LivePointContextCards
+                currentPoint={currentPoint}
+                variant={variant}
+              />
+            )}
+
+            {!isFieldVariant && (
+              <LivePointContextCards currentPoint={currentPoint} />
+            )}
+
+            {isFieldVariant && currentPoint && (
+              <LivePointActivitySummary
+                activePointId={activePoint?.id}
+                currentPoint={currentPoint}
+                stoppages={liveStoppages}
+                turnovers={liveTurnovers}
+              />
+            )}
 
             {!readOnly && (
               <LivePointActionBar
@@ -346,17 +541,21 @@ export default function LivePointTracker({
                 onOpenRecordTurnover={() => setIsTurnoverDialogOpen(true)}
                 onOpenResume={() => setIsResumeDialogOpen(true)}
                 onOpenComplete={() => setIsCompleteDialogOpen(true)}
-                onOpenMoreActions={(event) => setMoreActionsAnchor(event.currentTarget)}
+                onOpenMoreActions={(event) =>
+                  setMoreActionsAnchor(event.currentTarget)
+                }
+                onOpenManagePlayers={() => setIsManagePlayersDialogOpen(true)}
+                onOpenStrategy={() => setIsStrategyDialogOpen(true)}
+                onOpenComment={() => setIsCommentDialogOpen(true)}
+                variant={variant}
               />
             )}
 
-            <LivePointContextCards currentPoint={currentPoint} />
-
             {/* Divider before chronology */}
-            <Divider sx={{ my: 3 }} />
+            {!isFieldVariant && <Divider sx={{ my: 3 }} />}
 
             {/* Display chronology for active points (running or scored) */}
-            {currentPoint && (
+            {!isFieldVariant && currentPoint && (
               <PointEventsHistory
                 pointId={currentPoint.id}
                 startingOnOffense={currentPoint.starting_on_offense}
@@ -367,8 +566,16 @@ export default function LivePointTracker({
                 endDateTime={currentPoint.end_datetime}
                 won={currentPoint.won}
                 fieldSide={currentPoint.field_side}
-                turnovers={currentPoint.id === activePoint?.id ? liveTurnovers : undefined}
-                stoppages={currentPoint.id === activePoint?.id ? liveStoppages : undefined}
+                turnovers={
+                  currentPoint.id === activePoint?.id
+                    ? liveTurnovers
+                    : undefined
+                }
+                stoppages={
+                  currentPoint.id === activePoint?.id
+                    ? liveStoppages
+                    : undefined
+                }
               />
             )}
           </Box>
@@ -376,7 +583,7 @@ export default function LivePointTracker({
       </Paper>
 
       {/* Dialogs */}
-      {!readOnly && (
+      {canRecordPoint && (
         <StartPointDialog
           open={isStartDialogOpen}
           onClose={() => setIsStartDialogOpen(false)}
@@ -481,13 +688,16 @@ export default function LivePointTracker({
             <Typography variant="body2" color="text.secondary">
               {t(
                 "points:tracker.halfTimeConfirmDescription",
-                "This will add a halftime marker in the game history."
+                "This will add a halftime marker in the game history.",
               )}
             </Typography>
             {createHalftimeMutation.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
-                {(createHalftimeMutation.error as { response?: { data?: { detail?: string } } })?.response?.data
-                  ?.detail || t("common:error.generic")}
+                {(
+                  createHalftimeMutation.error as {
+                    response?: { data?: { detail?: string } };
+                  }
+                )?.response?.data?.detail || t("common:error.generic")}
               </Alert>
             )}
           </DialogContent>
@@ -502,6 +712,7 @@ export default function LivePointTracker({
               variant="contained"
               onClick={() => createHalftimeMutation.mutate()}
               disabled={createHalftimeMutation.isPending}
+              sx={newUiContainedButtonSx}
             >
               {createHalftimeMutation.isPending
                 ? t("points:tracker.recordingHalftime", "Recording...")

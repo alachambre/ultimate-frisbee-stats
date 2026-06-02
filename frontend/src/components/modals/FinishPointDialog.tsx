@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -39,42 +39,33 @@ export default function FinishPointDialog({
   onSuccess,
 }: FinishPointDialogProps) {
   const { t } = useTranslation(["points", "common"]);
-  const [won, setWon] = useState<boolean | null>(null);
-  const [preselectedWon, setPreselectedWon] = useState<boolean | null>(null);
-  const [showWarning, setShowWarning] = useState(false);
+  const [selectedWon, setSelectedWon] = useState<boolean | null>(null);
   const queryClient = useQueryClient();
-  const initializedRef = useRef(false);
 
   // Fetch turnovers for the active point
-  const { data: turnovers = [] } = useQuery<TurnoverWithPlayer[]>({
+  const {
+    data: turnovers = [],
+    isFetched: hasFetchedTurnovers,
+    isFetching: isFetchingTurnovers,
+  } = useQuery<TurnoverWithPlayer[]>({
     queryKey: queryKeys.turnovers(activePoint.id),
     queryFn: () => getTurnoversByPoint(activePoint.id),
     enabled: open && !!activePoint.id,
   });
+  const isOutcomeInitializing =
+    open && (!hasFetchedTurnovers || isFetchingTurnovers);
 
   // Calculate current possession based on starting position and turnovers
   const weHavePossession = useMemo(() => {
     const currentlyHavePossession = (activePoint.starting_on_offense ? 1 : 0) + turnovers.length;
     return currentlyHavePossession % 2 === 1;
   }, [activePoint.starting_on_offense, turnovers.length]);
-
-  // Preselect outcome when dialog opens based on possession
-  useEffect(() => {
-    if (open && !initializedRef.current) {
-      // Only initialize once when dialog opens
-      initializedRef.current = true;
-      // This is a legitimate use of setState in useEffect for initialization when the dialog opens
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPreselectedWon(weHavePossession);
-       
-      setWon(weHavePossession);
-       
-      setShowWarning(false);
-    } else if (!open) {
-      // Reset initialization flag when dialog closes
-      initializedRef.current = false;
-    }
-  }, [open, weHavePossession]);
+  const preselectedWon = isOutcomeInitializing ? null : weHavePossession;
+  const won = selectedWon ?? preselectedWon;
+  const showWarning =
+    selectedWon !== null &&
+    preselectedWon !== null &&
+    selectedWon !== preselectedWon;
 
   const finishMutation = useMutation({
     mutationFn: () =>
@@ -91,9 +82,7 @@ export default function FinishPointDialog({
   });
 
   const handleClose = () => {
-    setWon(null);
-    setPreselectedWon(null);
-    setShowWarning(false);
+    setSelectedWon(null);
     finishMutation.reset();
     onClose();
   };
@@ -105,13 +94,7 @@ export default function FinishPointDialog({
   };
 
   const handleOutcomeChange = (newWon: boolean) => {
-    setWon(newWon);
-    // Show warning if user changed from the preselected value
-    if (preselectedWon !== null && newWon !== preselectedWon) {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-    }
+    setSelectedWon(newWon);
   };
 
   const isOffense = activePoint.starting_on_offense;
@@ -167,6 +150,7 @@ export default function FinishPointDialog({
               }
             }}
             fullWidth
+            disabled={isOutcomeInitializing}
             aria-label={t("common:ariaLabel.pointOutcome")}
             sx={(theme) => ({
               "& .MuiToggleButton-root": {
@@ -214,7 +198,7 @@ export default function FinishPointDialog({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={won === null || finishMutation.isPending}
+          disabled={won === null || isOutcomeInitializing || finishMutation.isPending}
         >
           {finishMutation.isPending
             ? t("points:dialog.finish.finishing", "Finishing...")

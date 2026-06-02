@@ -58,7 +58,7 @@ export default function NewRecordGamePage() {
     isLoadingTeams ||
     isLoadingGames ||
     (effectiveSelectedTeamId !== undefined && isLoadingTeamCompetitions);
-  const error = gamesError || teamCompetitionsError;
+  const error = teamsError || gamesError || teamCompetitionsError;
 
   if (isLoading) {
     return <LoadingState message={t("newUiPages.recordGame.loading")} />;

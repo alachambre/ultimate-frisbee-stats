@@ -7,22 +7,26 @@ import { server } from "../../../test/setup";
 import { UiModeProvider } from "../../../uiMode/UiModeProvider";
 import { NewUiTeamProvider } from "../../team/NewUiTeamProvider";
 import NewAppShell from "../NewAppShell";
+import { isMobileFullscreenRoute } from "../mobileFullscreenRoutes";
 
-function renderShell(role: "public" | "team_member" | "team_analyst" | "admin") {
+function renderShell(
+  role: "public" | "team_member" | "team_analyst" | "admin",
+  route = "/",
+) {
   localStorage.setItem("monkey-statistics-ui-mode", "new");
 
   render(
     <UiModeProvider>
       <NewUiTeamProvider canLoadTeams={role !== "public"}>
         <Routes>
-          <Route path="/" element={<NewAppShell />}>
-            <Route index element={<div>New UI home</div>} />
+          <Route path="*" element={<NewAppShell />}>
+            <Route path="*" element={<div>New UI content</div>} />
           </Route>
         </Routes>
       </NewUiTeamProvider>
     </UiModeProvider>,
     {
-      route: "/",
+      route,
       auth: {
         role,
         isAuthenticated: role !== "public",
@@ -37,7 +41,7 @@ function renderShell(role: "public" | "team_member" | "team_analyst" | "admin") 
 async function openDrawer() {
   const user = userEvent.setup();
   await user.click(
-    screen.getByRole("button", { name: /^Monkey Statistics$/i })
+    screen.getByRole("button", { name: /^Open navigation$/i })
   );
   return user;
 }
@@ -64,12 +68,6 @@ describe("NewAppShell", () => {
     await openDrawer();
 
     expect(
-      screen.getByRole("link", { name: /^Record game$/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /^Live game$/i })
-    ).toBeInTheDocument();
-    expect(
       screen.getByRole("link", { name: /^All games$/i })
     ).toBeInTheDocument();
     expect(
@@ -78,7 +76,15 @@ describe("NewAppShell", () => {
     expect(
       screen.getByRole("link", { name: /^Team setup$/i })
     ).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^Admin$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Record game$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Live game$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Admin$/i })
+    ).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThan(0);
@@ -96,10 +102,14 @@ describe("NewAppShell", () => {
     renderShell("public");
     await openDrawer();
 
-    expect(screen.getByRole("link", { name: /^Live game$/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^All games$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /^All games$/i })
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Record game$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Live game$/i })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Team setup$/i })
@@ -107,6 +117,19 @@ describe("NewAppShell", () => {
     expect(
       screen.queryByRole("link", { name: /^Statistics$/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("highlights All games while viewing a live game", async () => {
+    renderShell("team_member", "/live/1");
+
+    await waitFor(() => {
+      expect(
+        screen.getAllByRole("link", {
+          hidden: true,
+          name: /^All games$/i,
+        })[0],
+      ).toHaveClass("MuiButton-contained");
+    });
   });
 
   it("switches back to old UI from the mode toggle", async () => {
@@ -120,13 +143,18 @@ describe("NewAppShell", () => {
     expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("old");
   });
 
-  it("shows drawer navigation, mode toggle, and auth action", async () => {
+  it("shows drawer navigation, language toggle, mode toggle, and auth action", async () => {
     renderShell("public");
     const user = await openDrawer();
 
-    expect(screen.getByRole("link", { name: /^Live game$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /^All games$/i })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /^Switch to old UI$/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^Select Language$/i })
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Sign in$/i })).toBeInTheDocument();
 
@@ -135,5 +163,24 @@ describe("NewAppShell", () => {
     expect(
       screen.getByRole("heading", { name: /^Sign in$/i })
     ).toBeInTheDocument();
+  });
+
+  it("lets users switch language from the new UI shell", async () => {
+    renderShell("public");
+    await openDrawer();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: /^Select Language$/i }));
+    await user.click(screen.getByRole("menuitem", { name: /Français/i }));
+
+    expect(localStorage.getItem("i18nextLng")).toBe("fr");
+  });
+
+  it("uses the mobile fullscreen shell for live tracking and game history", () => {
+    expect(isMobileFullscreenRoute("/live/1")).toBe(true);
+    expect(isMobileFullscreenRoute("/games/1")).toBe(true);
+    expect(isMobileFullscreenRoute("/games")).toBe(false);
+    expect(isMobileFullscreenRoute("/games/1/details")).toBe(false);
+    expect(isMobileFullscreenRoute("/statistics")).toBe(false);
   });
 });
