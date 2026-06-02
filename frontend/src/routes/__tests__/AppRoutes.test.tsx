@@ -139,6 +139,15 @@ describe("AppRoutes", () => {
     expect(window.location.pathname).toBe("/live/1");
   });
 
+  it("redirects the removed new UI live overview route to games", async () => {
+    renderAppRoutes("new", "/live");
+
+    expect(
+      await screen.findByRole("heading", { name: /^All games$/i })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/games");
+  });
+
   it("keeps new UI record routes routable", async () => {
     renderAppRoutes("new", "/record/1");
 

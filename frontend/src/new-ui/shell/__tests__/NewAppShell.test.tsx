@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "../../../test/test-utils";
+import { render, screen, waitFor, within } from "../../../test/test-utils";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { Route, Routes } from "react-router-dom";
@@ -59,6 +59,9 @@ describe("NewAppShell", () => {
             players: [],
           },
         ])
+      ),
+      http.get("http://localhost:8000/games", () =>
+        HttpResponse.json([])
       )
     );
   });
@@ -91,6 +94,65 @@ describe("NewAppShell", () => {
     });
   });
 
+  it("renders mobile bottom navigation for primary new UI routes", async () => {
+    server.use(
+      http.get("http://localhost:8000/games", () =>
+        HttpResponse.json([
+          {
+            id: 7,
+            competition_id: 10,
+            opponent_name: "Live Opponent",
+            date: "2026-05-22T10:00:00Z",
+            comments: null,
+            status: "started",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 3,
+            opponent_score: 2,
+            team_name: "Monkey Stats",
+            competition_name: "Spring Cup",
+          },
+        ])
+      )
+    );
+    renderShell("team_member", "/games");
+
+    const mobileNav = screen.getByLabelText(/^Mobile primary navigation$/i);
+
+    expect(
+      within(mobileNav).getByRole("link", { hidden: true, name: /^Games$/i })
+    ).toHaveAttribute("href", "/games");
+    expect(
+      within(mobileNav).getByRole("link", { hidden: true, name: /^Games$/i })
+    ).toHaveAttribute("aria-current", "page");
+    await waitFor(() => {
+      expect(
+        within(mobileNav).getByRole("link", { hidden: true, name: /^Live$/i })
+      ).toHaveAttribute("href", "/games/7");
+    });
+    expect(
+      within(mobileNav).getByRole("link", { hidden: true, name: /^Stats$/i })
+    ).toHaveAttribute("href", "/statistics");
+    expect(
+      within(mobileNav).getByRole("button", { hidden: true, name: /^More$/i })
+    ).toBeInTheDocument();
+  });
+
+  it("opens the drawer from the mobile more navigation action", async () => {
+    const user = userEvent.setup();
+    renderShell("team_member", "/games");
+
+    const mobileNav = screen.getByLabelText(/^Mobile primary navigation$/i);
+    await user.click(
+      within(mobileNav).getByRole("button", { hidden: true, name: /^More$/i })
+    );
+
+    expect(
+      await screen.findByRole("link", { name: /^Team setup$/i })
+    ).toBeInTheDocument();
+  });
+
   it("shows admin navigation for admins", async () => {
     renderShell("admin");
     await openDrawer();
@@ -116,6 +178,17 @@ describe("NewAppShell", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Statistics$/i })
+    ).not.toBeInTheDocument();
+
+    const mobileNav = screen.getByLabelText(/^Mobile primary navigation$/i);
+    expect(
+      within(mobileNav).getByRole("link", { hidden: true, name: /^Games$/i })
+    ).toBeInTheDocument();
+    expect(
+      within(mobileNav).getByRole("link", { hidden: true, name: /^Live$/i })
+    ).toBeInTheDocument();
+    expect(
+      within(mobileNav).queryByRole("link", { hidden: true, name: /^Stats$/i })
     ).not.toBeInTheDocument();
   });
 

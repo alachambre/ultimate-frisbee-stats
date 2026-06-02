@@ -16,6 +16,16 @@
     "title": "Monkey Statistics",
     "open": "Ouvrir la navigation"
   },
+  "mobileTopBar": {
+    "label": "En-tête mobile"
+  },
+  "mobileNav": {
+    "label": "Navigation principale mobile",
+    "games": "Matchs",
+    "live": "Live",
+    "statistics": "Stats",
+    "more": "Plus"
+  },
   "language": {
     "english": "English",
     "french": "Français",
@@ -29,7 +39,10 @@
   },
   "team": {
     "selectedTeam": "Équipe sélectionnée",
-    "noTeam": "Aucune équipe sélectionnée"
+    "noTeam": "Aucune équipe sélectionnée",
+    "allTeams": "Toutes équipes",
+    "publicView": "Vue publique",
+    "changeTeam": "Changer d'équipe"
   },
   "newUiPages": {
     "allGames": {
@@ -39,6 +52,8 @@
       "publicNotice": "Vous voyez les informations publiques des matchs. Connectez-vous avec un accès équipe pour utiliser le tableau de bord.",
       "selectedTeamEyebrow": "Tableau de bord {{teamName}}",
       "globalEyebrow": "Matchs publics",
+      "globalDashboardEyebrow": "Tableau de bord toutes équipes",
+      "globalCopy": "Matchs de toutes les équipes auxquelles vous avez accès. Sélectionnez une équipe pour cibler le tableau de bord.",
       "actions": {
         "newGame": "Nouveau match",
         "newCompetition": "Nouvelle compétition",
@@ -73,6 +88,7 @@
       "empty": {
         "team": "Aucun match pour cette équipe.",
         "public": "Aucun match public disponible pour le moment.",
+        "global": "Aucun match disponible pour le moment.",
         "filtered": "Aucun match ne correspond à cette recherche d'adversaire.",
         "competition": "Aucun match dans cette compétition pour le moment.",
         "section": "Rien à afficher pour le moment."

@@ -125,13 +125,31 @@ export default function NewAllGamesPage() {
     return <ErrorState message={t("newUiPages.allGames.error")} />;
   }
 
-  const isPublicFallback =
-    !canLoadTeams || Boolean(teamsError) || effectiveSelectedTeamId === undefined;
+  const hasTeamScope = effectiveSelectedTeamId !== undefined;
+  const isGlobalGameFallback =
+    !canLoadTeams || Boolean(teamsError) || !hasTeamScope;
+  const shouldShowPublicSpectatorNotice =
+    shouldProtectUi && !auth.hasAppAccess && isGlobalGameFallback;
+  const pageEyebrow =
+    selectedTeam && hasTeamScope
+      ? t("newUiPages.allGames.selectedTeamEyebrow", {
+          teamName: selectedTeam.name,
+        })
+      : shouldShowPublicSpectatorNotice
+        ? t("newUiPages.allGames.globalEyebrow")
+        : t("newUiPages.allGames.globalDashboardEyebrow");
+  const pageCopy = shouldShowPublicSpectatorNotice
+    ? t("newUiPages.allGames.publicNotice")
+    : hasTeamScope
+      ? t("newUiPages.allGames.copy")
+      : t("newUiPages.allGames.globalCopy");
   const emptyMessage = opponentSearch.trim()
     ? t("newUiPages.allGames.empty.filtered")
-    : effectiveSelectedTeamId === undefined
-      ? t("newUiPages.allGames.empty.public")
-      : t("newUiPages.allGames.empty.team");
+    : hasTeamScope
+      ? t("newUiPages.allGames.empty.team")
+      : shouldShowPublicSpectatorNotice
+        ? t("newUiPages.allGames.empty.public")
+        : t("newUiPages.allGames.empty.global");
   const formatCompetitionDate = (value: string | null) => {
     if (!value) {
       return t("games:detail.dateNotSet");
@@ -144,7 +162,7 @@ export default function NewAllGamesPage() {
   const closeRosterDialog = () => setRosterCompetition(null);
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 5 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 5 } }}>
       <Stack spacing={3}>
         <Box
           sx={(theme) => ({
@@ -155,22 +173,21 @@ export default function NewAllGamesPage() {
             },
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
-            gap: { xs: 1.5, md: 2 },
+            gap: { xs: 0, sm: 1.5, md: 2 },
             justifyContent: "space-between",
             pb: { xs: 2, md: 0 },
           })}
         >
-          <Stack spacing={0.75} sx={{ maxWidth: 720 }}>
+          <Stack
+            spacing={0.75}
+            sx={{ display: { xs: "none", sm: "flex" }, maxWidth: 720 }}
+          >
             <Typography
               color="text.secondary"
               sx={{ display: { xs: "none", sm: "block" }, lineHeight: 1.2 }}
               variant="overline"
             >
-              {selectedTeam && effectiveSelectedTeamId !== undefined
-                ? t("newUiPages.allGames.selectedTeamEyebrow", {
-                    teamName: selectedTeam.name,
-                  })
-                : t("newUiPages.allGames.globalEyebrow")}
+              {pageEyebrow}
             </Typography>
             <Stack
               alignItems="center"
@@ -200,9 +217,7 @@ export default function NewAllGamesPage() {
               sx={{ display: { xs: "none", sm: "block" } }}
               variant="body1"
             >
-              {isPublicFallback
-                ? t("newUiPages.allGames.publicNotice")
-                : t("newUiPages.allGames.copy")}
+              {pageCopy}
             </Typography>
           </Stack>
 
@@ -258,7 +273,7 @@ export default function NewAllGamesPage() {
           </Stack>
         </Box>
 
-        {isPublicFallback && (
+        {shouldShowPublicSpectatorNotice && (
           <PermissionNotice
             title={t("newUiPages.allGames.publicCopy")}
             description={t("newUiPages.allGames.publicNotice")}

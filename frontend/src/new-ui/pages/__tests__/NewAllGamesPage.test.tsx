@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import type { AppRole } from "../../../auth";
 import { render, screen, waitFor } from "../../../test/test-utils";
 import { server } from "../../../test/setup";
 import { NewUiTeamProvider } from "../../team/NewUiTeamProvider";
@@ -23,7 +24,7 @@ function renderPage({
   role = "team_member",
   canLoadTeams = true,
 }: {
-  role?: "public" | "team_member";
+  role?: AppRole;
   canLoadTeams?: boolean;
 } = {}) {
   return render(
@@ -286,6 +287,57 @@ describe("NewAllGamesPage", () => {
       "href",
       "/games/1"
     );
+  });
+
+  it("hides the public spectator notice for an admin global dashboard", async () => {
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+          {
+            id: 2,
+            name: "Second Team",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/games`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            competition_id: 10,
+            opponent_name: "Admin Opponent",
+            date: "2026-05-22T10:00:00Z",
+            comments: null,
+            status: "started",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 3,
+            opponent_score: 2,
+            team_name: "Monkey Stats",
+            competition_name: "Spring Cup",
+          },
+        ])
+      )
+    );
+
+    renderPage({ role: "admin" });
+
+    expect(await screen.findByText("Admin Opponent")).toBeInTheDocument();
+    expect(screen.getByText("All teams dashboard")).toBeInTheDocument();
+    expect(screen.queryByText("Public spectator view")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "You are seeing public game information. Sign in with team access to use the team dashboard."
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("shows an empty state when the selected team has no games", async () => {

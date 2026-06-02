@@ -16,6 +16,16 @@
     "title": "Monkey Statistics",
     "open": "Open navigation"
   },
+  "mobileTopBar": {
+    "label": "Mobile app header"
+  },
+  "mobileNav": {
+    "label": "Mobile primary navigation",
+    "games": "Games",
+    "live": "Live",
+    "statistics": "Stats",
+    "more": "More"
+  },
   "language": {
     "english": "English",
     "french": "Français",
@@ -29,7 +39,10 @@
   },
   "team": {
     "selectedTeam": "Selected team",
-    "noTeam": "No team selected"
+    "noTeam": "No team selected",
+    "allTeams": "All teams",
+    "publicView": "Public view",
+    "changeTeam": "Change team"
   },
   "newUiPages": {
     "allGames": {
@@ -39,6 +52,8 @@
       "publicNotice": "You are seeing public game information. Sign in with team access to use the team dashboard.",
       "selectedTeamEyebrow": "{{teamName}} dashboard",
       "globalEyebrow": "Public games",
+      "globalDashboardEyebrow": "All teams dashboard",
+      "globalCopy": "Games across every team you can access. Select a team to focus the dashboard.",
       "actions": {
         "newGame": "New game",
         "newCompetition": "New competition",
@@ -73,6 +88,7 @@
       "empty": {
         "team": "No games for this team yet.",
         "public": "No public games are available yet.",
+        "global": "No games are available yet.",
         "filtered": "No games match this opponent search.",
         "competition": "No games in this competition yet.",
         "section": "Nothing to show here right now."

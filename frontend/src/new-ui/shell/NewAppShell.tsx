@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import AppBar from "@mui/material/AppBar";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -15,8 +18,13 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Toolbar from "@mui/material/Toolbar";
 import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import LanguageIcon from "@mui/icons-material/Language";
 import MenuIcon from "@mui/icons-material/Menu";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
@@ -26,13 +34,18 @@ import {
   ENGLISH_FLAG_EMOJI,
   FRENCH_FLAG_EMOJI,
 } from "../../constants/branding";
+import { getAllGames } from "../../services/games";
+import type { GameWithScore } from "../../types";
+import { queryKeys } from "../../utils/queryKeys";
 import { isMobileFullscreenRoute } from "./mobileFullscreenRoutes";
 import NewTeamSelector from "./NewTeamSelector";
 import NewUiModeToggle from "./NewUiModeToggle";
+import { useNewUiTeam } from "../team/useNewUiTeam";
 
 interface NavigationItem {
   label: string;
   path: string;
+  value?: string;
 }
 
 function isActivePath(currentPath: string, itemPath: string) {
@@ -43,10 +56,79 @@ function isActivePath(currentPath: string, itemPath: string) {
   return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`);
 }
 
+function getCurrentSectionKey(pathname: string) {
+  if (pathname.startsWith("/live")) {
+    return "navigation:mobileNav.live";
+  }
+  if (pathname.startsWith("/statistics")) {
+    return "navigation:mobileNav.statistics";
+  }
+  if (pathname.startsWith("/team-setup")) {
+    return "navigation:menu.teamSetup";
+  }
+  if (pathname.startsWith("/admin/users")) {
+    return "navigation:menu.admin";
+  }
+  if (pathname.startsWith("/record")) {
+    return "navigation:menu.recordGame";
+  }
+
+  return "navigation:menu.allGames";
+}
+
+function getMobileNavValue(pathname: string) {
+  if (pathname.startsWith("/games/") || pathname.startsWith("/live")) {
+    return "/live";
+  }
+  if (pathname.startsWith("/statistics")) {
+    return "/statistics";
+  }
+  if (pathname.startsWith("/games")) {
+    return "/games";
+  }
+
+  return "more";
+}
+
+function compareGameDates(
+  leftDate?: string | null,
+  rightDate?: string | null
+) {
+  if (!leftDate && !rightDate) {
+    return 0;
+  }
+  if (!leftDate) {
+    return 1;
+  }
+  if (!rightDate) {
+    return -1;
+  }
+
+  return new Date(leftDate).getTime() - new Date(rightDate).getTime();
+}
+
+function getCurrentLiveGame(
+  games: GameWithScore[],
+  selectedTeamName?: string
+): GameWithScore | undefined {
+  const liveGames = games.filter((game) => game.status === "started");
+  const teamLiveGames =
+    selectedTeamName === undefined
+      ? liveGames
+      : liveGames.filter((game) => game.team_name === selectedTeamName);
+  const scopedLiveGames =
+    teamLiveGames.length > 0 ? teamLiveGames : liveGames;
+
+  return [...scopedLiveGames].sort((left, right) =>
+    compareGameDates(left.date, right.date)
+  )[0];
+}
+
 export default function NewAppShell() {
   const auth = useAuth();
   const location = useLocation();
   const { t, i18n } = useTranslation(["common", "navigation"]);
+  const { canLoadTeams, selectedTeam } = useNewUiTeam();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [languageMenuAnchor, setLanguageMenuAnchor] =
     useState<null | HTMLElement>(null);
@@ -56,6 +138,24 @@ export default function NewAppShell() {
     auth.isLoading
   );
   const shouldUseMobileFullscreen = isMobileFullscreenRoute(location.pathname);
+  const { data: games = [] } = useQuery({
+    queryKey: queryKeys.games,
+    queryFn: getAllGames,
+    enabled: !shouldUseMobileFullscreen,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+  });
+  const currentLiveGame = getCurrentLiveGame(games, selectedTeam?.name);
+  const liveHistoryPath = currentLiveGame
+    ? `/games/${currentLiveGame.id}`
+    : "/games";
+  const selectedTeamLabel =
+    selectedTeam?.name ??
+    (canLoadTeams
+      ? t("navigation:team.allTeams")
+      : t("navigation:team.publicView"));
+  const currentSectionLabel = t(getCurrentSectionKey(location.pathname));
 
   const navigationItems = useMemo<NavigationItem[]>(() => {
     const canViewStatistics =
@@ -78,6 +178,28 @@ export default function NewAppShell() {
     auth.capabilities.canEditData,
     auth.capabilities.canManageUsers,
     auth.capabilities.canViewStatistics,
+    shouldProtectUi,
+    t,
+  ]);
+
+  const mobileNavigationItems = useMemo<NavigationItem[]>(() => {
+    const canViewStatistics =
+      !shouldProtectUi || auth.capabilities.canViewStatistics;
+
+    return [
+      { label: t("navigation:mobileNav.games"), path: "/games" },
+      {
+        label: t("navigation:mobileNav.live"),
+        path: liveHistoryPath,
+        value: "/live",
+      },
+      ...(canViewStatistics
+        ? [{ label: t("navigation:mobileNav.statistics"), path: "/statistics" }]
+        : []),
+    ];
+  }, [
+    auth.capabilities.canViewStatistics,
+    liveHistoryPath,
     shouldProtectUi,
     t,
   ]);
@@ -168,10 +290,17 @@ export default function NewAppShell() {
         elevation={0}
         position="sticky"
         sx={(theme) => ({
-          bgcolor: "background.default",
+          bgcolor: {
+            xs: theme.colors.newUi.primary,
+            sm: "background.default",
+          },
+          color: {
+            xs: theme.palette.common.white,
+            sm: theme.palette.text.primary,
+          },
           borderBottom: {
-            xs: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
-            md: `1px solid ${alpha(theme.palette.divider, 0.45)}`,
+            xs: "none",
+            sm: `1px solid ${alpha(theme.palette.divider, 0.55)}`,
           },
           display: {
             xs: shouldUseMobileFullscreen ? "none" : "block",
@@ -180,7 +309,64 @@ export default function NewAppShell() {
         })}
       >
         <Toolbar
+          aria-label={t("navigation:mobileTopBar.label")}
           sx={(theme) => ({
+            alignItems: "center",
+            display: { xs: "flex", sm: "none" },
+            justifyContent: "center",
+            minHeight: 56,
+            px: 2,
+            width: "100%",
+            ...(!shouldUseMobileFullscreen
+              ? {}
+              : {
+                  [theme.breakpoints.only("xs")]: {
+                    display: "none",
+                  },
+            }),
+          })}
+        >
+          <Box
+            sx={{
+              minWidth: 0,
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              component="div"
+              title={selectedTeamLabel}
+              sx={{
+                color: "inherit",
+                fontWeight: 900,
+                lineHeight: 1.15,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              variant="subtitle1"
+            >
+              {selectedTeamLabel}
+            </Typography>
+            <Typography
+              component="div"
+              sx={(theme) => ({
+                color: alpha(theme.palette.common.white, 0.78),
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                lineHeight: 1.15,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              })}
+            >
+              {currentSectionLabel}
+            </Typography>
+          </Box>
+        </Toolbar>
+
+        <Toolbar
+          sx={(theme) => ({
+            display: { xs: "none", sm: "flex" },
             gap: { xs: 1, md: 2 },
             maxWidth: theme.breakpoints.values.lg,
             minHeight: { xs: 64, md: 72 },
@@ -195,7 +381,7 @@ export default function NewAppShell() {
             onClick={() => setIsDrawerOpen(true)}
             sx={(theme) => ({
               ...newUiIconButtonSx(theme),
-              display: { xs: "inline-flex", xl: "none" },
+              display: "inline-flex",
             })}
           >
             <MenuIcon />
@@ -204,7 +390,7 @@ export default function NewAppShell() {
           <Box
             component="nav"
             sx={{
-              display: { xs: "none", xl: "flex" },
+              display: { xs: "none", md: "flex" },
               flex: 1,
               gap: 0.5,
               minWidth: 0,
@@ -245,9 +431,10 @@ export default function NewAppShell() {
           <Box
             sx={{
               alignItems: "center",
-              display: { xs: "none", lg: "flex" },
+              display: { xs: "none", sm: "flex" },
               flexShrink: 0,
               gap: 1.5,
+              ml: "auto",
             }}
           >
             <NewTeamSelector />
@@ -392,8 +579,93 @@ export default function NewAppShell() {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flex: 1 }}>
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          pb: {
+            xs: shouldUseMobileFullscreen
+              ? 0
+              : "calc(78px + env(safe-area-inset-bottom))",
+            sm: 0,
+          },
+        }}
+      >
         <Outlet />
+      </Box>
+
+      <Box
+        aria-label={t("navigation:mobileNav.label")}
+        component="nav"
+        sx={(theme) => ({
+          bottom: 0,
+          display: {
+            xs: shouldUseMobileFullscreen ? "none" : "block",
+            sm: "none",
+          },
+          left: 0,
+          position: "fixed",
+          right: 0,
+          zIndex: theme.zIndex.appBar,
+        })}
+      >
+        <BottomNavigation
+          showLabels
+          value={getMobileNavValue(location.pathname)}
+          sx={(theme) => ({
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+            boxShadow: `0 -8px 24px ${alpha(theme.palette.common.black, 0.08)}`,
+            height: "calc(64px + env(safe-area-inset-bottom))",
+            pb: "env(safe-area-inset-bottom)",
+            "& .MuiBottomNavigationAction-root": {
+              color: theme.palette.text.secondary,
+              minWidth: 0,
+              px: 0.5,
+            },
+            "& .Mui-selected": {
+              color: theme.colors.newUi.primary,
+            },
+            "& .MuiBottomNavigationAction-label": {
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              whiteSpace: "nowrap",
+            },
+          })}
+        >
+          {mobileNavigationItems.map((item) => {
+            const icon =
+              item.value === "/live" ? (
+                <PlayArrowIcon />
+              ) : item.path === "/statistics" ? (
+                <BarChartIcon />
+              ) : (
+                <SportsScoreIcon />
+              );
+
+            return (
+              <BottomNavigationAction
+                aria-current={
+                  getMobileNavValue(location.pathname) ===
+                  (item.value ?? item.path)
+                    ? "page"
+                    : undefined
+                }
+                component={Link}
+                icon={icon}
+                key={item.value ?? item.path}
+                label={item.label}
+                to={item.path}
+                value={item.value ?? item.path}
+              />
+            );
+          })}
+          <BottomNavigationAction
+            icon={<MoreHorizIcon />}
+            label={t("navigation:mobileNav.more")}
+            onClick={() => setIsDrawerOpen(true)}
+            value="more"
+          />
+        </BottomNavigation>
       </Box>
 
       <LoginDialog
