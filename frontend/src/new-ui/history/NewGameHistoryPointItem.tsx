@@ -203,6 +203,7 @@ export default function NewGameHistoryPointItem({
   const ourTurnovers = point.our_turnovers ?? 0;
   const turnLabel = getTurnLabel(ourTurnovers, t);
   const turnChipColor = getTurnChipColor(ourTurnovers);
+  const SideIcon = point.starting_on_offense ? FlashOnIcon : ShieldIcon;
 
   return (
     <Accordion
@@ -211,28 +212,64 @@ export default function NewGameHistoryPointItem({
       expanded={expanded}
       onChange={(_, isExpanded) => setExpanded(isExpanded)}
       sx={(theme) => ({
-        border: `1px solid ${theme.palette.divider}`,
+        bgcolor: "background.paper",
+        border: `1px solid ${
+          expanded
+            ? alpha(theme.colors.newUi.primary, 0.5)
+            : alpha(theme.palette.divider, 0.9)
+        }`,
         borderRadius: 1,
+        boxShadow: expanded
+          ? `0 12px 28px ${alpha(theme.colors.newUi.primary, 0.14)}`
+          : "none",
         overflow: "hidden",
+        position: "relative",
+        transition: theme.transitions.create(["border-color", "box-shadow"], {
+          duration: theme.transitions.duration.short,
+        }),
+        "&:after": {
+          bgcolor: expanded ? theme.colors.newUi.primary : "transparent",
+          bottom: 0,
+          content: '""',
+          left: 0,
+          position: "absolute",
+          top: 0,
+          transition: theme.transitions.create("background-color", {
+            duration: theme.transitions.duration.short,
+          }),
+          width: 5,
+          zIndex: 1,
+        },
         "&:before": { display: "none" },
       })}
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
-        sx={{
+        sx={(theme) => ({
           alignItems: "stretch",
-          bgcolor: "background.paper",
-          px: { xs: 2, sm: 2.5 },
-          py: 1.25,
+          bgcolor: expanded
+            ? alpha(theme.colors.newUi.primary, 0.07)
+            : "background.paper",
+          minHeight: 0,
+          pl: expanded ? { xs: 2.5, sm: 3 } : { xs: 2, sm: 2.5 },
+          pr: { xs: 1.5, sm: 2 },
+          py: { xs: 1.4, sm: 1.5 },
+          transition: theme.transitions.create(["background-color", "padding"], {
+            duration: theme.transitions.duration.short,
+          }),
           "& .MuiAccordionSummary-content": {
             display: "block",
+            my: 0,
             minWidth: 0,
           },
           "& .MuiAccordionSummary-expandIconWrapper": {
             alignSelf: "flex-end",
+            color: expanded
+              ? theme.colors.newUi.primary
+              : theme.palette.text.secondary,
             mb: 1,
           },
-        }}
+        })}
       >
         <Stack
           alignItems="flex-start"
@@ -242,20 +279,32 @@ export default function NewGameHistoryPointItem({
         >
           <Box sx={{ minWidth: 0 }}>
             <Stack alignItems="center" direction="row" spacing={1}>
-              {point.starting_on_offense ? (
-                <FlashOnIcon
-                  fontSize="small"
-                  sx={(theme) => ({ color: theme.colors.newUi.primary })}
-                  titleAccess={sideAccessibilityLabel}
-                />
-              ) : (
-                <ShieldIcon
-                  fontSize="small"
-                  sx={(theme) => ({ color: theme.colors.newUi.primary })}
-                  titleAccess={sideAccessibilityLabel}
-                />
-              )}
-              <Typography component="h2" fontWeight={900} variant="h6">
+              <Box
+                sx={(theme) => ({
+                  alignItems: "center",
+                  bgcolor: expanded
+                    ? alpha(theme.colors.newUi.primary, 0.14)
+                    : theme.colors.newUi.primarySoft,
+                  borderRadius: "50%",
+                  color: theme.colors.newUi.primary,
+                  display: "inline-flex",
+                  flexShrink: 0,
+                  height: 30,
+                  justifyContent: "center",
+                  width: 30,
+                  "& .MuiSvgIcon-root": {
+                    fontSize: 18,
+                  },
+                })}
+              >
+                <SideIcon titleAccess={sideAccessibilityLabel} />
+              </Box>
+              <Typography
+                component="h2"
+                fontWeight={900}
+                sx={{ lineHeight: 1.15 }}
+                variant="h6"
+              >
                 {t("history.point", "Point")} {point.point_number}
               </Typography>
               {durationLabel && (
@@ -291,7 +340,12 @@ export default function NewGameHistoryPointItem({
                 size="small"
                 sx={(theme) => {
                   if (!turnChipColor) {
-                    return { fontWeight: 700 };
+                    return {
+                      bgcolor: expanded
+                        ? theme.palette.background.paper
+                        : "transparent",
+                      fontWeight: 700,
+                    };
                   }
 
                   return {
@@ -331,19 +385,21 @@ export default function NewGameHistoryPointItem({
       <AccordionDetails
         sx={(theme) => ({
           bgcolor: "background.paper",
-          borderTop: `1px solid ${theme.palette.divider}`,
+          borderTop: `1px solid ${alpha(theme.colors.newUi.primary, 0.16)}`,
+          ml: "5px",
           p: { xs: 2, sm: 2.5 },
         })}
       >
         {point.comments && (
           <Box
-            sx={{
-              bgcolor: "action.hover",
+            sx={(theme) => ({
+              bgcolor: alpha(theme.colors.newUi.primary, 0.05),
+              border: `1px solid ${alpha(theme.colors.newUi.primary, 0.12)}`,
               borderRadius: 1,
               mb: 2,
               px: 1.5,
               py: 1.25,
-            }}
+            })}
           >
             <Box sx={{ alignItems: "center", display: "flex", gap: 1, mb: 0.5 }}>
               <CommentIcon
@@ -417,6 +473,9 @@ export default function NewGameHistoryPointItem({
                   key={player.id}
                   label={player.name}
                   size="small"
+                  sx={(theme) => ({
+                    bgcolor: alpha(theme.palette.text.primary, 0.025),
+                  })}
                   variant="outlined"
                 />
               ))}
@@ -439,11 +498,11 @@ export default function NewGameHistoryPointItem({
               color: "success.main",
               display: "flex",
               gap: 1,
-              mt: 2,
+              mt: 2.5,
             }}
           >
             <CheckCircleIcon fontSize="small" />
-            <Typography fontWeight={700} variant="body2">
+            <Typography fontWeight={800} variant="body2">
               {t("history.weScored", "We scored!")}
             </Typography>
           </Box>

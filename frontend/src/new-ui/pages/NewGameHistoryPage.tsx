@@ -85,13 +85,28 @@ function NewGameHistoryHalftimeItem({
     <Paper
       elevation={0}
       sx={(theme) => ({
-        border: `1px solid ${theme.palette.divider}`,
+        bgcolor: alpha(theme.palette.warning.main, 0.06),
+        border: `1px solid ${alpha(theme.palette.warning.main, 0.22)}`,
         borderRadius: 1,
         p: { xs: 2, sm: 2.5 },
       })}
     >
       <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-        <AccessTimeFilledIcon color="warning" fontSize="small" />
+        <Box
+          sx={(theme) => ({
+            alignItems: "center",
+            bgcolor: alpha(theme.palette.warning.main, 0.14),
+            borderRadius: "50%",
+            color: theme.palette.warning.dark,
+            display: "inline-flex",
+            flexShrink: 0,
+            height: 30,
+            justifyContent: "center",
+            width: 30,
+          })}
+        >
+          <AccessTimeFilledIcon fontSize="small" />
+        </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography fontWeight={900} variant="subtitle1">
             {t("points:history.halfTime")}

@@ -1,13 +1,6 @@
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import {
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { TFunction } from "i18next";
 
 import type { PointWithPlayers, Stoppage, TurnoverWithPlayer } from "../../types";
@@ -156,66 +149,137 @@ export default function NewGameHistoryChronology({
   const pointStartTime = point.start_datetime;
 
   return (
-    <Box aria-label={title} role="region" sx={{ mt: 2 }}>
-      <Typography fontWeight={800} sx={{ mb: 1 }} variant="subtitle2">
+    <Box aria-label={title} role="region" sx={{ mt: 2.5 }}>
+      <Typography fontWeight={900} sx={{ mb: 1 }} variant="subtitle2">
         {title} ({events.length})
       </Typography>
-      <TableContainer
+      <Box
         sx={(theme) => ({
-          bgcolor: "background.paper",
-          border: `1px solid ${theme.palette.divider}`,
+          bgcolor: alpha(theme.colors.newUi.primary, 0.03),
+          border: `1px solid ${alpha(theme.palette.divider, 0.95)}`,
           borderRadius: 1,
+          overflow: "hidden",
         })}
       >
-        <Table aria-label={title} size="small">
-          <TableBody>
-            {events.map((event) => (
-              <TableRow key={event.id}>
-                <TableCell sx={{ borderColor: "divider", py: 1, width: 36 }}>
-                  {event.id === "point-start" && (
-                    <PlayArrowIcon
-                      fontSize="small"
-                      sx={(theme) => ({ color: theme.colors.newUi.primary })}
-                    />
-                  )}
-                </TableCell>
-                <TableCell sx={{ borderColor: "divider", py: 1 }}>
-                  <Typography
-                    color={
+        {events.map((event, index) => {
+          const isFirst = index === 0;
+          const isLast = index === events.length - 1;
+
+          return (
+            <Box
+              key={event.id}
+              sx={(theme) => {
+                const eventColor =
+                  event.tone === "error"
+                    ? theme.palette.error.main
+                    : event.tone === "success"
+                      ? theme.palette.success.main
+                      : theme.colors.newUi.primary;
+
+                return {
+                  bgcolor:
+                    event.id === "point-scored"
+                      ? alpha(eventColor, 0.06)
+                      : "background.paper",
+                  borderTop: isFirst
+                    ? "none"
+                    : `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+                  display: "grid",
+                  gap: { xs: 1, sm: 1.25 },
+                  gridTemplateColumns: "28px minmax(0, 1fr) auto",
+                  px: { xs: 1.25, sm: 1.5 },
+                  py: 1.25,
+                };
+              }}
+            >
+              <Box
+                sx={(theme) => ({
+                  alignItems: "flex-start",
+                  display: "flex",
+                  justifyContent: "center",
+                  position: "relative",
+                  pt: 0.25,
+                  "&:before": {
+                    bgcolor: alpha(theme.palette.text.primary, 0.12),
+                    bottom: isLast ? "50%" : theme.spacing(-1.25),
+                    content: '""',
+                    position: "absolute",
+                    top: isFirst ? "50%" : theme.spacing(-1.25),
+                    width: 2,
+                  },
+                })}
+              >
+                <Box
+                  aria-hidden
+                  sx={(theme) => {
+                    const eventColor =
                       event.tone === "error"
-                        ? "error.main"
+                        ? theme.palette.error.main
                         : event.tone === "success"
-                          ? "success.main"
-                          : "text.primary"
-                    }
-                    fontWeight={700}
-                    variant="body2"
-                  >
-                    {event.label}
-                  </Typography>
-                  {event.detail && (
-                    <Typography color="text.secondary" variant="caption">
-                      {event.detail}
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{
-                    borderColor: "divider",
-                    color: "text.secondary",
-                    fontWeight: 800,
-                    py: 1,
-                    whiteSpace: "nowrap",
+                          ? theme.palette.success.main
+                          : theme.colors.newUi.primary;
+
+                    return {
+                      alignItems: "center",
+                      bgcolor: eventColor,
+                      border: `2px solid ${theme.palette.background.paper}`,
+                      borderRadius: "50%",
+                      boxShadow: `0 0 0 2px ${alpha(eventColor, 0.14)}`,
+                      color: theme.palette.common.white,
+                      display: "flex",
+                      height: event.id === "point-start" ? 18 : 14,
+                      justifyContent: "center",
+                      mt: event.id === "point-start" ? 0 : 0.25,
+                      position: "relative",
+                      width: event.id === "point-start" ? 18 : 14,
+                      zIndex: 1,
+                      "& .MuiSvgIcon-root": {
+                        fontSize: 14,
+                      },
+                    };
                   }}
                 >
-                  {formatElapsedTime(pointStartTime, event.timestamp)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                  {event.id === "point-start" && <PlayArrowIcon />}
+                </Box>
+              </Box>
+
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  color={
+                    event.tone === "error"
+                      ? "error.main"
+                      : event.tone === "success"
+                        ? "success.main"
+                        : "text.primary"
+                  }
+                  fontWeight={800}
+                  variant="body2"
+                >
+                  {event.label}
+                </Typography>
+                {event.detail && (
+                  <Typography
+                    color="text.secondary"
+                    sx={{ display: "block", lineHeight: 1.35, mt: 0.25 }}
+                    variant="caption"
+                  >
+                    {event.detail}
+                  </Typography>
+                )}
+              </Box>
+
+              <Typography
+                color="text.secondary"
+                fontWeight={900}
+                sx={{ pt: 0.1, whiteSpace: "nowrap" }}
+                variant="body2"
+              >
+                {formatElapsedTime(pointStartTime, event.timestamp)}
+              </Typography>
+            </Box>
+          );
+        })}
+      </Box>
     </Box>
   );
 }
