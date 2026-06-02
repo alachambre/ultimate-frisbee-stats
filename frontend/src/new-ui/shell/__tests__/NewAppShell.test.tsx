@@ -17,7 +17,7 @@ function renderShell(
 
   render(
     <UiModeProvider>
-      <NewUiTeamProvider canLoadTeams={role !== "public"}>
+      <NewUiTeamProvider canLoadTeamDetails={role !== "public"}>
         <Routes>
           <Route path="*" element={<NewAppShell />}>
             <Route path="*" element={<div>New UI content</div>} />
@@ -229,6 +229,34 @@ describe("NewAppShell", () => {
     expect(
       within(mobileNav).queryByRole("link", { hidden: true, name: /^Stats$/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("lets public users select a team from public-safe team options", async () => {
+    server.use(
+      http.get("http://localhost:8000/teams/public", () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+          },
+          {
+            id: 2,
+            name: "Banana Cutters",
+            created_at: "2026-01-01T00:00:00Z",
+          },
+        ])
+      )
+    );
+
+    renderShell("public");
+    await openDrawer();
+
+    const selector = await screen.findByRole("combobox", {
+      name: /^Selected team$/i,
+    });
+
+    expect(selector).toBeEnabled();
   });
 
   it("highlights All games while viewing a live game", async () => {

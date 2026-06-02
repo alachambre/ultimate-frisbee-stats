@@ -39,6 +39,7 @@ def test_anonymous_users_can_access_public_spectator_routes_in_enforced_mode(cli
         f"/turnovers/points/{scenario['tracked_point'].id}/turnovers"
     )
     halftime_response = client.get(f"/halftimes/games/{scenario['game'].id}/halftime")
+    public_teams_response = client.get("/teams/public")
 
     assert competition_response.status_code == 200
     assert game_response.status_code == 200
@@ -47,6 +48,8 @@ def test_anonymous_users_can_access_public_spectator_routes_in_enforced_mode(cli
     assert stoppages_response.status_code == 200
     assert turnovers_response.status_code == 200
     assert halftime_response.status_code == 200
+    assert public_teams_response.status_code == 200
+    assert "players" not in public_teams_response.json()[0]
 
 
 def test_anonymous_users_are_blocked_from_protected_routes_in_enforced_mode(client, db_session):

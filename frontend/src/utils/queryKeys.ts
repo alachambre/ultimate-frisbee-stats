@@ -90,6 +90,7 @@ export const queryKeys = {
       normalizeIds(playerIds),
     ] as const,
   teams: ["teams"] as const,
+  publicTeams: ["teams", "public"] as const,
   team: (teamId: number) => ["team", teamId] as const,
   users: ["users"] as const,
   player: (playerId: number) => ["player", playerId] as const,

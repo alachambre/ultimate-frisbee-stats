@@ -130,6 +130,11 @@ export const handlers = [
     return HttpResponse.json(teamsWithPlayers);
   }),
 
+  // GET /teams/public - List public-safe team options
+  http.get(`${BASE_URL}/teams/public`, () => {
+    return HttpResponse.json(teams);
+  }),
+
   // POST /teams - Create a team
   http.post(`${BASE_URL}/teams`, async ({ request }) => {
     const body = (await request.json()) as TeamCreate;

@@ -43,14 +43,14 @@ export default function NewUiRoutes() {
     auth.enforcementMode,
     auth.isLoading
   );
-  const canLoadTeams =
+  const canLoadTeamDetails =
     !shouldProtectUi ||
     auth.capabilities.canEditData ||
     auth.capabilities.canViewStatistics ||
     auth.capabilities.canManageUsers;
 
   return (
-    <NewUiTeamProvider canLoadTeams={canLoadTeams}>
+    <NewUiTeamProvider canLoadTeamDetails={canLoadTeamDetails}>
       <Routes>
         <Route path="/" element={<NewAppShell />}>
           <Route index element={<Navigate replace to="/games" />} />

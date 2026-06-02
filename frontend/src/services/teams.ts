@@ -20,6 +20,15 @@ export const getTeams = async (): Promise<TeamWithPlayers[]> => {
   return response.data;
 };
 
+// Get public-safe team options for spectator views
+export const getPublicTeams = async (): Promise<TeamWithPlayers[]> => {
+  const response = await apiClient.get<Team[]>("/teams/public");
+  return response.data.map((team) => ({
+    ...team,
+    players: [],
+  }));
+};
+
 // Get team by ID with players
 export const getTeam = async (teamId: number): Promise<TeamWithPlayers> => {
   const response = await apiClient.get<TeamWithPlayers>(`/teams/${teamId}`);

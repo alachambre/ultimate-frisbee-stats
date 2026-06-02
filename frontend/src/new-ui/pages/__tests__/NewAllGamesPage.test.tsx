@@ -22,13 +22,13 @@ function shiftedLocalDateKey(daysFromToday: number): string {
 
 function renderPage({
   role = "team_member",
-  canLoadTeams = true,
+  canLoadTeamDetails = true,
 }: {
   role?: AppRole;
-  canLoadTeams?: boolean;
+  canLoadTeamDetails?: boolean;
 } = {}) {
   return render(
-    <NewUiTeamProvider canLoadTeams={canLoadTeams}>
+    <NewUiTeamProvider canLoadTeamDetails={canLoadTeamDetails}>
       <NewAllGamesPage />
     </NewUiTeamProvider>,
     {
@@ -187,7 +187,7 @@ describe("NewAllGamesPage", () => {
       )
     );
 
-    renderPage({ role: "public", canLoadTeams: false });
+    renderPage({ role: "public", canLoadTeamDetails: false });
 
     expect(await screen.findByText("Public Opponent")).toBeInTheDocument();
     expect(screen.getByText("Public spectator view")).toBeInTheDocument();

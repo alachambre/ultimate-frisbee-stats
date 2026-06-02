@@ -155,7 +155,7 @@ function renderPage(
   route = "/statistics"
 ) {
   return render(
-    <NewUiTeamProvider canLoadTeams>
+    <NewUiTeamProvider canLoadTeamDetails>
       <NewStatisticsPage />
     </NewUiTeamProvider>,
     {

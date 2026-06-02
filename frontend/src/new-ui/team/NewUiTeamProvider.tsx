@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getTeams } from "../../services/teams";
+import { getPublicTeams, getTeams } from "../../services/teams";
 import type { TeamWithPlayers } from "../../types";
 import { queryKeys } from "../../utils/queryKeys";
 
@@ -44,12 +44,12 @@ function readStoredTeamId(): number | undefined {
 
 interface NewUiTeamProviderProps {
   children: ReactNode;
-  canLoadTeams: boolean;
+  canLoadTeamDetails: boolean;
 }
 
 export function NewUiTeamProvider({
   children,
-  canLoadTeams,
+  canLoadTeamDetails,
 }: NewUiTeamProviderProps) {
   const [selectedTeamId, setSelectedTeamIdState] = useState<
     number | undefined
@@ -62,20 +62,18 @@ export function NewUiTeamProvider({
     isSuccess: hasLoadedTeams,
     error: teamsError,
   } = useQuery({
-    queryKey: queryKeys.teams,
-    queryFn: getTeams,
-    enabled: canLoadTeams,
+    queryKey: canLoadTeamDetails ? queryKeys.teams : queryKeys.publicTeams,
+    queryFn: canLoadTeamDetails ? getTeams : getPublicTeams,
   });
 
   const visibleTeams = useMemo(
-    () => (canLoadTeams && !isFetchingTeams ? teams : []),
-    [canLoadTeams, isFetchingTeams, teams]
+    () => (!isFetchingTeams ? teams : []),
+    [isFetchingTeams, teams]
   );
-  const visibleSelectedTeamId =
-    canLoadTeams && !isFetchingTeams ? selectedTeamId : undefined;
+  const visibleSelectedTeamId = !isFetchingTeams ? selectedTeamId : undefined;
 
   useEffect(() => {
-    if (!canLoadTeams || isLoadingTeams || isFetchingTeams || !hasLoadedTeams) {
+    if (isLoadingTeams || isFetchingTeams || !hasLoadedTeams) {
       return;
     }
 
@@ -99,7 +97,6 @@ export function NewUiTeamProvider({
       window.localStorage.removeItem(SELECTED_TEAM_STORAGE_KEY);
     }
   }, [
-    canLoadTeams,
     hasLoadedTeams,
     isFetchingTeams,
     isLoadingTeams,
@@ -128,12 +125,11 @@ export function NewUiTeamProvider({
       selectedTeam,
       selectedTeamId: visibleSelectedTeamId,
       setSelectedTeamId,
-      isLoadingTeams: canLoadTeams && (isLoadingTeams || isFetchingTeams),
-      teamsError: canLoadTeams ? teamsError : null,
-      canLoadTeams,
+      isLoadingTeams: isLoadingTeams || isFetchingTeams,
+      teamsError,
+      canLoadTeams: true,
     }),
     [
-      canLoadTeams,
       isFetchingTeams,
       isLoadingTeams,
       selectedTeam,

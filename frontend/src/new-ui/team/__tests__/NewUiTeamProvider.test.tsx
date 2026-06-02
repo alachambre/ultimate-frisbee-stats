@@ -20,13 +20,13 @@ function createQueryClient() {
 function renderWithProvider(
   children: React.ReactNode,
   {
-    canLoadTeams = true,
+    canLoadTeamDetails = true,
     queryClient = createQueryClient(),
-  }: { canLoadTeams?: boolean; queryClient?: QueryClient } = {}
+  }: { canLoadTeamDetails?: boolean; queryClient?: QueryClient } = {}
 ) {
   render(
     <QueryClientProvider client={queryClient}>
-      <NewUiTeamProvider canLoadTeams={canLoadTeams}>
+      <NewUiTeamProvider canLoadTeamDetails={canLoadTeamDetails}>
         {children}
       </NewUiTeamProvider>
     </QueryClientProvider>
@@ -189,9 +189,18 @@ describe("NewUiTeamProvider", () => {
     });
   });
 
-  it("hides cached teams and skips loading when team loading is disabled", async () => {
+  it("loads public team options when protected team details are disabled", async () => {
     localStorage.setItem("monkey-statistics-new-ui-team-id", "2");
-    const requestHandler = vi.fn(() => HttpResponse.json([]));
+    const protectedRequestHandler = vi.fn(() => HttpResponse.json([]));
+    const publicRequestHandler = vi.fn(() =>
+      HttpResponse.json([
+        {
+          id: 2,
+          name: "Banana Cutters",
+          created_at: "2026-01-01T00:00:00Z",
+        },
+      ])
+    );
     const queryClient = createQueryClient();
     queryClient.setQueryData(queryKeys.teams, [
       {
@@ -201,15 +210,19 @@ describe("NewUiTeamProvider", () => {
         players: [],
       },
     ]);
-    server.use(http.get("http://localhost:8000/teams", requestHandler));
+    server.use(
+      http.get("http://localhost:8000/teams", protectedRequestHandler),
+      http.get("http://localhost:8000/teams/public", publicRequestHandler)
+    );
 
-    renderWithProvider(<Probe />, { canLoadTeams: false, queryClient });
+    renderWithProvider(<Probe />, { canLoadTeamDetails: false, queryClient });
 
     await waitFor(() => {
-      expect(screen.getByText("Teams count: 0")).toBeInTheDocument();
-      expect(screen.getByText("Selected team: none")).toBeInTheDocument();
-      expect(screen.getByText("Selected team id: none")).toBeInTheDocument();
-      expect(requestHandler).not.toHaveBeenCalled();
+      expect(screen.getByText("Teams count: 1")).toBeInTheDocument();
+      expect(screen.getByText("Selected team: Banana Cutters")).toBeInTheDocument();
+      expect(screen.getByText("Selected team id: 2")).toBeInTheDocument();
+      expect(publicRequestHandler).toHaveBeenCalled();
+      expect(protectedRequestHandler).not.toHaveBeenCalled();
     });
   });
 

@@ -23,6 +23,19 @@ def test_list_teams_api(client, sample_team):
     assert data[0]["name"] == sample_team.name
 
 
+def test_list_public_teams_api(client, sample_team):
+    """Test GET /teams/public"""
+    response = client.get("/teams/public")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) >= 1
+    assert data[0]["id"] == sample_team.id
+    assert data[0]["name"] == sample_team.name
+    assert "players" not in data[0]
+
+
 def test_get_team_api(client, sample_team):
     """Test GET /teams/{team_id}"""
     response = client.get(f"/teams/{sample_team.id}")
