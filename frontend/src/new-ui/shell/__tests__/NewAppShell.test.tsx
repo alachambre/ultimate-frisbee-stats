@@ -139,6 +139,45 @@ describe("NewAppShell", () => {
     ).toBeInTheDocument();
   });
 
+  it("disables the mobile live action when the selected team has no live game", async () => {
+    server.use(
+      http.get("http://localhost:8000/games", () =>
+        HttpResponse.json([
+          {
+            id: 7,
+            competition_id: 10,
+            opponent_name: "Other Live Opponent",
+            date: "2026-05-22T10:00:00Z",
+            comments: null,
+            status: "started",
+            start_datetime: null,
+            end_datetime: null,
+            created_at: "2026-05-01T00:00:00Z",
+            our_score: 3,
+            opponent_score: 2,
+            team_name: "Other Team",
+            competition_name: "Other Cup",
+          },
+        ])
+      )
+    );
+    renderShell("team_member", "/games");
+
+    const mobileNav = screen.getByLabelText(/^Mobile primary navigation$/i);
+
+    await waitFor(() => {
+      expect(
+        within(mobileNav).getByRole("button", {
+          hidden: true,
+          name: /^Live$/i,
+        })
+      ).toBeDisabled();
+    });
+    expect(
+      within(mobileNav).queryByRole("link", { hidden: true, name: /^Live$/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("opens the drawer from the mobile more navigation action", async () => {
     const user = userEvent.setup();
     renderShell("team_member", "/games");
@@ -185,8 +224,8 @@ describe("NewAppShell", () => {
       within(mobileNav).getByRole("link", { hidden: true, name: /^Games$/i })
     ).toBeInTheDocument();
     expect(
-      within(mobileNav).getByRole("link", { hidden: true, name: /^Live$/i })
-    ).toBeInTheDocument();
+      within(mobileNav).getByRole("button", { hidden: true, name: /^Live$/i })
+    ).toBeDisabled();
     expect(
       within(mobileNav).queryByRole("link", { hidden: true, name: /^Stats$/i })
     ).not.toBeInTheDocument();

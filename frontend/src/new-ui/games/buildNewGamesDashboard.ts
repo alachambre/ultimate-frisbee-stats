@@ -4,7 +4,6 @@ interface BuildNewGamesDashboardArgs {
   games: GameWithScore[];
   selectedTeamId?: number;
   teamCompetitions?: CompetitionWithTeam[];
-  opponentSearch?: string;
 }
 
 export interface NewGamesDashboardSummary {
@@ -186,24 +185,6 @@ function isUpcomingGame(game: GameWithScore): boolean {
   return !isLiveGame(game) && !isCompletedGame(game);
 }
 
-function filterByOpponentSearch(
-  games: GameWithScore[],
-  opponentSearch?: string
-): GameWithScore[] {
-  const normalizedSearch = normalizeOpponentSearch(opponentSearch);
-  if (!normalizedSearch) {
-    return games;
-  }
-
-  return games.filter((game) =>
-    game.opponent_name.toLocaleLowerCase().includes(normalizedSearch)
-  );
-}
-
-function normalizeOpponentSearch(opponentSearch?: string): string {
-  return opponentSearch?.trim().toLocaleLowerCase() ?? "";
-}
-
 function buildScopedGames({
   games,
   selectedTeamId,
@@ -327,11 +308,7 @@ export function buildNewGamesDashboard(
   args: BuildNewGamesDashboardArgs
 ): NewGamesDashboardView {
   const { selectedTeamId, teamCompetitions } = args;
-  const hasOpponentSearch = Boolean(normalizeOpponentSearch(args.opponentSearch));
-  const scopedGames = filterByOpponentSearch(
-    buildScopedGames(args),
-    args.opponentSearch
-  );
+  const scopedGames = buildScopedGames(args);
   const liveGames = scopedGames
     .filter(isLiveGame)
     .sort(sortAscendingByDate);
@@ -344,7 +321,7 @@ export function buildNewGamesDashboard(
   const competitionGroups = buildCompetitionGroups({
     games: scopedGames,
     teamCompetitions,
-    includeEmptyCompetitions: selectedTeamId !== undefined && !hasOpponentSearch,
+    includeEmptyCompetitions: selectedTeamId !== undefined,
   });
 
   const wins = recentGames.filter(

@@ -46,6 +46,7 @@ interface NavigationItem {
   label: string;
   path: string;
   value?: string;
+  disabled?: boolean;
 }
 
 function isActivePath(currentPath: string, itemPath: string) {
@@ -107,21 +108,20 @@ function compareGameDates(
   return new Date(leftDate).getTime() - new Date(rightDate).getTime();
 }
 
-function getCurrentLiveGame(
+function getSelectedTeamLiveGame(
   games: GameWithScore[],
   selectedTeamName?: string
 ): GameWithScore | undefined {
-  const liveGames = games.filter((game) => game.status === "started");
-  const teamLiveGames =
-    selectedTeamName === undefined
-      ? liveGames
-      : liveGames.filter((game) => game.team_name === selectedTeamName);
-  const scopedLiveGames =
-    teamLiveGames.length > 0 ? teamLiveGames : liveGames;
+  if (selectedTeamName === undefined) {
+    return undefined;
+  }
 
-  return [...scopedLiveGames].sort((left, right) =>
-    compareGameDates(left.date, right.date)
-  )[0];
+  return games
+    .filter(
+      (game) =>
+        game.status === "started" && game.team_name === selectedTeamName
+    )
+    .sort((left, right) => compareGameDates(left.date, right.date))[0];
 }
 
 export default function NewAppShell() {
@@ -146,7 +146,7 @@ export default function NewAppShell() {
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
-  const currentLiveGame = getCurrentLiveGame(games, selectedTeam?.name);
+  const currentLiveGame = getSelectedTeamLiveGame(games, selectedTeam?.name);
   const liveHistoryPath = currentLiveGame
     ? `/games/${currentLiveGame.id}`
     : "/games";
@@ -192,6 +192,7 @@ export default function NewAppShell() {
         label: t("navigation:mobileNav.live"),
         path: liveHistoryPath,
         value: "/live",
+        disabled: currentLiveGame === undefined,
       },
       ...(canViewStatistics
         ? [{ label: t("navigation:mobileNav.statistics"), path: "/statistics" }]
@@ -199,6 +200,7 @@ export default function NewAppShell() {
     ];
   }, [
     auth.capabilities.canViewStatistics,
+    currentLiveGame,
     liveHistoryPath,
     shouldProtectUi,
     t,
@@ -625,6 +627,9 @@ export default function NewAppShell() {
             "& .Mui-selected": {
               color: theme.colors.newUi.primary,
             },
+            "& .MuiBottomNavigationAction-root.Mui-disabled": {
+              color: alpha(theme.palette.text.secondary, 0.48),
+            },
             "& .MuiBottomNavigationAction-label": {
               fontSize: "0.7rem",
               fontWeight: 800,
@@ -641,6 +646,18 @@ export default function NewAppShell() {
               ) : (
                 <SportsScoreIcon />
               );
+
+            if (item.disabled) {
+              return (
+                <BottomNavigationAction
+                  disabled
+                  icon={icon}
+                  key={item.value ?? item.path}
+                  label={item.label}
+                  value={item.value ?? item.path}
+                />
+              );
+            }
 
             return (
               <BottomNavigationAction

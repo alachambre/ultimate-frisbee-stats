@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
-import SearchIcon from "@mui/icons-material/Search";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -11,9 +10,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
@@ -45,7 +42,6 @@ import { useNewUiTeam } from "../team/useNewUiTeam";
 export default function NewAllGamesPage() {
   const auth = useAuth();
   const { t, i18n } = useTranslation(["navigation", "games", "common"]);
-  const [opponentSearch, setOpponentSearch] = useState("");
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
   const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
   const [editingCompetition, setEditingCompetition] =
@@ -105,9 +101,8 @@ export default function NewAllGamesPage() {
         games,
         selectedTeamId: effectiveSelectedTeamId,
         teamCompetitions,
-        opponentSearch,
       }),
-    [effectiveSelectedTeamId, games, opponentSearch, teamCompetitions]
+    [effectiveSelectedTeamId, games, teamCompetitions]
   );
 
   const isLoading =
@@ -143,13 +138,11 @@ export default function NewAllGamesPage() {
     : hasTeamScope
       ? t("newUiPages.allGames.copy")
       : t("newUiPages.allGames.globalCopy");
-  const emptyMessage = opponentSearch.trim()
-    ? t("newUiPages.allGames.empty.filtered")
-    : hasTeamScope
-      ? t("newUiPages.allGames.empty.team")
-      : shouldShowPublicSpectatorNotice
-        ? t("newUiPages.allGames.empty.public")
-        : t("newUiPages.allGames.empty.global");
+  const emptyMessage = hasTeamScope
+    ? t("newUiPages.allGames.empty.team")
+    : shouldShowPublicSpectatorNotice
+      ? t("newUiPages.allGames.empty.public")
+      : t("newUiPages.allGames.empty.global");
   const formatCompetitionDate = (value: string | null) => {
     if (!value) {
       return t("games:detail.dateNotSet");
@@ -241,10 +234,37 @@ export default function NewAllGamesPage() {
                   onClick={() => setIsCreateGameOpen(true)}
                   startIcon={<AddIcon />}
                   sx={(theme) => ({
-                    bgcolor: theme.colors.newUi.primary,
-                    color: theme.palette.common.white,
+                    bgcolor: {
+                      xs: theme.palette.background.paper,
+                      sm: theme.colors.newUi.primary,
+                    },
+                    border: {
+                      xs: `1px solid ${theme.colors.newUi.primaryBorder}`,
+                      sm: "none",
+                    },
+                    boxShadow: {
+                      xs: `0 4px 10px ${alpha(
+                        theme.palette.common.black,
+                        0.08
+                      )}`,
+                      sm: theme.shadows[2],
+                    },
+                    color: {
+                      xs: theme.colors.newUi.primary,
+                      sm: theme.palette.common.white,
+                    },
                     "&:hover": {
-                      bgcolor: theme.colors.newUi.primary,
+                      bgcolor: {
+                        xs: theme.palette.background.paper,
+                        sm: theme.colors.newUi.primary,
+                      },
+                      boxShadow: {
+                        xs: `0 5px 12px ${alpha(
+                          theme.palette.common.black,
+                          0.1
+                        )}`,
+                        sm: theme.shadows[4],
+                      },
                     },
                   })}
                   type="button"
@@ -287,31 +307,6 @@ export default function NewAllGamesPage() {
             upcoming: t("newUiPages.allGames.summary.upcoming"),
             completed: t("newUiPages.allGames.summary.completed"),
             results: t("newUiPages.allGames.summary.results"),
-          }}
-        />
-
-        <TextField
-          fullWidth
-          label={t("newUiPages.allGames.filters.opponent")}
-          onChange={(event) => setOpponentSearch(event.target.value)}
-          sx={(theme) => ({
-            "& label.Mui-focused": {
-              color: theme.colors.newUi.primary,
-            },
-            "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-              {
-                borderColor: theme.colors.newUi.primary,
-              },
-          })}
-          value={opponentSearch}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" fontSize="small" />
-                </InputAdornment>
-              ),
-            },
           }}
         />
 

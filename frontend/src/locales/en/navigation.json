@@ -77,9 +77,6 @@
         "lost": "Lost",
         "draw": "Draw"
       },
-      "filters": {
-        "opponent": "Opponent search"
-      },
       "sections": {
         "live": "Live now",
         "upcoming": "Upcoming games",
@@ -89,7 +86,6 @@
         "team": "No games for this team yet.",
         "public": "No public games are available yet.",
         "global": "No games are available yet.",
-        "filtered": "No games match this opponent search.",
         "competition": "No games in this competition yet.",
         "section": "Nothing to show here right now."
       },
