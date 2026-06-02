@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { HttpResponse, http } from "msw";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { render, screen } from "../../../test/test-utils";
@@ -363,5 +364,25 @@ describe("NewGameHistoryPage", () => {
     expect(
       await screen.findByRole("link", { name: /^Live game$/i }),
     ).toHaveAttribute("href", "/live/1");
+  });
+
+  it("closes the previously expanded point when another point is opened", async () => {
+    setupHandlers();
+    const user = userEvent.setup();
+
+    renderPage();
+
+    const point6Summary = await screen.findByRole("button", {
+      name: /Point 6/i,
+    });
+    const point5Summary = screen.getByRole("button", { name: /Point 5/i });
+
+    expect(point6Summary).toHaveAttribute("aria-expanded", "true");
+    expect(point5Summary).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(point5Summary);
+
+    expect(point6Summary).toHaveAttribute("aria-expanded", "false");
+    expect(point5Summary).toHaveAttribute("aria-expanded", "true");
   });
 });

@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { ReactElement } from "react";
 import { useQuery } from "@tanstack/react-query";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CommentIcon from "@mui/icons-material/Comment";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FemaleIcon from "@mui/icons-material/Female";
@@ -33,7 +32,8 @@ import { queryKeys } from "../../utils/queryKeys";
 import NewGameHistoryChronology from "./NewGameHistoryChronology";
 
 interface NewGameHistoryPointItemProps {
-  defaultExpanded?: boolean;
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
   point: PointWithPlayers;
   scoreAfter?: {
     opponent: number;
@@ -163,13 +163,13 @@ function getTurnChipColor(turns: number) {
 }
 
 export default function NewGameHistoryPointItem({
-  defaultExpanded = false,
+  expanded,
+  onExpandedChange,
   point,
   scoreAfter,
   turnovers: providedTurnovers,
 }: NewGameHistoryPointItemProps) {
   const { t } = useTranslation("points");
-  const [expanded, setExpanded] = useState(defaultExpanded);
   const durationLabel = formatDuration(point.duration_seconds);
   const sideAccessibilityLabel = point.starting_on_offense
     ? t("history.startedOnOffense", "Started on offense")
@@ -210,7 +210,7 @@ export default function NewGameHistoryPointItem({
       disableGutters
       elevation={0}
       expanded={expanded}
-      onChange={(_, isExpanded) => setExpanded(isExpanded)}
+      onChange={(_, isExpanded) => onExpandedChange(isExpanded)}
       sx={(theme) => ({
         bgcolor: "background.paper",
         border: `1px solid ${
@@ -490,23 +490,6 @@ export default function NewGameHistoryPointItem({
           title={t("pointEvents", "Chronology")}
           turnovers={turnovers}
         />
-
-        {point.status === "completed" && point.won && (
-          <Box
-            sx={{
-              alignItems: "center",
-              color: "success.main",
-              display: "flex",
-              gap: 1,
-              mt: 2.5,
-            }}
-          >
-            <CheckCircleIcon fontSize="small" />
-            <Typography fontWeight={800} variant="body2">
-              {t("history.weScored", "We scored!")}
-            </Typography>
-          </Box>
-        )}
       </AccordionDetails>
     </Accordion>
   );

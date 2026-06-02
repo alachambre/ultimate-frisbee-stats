@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import ErrorState from "../../components/shared/ErrorState";
@@ -34,6 +34,12 @@ type HistoryItem =
       timestamp: string;
       type: "halftime";
     };
+
+function isPointHistoryItem(
+  item: HistoryItem,
+): item is Extract<HistoryItem, { type: "point" }> {
+  return item.type === "point";
+}
 
 function getTimestamp(point: PointWithPlayers): string {
   return point.start_datetime || point.end_datetime || point.created_at;
@@ -133,6 +139,9 @@ export default function NewGameHistoryPage() {
   const { t, i18n } = useTranslation(["navigation", "games", "points", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const [searchParams] = useSearchParams();
+  const [requestedExpandedPointId, setRequestedExpandedPointId] = useState<
+    number | null | undefined
+  >(undefined);
   const source = searchParams.get("from");
   const isFromLive = source === "live";
   const {
@@ -182,9 +191,17 @@ export default function NewGameHistoryPage() {
     () => buildTurnoversByPointId(gameTurnovers ?? []),
     [gameTurnovers],
   );
-  const firstPointItemIndex = historyItems.findIndex(
-    (item) => item.type === "point",
+  const firstPointId = historyItems.find(isPointHistoryItem)?.point.id;
+  const requestedPointIdIsAvailable = historyItems.some(
+    (item) =>
+      item.type === "point" && item.point.id === requestedExpandedPointId,
   );
+  const expandedPointId =
+    requestedExpandedPointId === null
+      ? null
+      : requestedPointIdIsAvailable
+        ? requestedExpandedPointId
+        : firstPointId;
 
   if (isLoading) {
     return <LoadingState message={t("newUiPages.gameHistory.loading")} />;
@@ -375,11 +392,16 @@ export default function NewGameHistoryPage() {
             </Paper>
           ) : (
             <Stack spacing={1.5}>
-              {historyItems.map((item, index) =>
+              {historyItems.map((item) =>
                 item.type === "point" ? (
                   <NewGameHistoryPointItem
-                    defaultExpanded={index === firstPointItemIndex}
+                    expanded={item.point.id === expandedPointId}
                     key={item.id}
+                    onExpandedChange={(isExpanded) =>
+                      setRequestedExpandedPointId(
+                        isExpanded ? item.point.id : null,
+                      )
+                    }
                     point={item.point}
                     scoreAfter={scoreByPointId.get(item.point.id)}
                     turnovers={turnoversByPointId.get(item.point.id) ?? []}
