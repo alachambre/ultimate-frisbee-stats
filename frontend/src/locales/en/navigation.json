@@ -13,7 +13,8 @@
     "admin": "Admin"
   },
   "drawer": {
-    "title": "Monkey Statistics"
+    "title": "Monkey Statistics",
+    "open": "Open navigation"
   },
   "language": {
     "english": "English",
@@ -125,6 +126,7 @@
         "heading": "{{teamName}} vs {{opponentName}}",
         "actions": {
           "roster": "Roster",
+          "history": "History",
           "stats": "Stats",
           "edit": "Edit",
           "complete": "Complete"
@@ -147,6 +149,17 @@
         "waiting": "Waiting for the next point",
         "waitingCopy": "The score is live. The next point will appear here."
       }
+    },
+    "gameHistory": {
+      "eyebrow": "Game review",
+      "heading": "Game history",
+      "backToAllGames": "All games",
+      "backToLive": "Live game",
+      "pointCount_one": "{{count}} point",
+      "pointCount_other": "{{count}} points",
+      "empty": "No point has been recorded yet.",
+      "loading": "Loading game history...",
+      "error": "Unable to load game history."
     },
     "statistics": {
       "heading": "Statistics",

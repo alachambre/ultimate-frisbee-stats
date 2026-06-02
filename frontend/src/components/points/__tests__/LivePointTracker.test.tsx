@@ -1056,22 +1056,22 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(
         screen.getByRole("button", { name: /Launch Pull/i }),
       ).toBeInTheDocument();
-      const selectPlayersButton = screen.getByRole("button", {
-        name: /Select Players/i,
+      const playersButton = screen.getByRole("button", {
+        name: /Players/i,
       });
-      expect(selectPlayersButton).toBeInTheDocument();
-      expect(selectPlayersButton).toHaveClass("MuiButton-colorWarning");
-      expect(screen.getByText("Select Players")).toBeVisible();
-      const selectStrategyButton = screen.getByRole("button", {
-        name: /Select Strategy/i,
+      expect(playersButton).toBeInTheDocument();
+      expect(playersButton).toHaveClass("MuiButton-colorWarning");
+      expect(screen.getByText("Players")).toBeVisible();
+      const strategyButton = screen.getByRole("button", {
+        name: /Strategy/i,
       });
-      expect(selectStrategyButton).toBeInTheDocument();
-      expect(selectStrategyButton).not.toHaveClass("MuiButton-colorWarning");
-      expect(screen.getByText("Select Strategy")).toBeVisible();
+      expect(strategyButton).toBeInTheDocument();
+      expect(strategyButton).not.toHaveClass("MuiButton-colorWarning");
+      expect(screen.getByText("Strategy")).toBeVisible();
       expect(
-        screen.getByRole("button", { name: /Add Comment/i }),
+        screen.getByRole("button", { name: /^Comment$/i }),
       ).toBeInTheDocument();
-      expect(screen.getByText("Add Comment")).toBeVisible();
+      expect(screen.getByText("Comment")).toBeVisible();
     });
 
     it("hides ready-point setup labels on mobile while keeping accessible names", async () => {
@@ -1103,17 +1103,17 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         screen.getByRole("button", { name: /Launch Pull/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Select Players/i }),
+        screen.getByRole("button", { name: /Players/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Select Strategy/i }),
+        screen.getByRole("button", { name: /Strategy/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Add Comment/i }),
+        screen.getByRole("button", { name: /^Comment$/i }),
       ).toBeInTheDocument();
-      expect(screen.queryByText("Select Players")).not.toBeInTheDocument();
-      expect(screen.queryByText("Select Strategy")).not.toBeInTheDocument();
-      expect(screen.queryByText("Add Comment")).not.toBeInTheDocument();
+      expect(screen.queryByText("Players")).not.toBeInTheDocument();
+      expect(screen.queryByText("Strategy")).not.toBeInTheDocument();
+      expect(screen.queryByText("Comment")).not.toBeInTheDocument();
     });
 
     it("highlights the line action after pull launch while players are incomplete", async () => {
@@ -1138,9 +1138,9 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         />,
       );
 
-      const lineButton = screen.getByRole("button", { name: /Line/i });
-      expect(lineButton).toBeInTheDocument();
-      expect(lineButton).toHaveClass("MuiButton-colorWarning");
+      const playersButton = screen.getByRole("button", { name: /Players/i });
+      expect(playersButton).toBeInTheDocument();
+      expect(playersButton).toHaveClass("MuiButton-colorWarning");
     });
   });
 });

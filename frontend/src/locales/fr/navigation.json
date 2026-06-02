@@ -8,12 +8,13 @@
     "home": "Accueil",
     "recordGame": "Saisir un match",
     "liveGame": "Match en direct",
-    "allGames": "Tous les matchs",
+    "allGames": "Matchs",
     "teamSetup": "Configuration équipe",
     "admin": "Admin"
   },
   "drawer": {
-    "title": "Monkey Statistics"
+    "title": "Monkey Statistics",
+    "open": "Ouvrir la navigation"
   },
   "language": {
     "english": "English",
@@ -32,7 +33,7 @@
   },
   "newUiPages": {
     "allGames": {
-      "heading": "Tous les matchs",
+      "heading": "Matchs",
       "copy": "Compétitions et matchs de l'équipe sélectionnée.",
       "publicCopy": "Vue publique spectateur",
       "publicNotice": "Vous voyez les informations publiques des matchs. Connectez-vous avec un accès équipe pour utiliser le tableau de bord.",
@@ -120,11 +121,12 @@
       "requestedGameUnavailable": "Ce match n'est pas en direct pour le moment.",
       "requestedGameUnavailableCopy": "Ouvrez la liste des matchs en direct pour choisir un match en cours.",
       "tracker": {
-        "back": "Tous les matchs",
+        "back": "Matchs",
         "eyebrow": "Suivi en direct",
         "heading": "{{teamName}} vs {{opponentName}}",
         "actions": {
           "roster": "Roster",
+          "history": "Historique",
           "stats": "Stats",
           "edit": "Modifier",
           "complete": "Terminer"
@@ -147,6 +149,17 @@
         "waiting": "En attente du prochain point",
         "waitingCopy": "Le score est en direct. Le prochain point apparaîtra ici."
       }
+    },
+    "gameHistory": {
+      "eyebrow": "Revue du match",
+      "heading": "Historique du match",
+      "backToAllGames": "Matchs",
+      "backToLive": "Match en direct",
+      "pointCount_one": "{{count}} point",
+      "pointCount_other": "{{count}} points",
+      "empty": "Aucun point n'a encore été saisi.",
+      "loading": "Chargement de l'historique du match...",
+      "error": "Impossible de charger l'historique du match."
     },
     "statistics": {
       "heading": "Statistiques",

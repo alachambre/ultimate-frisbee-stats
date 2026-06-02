@@ -18,9 +18,12 @@ export function LivePointHeader({
 }: LivePointHeaderProps) {
   const { t } = useTranslation(["points"]);
   const theme = useTheme();
-  const accentColor = currentPoint.starting_on_offense
-    ? theme.colors.offense.main
-    : theme.colors.defense.main;
+  const accentColor =
+    variant === "field"
+      ? theme.colors.newUi.primary
+      : currentPoint.starting_on_offense
+        ? theme.colors.offense.main
+        : theme.colors.defense.main;
   const statusLabel =
     currentPoint.status === "ready"
       ? t("points:status.ready", "Ready")
@@ -84,18 +87,13 @@ export function LivePointHeader({
                 : t("points:tracker.defense")
             }
             size="small"
-            sx={(innerTheme) =>
-              currentPoint.starting_on_offense
-                ? {}
-                : {
-                    bgcolor: innerTheme.colors.defense.main,
-                    color: innerTheme.palette.common.white,
-                    "& .MuiChip-label": {
-                      color: innerTheme.palette.common.white,
-                    },
-                  }
-            }
-            color={currentPoint.starting_on_offense ? "primary" : undefined}
+            sx={(innerTheme) => ({
+              bgcolor: innerTheme.colors.newUi.primary,
+              color: innerTheme.palette.common.white,
+              "& .MuiChip-label": {
+                color: innerTheme.palette.common.white,
+              },
+            })}
           />
           <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
           {currentPoint.status === "scored" && (

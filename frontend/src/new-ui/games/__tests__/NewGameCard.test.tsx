@@ -52,4 +52,13 @@ describe("NewGameCard", () => {
       "/games/42"
     );
   });
+
+  it("routes read-only live games to the game history route", () => {
+    render(<NewGameCard canEditData={false} game={buildGame()} />);
+
+    expect(screen.getByRole("link", { name: /^Go$/i })).toHaveAttribute(
+      "href",
+      "/games/42"
+    );
+  });
 });

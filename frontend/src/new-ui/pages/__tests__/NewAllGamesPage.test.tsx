@@ -282,6 +282,10 @@ describe("NewAllGamesPage", () => {
 
     expect(await screen.findByText("Public Opponent")).toBeInTheDocument();
     expect(screen.getByText("Public spectator view")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Go$/i })).toHaveAttribute(
+      "href",
+      "/games/1"
+    );
   });
 
   it("shows an empty state when the selected team has no games", async () => {

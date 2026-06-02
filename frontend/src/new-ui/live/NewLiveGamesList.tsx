@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
+import Chip, { type ChipProps } from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
+import { alpha, type SxProps, type Theme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
-import StatusChip from "../../components/shared/StatusChip";
 import type { GameWithScore } from "../../types";
 import { formatDateTime } from "../../utils/dateFormatting";
 
@@ -16,12 +16,76 @@ interface NewLiveGamesListProps {
   selectedGameId?: number;
 }
 
+function getGameOutcome(game: GameWithScore): "won" | "lost" | "draw" | null {
+  if (game.our_score > game.opponent_score) {
+    return "won";
+  }
+
+  if (game.our_score < game.opponent_score) {
+    return "lost";
+  }
+
+  return game.status === "ended" ? "draw" : null;
+}
+
+function getStatusChipProps(
+  game: GameWithScore,
+  t: (key: string) => string
+): {
+  color?: ChipProps["color"];
+  label: string;
+  sx?: SxProps<Theme>;
+  variant?: ChipProps["variant"];
+} {
+  if (game.status === "started") {
+    return {
+      label: t("games:status.started"),
+      sx: (theme) => ({
+        bgcolor: theme.colors.newUi.primarySoft,
+        borderColor: theme.colors.newUi.primaryBorder,
+        color: theme.colors.newUi.primary,
+        fontWeight: 700,
+      }),
+      variant: "outlined",
+    };
+  }
+
+  if (game.status === "ready") {
+    return {
+      label: t("games:status.ready"),
+      sx: (theme) => ({
+        bgcolor: alpha(theme.colors.newUi.primary, 0.08),
+        borderColor: theme.colors.newUi.primaryBorder,
+        color: theme.colors.newUi.primary,
+        fontWeight: 700,
+      }),
+      variant: "outlined",
+    };
+  }
+
+  const outcome = getGameOutcome(game);
+
+  if (outcome === "won") {
+    return { color: "success", label: t("games:status.won") };
+  }
+
+  if (outcome === "lost") {
+    return { color: "error", label: t("games:status.lost") };
+  }
+
+  if (outcome === "draw") {
+    return { color: "warning", label: t("games:status.draw") };
+  }
+
+  return { label: t("games:status.ended") };
+}
+
 export default function NewLiveGamesList({
   emptyLabel,
   games,
   selectedGameId,
 }: NewLiveGamesListProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation(["games"]);
 
   if (games.length === 0) {
     return (
@@ -43,6 +107,7 @@ export default function NewLiveGamesList({
     <Stack component="nav" spacing={1}>
       {games.map((game) => {
         const isSelected = game.id === selectedGameId;
+        const statusChipProps = getStatusChipProps(game, t);
         return (
           <Paper
             component={Link}
@@ -51,10 +116,10 @@ export default function NewLiveGamesList({
             to={`/live/${game.id}`}
             sx={(theme) => ({
               bgcolor: isSelected
-                ? alpha(theme.palette.primary.main, 0.1)
+                ? alpha(theme.colors.newUi.primary, 0.1)
                 : "background.paper",
               border: `1px solid ${
-                isSelected ? theme.palette.primary.main : theme.palette.divider
+                isSelected ? theme.colors.newUi.primary : theme.palette.divider
               }`,
               borderRadius: 1,
               color: "text.primary",
@@ -73,12 +138,7 @@ export default function NewLiveGamesList({
                 <Typography fontWeight={800} variant="body1">
                   {game.opponent_name}
                 </Typography>
-                <StatusChip
-                  kind="game"
-                  opponentScore={game.opponent_score}
-                  ourScore={game.our_score}
-                  status={game.status}
-                />
+                <Chip size="small" {...statusChipProps} />
               </Stack>
               <Box>
                 <Typography color="text.secondary" variant="body2">

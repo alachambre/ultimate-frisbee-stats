@@ -21,6 +21,7 @@ import {
 import NewGameCard from "./NewGameCard";
 
 interface NewCompetitionGamesAccordionProps {
+  canEditData?: boolean;
   canManageCompetition?: boolean;
   group: NewGamesCompetitionGroup;
   formatDate: (value: string | null) => string;
@@ -65,6 +66,7 @@ function renderStatusChipLabel(
 }
 
 export default function NewCompetitionGamesAccordion({
+  canEditData = true,
   canManageCompetition = false,
   group,
   formatDate,
@@ -207,7 +209,11 @@ export default function NewCompetitionGamesAccordion({
                     })}
                   />
                 )}
-                <NewGameCard game={game} variant="row" />
+                <NewGameCard
+                  canEditData={canEditData}
+                  game={game}
+                  variant="row"
+                />
               </Fragment>
             ))
           )}

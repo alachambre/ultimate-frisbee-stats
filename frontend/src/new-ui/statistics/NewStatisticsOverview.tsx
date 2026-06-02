@@ -100,7 +100,7 @@ export default function NewStatisticsOverview({
     <Grid container spacing={1.5}>
       <Grid size={{ xs: 6, md: 2.4 }}>
         <KpiCard
-          accentColor={theme.palette.primary.main}
+          accentColor={theme.colors.newUi.primary}
           icon={<AssessmentIcon fontSize="small" />}
           label={t("statistics:teamStats.gamesCount")}
           value={gamesCount}
@@ -124,7 +124,7 @@ export default function NewStatisticsOverview({
       </Grid>
       <Grid size={{ xs: 6, md: 2.4 }}>
         <KpiCard
-          accentColor={theme.colors.offense.main}
+          accentColor={theme.colors.newUi.primary}
           caption={`${teamStats?.offense.points_won ?? 0}/${teamStats?.offense.points_started ?? 0}`}
           icon={<FlashOnIcon fontSize="small" />}
           label={t("navigation:newUiPages.statistics.overview.holdRate")}
@@ -136,7 +136,7 @@ export default function NewStatisticsOverview({
       </Grid>
       <Grid size={{ xs: 6, md: 2.4 }}>
         <KpiCard
-          accentColor={theme.colors.defense.main}
+          accentColor={theme.colors.newUi.primary}
           caption={`${teamStats?.defense.points_won ?? 0}/${teamStats?.defense.points_started ?? 0}`}
           icon={<ShieldIcon fontSize="small" />}
           label={t("navigation:newUiPages.statistics.overview.breakRate")}

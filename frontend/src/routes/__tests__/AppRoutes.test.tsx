@@ -43,6 +43,10 @@ vi.mock("../../new-ui/pages/NewGameTrackerPage", () => ({
   default: () => <div>New UI game tracker route</div>,
 }));
 
+vi.mock("../../new-ui/pages/NewGameHistoryPage", () => ({
+  default: () => <div>New UI game history route</div>,
+}));
+
 vi.mock("../../new-ui/pages/NewAllGamesPage", () => ({
   default: () => <h1>All games</h1>,
 }));
@@ -107,9 +111,8 @@ describe("AppRoutes", () => {
     });
 
     await user.click(
-      await screen.findByRole("button", { name: /^Monkey Statistics$/i })
+      await screen.findByRole("button", { name: /^Open navigation$/i })
     );
-
     expect(
       await screen.findByRole("link", { name: /^All games$/i })
     ).toBeInTheDocument();
@@ -118,10 +121,12 @@ describe("AppRoutes", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps new UI game detail routes routable", async () => {
+  it("keeps new UI game history routes routable", async () => {
     renderAppRoutes("new", "/games/1");
 
-    expect(await screen.findByText("New UI game detail route")).toBeInTheDocument();
+    expect(
+      await screen.findByText("New UI game history route")
+    ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/games/1");
   });
 
@@ -182,7 +187,7 @@ describe("AppRoutes", () => {
     ).toBeInTheDocument();
 
     await user.click(
-      await screen.findByRole("button", { name: /^Monkey Statistics$/i })
+      await screen.findByRole("button", { name: /^Open navigation$/i })
     );
     await user.click(
       screen.getByRole("button", { name: /^Switch to old UI$/i })

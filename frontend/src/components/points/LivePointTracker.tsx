@@ -42,6 +42,7 @@ import type {
   Stoppage,
 } from "../../types";
 import { useQuery } from "@tanstack/react-query";
+import { alpha, type SxProps, type Theme } from "@mui/material/styles";
 import { getTurnoversByPoint } from "../../services/turnovers";
 import { getStoppagesByPoint } from "../../services/stoppages";
 import GroupIcon from "@mui/icons-material/Group";
@@ -147,6 +148,25 @@ export default function LivePointTracker({
   const canRenderReadyState = renderWhenReady && game.status === "ready";
   const canRecordPoint = !readOnly && game.status === "started";
   const isFieldVariant = variant === "field";
+  const newUiContainedButtonSx: SxProps<Theme> | undefined = isFieldVariant
+    ? {
+        bgcolor: (theme) => theme.colors.newUi.primary,
+        color: (theme) => theme.palette.common.white,
+        "&:hover": {
+          bgcolor: (theme) => theme.colors.newUi.primary,
+        },
+      }
+    : undefined;
+  const newUiOutlinedButtonSx: SxProps<Theme> | undefined = isFieldVariant
+    ? {
+        borderColor: (theme) => theme.colors.newUi.primaryBorder,
+        color: (theme) => theme.colors.newUi.primary,
+        "&:hover": {
+          bgcolor: (theme) => alpha(theme.colors.newUi.primary, 0.08),
+          borderColor: (theme) => theme.colors.newUi.primary,
+        },
+      }
+    : undefined;
   const shouldShowPullResolution =
     !readOnly &&
     activePoint &&
@@ -282,6 +302,7 @@ export default function LivePointTracker({
                     startIcon={<AddIcon />}
                     onClick={() => setIsStartDialogOpen(true)}
                     size="large"
+                    sx={newUiContainedButtonSx}
                   >
                     {isFieldVariant
                       ? t("points:tracker.fieldNewPoint", "New point")
@@ -293,6 +314,7 @@ export default function LivePointTracker({
                     onClick={() => setIsHalftimeConfirmOpen(true)}
                     disabled={hasHalftime || createHalftimeMutation.isPending}
                     size="large"
+                    sx={newUiOutlinedButtonSx}
                   >
                     {createHalftimeMutation.isPending
                       ? t("points:tracker.recordingHalftime", "Recording...")
@@ -690,6 +712,7 @@ export default function LivePointTracker({
               variant="contained"
               onClick={() => createHalftimeMutation.mutate()}
               disabled={createHalftimeMutation.isPending}
+              sx={newUiContainedButtonSx}
             >
               {createHalftimeMutation.isPending
                 ? t("points:tracker.recordingHalftime", "Recording...")

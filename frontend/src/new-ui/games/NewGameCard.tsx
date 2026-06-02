@@ -8,12 +8,14 @@ import CardContent from "@mui/material/CardContent";
 import Chip, { type ChipProps } from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import type { GameWithScore } from "../../types";
 import { formatDateTime } from "../../utils/dateFormatting";
 
 interface NewGameCardProps {
+  canEditData?: boolean;
   game: GameWithScore;
   variant?: "card" | "row";
 }
@@ -50,14 +52,12 @@ function getStatusChipProps(
 ): Pick<ChipProps, "color" | "label"> {
   if (game.status === "started") {
     return {
-      color: "primary",
       label: t("navigation:newUiPages.allGames.status.live"),
     };
   }
 
   if (game.status === "ready") {
     return {
-      color: "info",
       label: t("navigation:newUiPages.allGames.status.ready"),
     };
   }
@@ -76,13 +76,16 @@ function getStatusChipProps(
 }
 
 export default function NewGameCard({
+  canEditData = true,
   game,
   variant = "card",
 }: NewGameCardProps) {
   const { t, i18n } = useTranslation(["games", "navigation"]);
   const actionLabel = getActionLabel(game.status, t);
   const actionPath =
-    game.status === "ended" ? `/games/${game.id}` : `/live/${game.id}`;
+    game.status === "ended" || !canEditData
+      ? `/games/${game.id}`
+      : `/live/${game.id}`;
   const statusChipProps = getStatusChipProps(game, t);
   const isRow = variant === "row";
 
@@ -114,7 +117,25 @@ export default function NewGameCard({
             spacing={1}
             sx={{ mb: isRow ? 0.5 : 1, minWidth: 0 }}
           >
-            <Chip {...statusChipProps} size="small" />
+            <Chip
+              {...statusChipProps}
+              size="small"
+              sx={(theme) =>
+                game.status === "started"
+                  ? {
+                      bgcolor: theme.colors.newUi.primary,
+                      color: theme.palette.common.white,
+                      fontWeight: 800,
+                    }
+                  : game.status === "ready"
+                    ? {
+                        bgcolor: theme.colors.newUi.primarySoft,
+                        color: theme.colors.newUi.primary,
+                        fontWeight: 800,
+                      }
+                    : {}
+              }
+            />
             <Stack
               alignItems="center"
               direction="row"
@@ -178,10 +199,26 @@ export default function NewGameCard({
             size={isRow ? "small" : "medium"}
             to={actionPath}
             variant={game.status === "ended" ? "outlined" : "contained"}
-            sx={{
+            sx={(theme) => ({
+              bgcolor:
+                game.status === "ended"
+                  ? "transparent"
+                  : theme.colors.newUi.primary,
+              borderColor: theme.colors.newUi.primaryBorder,
+              color:
+                game.status === "ended"
+                  ? theme.colors.newUi.primary
+                  : theme.palette.common.white,
               minWidth: { xs: isRow ? 72 : "100%", sm: 96 },
               px: { xs: isRow ? 1.5 : 2, sm: 2 },
-            }}
+              "&:hover": {
+                bgcolor:
+                  game.status === "ended"
+                    ? alpha(theme.colors.newUi.primary, 0.08)
+                    : theme.colors.newUi.primary,
+                borderColor: theme.colors.newUi.primary,
+              },
+            })}
           >
             {actionLabel}
           </Button>

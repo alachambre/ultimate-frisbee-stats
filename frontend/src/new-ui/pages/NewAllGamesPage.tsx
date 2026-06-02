@@ -15,6 +15,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
@@ -224,6 +225,13 @@ export default function NewAllGamesPage() {
                 <Button
                   onClick={() => setIsCreateGameOpen(true)}
                   startIcon={<AddIcon />}
+                  sx={(theme) => ({
+                    bgcolor: theme.colors.newUi.primary,
+                    color: theme.palette.common.white,
+                    "&:hover": {
+                      bgcolor: theme.colors.newUi.primary,
+                    },
+                  })}
                   type="button"
                   variant="contained"
                 >
@@ -232,6 +240,14 @@ export default function NewAllGamesPage() {
                 <Button
                   onClick={() => setIsCreateCompetitionOpen(true)}
                   startIcon={<AddIcon />}
+                  sx={(theme) => ({
+                    borderColor: theme.colors.newUi.primaryBorder,
+                    color: theme.colors.newUi.primary,
+                    "&:hover": {
+                      bgcolor: alpha(theme.colors.newUi.primary, 0.08),
+                      borderColor: theme.colors.newUi.primary,
+                    },
+                  })}
                   type="button"
                   variant="outlined"
                 >
@@ -263,6 +279,15 @@ export default function NewAllGamesPage() {
           fullWidth
           label={t("newUiPages.allGames.filters.opponent")}
           onChange={(event) => setOpponentSearch(event.target.value)}
+          sx={(theme) => ({
+            "& label.Mui-focused": {
+              color: theme.colors.newUi.primary,
+            },
+            "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+              {
+                borderColor: theme.colors.newUi.primary,
+              },
+          })}
           value={opponentSearch}
           slotProps={{
             input: {
@@ -291,6 +316,7 @@ export default function NewAllGamesPage() {
           <Stack spacing={2}>
             {dashboard.competitionGroups.map((group) => (
               <NewCompetitionGamesAccordion
+                canEditData={canEditData}
                 canManageCompetition={canEditData}
                 formatDate={formatCompetitionDate}
                 group={group}

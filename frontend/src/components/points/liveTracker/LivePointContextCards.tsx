@@ -32,12 +32,7 @@ export function LivePointContextCards({
           >
             <EmojiObjectsIcon
               fontSize="small"
-              sx={{
-                color: (theme) =>
-                  currentPoint.starting_on_offense
-                    ? theme.colors.offense.main
-                    : theme.colors.defense.main,
-              }}
+              sx={(theme) => ({ color: theme.colors.newUi.primary })}
             />
             <Typography variant="body2" fontWeight="medium">
               {currentPoint.starting_on_offense
@@ -63,12 +58,7 @@ export function LivePointContextCards({
             >
               <CommentIcon
                 fontSize="small"
-                sx={{
-                  color: (theme) =>
-                    currentPoint.starting_on_offense
-                      ? theme.colors.offense.main
-                      : theme.colors.defense.main,
-                }}
+                sx={(theme) => ({ color: theme.colors.newUi.primary })}
               />
               <Typography variant="body2" fontWeight="medium">
                 {t("points:tracker.comment", "Comment")}

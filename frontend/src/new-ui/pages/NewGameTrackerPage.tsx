@@ -6,6 +6,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import GroupIcon from "@mui/icons-material/Group";
+import HistoryIcon from "@mui/icons-material/History";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import {
   Alert,
@@ -22,7 +23,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { alpha, type SxProps, type Theme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
@@ -111,13 +112,36 @@ export default function NewGameTrackerPage() {
   const canShowTracker =
     (game.status === "ready" || game.status === "started") &&
     (!canEditData || competition);
-  const gameActionButtonSx = {
+  const newUiOutlinedButtonSx: SxProps<Theme> = {
+    minHeight: { xs: 48, sm: 44 },
+    minWidth: 0,
+    px: { xs: 0.5, sm: 2 },
+    borderColor: (theme) => theme.colors.newUi.primary,
+    color: (theme) => theme.colors.newUi.primary,
+    "& .MuiButton-startIcon": {
+      ml: 0,
+      mr: { xs: 0, sm: 1 },
+    },
+    "&:hover": {
+      bgcolor: (theme) => alpha(theme.colors.newUi.primary, 0.08),
+      borderColor: (theme) => theme.colors.newUi.primary,
+    },
+  };
+  const gameActionButtonSx: SxProps<Theme> = {
     minHeight: { xs: 48, sm: 44 },
     minWidth: 0,
     px: { xs: 0.5, sm: 2 },
     "& .MuiButton-startIcon": {
       ml: 0,
       mr: { xs: 0, sm: 1 },
+    },
+  };
+  const newUiContainedButtonSx: SxProps<Theme> = {
+    ...gameActionButtonSx,
+    bgcolor: (theme) => theme.colors.newUi.primary,
+    color: (theme) => theme.palette.common.white,
+    "&:hover": {
+      bgcolor: (theme) => theme.colors.newUi.primary,
     },
   };
   const mobileHiddenLabelSx = {
@@ -267,9 +291,33 @@ export default function NewGameTrackerPage() {
             sx={{
               display: "grid",
               gap: 1,
-              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+              gridTemplateColumns: {
+                xs: "repeat(auto-fit, minmax(64px, 1fr))",
+                sm: "repeat(auto-fit, minmax(120px, 1fr))",
+              },
             }}
           >
+            <Tooltip
+              title={t(
+                "navigation:newUiPages.liveGame.tracker.actions.history",
+              )}
+            >
+              <Button
+                aria-label={t(
+                  "navigation:newUiPages.liveGame.tracker.actions.history",
+                )}
+                component={Link}
+                fullWidth
+                startIcon={<HistoryIcon />}
+                sx={newUiOutlinedButtonSx}
+                to={`/games/${game.id}?from=live`}
+                variant="outlined"
+              >
+                <Box component="span" sx={mobileHiddenLabelSx}>
+                  {t("navigation:newUiPages.liveGame.tracker.actions.history")}
+                </Box>
+              </Button>
+            </Tooltip>
             {(canEditData || canViewStatistics) && (
               <Tooltip
                 title={t(
@@ -283,7 +331,7 @@ export default function NewGameTrackerPage() {
                   fullWidth
                   onClick={() => setIsRosterDialogOpen(true)}
                   startIcon={<GroupIcon />}
-                  sx={gameActionButtonSx}
+                  sx={newUiOutlinedButtonSx}
                   variant="outlined"
                 >
                   <Box component="span" sx={mobileHiddenLabelSx}>
@@ -305,7 +353,7 @@ export default function NewGameTrackerPage() {
                   component={Link}
                   fullWidth
                   startIcon={<BarChartIcon />}
-                  sx={gameActionButtonSx}
+                  sx={newUiOutlinedButtonSx}
                   to={statisticsPath}
                   variant="outlined"
                 >
@@ -328,7 +376,7 @@ export default function NewGameTrackerPage() {
                   fullWidth
                   onClick={() => setIsEditModalOpen(true)}
                   startIcon={<EditIcon />}
-                  sx={gameActionButtonSx}
+                  sx={newUiOutlinedButtonSx}
                   variant="outlined"
                 >
                   <Box component="span" sx={mobileHiddenLabelSx}>
@@ -346,7 +394,7 @@ export default function NewGameTrackerPage() {
                     fullWidth
                     onClick={() => startMutation.mutate()}
                     startIcon={<PlayArrowIcon />}
-                    sx={gameActionButtonSx}
+                    sx={newUiContainedButtonSx}
                     variant="contained"
                   >
                     <Box component="span" sx={mobileHiddenLabelSx}>

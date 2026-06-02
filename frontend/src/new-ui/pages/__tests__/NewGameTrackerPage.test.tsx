@@ -131,6 +131,10 @@ describe("NewGameTrackerPage", () => {
     expect(
       screen.queryByRole("button", { name: /^Complete$/i }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^History$/i })).toHaveAttribute(
+      "href",
+      "/games/1?from=live",
+    );
   });
 
   it("shows team game actions and the shared tracker", async () => {
@@ -144,6 +148,10 @@ describe("NewGameTrackerPage", () => {
     expect(
       screen.getByRole("button", { name: /^Roster$/i }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^History$/i })).toHaveAttribute(
+      "href",
+      "/games/1?from=live",
+    );
     expect(screen.getByRole("link", { name: /^Stats$/i })).toHaveAttribute(
       "href",
       "/statistics?teamId=1&gameIds=1",

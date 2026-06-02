@@ -68,7 +68,7 @@ export default function NewLiveGameBoard({
     >
       <Box
         sx={(theme) => ({
-          bgcolor: alpha(theme.palette.primary.main, 0.08),
+          bgcolor: alpha(theme.colors.newUi.primary, 0.08),
           p: { xs: 2, md: 3 },
         })}
       >
@@ -80,12 +80,16 @@ export default function NewLiveGameBoard({
         >
           <Box>
             <Chip
-              color="primary"
               label={t("newUiPages.liveGame.board.live", {
                 defaultValue: "Live",
               })}
               size="small"
-              sx={{ mb: 1 }}
+              sx={(theme) => ({
+                bgcolor: theme.colors.newUi.primary,
+                color: theme.palette.common.white,
+                fontWeight: 800,
+                mb: 1,
+              })}
             />
             <Typography component="h1" fontWeight={800} variant="h4">
               {game.opponent_name}

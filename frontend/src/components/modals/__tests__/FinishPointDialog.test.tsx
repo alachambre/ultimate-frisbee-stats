@@ -1,8 +1,13 @@
 import { render, screen } from "../../../test/test-utils";
 import { describe, it, expect, vi } from "vitest";
+import { HttpResponse, http } from "msw";
 import userEvent from "@testing-library/user-event";
+import { waitFor } from "@testing-library/react";
 import FinishPointDialog from "../FinishPointDialog";
 import type { PointWithPlayers } from "../../../types";
+import { server } from "../../../test/setup";
+
+const BASE_URL = "http://localhost:8000";
 
 const mockRunningPoint: PointWithPlayers = {
   id: 1,
@@ -19,6 +24,11 @@ const mockRunningPoint: PointWithPlayers = {
     { id: 2, name: "Player 2", number: 20, gender: "M", team_id: 1, created_at: "2024-01-01" },
     { id: 3, name: "Player 3", number: null, gender: "M", team_id: 1, created_at: "2024-01-01" },
   ],
+};
+
+const mockDefensivePoint: PointWithPlayers = {
+  ...mockRunningPoint,
+  starting_on_offense: false,
 };
 
 
@@ -72,11 +82,64 @@ describe("FinishPointDialog", () => {
 
     // With starting_on_offense=true and no turnovers, we have possession, so "Won" should be preselected
     const wonButton = screen.getByRole("button", { name: /won the point/i });
-    expect(wonButton).toHaveClass("Mui-selected");
+    await waitFor(() => expect(wonButton).toHaveClass("Mui-selected"));
 
     // Finish button should be enabled since outcome is preselected
     const finishButton = screen.getByRole("button", { name: /finish point/i });
-    expect(finishButton).toBeEnabled();
+    await waitFor(() => expect(finishButton).toBeEnabled());
+  });
+
+  it("preselects won after a quickly recorded defensive turnover loads", async () => {
+    const user = userEvent.setup();
+    let updatePayload: Record<string, unknown> | undefined;
+
+    server.use(
+      http.get(`${BASE_URL}/turnovers/points/1/turnovers`, async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        return HttpResponse.json([
+          {
+            id: 1,
+            point_id: 1,
+            player_id: null,
+            turnover_type: "other",
+            timestamp: new Date().toISOString(),
+            comments: null,
+            created_at: "2024-01-01T00:00:00Z",
+            player: null,
+          },
+        ]);
+      }),
+      http.put(`${BASE_URL}/points/1`, async ({ request }) => {
+        updatePayload = await request.json() as Record<string, unknown>;
+
+        return HttpResponse.json({
+          ...mockDefensivePoint,
+          ...updatePayload,
+        });
+      }),
+    );
+
+    render(
+      <FinishPointDialog
+        open={true}
+        onClose={vi.fn()}
+        activePoint={mockDefensivePoint}
+      />
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: /won the point/i }),
+      ).toHaveClass("Mui-selected"),
+    );
+    expect(
+      screen.getByRole("button", { name: /lost the point/i }),
+    ).not.toHaveClass("Mui-selected");
+
+    await user.click(screen.getByRole("button", { name: /finish point/i }));
+
+    await waitFor(() => expect(updatePayload?.won).toBe(true));
   });
 
   it("shows warning when user changes preselected outcome", async () => {
@@ -91,7 +154,7 @@ describe("FinishPointDialog", () => {
 
     // Won should be preselected (we have possession)
     const wonButton = screen.getByRole("button", { name: /won the point/i });
-    expect(wonButton).toHaveClass("Mui-selected");
+    await waitFor(() => expect(wonButton).toHaveClass("Mui-selected"));
 
     // No warning initially
     expect(screen.queryByText(/doesn't match the current possession/i)).not.toBeInTheDocument();
@@ -142,6 +205,7 @@ describe("FinishPointDialog", () => {
 
     // Select won
     const wonButton = screen.getByRole("button", { name: /won the point/i });
+    await waitFor(() => expect(wonButton).toBeEnabled());
     await user.click(wonButton);
 
     // Click finish

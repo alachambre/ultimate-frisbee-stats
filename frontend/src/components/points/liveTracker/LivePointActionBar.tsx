@@ -57,19 +57,11 @@ export function LivePointActionBar({
   const theme = useTheme();
   const isMobileActionLayout = useMediaQuery(theme.breakpoints.down("sm"));
   const accentOutlinedSx: SxProps<Theme> = {
-    borderColor: (theme) =>
-      currentPoint.starting_on_offense
-        ? theme.colors.offense.main
-        : theme.colors.defense.main,
-    color: (theme) =>
-      currentPoint.starting_on_offense
-        ? theme.colors.offense.main
-        : theme.colors.defense.main,
+    borderColor: (theme) => theme.colors.newUi.primary,
+    color: (theme) => theme.colors.newUi.primary,
     "&:hover": {
-      borderColor: (theme) =>
-        currentPoint.starting_on_offense
-          ? theme.colors.offense.dark
-          : theme.colors.defense.dark,
+      bgcolor: (theme) => theme.colors.newUi.primarySoft,
+      borderColor: (theme) => theme.colors.newUi.primary,
     },
   };
 
@@ -98,7 +90,8 @@ export function LivePointActionBar({
       flexWrap: "nowrap",
       gap: { xs: 0.75, sm: 1 },
       justifyContent: { xs: "space-between", sm: "center" },
-      overflowX: { xs: "auto", sm: "visible" },
+      minWidth: 0,
+      overflowX: "auto",
       scrollbarWidth: "none",
       width: "100%",
       "&::-webkit-scrollbar": {
@@ -128,7 +121,7 @@ export function LivePointActionBar({
     const fieldSecondaryButtonWrapperSx = {
       display: "flex",
       flex: { xs: "1 1 0", sm: "0 0 auto" },
-      minWidth: { xs: 74, sm: 112 },
+      minWidth: { xs: 74, sm: 96 },
     } satisfies SxProps<Theme>;
 
     const renderFieldSecondaryButton = ({
@@ -195,15 +188,9 @@ export function LivePointActionBar({
           }
           sx={{
             ...fieldPrimaryButtonSx,
-            bgcolor: (theme) =>
-              currentPoint.starting_on_offense
-                ? theme.colors.offense.main
-                : theme.colors.defense.main,
+            bgcolor: (theme) => theme.colors.newUi.primary,
             "&:hover": {
-              bgcolor: (theme) =>
-                currentPoint.starting_on_offense
-                  ? theme.colors.offense.dark
-                  : theme.colors.defense.dark,
+              bgcolor: (theme) => theme.colors.newUi.primary,
             },
           }}
         >
@@ -247,16 +234,9 @@ export function LivePointActionBar({
       ) : null;
 
     const isLineIncomplete = currentPoint.players.length < 7;
-    const readyPlayerActionLabel =
-      currentPoint.players.length >= 7
-        ? t("points:tracker.managePlayers", "Manage Players")
-        : t("points:tracker.selectPlayers", "Select Players");
-    const strategyActionLabel = currentPoint.strategy
-      ? t("points:tracker.changeStrategy", "Change Strategy")
-      : t("points:tracker.selectStrategy", "Select Strategy");
-    const commentActionLabel = currentPoint.comments
-      ? t("points:tracker.editComment", "Edit Comment")
-      : t("points:tracker.addComment", "Add Comment");
+    const playerActionLabel = t("points:tracker.selectPlayers", "Players");
+    const strategyActionLabel = t("points:tracker.selectStrategy", "Strategy");
+    const commentActionLabel = t("points:tracker.addComment", "Comment");
 
     const secondaryActions: ReactNode[] = [];
 
@@ -264,7 +244,7 @@ export function LivePointActionBar({
       secondaryActions.push(
         renderFieldSecondaryButton({
           actionKey: "manage-players",
-          label: readyPlayerActionLabel,
+          label: playerActionLabel,
           icon: <GroupIcon />,
           onClick: onOpenManagePlayers,
           disabled: !onOpenManagePlayers,
@@ -323,7 +303,7 @@ export function LivePointActionBar({
       secondaryActions.push(
         renderFieldSecondaryButton({
           actionKey: "line",
-          label: t("points:tracker.line", "Line"),
+          label: playerActionLabel,
           icon: <GroupIcon />,
           onClick: onOpenManagePlayers,
           disabled: !onOpenManagePlayers,
