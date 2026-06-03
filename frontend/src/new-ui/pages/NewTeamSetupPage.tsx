@@ -1211,10 +1211,12 @@ export default function NewTeamSetupPage() {
 
           {editingPlayer && (
             <EditPlayerModal
-              key={editingPlayer.id}
+              key={`edit-player-${editingPlayer.id}`}
               isOpen={editingPlayer !== null}
               onClose={() => {
                 setEditingPlayer(null);
+              }}
+              onPlayerChanged={() => {
                 void invalidateSelectedTeamWorkspace();
               }}
               player={editingPlayer}
@@ -1223,7 +1225,7 @@ export default function NewTeamSetupPage() {
           )}
 
           <CreateLineModal
-            key={selectedTeamId}
+            key={`create-line-${selectedTeamId}`}
             isOpen={isCreateLineOpen}
             onClose={() => {
               void closeCreateLineModal();
@@ -1233,7 +1235,7 @@ export default function NewTeamSetupPage() {
 
           {editingLine && (
             <EditLineModal
-              key={editingLine.id}
+              key={`edit-line-${editingLine.id}`}
               isOpen={editingLine !== null}
               line={editingLine}
               onClose={() => {

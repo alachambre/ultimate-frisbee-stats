@@ -141,6 +141,29 @@ describe("NewTeamSetupPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("closes the edit player modal when cancelling", async () => {
+    const user = userEvent.setup();
+    useSelectedTeamWorkspaceHandlers();
+
+    renderPage();
+
+    expect(await screen.findAllByText("Alex")).not.toHaveLength(0);
+    await user.click(
+      screen.getAllByRole("button", { name: "Edit Alex" })[0]
+    );
+    const editDialog = await screen.findByRole("dialog", {
+      name: "Edit Player",
+    });
+
+    await user.click(within(editDialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Edit Player" })
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("shows line rows without usage or game-count concepts", async () => {
     const user = userEvent.setup();
     useSelectedTeamWorkspaceHandlers();

@@ -19,13 +19,13 @@ const NewGameTrackerPage = lazy(() => import("./pages/NewGameTrackerPage"));
 const NewGameHistoryPage = lazy(() => import("./pages/NewGameHistoryPage"));
 const NewStatisticsPage = lazy(() => import("./pages/NewStatisticsPage"));
 const NewTeamSetupPage = lazy(() => import("./pages/NewTeamSetupPage"));
+const NewStrategiesPage = lazy(() => import("./pages/NewStrategiesPage"));
 const AdminUsersPage = lazy(() => import("../pages/AdminUsersPage"));
 const CompetitionsPage = lazy(() => import("../pages/CompetitionsPage"));
 const CompetitionDetailPage = lazy(
   () => import("../pages/CompetitionDetailPage")
 );
 const LineDetailPage = lazy(() => import("../pages/LineDetailPage"));
-const StrategiesPage = lazy(() => import("../pages/StrategiesPage"));
 const TeamsPage = lazy(() => import("../pages/TeamsPage"));
 const TeamDetailPage = lazy(() => import("../pages/TeamDetailPage"));
 
@@ -131,7 +131,7 @@ export default function NewUiRoutes() {
             path="strategies"
             element={renderLazyRoute(
               <RequireMinimumRole minimumRole="team_member">
-                <StrategiesPage />
+                <NewStrategiesPage />
               </RequireMinimumRole>
             )}
           />

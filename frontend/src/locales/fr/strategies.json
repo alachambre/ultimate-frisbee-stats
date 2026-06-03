@@ -2,13 +2,49 @@
   "page": {
     "title": "Stratégies",
     "newStrategy": "Créer une stratégie",
+    "eyebrow": "Configuration application",
+    "copy": "Bibliothèque partagée de stratégies utilisée pour préparer et suivre les points. Les stratégies sont disponibles pour toutes les équipes.",
+    "loading": "Chargement des stratégies...",
+    "error": "Impossible de charger les stratégies.",
+    "summary": {
+      "label": "Résumé des stratégies",
+      "total_one": "{{count}} stratégie",
+      "total_other": "{{count}} stratégies",
+      "offense_one": "{{count}} attaque",
+      "offense_other": "{{count}} attaque",
+      "defense_one": "{{count}} défense",
+      "defense_other": "{{count}} défense"
+    },
     "filter": {
       "all": "Toutes"
+    },
+    "filters": {
+      "label": "Filtres des stratégies",
+      "categoryAria": "Catégorie de stratégie"
+    },
+    "search": {
+      "label": "Rechercher une stratégie",
+      "placeholder": "Rechercher une stratégie"
+    },
+    "library": {
+      "title": "Bibliothèque de stratégies",
+      "scope": "Partagée entre les équipes",
+      "noDescription": "Aucune description"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "openEditorAria": "Ouvrir l'éditeur de {{strategyName}}",
+      "editAria": "Modifier {{strategyName}}",
+      "deleteAria": "Supprimer {{strategyName}}",
+      "deleteConfirm": "Voulez-vous vraiment supprimer {{strategyName}} ?",
+      "deleteError": "Impossible de supprimer la stratégie."
     },
     "empty": {
       "title": "Aucune stratégie pour le moment",
       "description": "Créez votre première stratégie pour commencer",
-      "button": "Créer votre première stratégie"
+      "button": "Créer votre première stratégie",
+      "filteredTitle": "Aucune stratégie correspondante",
+      "filteredDescription": "Essayez une autre recherche ou changez le filtre de catégorie."
     }
   },
   "modal": {

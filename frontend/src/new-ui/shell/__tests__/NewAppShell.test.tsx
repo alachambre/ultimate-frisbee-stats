@@ -80,6 +80,9 @@ describe("NewAppShell", () => {
       screen.getByRole("link", { name: /^Team setup$/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("link", { name: /^Strategies$/i })
+    ).toBeInTheDocument();
+    expect(
       screen.queryByRole("link", { name: /^Record game$/i })
     ).not.toBeInTheDocument();
     expect(
@@ -217,6 +220,9 @@ describe("NewAppShell", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Team setup$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Strategies$/i })
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Statistics$/i })

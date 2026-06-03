@@ -67,6 +67,9 @@ function getCurrentSectionKey(pathname: string) {
   if (pathname.startsWith("/team-setup")) {
     return "navigation:menu.teamSetup";
   }
+  if (pathname.startsWith("/strategies")) {
+    return "navigation:menu.strategies";
+  }
   if (pathname.startsWith("/admin/users")) {
     return "navigation:menu.admin";
   }
@@ -169,6 +172,9 @@ export default function NewAppShell() {
         : []),
       ...(canEditData
         ? [{ label: t("navigation:menu.teamSetup"), path: "/team-setup" }]
+        : []),
+      ...(canEditData
+        ? [{ label: t("navigation:menu.strategies"), path: "/strategies" }]
         : []),
       ...(auth.capabilities.canManageUsers
         ? [{ label: t("navigation:menu.admin"), path: "/admin/users" }]
@@ -383,7 +389,7 @@ export default function NewAppShell() {
             onClick={() => setIsDrawerOpen(true)}
             sx={(theme) => ({
               ...newUiIconButtonSx(theme),
-              display: "inline-flex",
+              display: { sm: "inline-flex", lg: "none" },
             })}
           >
             <MenuIcon />

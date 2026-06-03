@@ -35,6 +35,10 @@ vi.mock("../../pages/StrategiesPage", () => ({
   default: () => <div>New UI strategies route</div>,
 }));
 
+vi.mock("../../new-ui/pages/NewStrategiesPage", () => ({
+  default: () => <div>New UI strategies route</div>,
+}));
+
 vi.mock("../../new-ui/pages/NewRecordGameDetailPage", () => ({
   default: () => <div>New UI record game detail route</div>,
 }));

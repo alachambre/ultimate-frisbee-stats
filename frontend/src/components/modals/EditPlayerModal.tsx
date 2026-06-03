@@ -21,12 +21,14 @@ interface EditPlayerModalProps {
   onClose: () => void;
   player: Player;
   teamId: number;
+  onPlayerChanged?: () => void;
   onViewStatistics?: (player: Player) => void;
 }
 
 export default function EditPlayerModal({
   isOpen,
   onClose,
+  onPlayerChanged,
   player,
   teamId,
   onViewStatistics,
@@ -45,6 +47,7 @@ export default function EditPlayerModal({
       updatePlayer(player.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.team(teamId) });
+      onPlayerChanged?.();
       onClose();
     },
   });
@@ -53,6 +56,7 @@ export default function EditPlayerModal({
     mutationFn: () => deletePlayer(player.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.team(teamId) });
+      onPlayerChanged?.();
       onClose();
     },
   });
@@ -73,13 +77,13 @@ export default function EditPlayerModal({
   };
 
   const handleClose = () => {
+    onClose();
     setPlayerName(player.name);
     setPlayerNumber(player.number?.toString() || "");
     setGender(player.gender);
     setShowDeleteConfirm(false);
     updateMutation.reset();
     deleteMutation.reset();
-    onClose();
   };
 
   const handleViewStatistics = () => {
@@ -107,6 +111,7 @@ export default function EditPlayerModal({
           <Button
             onClick={() => setShowDeleteConfirm(false)}
             disabled={deleteMutation.isPending}
+            type="button"
           >
             {t("common:action.cancel")}
           </Button>
@@ -157,6 +162,7 @@ export default function EditPlayerModal({
             onClick={() => setShowDeleteConfirm(true)}
             color="error"
             disabled={updateMutation.isPending}
+            type="button"
             sx={{
               order: { xs: 4, sm: 1 },
               width: { xs: "100%", sm: "auto" },
@@ -170,6 +176,7 @@ export default function EditPlayerModal({
               startIcon={<BarChartIcon />}
               color="primary"
               disabled={updateMutation.isPending}
+              type="button"
               sx={{
                 order: { xs: 3, sm: 2 },
                 width: { xs: "100%", sm: "auto" },
@@ -190,6 +197,7 @@ export default function EditPlayerModal({
             <Button
               onClick={handleClose}
               disabled={updateMutation.isPending}
+              type="button"
               sx={{
                 order: { xs: 2, sm: 1 },
                 width: { xs: "100%", sm: "auto" },

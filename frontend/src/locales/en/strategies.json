@@ -2,13 +2,49 @@
   "page": {
     "title": "Strategies",
     "newStrategy": "New Strategy",
+    "eyebrow": "Application setup",
+    "copy": "Shared strategy library used when preparing and tracking points. Strategies are available across teams.",
+    "loading": "Loading strategies...",
+    "error": "Unable to load strategies.",
+    "summary": {
+      "label": "Strategy summary",
+      "total_one": "{{count}} strategy",
+      "total_other": "{{count}} strategies",
+      "offense_one": "{{count}} offense",
+      "offense_other": "{{count}} offense",
+      "defense_one": "{{count}} defense",
+      "defense_other": "{{count}} defense"
+    },
     "filter": {
       "all": "All"
+    },
+    "filters": {
+      "label": "Strategy filters",
+      "categoryAria": "Strategy category"
+    },
+    "search": {
+      "label": "Search strategy",
+      "placeholder": "Search strategy"
+    },
+    "library": {
+      "title": "Strategy library",
+      "scope": "Shared across teams",
+      "noDescription": "No description"
+    },
+    "actions": {
+      "edit": "Edit",
+      "openEditorAria": "Open {{strategyName}} editor",
+      "editAria": "Edit {{strategyName}}",
+      "deleteAria": "Delete {{strategyName}}",
+      "deleteConfirm": "Are you sure you want to delete {{strategyName}}?",
+      "deleteError": "Unable to delete strategy."
     },
     "empty": {
       "title": "No strategies yet",
       "description": "Create your first strategy to get started",
-      "button": "Create Your First Strategy"
+      "button": "Create Your First Strategy",
+      "filteredTitle": "No matching strategy",
+      "filteredDescription": "Try another search or switch the category filter."
     }
   },
   "modal": {
