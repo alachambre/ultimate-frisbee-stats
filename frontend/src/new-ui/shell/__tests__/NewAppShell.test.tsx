@@ -132,6 +132,9 @@ describe("NewAppShell", () => {
       ).toHaveAttribute("href", "/games/7");
     });
     expect(
+      within(mobileNav).getByRole("link", { hidden: true, name: /^Live$/i })
+    ).toHaveAttribute("data-live-available", "true");
+    expect(
       within(mobileNav).getByRole("link", { hidden: true, name: /^Stats$/i })
     ).toHaveAttribute("href", "/statistics");
     expect(

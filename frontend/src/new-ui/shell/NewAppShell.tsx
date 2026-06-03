@@ -638,6 +638,8 @@ export default function NewAppShell() {
           })}
         >
           {mobileNavigationItems.map((item) => {
+            const isLiveNavigationAvailable =
+              item.value === "/live" && currentLiveGame !== undefined;
             const icon =
               item.value === "/live" ? (
                 <PlayArrowIcon />
@@ -668,9 +670,44 @@ export default function NewAppShell() {
                     : undefined
                 }
                 component={Link}
+                data-live-available={
+                  isLiveNavigationAvailable ? "true" : undefined
+                }
                 icon={icon}
                 key={item.value ?? item.path}
                 label={item.label}
+                sx={
+                  isLiveNavigationAvailable
+                    ? (theme) => ({
+                        bgcolor: alpha(theme.palette.success.main, 0.1),
+                        borderRadius: 1,
+                        color: theme.palette.success.dark,
+                        mx: 0.25,
+                        position: "relative",
+                        "& .MuiBottomNavigationAction-label": {
+                          color: "inherit",
+                        },
+                        "& .MuiSvgIcon-root": {
+                          color: theme.palette.success.main,
+                        },
+                        "&::after": {
+                          bgcolor: theme.palette.success.main,
+                          border: `2px solid ${theme.palette.background.paper}`,
+                          borderRadius: "50%",
+                          content: '""',
+                          height: 10,
+                          position: "absolute",
+                          right: "28%",
+                          top: 8,
+                          width: 10,
+                        },
+                        "&&.Mui-selected": {
+                          bgcolor: alpha(theme.palette.success.main, 0.16),
+                          color: theme.palette.success.dark,
+                        },
+                      })
+                    : undefined
+                }
                 to={item.path}
                 value={item.value ?? item.path}
               />

@@ -215,13 +215,13 @@ export default function NewGameHistoryPointItem({
         bgcolor: "background.paper",
         border: `1px solid ${
           expanded
-            ? alpha(theme.colors.newUi.primary, 0.5)
-            : alpha(theme.palette.divider, 0.9)
+            ? alpha(theme.colors.newUi.primary, 0.24)
+            : alpha(theme.palette.text.primary, 0.08)
         }`,
         borderRadius: 1,
         boxShadow: expanded
-          ? `0 12px 28px ${alpha(theme.colors.newUi.primary, 0.14)}`
-          : "none",
+          ? `0 10px 24px ${alpha(theme.colors.newUi.primary, 0.1)}`
+          : `0 1px 2px ${alpha(theme.palette.common.black, 0.025)}`,
         overflow: "hidden",
         position: "relative",
         transition: theme.transitions.create(["border-color", "box-shadow"], {
