@@ -223,9 +223,9 @@ const game: GameDetail = {
   ],
 };
 
-function setupHandlers() {
+function setupHandlers(gameResponse: GameDetail = game) {
   server.use(
-    http.get(`${BASE_URL}/games/1`, () => HttpResponse.json(game)),
+    http.get(`${BASE_URL}/games/1`, () => HttpResponse.json(gameResponse)),
     http.get(`${BASE_URL}/games/1/turnovers`, () =>
       HttpResponse.json([
         {
@@ -316,17 +316,22 @@ describe("NewGameHistoryPage", () => {
     renderPage();
 
     expect(
-      await screen.findByRole("heading", { level: 2, name: "Game history" }),
+      await screen.findByRole("heading", { level: 1, name: "Game history" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^All games$/i })).toHaveAttribute(
       "href",
       "/games",
     );
+    expect(screen.queryByText("Game review")).not.toBeInTheDocument();
     expect(screen.getByText("Monkey")).toBeInTheDocument();
     expect(screen.getByText("Blue Tigers")).toBeInTheDocument();
+    expect(screen.getByText("Monkey won")).toBeInTheDocument();
+    expect(screen.getByText("Spring Cup")).toBeInTheDocument();
     expect(screen.getAllByText("1 - 1").length).toBeGreaterThan(0);
     expect(screen.queryByText("Score after point")).not.toBeInTheDocument();
     expect(screen.getByText("6 points")).toBeInTheDocument();
+    expect(screen.getByText("1 break")).toBeInTheDocument();
+    expect(screen.getByText("1 broken")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Point 2" })).toBeInTheDocument();
     expect(screen.getAllByText("2:30").length).toBeGreaterThan(0);
     expect(screen.getByText("5 turns")).toBeInTheDocument();
@@ -364,6 +369,21 @@ describe("NewGameHistoryPage", () => {
     expect(
       await screen.findByRole("link", { name: /^Live game$/i }),
     ).toHaveAttribute("href", "/live/1");
+  });
+
+  it("summarizes a running game for spectator history", async () => {
+    setupHandlers({
+      ...game,
+      our_score: 3,
+      opponent_score: 3,
+      status: "started",
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("Point 3 running")).toBeInTheDocument();
+    expect(screen.getByText("Game tied")).toBeInTheDocument();
+    expect(screen.getByText("Current: defense")).toBeInTheDocument();
   });
 
   it("closes the previously expanded point when another point is opened", async () => {
