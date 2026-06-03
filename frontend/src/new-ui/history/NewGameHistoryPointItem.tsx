@@ -281,12 +281,16 @@ export default function NewGameHistoryPointItem({
             <Stack alignItems="center" direction="row" spacing={1}>
               <Box
                 sx={(theme) => ({
+                  "--history-side-icon-bg": point.starting_on_offense
+                    ? theme.colors.newUi.primarySoft
+                    : alpha(theme.palette.success.main, 0.1),
+                  "--history-side-icon-color": point.starting_on_offense
+                    ? theme.colors.newUi.primary
+                    : theme.palette.success.dark,
                   alignItems: "center",
-                  bgcolor: expanded
-                    ? alpha(theme.colors.newUi.primary, 0.14)
-                    : theme.colors.newUi.primarySoft,
+                  bgcolor: "var(--history-side-icon-bg)",
                   borderRadius: "50%",
-                  color: theme.colors.newUi.primary,
+                  color: "var(--history-side-icon-color)",
                   display: "inline-flex",
                   flexShrink: 0,
                   height: 30,
