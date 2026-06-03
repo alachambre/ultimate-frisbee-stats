@@ -187,4 +187,16 @@ describe("NewGameTrackerPage", () => {
       screen.queryByRole("button", { name: /^New point$/i }),
     ).not.toBeInTheDocument();
   });
+
+  it("keeps game trends out of the field tracking screen", async () => {
+    setupHandlers(createGame("started"));
+
+    renderPage({ role: "public" });
+
+    expect(
+      await screen.findByRole("heading", { name: /^No active point$/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Game trends")).not.toBeInTheDocument();
+    expect(screen.queryByText("Score progression")).not.toBeInTheDocument();
+  });
 });

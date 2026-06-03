@@ -332,6 +332,11 @@ describe("NewGameHistoryPage", () => {
     expect(screen.getByText("6 points")).toBeInTheDocument();
     expect(screen.getByText("1 break")).toBeInTheDocument();
     expect(screen.getByText("1 broken")).toBeInTheDocument();
+    expect(await screen.findByText("Game trends")).toBeInTheDocument();
+    expect(screen.getByText("Score progression")).toBeInTheDocument();
+    expect(screen.getByText("Break point")).toBeInTheDocument();
+    expect(screen.getByText("Broken point")).toBeInTheDocument();
+    expect(screen.getByTestId("chartjs-line")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Point 2" })).toBeInTheDocument();
     expect(screen.getAllByText("2:30").length).toBeGreaterThan(0);
     expect(screen.getByText("5 turns")).toBeInTheDocument();

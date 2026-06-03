@@ -96,6 +96,8 @@
     "scoreYAxis": "Score",
     "turnoversYAxis": "Turns",
     "halftime": "Half time",
+    "breakMarker": "Break point",
+    "brokenMarker": "Broken point",
     "resetZoom": "Reset zoom",
     "empty": "No completed points are available for charting yet."
   },

@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import type { TFunction } from "i18next";
-import { useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import ErrorState from "../../components/shared/ErrorState";
@@ -28,7 +28,12 @@ import type {
   TurnoverWithPlayer,
 } from "../../types";
 import { formatDateTime } from "../../utils/dateFormatting";
+import { buildGamePointTimelineFromPoints } from "../../utils/gameTimeline";
 import NewGameHistoryPointItem from "../history/NewGameHistoryPointItem";
+
+const LazyNewGameScoreProgression = lazy(
+  () => import("../games/NewGameScoreProgression"),
+);
 
 type HistoryItem =
   | {
@@ -249,6 +254,17 @@ export default function NewGameHistoryPage() {
     () => buildScoreByPointId(game?.points ?? []),
     [game?.points],
   );
+  const scoreTimeline = useMemo(() => {
+    if (!game) {
+      return null;
+    }
+
+    return buildGamePointTimelineFromPoints(
+      game.id,
+      game.points,
+      game.halftime,
+    );
+  }, [game]);
   const historySummary = useMemo(
     () => buildHistorySummary(game?.points ?? []),
     [game?.points],
@@ -568,6 +584,16 @@ export default function NewGameHistoryPage() {
           spacing={2}
           sx={{ px: { xs: 1.5, sm: 0 }, pb: { xs: 2, sm: 0 } }}
         >
+          {scoreTimeline && scoreTimeline.points.length > 0 && (
+            <Suspense fallback={null}>
+              <LazyNewGameScoreProgression
+                opponentName={game.opponent_name}
+                teamName={game.team_name}
+                timeline={scoreTimeline}
+              />
+            </Suspense>
+          )}
+
           {historyItems.length === 0 ? (
             <Paper
               elevation={0}
