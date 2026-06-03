@@ -202,37 +202,99 @@
     },
     "teamSetup": {
       "heading": "Configuration équipe",
-      "copy": "Gardez l'effectif, les lignes, les compétitions et les stratégies faciles d'accès sans faire de la configuration le centre de l'application.",
+      "copy": "Maintenez le roster et les lignes réutilisables de l'équipe sélectionnée dans un seul espace de travail.",
       "selectedTeamEyebrow": "Configuration {{teamName}}",
       "noTeamEyebrow": "Aucune équipe sélectionnée",
       "noTeamTitle": "Aucune équipe sélectionnée",
-      "noTeamCopy": "Choisissez une équipe dans l'en-tête ou ouvrez la page des équipes pour en sélectionner une.",
-      "noTeamsCopy": "Créez une équipe avant de configurer l'effectif, les lignes et les compétitions.",
+      "noTeamCopy": "Sélectionnez une équipe pour configurer son roster et ses lignes.",
+      "noTeamsCopy": "Créez une équipe avant de configurer le roster et les lignes.",
       "playerCount": {
         "one": "{{count}} joueur",
         "other": "{{count}} joueurs"
       },
       "loading": "Chargement de la configuration équipe...",
       "error": "Impossible de charger la configuration équipe.",
-      "mobileNote": "Ces écrans de configuration restent disponibles sur mobile pour les mises à jour rapides au bord du terrain, comme ajouter une stratégie pendant un match.",
+      "gender": {
+        "men": "Hommes",
+        "women": "Femmes"
+      },
+      "teamCard": {
+        "label": "Contexte de l'équipe sélectionnée",
+        "selectedLabel": "Équipe sélectionnée",
+        "selectLabel": "Équipe sélectionnée",
+        "scopeCopy": "Tous les changements ci-dessous s'appliquent à cette équipe.",
+        "onlyTeam": "Seule équipe disponible"
+      },
+      "summary": {
+        "label": "Résumé équipe",
+        "players": "Joueurs",
+        "men": "Hommes",
+        "women": "Femmes",
+        "lines": "Lignes"
+      },
+      "tabs": {
+        "label": "Sections de configuration équipe",
+        "roster": "Roster",
+        "lines": "Lignes"
+      },
       "actions": {
         "openTeams": "Ouvrir les équipes",
-        "openRosterLines": "Ouvrir effectif et lignes",
-        "openCompetitions": "Ouvrir les compétitions",
-        "openStrategies": "Ouvrir les stratégies"
+        "newTeam": "Nouvelle équipe",
+        "addPlayer": "Ajouter un joueur",
+        "newLine": "Nouvelle ligne",
+        "editPlayer": "Modifier",
+        "editPlayerAria": "Modifier {{playerName}}",
+        "deletePlayer": "Supprimer",
+        "deletePlayerAria": "Supprimer {{playerName}}",
+        "editLine": "Modifier",
+        "editLineAria": "Modifier {{lineName}}",
+        "deleteLine": "Supprimer",
+        "deleteLineAria": "Supprimer {{lineName}}",
+        "manageLineRoster": "Gérer le roster",
+        "manageLineRosterAria": "Gérer le roster {{lineName}}"
       },
-      "cards": {
-        "rosterLines": {
-          "title": "Effectif et lignes",
-          "copy": "Gérez les joueurs, modifiez leurs informations et maintenez les groupes de lignes de l'équipe sélectionnée."
+      "roster": {
+        "title": "Roster",
+        "copy": "Joueurs disponibles pour la configuration équipe et les lignes réutilisables.",
+        "filterLabel": "Afficher les joueurs",
+        "filterAria": "Filtre de genre du roster",
+        "tableLabel": "Joueurs du roster",
+        "empty": "Aucun joueur ne correspond à cette vue du roster.",
+        "noLines": "Aucune ligne",
+        "number": "#{{number}}",
+        "deleteTitle": "Supprimer le joueur ?",
+        "deleteConfirm": "Voulez-vous vraiment retirer {{playerName}} de cette équipe ?",
+        "deleteError": "Impossible de supprimer le joueur.",
+        "filters": {
+          "all": "Tous",
+          "men": "Hommes",
+          "women": "Femmes"
         },
-        "competitions": {
-          "title": "Compétitions et matchs",
-          "copy": "Créez des compétitions, préparez les matchs, ajustez les rosters et ouvrez la configuration des matchs existants."
-        },
-        "strategies": {
-          "title": "Stratégies",
-          "copy": "Maintenez les stratégies offensives et défensives, y compris les ajouts rapides pendant un match."
+        "columns": {
+          "player": "Joueur",
+          "gender": "Genre",
+          "lines": "Lignes",
+          "actions": "Actions"
+        }
+      },
+      "lines": {
+        "title": "Lignes",
+        "copy": "Groupes de joueurs réutilisables pour une sélection rapide au bord du terrain.",
+        "loading": "Chargement des lignes...",
+        "error": "Impossible de charger les lignes.",
+        "empty": "Aucune ligne pour le moment.",
+        "tableLabel": "Lignes équipe",
+        "composition": "{{men}}M / {{women}}F",
+        "noPlayers": "Aucun joueur",
+        "lineDataUnavailable": "Lignes indisponibles",
+        "deleteTitle": "Supprimer la ligne ?",
+        "deleteConfirm": "Voulez-vous vraiment supprimer {{lineName}} ?",
+        "deleteError": "Impossible de supprimer la ligne.",
+        "columns": {
+          "line": "Ligne",
+          "composition": "Composition",
+          "players": "Joueurs",
+          "actions": "Actions"
         }
       }
     }

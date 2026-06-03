@@ -202,37 +202,99 @@
     },
     "teamSetup": {
       "heading": "Team setup",
-      "copy": "Keep roster, lines, competitions, and strategies easy to reach without making setup the center of the app.",
+      "copy": "Maintain the selected team roster and reusable lines in one operational workspace.",
       "selectedTeamEyebrow": "{{teamName}} configuration",
       "noTeamEyebrow": "No team selected",
       "noTeamTitle": "No team selected",
-      "noTeamCopy": "Pick a team from the header or open the teams page to choose one.",
-      "noTeamsCopy": "Create a team before configuring roster, lines, and competitions.",
+      "noTeamCopy": "Select a team to configure its roster and lines.",
+      "noTeamsCopy": "Create a team before configuring roster and lines.",
       "playerCount": {
         "one": "{{count}} player",
         "other": "{{count}} players"
       },
       "loading": "Loading team setup...",
       "error": "Unable to load team setup.",
-      "mobileNote": "These setup screens stay available on mobile for quick sideline updates, such as adding a strategy during a game.",
+      "gender": {
+        "men": "Men",
+        "women": "Women"
+      },
+      "teamCard": {
+        "label": "Selected team context",
+        "selectedLabel": "Selected team",
+        "selectLabel": "Selected team",
+        "scopeCopy": "All setup changes below apply to this team.",
+        "onlyTeam": "Only team available"
+      },
+      "summary": {
+        "label": "Team summary",
+        "players": "Players",
+        "men": "Men",
+        "women": "Women",
+        "lines": "Lines"
+      },
+      "tabs": {
+        "label": "Team setup sections",
+        "roster": "Roster",
+        "lines": "Lines"
+      },
       "actions": {
         "openTeams": "Open teams",
-        "openRosterLines": "Open roster and lines",
-        "openCompetitions": "Open competitions",
-        "openStrategies": "Open strategies"
+        "newTeam": "New team",
+        "addPlayer": "Add player",
+        "newLine": "New line",
+        "editPlayer": "Edit",
+        "editPlayerAria": "Edit {{playerName}}",
+        "deletePlayer": "Delete",
+        "deletePlayerAria": "Delete {{playerName}}",
+        "editLine": "Edit",
+        "editLineAria": "Edit {{lineName}}",
+        "deleteLine": "Delete",
+        "deleteLineAria": "Delete {{lineName}}",
+        "manageLineRoster": "Manage roster",
+        "manageLineRosterAria": "Manage {{lineName}} roster"
       },
-      "cards": {
-        "rosterLines": {
-          "title": "Roster and lines",
-          "copy": "Manage players, edit player details, and maintain line groups for the selected team."
+      "roster": {
+        "title": "Roster",
+        "copy": "Players available for team setup and reusable lines.",
+        "filterLabel": "Show players",
+        "filterAria": "Roster gender filter",
+        "tableLabel": "Roster players",
+        "empty": "No players match this roster view.",
+        "noLines": "No lines",
+        "number": "#{{number}}",
+        "deleteTitle": "Delete player?",
+        "deleteConfirm": "Are you sure you want to remove {{playerName}} from this team?",
+        "deleteError": "Unable to delete player.",
+        "filters": {
+          "all": "All",
+          "men": "Men",
+          "women": "Women"
         },
-        "competitions": {
-          "title": "Competitions and games",
-          "copy": "Create competitions, prepare games, adjust rosters, and open existing game setup."
-        },
-        "strategies": {
-          "title": "Strategies",
-          "copy": "Maintain offensive and defensive strategies, including quick additions during a game."
+        "columns": {
+          "player": "Player",
+          "gender": "Gender",
+          "lines": "Lines",
+          "actions": "Actions"
+        }
+      },
+      "lines": {
+        "title": "Lines",
+        "copy": "Reusable player groups for fast sideline selection.",
+        "loading": "Loading lines...",
+        "error": "Unable to load lines.",
+        "empty": "No lines yet.",
+        "tableLabel": "Team lines",
+        "composition": "{{men}}M / {{women}}W",
+        "noPlayers": "No players",
+        "lineDataUnavailable": "Lines unavailable",
+        "deleteTitle": "Delete line?",
+        "deleteConfirm": "Are you sure you want to delete {{lineName}}?",
+        "deleteError": "Unable to delete line.",
+        "columns": {
+          "line": "Line",
+          "composition": "Composition",
+          "players": "Players",
+          "actions": "Actions"
         }
       }
     }

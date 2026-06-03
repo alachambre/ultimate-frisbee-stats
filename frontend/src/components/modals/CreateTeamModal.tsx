@@ -11,16 +11,19 @@ import {
   Alert,
 } from "@mui/material";
 import { createTeam } from "../../services";
+import type { Team } from "../../types";
 import { queryKeys } from "../../utils/queryKeys";
 
 interface CreateTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCreated?: (team: Team) => void;
 }
 
 export default function CreateTeamModal({
   isOpen,
   onClose,
+  onCreated,
 }: CreateTeamModalProps) {
   const { t } = useTranslation(["teams", "common"]);
   const [teamName, setTeamName] = useState("");
@@ -28,8 +31,9 @@ export default function CreateTeamModal({
 
   const mutation = useMutation({
     mutationFn: createTeam,
-    onSuccess: () => {
+    onSuccess: (team) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.teams });
+      onCreated?.(team);
       setTeamName("");
       onClose();
     },
