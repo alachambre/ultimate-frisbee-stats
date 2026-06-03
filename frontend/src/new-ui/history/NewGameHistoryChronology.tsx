@@ -156,8 +156,9 @@ export default function NewGameHistoryChronology({
       <Box
         sx={(theme) => ({
           bgcolor: alpha(theme.colors.newUi.primary, 0.03),
-          border: `1px solid ${alpha(theme.palette.divider, 0.95)}`,
+          border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
           borderRadius: 1,
+          boxShadow: `0 1px 2px ${alpha(theme.palette.common.black, 0.02)}`,
           overflow: "hidden",
         })}
       >
@@ -183,7 +184,7 @@ export default function NewGameHistoryChronology({
                       : "background.paper",
                   borderTop: isFirst
                     ? "none"
-                    : `1px solid ${alpha(theme.palette.divider, 0.9)}`,
+                    : `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
                   display: "grid",
                   gap: { xs: 1, sm: 1.25 },
                   gridTemplateColumns: "28px minmax(0, 1fr) auto",
