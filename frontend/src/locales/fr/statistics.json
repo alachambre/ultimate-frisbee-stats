@@ -73,6 +73,65 @@
     "noPlayers": "Aucun joueur disponible pour cette équipe.",
     "playerNotFound": "Le joueur sélectionné n'a pas été trouvé dans cette équipe."
   },
+  "newUi": {
+    "sections": {
+      "currentStats": "Stats actuelles"
+    },
+    "currentStats": {
+      "description": "Résultats, jeu d'équipe et impact des stratégies pour le jeu de données sélectionné.",
+      "completedPoints": "{{count}} point complété",
+      "completedPoints_plural": "{{count}} points complétés",
+      "winsCount": "{{count}} victoire",
+      "winsCount_plural": "{{count}} victoires",
+      "lossesCount": "{{count}} défaite",
+      "lossesCount_plural": "{{count}} défaites",
+      "drawsCount": "{{count}} égalité",
+      "drawsCount_plural": "{{count}} égalités",
+      "noDraw": "Aucune égalité dans la sélection",
+      "holdCaption": "{{count}} Holds / {{total}} points en attaque",
+      "breakCaption": "{{count}} Breaks / {{total}} points en défense",
+      "turnoversCaption": "Nos turns vs leurs turns",
+      "cleanPointsCaption": "Gagnés sans turnover de notre part",
+      "cleanWinsCaption": "{{count}} / {{total}} points gagnés sans turnover de notre part",
+      "holdRate": "Taux de Hold",
+      "breakRate": "Taux de Break",
+      "turnovers": "Turnovers",
+      "cleanPoints": "Clean points",
+      "cleanWins": "Clean wins",
+      "pointsCount": "{{count}} point",
+      "pointsCount_plural": "{{count}} points",
+      "offenseDescription": "Protéger le disque et Hold.",
+      "defenseDescription": "Créer des turns et Break.",
+      "coreMetrics": "Métriques principales",
+        "ourTurnsOffenseContext": "Turns commis sur les points commencés en attaque.",
+      "ourTurnsOffense": "Nos turns en attaque",
+      "bestOffenseStrategy": "Meilleure stratégie offensive",
+      "advancedDefense": "Après turnover et Pulls",
+      "bestDefenseStrategy": "Meilleure stratégie défensive",
+      "turnoverTypesDescription": "Comprendre comment les possessions sont gagnées ou perdues.",
+      "strategyDetails": "Détails des stratégies",
+      "strategyDetailsDescription": "Liste complète des stratégies pour le jeu de données sélectionné.",
+      "strategyError": "Les statistiques de stratégie n'ont pas pu être chargées"
+    },
+    "evolution": {
+      "description": "Évolution match par match pour la même configuration.",
+      "chartTitle": "Graphique d'évolution",
+      "chartDescription": "Statistiques sélectionnées sur les matchs complétés.",
+      "completedGames": "{{count}} match complété",
+      "completedGames_plural": "{{count}} matchs complétés",
+      "tablePreviewDescription": "Le tableau affiche les premiers matchs du jeu de données d'évolution."
+    },
+    "players": {
+      "description": "Vue centrée sur les joueurs pour comparer le temps de jeu, l'impact offensif et l'impact défensif.",
+      "comparisonTitle": "Comparaison des joueurs",
+      "comparisonDescription": "Comparez l'utilisation et l'impact sur l'ensemble du roster.",
+      "viewAria": "Vue des métriques joueurs",
+      "sortedByTime": "Trié par temps de jeu",
+      "sortableColumns": "Colonnes triables",
+      "tableAria": "Statistiques des joueurs",
+      "cardsAria": "Cartes de statistiques des joueurs"
+    }
+  },
   "view": {
     "all": "Tout",
     "offense": "Attaque",
@@ -253,6 +312,7 @@
     "offenseStrategies": "Stratégies offensives",
     "defenseStrategies": "Stratégies défensives",
     "pointsPlayed": "points joués",
+    "pointsPlayedWithCount": "{{count}} points joués",
     "holdRate": "Taux de hold",
     "cleanHolds": "Clean Holds",
     "quickScores": "Points marqués rapidement (< 90s)",
@@ -298,16 +358,16 @@
     "cohortExplanation": "Ces statistiques sont calculées à partir des points où tous les joueurs sélectionnés étaient ensemble sur le point."
   },
   "tooltips": {
-    "cleanPointRate": "Points offensifs gagnés sans que nous ne fassions de turnover, sur tous les points offensifs joués.",
-    "breakRate": "Points défensifs gagnés, sur tous les points défensifs joués.",
-    "turnoverRate": "Points défensifs où au moins un turnover a eu lieu, sur tous les points défensifs joués.",
-    "conversionRate": "Points défensifs gagnés parmi les points défensifs avec au moins un turnover.",
-    "cleanBreakRate": "Points défensifs gagnés sans que nous ne fassions de turnover, sur tous les points défensifs joués.",
-    "cleanConversionRate": "Points défensifs gagnés sans que nous ne fassions de turnover, parmi les points défensifs avec au moins un turnover.",
-    "holdRate": "Points offensifs gagnés, sur tous les points offensifs joués.",
+      "cleanPointRate": "Points d'attaque gagnés sans turnover de notre part.",
+      "breakRate": "Points de défense gagnés sur tous les points.",
+      "turnoverRate": "Points de défense avec au moins un turnover.",
+      "conversionRate": "Points de défense gagnés après une occasion de turnover.",
+      "cleanBreakRate": "Points de défense gagnés sans turnover de notre part.",
+      "cleanConversionRate": "Occasions de turnover converties sans turnover de notre part.",
+      "holdRate": "Points d'attaque gagnés sur tous les points.",
     "forcedTurnovers": "Points défensifs où au moins un turnover a eu lieu",
     "offensePoints": "Nombre de points offensifs complétés joués",
     "defensePoints": "Nombre de points défensifs complétés joués",
-    "pullRate": "Pulls restés dans le terrain, sur tous les pulls suivis."
+      "pullRate": "Pulls suivis qui restent dans le terrain."
   }
 }

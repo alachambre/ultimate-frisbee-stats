@@ -42,6 +42,7 @@ interface StatisticsPageAccess {
 
 interface StatisticsPageQueryOptions {
   activeTab: CompetitionStatisticsTab;
+  enabledTabs?: CompetitionStatisticsTab[];
   isPlayerFilterOpen: boolean;
 }
 
@@ -131,6 +132,7 @@ export function useStatisticsPageData(
         playerIds,
         selectedGameId: undefined,
         activeTab: queryOptions.activeTab,
+        enabledTabs: queryOptions.enabledTabs,
         isPlayerFilterOpen: queryOptions.isPlayerFilterOpen,
         access,
       }),
@@ -140,6 +142,7 @@ export function useStatisticsPageData(
       gameIds,
       playerIds,
       queryOptions.activeTab,
+      queryOptions.enabledTabs,
       queryOptions.isPlayerFilterOpen,
       teamId,
     ]
@@ -225,6 +228,7 @@ export function useStatisticsPageData(
         playerIds,
         selectedGameId: selectedGame?.id,
         activeTab: queryOptions.activeTab,
+        enabledTabs: queryOptions.enabledTabs,
         isPlayerFilterOpen: queryOptions.isPlayerFilterOpen,
         access,
       }),
@@ -234,6 +238,7 @@ export function useStatisticsPageData(
       gameIds,
       playerIds,
       queryOptions.activeTab,
+      queryOptions.enabledTabs,
       queryOptions.isPlayerFilterOpen,
       selectedGame?.id,
       teamId,

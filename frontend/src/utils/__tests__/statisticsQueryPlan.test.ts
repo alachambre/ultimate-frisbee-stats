@@ -113,6 +113,25 @@ describe("statisticsQueryPlan", () => {
     expect(plan.enabled.teamPlayerStats).toBe(true);
   });
 
+  it("can enable several statistics sections for a single-scroll page", () => {
+    const plan = buildStatisticsQueryPlan({
+      teamId: 7,
+      competitionIds: [],
+      gameIds: [],
+      playerIds: [],
+      selectedGameId: undefined,
+      activeTab: "team",
+      enabledTabs: ["team", "evolution", "strategies", "players"],
+      isPlayerFilterOpen: false,
+      access: fullAccess,
+    });
+
+    expect(plan.enabled.teamStats).toBe(true);
+    expect(plan.enabled.teamEvolution).toBe(true);
+    expect(plan.enabled.teamStrategyStats).toBe(true);
+    expect(plan.enabled.teamPlayerStats).toBe(true);
+  });
+
   it("builds refresh keys for selected statistics data", () => {
     const plan = buildStatisticsQueryPlan({
       teamId: 7,

@@ -15,6 +15,7 @@ interface StatisticsQueryPlanInput {
   playerIds: number[];
   selectedGameId?: number;
   activeTab: CompetitionStatisticsTab;
+  enabledTabs?: CompetitionStatisticsTab[];
   isPlayerFilterOpen: boolean;
   access: StatisticsQueryAccess;
 }
@@ -49,25 +50,28 @@ export function buildStatisticsQueryPlan({
   playerIds,
   selectedGameId,
   activeTab,
+  enabledTabs,
   isPlayerFilterOpen,
   access,
 }: StatisticsQueryPlanInput): StatisticsQueryPlan {
   const effectiveTeamId = teamId ?? 0;
   const hasTeam = teamId !== undefined;
+  const enabledTabSet = new Set(enabledTabs ?? [activeTab]);
+  const shouldLoadTab = (tab: CompetitionStatisticsTab) => enabledTabSet.has(tab);
 
   return {
     teamId,
     selectedGameId,
     enabled: {
-      teamStats: hasTeam && access.canViewTeamStatistics && activeTab === "team",
+      teamStats: hasTeam && access.canViewTeamStatistics && shouldLoadTab("team"),
       teamEvolution:
-        hasTeam && access.canViewTeamStatistics && activeTab === "evolution",
+        hasTeam && access.canViewTeamStatistics && shouldLoadTab("evolution"),
       teamPlayerStats:
         hasTeam &&
         access.canViewPlayerStatistics &&
-        (activeTab === "players" || isPlayerFilterOpen),
+        (shouldLoadTab("players") || isPlayerFilterOpen),
       teamStrategyStats:
-        hasTeam && access.canViewStrategyStatistics && activeTab === "strategies",
+        hasTeam && access.canViewStrategyStatistics && shouldLoadTab("strategies"),
       gamePointTimeline: selectedGameId !== undefined && access.canViewTeamStatistics,
     },
     queryKeys: {

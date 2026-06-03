@@ -73,6 +73,65 @@
     "noPlayers": "No players available for this team yet.",
     "playerNotFound": "Selected player was not found in this team."
   },
+  "newUi": {
+    "sections": {
+      "currentStats": "Current stats"
+    },
+    "currentStats": {
+      "description": "Results, team play, and strategy impact for the selected dataset.",
+      "completedPoints": "{{count}} completed point",
+      "completedPoints_plural": "{{count}} completed points",
+      "winsCount": "{{count}} win",
+      "winsCount_plural": "{{count}} wins",
+      "lossesCount": "{{count}} loss",
+      "lossesCount_plural": "{{count}} losses",
+      "drawsCount": "{{count}} draw",
+      "drawsCount_plural": "{{count}} draws",
+      "noDraw": "No draw in selection",
+      "holdCaption": "{{count}} holds / {{total}} offense points",
+      "breakCaption": "{{count}} breaks / {{total}} defense points",
+      "turnoversCaption": "Our turns vs their turns",
+      "cleanPointsCaption": "Won without our turnover",
+      "cleanWinsCaption": "{{count}} / {{total}} won points without our turnover",
+      "holdRate": "Hold rate",
+      "breakRate": "Break rate",
+      "turnovers": "Turnovers",
+      "cleanPoints": "Clean points",
+      "cleanWins": "Clean wins",
+      "pointsCount": "{{count}} point",
+      "pointsCount_plural": "{{count}} points",
+      "offenseDescription": "Protect possessions and hold.",
+      "defenseDescription": "Create turns and break.",
+      "coreMetrics": "Core metrics",
+      "ourTurnsOffenseContext": "Turns we committed on points started on offense.",
+      "ourTurnsOffense": "Our turns on offense",
+      "bestOffenseStrategy": "Best offense strategy",
+      "advancedDefense": "After turnover and pulls",
+      "bestDefenseStrategy": "Best defense strategy",
+      "turnoverTypesDescription": "Understand how possessions are won and lost.",
+      "strategyDetails": "Strategy details",
+      "strategyDetailsDescription": "Full strategy list for the selected dataset.",
+      "strategyError": "Strategy statistics could not be loaded"
+    },
+    "evolution": {
+      "description": "Game-by-game movement for the same configuration.",
+      "chartTitle": "Evolution chart",
+      "chartDescription": "Selected statistics across completed games.",
+      "completedGames": "{{count}} completed game",
+      "completedGames_plural": "{{count}} completed games",
+      "tablePreviewDescription": "The table shows the first games from the current evolution dataset."
+    },
+    "players": {
+      "description": "Player-focused view for comparing playing time, offense impact, and defense impact.",
+      "comparisonTitle": "Player comparison",
+      "comparisonDescription": "Compare usage and impact across the roster.",
+      "viewAria": "Player metric view",
+      "sortedByTime": "Sorted by playing time",
+      "sortableColumns": "Sortable columns",
+      "tableAria": "Player statistics",
+      "cardsAria": "Player statistics cards"
+    }
+  },
   "view": {
     "all": "All",
     "offense": "Offense",
@@ -253,6 +312,7 @@
     "offenseStrategies": "Offense Strategies",
     "defenseStrategies": "Defense Strategies",
     "pointsPlayed": "points played",
+    "pointsPlayedWithCount": "{{count}} points played",
     "holdRate": "Hold Rate",
     "cleanHolds": "Clean Holds",
     "quickScores": "Quick Scores (< 90s)",
@@ -298,16 +358,16 @@
     "cohortExplanation": "Stats are computed from points where all selected players were on the line together."
   },
   "tooltips": {
-    "cleanPointRate": "Offensive points won without us committing a turnover, out of all offensive points played.",
-    "breakRate": "Defensive points won, out of all defensive points played.",
-    "turnoverRate": "Defensive points where at least one turnover occurred, out of all defensive points played.",
-    "conversionRate": "Defensive points won, out of defensive points where at least one turnover occurred.",
-    "cleanBreakRate": "Defensive points won without us committing a turnover, out of all defensive points played.",
-    "cleanConversionRate": "Defensive points won without us committing a turnover, out of defensive points where at least one turnover occurred.",
-    "holdRate": "Offensive points won, out of all offensive points played.",
+      "cleanPointRate": "Offense points won without us making a turnover.",
+      "breakRate": "Defense points won out of all defense points.",
+      "turnoverRate": "Defense points with at least one possession turnover.",
+      "conversionRate": "Defense points won after creating a turnover chance.",
+      "cleanBreakRate": "Defense points won without us making a turnover.",
+      "cleanConversionRate": "Turnover chances converted without us making a turnover.",
+      "holdRate": "Offense points won out of all offense points.",
     "forcedTurnovers": "Defensive points where at least one turnover occurred",
     "offensePoints": "Number of completed offensive points played",
     "defensePoints": "Number of completed defensive points played",
-    "pullRate": "Pulls that stayed inbound, out of all tracked pulls."
+      "pullRate": "Tracked Pulls that stayed inbound on the field."
   }
 }
