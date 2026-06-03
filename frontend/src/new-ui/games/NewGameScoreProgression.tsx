@@ -8,9 +8,13 @@ import {
   PointElement,
   Tooltip,
   type ChartData,
+  type ChartDataset,
+  type ChartEvent,
   type ChartOptions,
+  type Plugin,
   type TooltipItem,
 } from "chart.js";
+import { useRef } from "react";
 import { Line } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
 
@@ -23,6 +27,14 @@ import {
 
 ChartJS.register(LineElement, PointElement, LinearScale, Tooltip, Legend);
 
+type ScoreProgressionPoint = { x: number; y: number };
+type ScoreProgressionDataset = ChartDataset<"line", ScoreProgressionPoint[]>;
+
+interface NearestSeriesPoint {
+  datasetIndex: number;
+  dataIndex: number;
+}
+
 interface NewGameScoreProgressionProps {
   timeline: GamePointTimeline;
   teamName: string;
@@ -34,6 +46,118 @@ function buildSeriesPoints(xValues: number[], yValues: number[]) {
     x,
     y: yValues[index] ?? 0,
   }));
+}
+
+function getDistanceToSegmentSquared(
+  pointX: number,
+  pointY: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+) {
+  const deltaX = endX - startX;
+  const deltaY = endY - startY;
+  const segmentLengthSquared = deltaX * deltaX + deltaY * deltaY;
+
+  if (segmentLengthSquared === 0) {
+    const distanceX = pointX - startX;
+    const distanceY = pointY - startY;
+    return distanceX * distanceX + distanceY * distanceY;
+  }
+
+  const projection = Math.max(
+    0,
+    Math.min(
+      1,
+      ((pointX - startX) * deltaX + (pointY - startY) * deltaY) /
+        segmentLengthSquared,
+    ),
+  );
+  const projectedX = startX + projection * deltaX;
+  const projectedY = startY + projection * deltaY;
+  const distanceX = pointX - projectedX;
+  const distanceY = pointY - projectedY;
+
+  return distanceX * distanceX + distanceY * distanceY;
+}
+
+function getNearestSeriesPoint(
+  chart: ChartJS<"line">,
+  event: ChartEvent,
+  datasets: ScoreProgressionDataset[],
+  thresholdPx = 18,
+): NearestSeriesPoint | null {
+  const pointerX = event.x;
+  const pointerY = event.y;
+
+  if (typeof pointerX !== "number" || typeof pointerY !== "number") {
+    return null;
+  }
+
+  const { left, right, top, bottom } = chart.chartArea;
+  if (
+    pointerX < left ||
+    pointerX > right ||
+    pointerY < top ||
+    pointerY > bottom
+  ) {
+    return null;
+  }
+
+  const xScale = chart.scales.x;
+  const yScale = chart.scales.y;
+  if (!xScale || !yScale) {
+    return null;
+  }
+
+  const thresholdSquared = thresholdPx * thresholdPx;
+  let bestPoint: NearestSeriesPoint | null = null;
+  let bestDistanceSquared = Number.POSITIVE_INFINITY;
+
+  datasets.forEach((dataset, datasetIndex) => {
+    const points = dataset.data;
+
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const start = points[index];
+      const end = points[index + 1];
+
+      if (
+        typeof start?.x !== "number" ||
+        typeof start?.y !== "number" ||
+        typeof end?.x !== "number" ||
+        typeof end?.y !== "number"
+      ) {
+        continue;
+      }
+
+      const startPixelX = xScale.getPixelForValue(start.x);
+      const startPixelY = yScale.getPixelForValue(start.y);
+      const endPixelX = xScale.getPixelForValue(end.x);
+      const endPixelY = yScale.getPixelForValue(end.y);
+      const distanceSquared = getDistanceToSegmentSquared(
+        pointerX,
+        pointerY,
+        startPixelX,
+        startPixelY,
+        endPixelX,
+        endPixelY,
+      );
+
+      if (distanceSquared < bestDistanceSquared) {
+        bestDistanceSquared = distanceSquared;
+        bestPoint = {
+          datasetIndex,
+          dataIndex:
+            Math.abs(pointerX - startPixelX) <= Math.abs(pointerX - endPixelX)
+              ? index
+              : index + 1,
+        };
+      }
+    }
+  });
+
+  return bestDistanceSquared <= thresholdSquared ? bestPoint : null;
 }
 
 function buildMarkerRadii(flags: boolean[], baseRadius = 0) {
@@ -105,6 +229,8 @@ export default function NewGameScoreProgression({
 }: NewGameScoreProgressionProps) {
   const { t } = useTranslation("statistics");
   const theme = useTheme();
+  const activePointRef = useRef<string | null>(null);
+  const chartRef = useRef<ChartJS<"line"> | null>(null);
 
   if (timeline.points.length === 0) {
     return null;
@@ -130,7 +256,7 @@ export default function NewGameScoreProgression({
     ]),
   );
 
-  const chartData: ChartData<"line"> = {
+  const chartData: ChartData<"line", ScoreProgressionPoint[]> = {
     datasets: [
       {
         label: teamName,
@@ -225,15 +351,93 @@ export default function NewGameScoreProgression({
     ],
   };
 
+  const applyTooltipActivation = (
+    chart: ChartJS<"line">,
+    point: NearestSeriesPoint | null,
+    shouldUpdate = true,
+  ) => {
+    const nextKey = point ? `${point.datasetIndex}:${point.dataIndex}` : null;
+    const didChange = activePointRef.current !== nextKey;
+
+    activePointRef.current = nextKey;
+
+    if (!point) {
+      chart.setActiveElements([]);
+      chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+      if (shouldUpdate && didChange) {
+        chart.update("none");
+      }
+
+      return didChange;
+    }
+
+    const dataset = chart.data.datasets[point.datasetIndex] as
+      | ScoreProgressionDataset
+      | undefined;
+    const datum = dataset?.data[point.dataIndex];
+    if (
+      typeof datum?.x !== "number" ||
+      typeof datum?.y !== "number" ||
+      !chart.scales.x ||
+      !chart.scales.y
+    ) {
+      chart.setActiveElements([]);
+      chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+      if (shouldUpdate) {
+        chart.update("none");
+      }
+
+      return true;
+    }
+
+    const activeElements = [
+      { datasetIndex: point.datasetIndex, index: point.dataIndex },
+    ];
+    chart.setActiveElements(activeElements);
+    chart.tooltip?.setActiveElements(activeElements, {
+      x: chart.scales.x.getPixelForValue(datum.x),
+      y: chart.scales.y.getPixelForValue(datum.y),
+    });
+    if (shouldUpdate) {
+      chart.update("none");
+    }
+
+    return true;
+  };
+
+  const proximityTooltipPlugin: Plugin<"line"> = {
+    id: "newGameScoreProgressionTooltip",
+    afterEvent: (chart, args) => {
+      const event = args.event as ChartEvent;
+      if (
+        event.type !== "mousemove" &&
+        event.type !== "click" &&
+        event.type !== "mouseout"
+      ) {
+        return;
+      }
+
+      const nextPoint =
+        event.type === "mouseout"
+          ? null
+          : getNearestSeriesPoint(chart, event, chartData.datasets);
+      chart.canvas.style.cursor = nextPoint ? "pointer" : "default";
+
+      if (applyTooltipActivation(chart, nextPoint, false)) {
+        args.changed = true;
+      }
+    },
+  };
+
   const chartOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
     normalized: true,
     interaction: {
-      mode: "index",
-      axis: "x",
-      intersect: false,
+      mode: "nearest",
+      axis: "xy",
+      intersect: true,
     },
     scales: {
       x: {
@@ -286,8 +490,9 @@ export default function NewGameScoreProgression({
         display: false,
       },
       tooltip: {
-        mode: "index",
-        intersect: false,
+        mode: "nearest",
+        intersect: true,
+        position: "nearest",
         usePointStyle: true,
         backgroundColor: alpha(theme.palette.background.paper, 0.96),
         titleColor: theme.palette.text.primary,
@@ -355,8 +560,24 @@ export default function NewGameScoreProgression({
         {t("charts.score")}
       </Typography>
 
-      <Box sx={{ height: { xs: 220, sm: 280 } }}>
-        <Line data={chartData} options={chartOptions} />
+      <Box
+        onMouseLeave={() => {
+          const chart = chartRef.current;
+          if (!chart) {
+            return;
+          }
+
+          chart.canvas.style.cursor = "default";
+          applyTooltipActivation(chart, null);
+        }}
+        sx={{ height: { xs: 220, sm: 280 } }}
+      >
+        <Line
+          ref={chartRef}
+          data={chartData}
+          options={chartOptions}
+          plugins={[proximityTooltipPlugin]}
+        />
       </Box>
     </Paper>
   );
