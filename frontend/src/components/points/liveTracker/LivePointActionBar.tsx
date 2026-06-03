@@ -19,6 +19,7 @@ import type { PointWithPlayers } from "../../../types";
 interface LivePointActionBarProps {
   currentPoint: PointWithPlayers;
   hasPendingStoppage: boolean;
+  hasValidPlayerComposition?: boolean;
   isLaunchPullPending: boolean;
   onLaunchPull: () => void;
   isRestartPending: boolean;
@@ -38,6 +39,7 @@ interface LivePointActionBarProps {
 export function LivePointActionBar({
   currentPoint,
   hasPendingStoppage,
+  hasValidPlayerComposition,
   isLaunchPullPending,
   onLaunchPull,
   isRestartPending,
@@ -84,6 +86,22 @@ export function LivePointActionBar({
     const fieldPrimaryRowSx = {
       display: "flex",
       width: "100%",
+    } satisfies SxProps<Theme>;
+    const fieldSetupRowSx = {
+      display: "grid",
+      gap: 1,
+      gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+      width: "100%",
+    } satisfies SxProps<Theme>;
+    const fieldSetupButtonSx = {
+      fontWeight: 800,
+      minHeight: 52,
+      minWidth: 0,
+      px: 2,
+      whiteSpace: "nowrap",
+      "& .MuiButton-startIcon": {
+        mr: 1,
+      },
     } satisfies SxProps<Theme>;
     const fieldSecondaryRowSx = {
       display: "flex",
@@ -233,10 +251,53 @@ export function LivePointActionBar({
         </Button>
       ) : null;
 
-    const isLineIncomplete = currentPoint.players.length < 7;
+    const hasCompleteLine =
+      hasValidPlayerComposition ?? currentPoint.players.length >= 7;
+    const isLineIncomplete = !hasCompleteLine;
+    const isStrategyMissing = !currentPoint.strategy;
     const playerActionLabel = t("points:tracker.selectPlayers", "Players");
     const strategyActionLabel = t("points:tracker.selectStrategy", "Strategy");
     const commentActionLabel = t("points:tracker.addComment", "Comment");
+    const setupActions: ReactNode[] = [];
+
+    if (isLineIncomplete) {
+      setupActions.push(
+        <Button
+          aria-label={t(
+            "points:tracker.requiredPlayersAction",
+            "Select players",
+          )}
+          color="warning"
+          disabled={!onOpenManagePlayers}
+          key="required-players"
+          onClick={onOpenManagePlayers}
+          startIcon={<GroupIcon />}
+          sx={fieldSetupButtonSx}
+          variant="outlined"
+        >
+          {playerActionLabel}
+        </Button>,
+      );
+    }
+
+    if (isStrategyMissing) {
+      setupActions.push(
+        <Button
+          aria-label={t(
+            "points:tracker.requiredStrategyAction",
+            "Set strategy",
+          )}
+          disabled={!onOpenStrategy}
+          key="required-strategy"
+          onClick={onOpenStrategy}
+          startIcon={<EmojiObjectsIcon />}
+          sx={[fieldSetupButtonSx, accentOutlinedSx]}
+          variant="outlined"
+        >
+          {strategyActionLabel}
+        </Button>,
+      );
+    }
 
     const secondaryActions: ReactNode[] = [];
 
@@ -323,6 +384,18 @@ export function LivePointActionBar({
 
     return (
       <Box sx={fieldDeckSx}>
+        {setupActions.length > 0 && (
+          <Box
+            role="group"
+            aria-label={t(
+              "points:tracker.requiredSetupActions",
+              "Required setup",
+            )}
+            sx={fieldSetupRowSx}
+          >
+            {setupActions}
+          </Box>
+        )}
         {primaryAction && (
           <Box
             role="group"

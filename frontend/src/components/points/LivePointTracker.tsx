@@ -532,6 +532,7 @@ export default function LivePointTracker({
               <LivePointActionBar
                 currentPoint={currentPoint}
                 hasPendingStoppage={hasPendingStoppage}
+                hasValidPlayerComposition={hasValidPlayerComposition}
                 isLaunchPullPending={launchPullMutation.isPending}
                 onLaunchPull={() => launchPullMutation.mutate()}
                 isRestartPending={restartPointMutation.isPending}

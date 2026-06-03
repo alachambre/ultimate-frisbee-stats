@@ -251,7 +251,7 @@ export function LivePointActivitySummary({
           value={turnCounts.our}
         />
         <FieldPointMetric
-          label={t("history.opponentTurns", "Opponent turns")}
+          label={t("history.opponentTurns", "Their turns")}
           value={turnCounts.opponent}
         />
         <FieldPointMetric

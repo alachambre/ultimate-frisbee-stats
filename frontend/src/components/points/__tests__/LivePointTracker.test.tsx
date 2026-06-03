@@ -869,13 +869,13 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       );
 
       expect(screen.getByText("Our turns")).toBeInTheDocument();
-      expect(screen.getByText("Opponent turns")).toBeInTheDocument();
+      expect(screen.getByText("Their turns")).toBeInTheDocument();
       expect(screen.getByText("Stoppages")).toBeInTheDocument();
       expect(
         screen.getByRole("group", { name: "Our turns: 1" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("group", { name: "Opponent turns: 1" }),
+        screen.getByRole("group", { name: "Their turns: 1" }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole("group", { name: "Stoppages: 1" }),
@@ -945,7 +945,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
           screen.getByRole("group", { name: "Our turns: 1" }),
         ).toBeInTheDocument();
         expect(
-          screen.getByRole("group", { name: "Opponent turns: 0" }),
+          screen.getByRole("group", { name: "Their turns: 0" }),
         ).toBeInTheDocument();
         expect(
           screen.getByRole("group", { name: "Stoppages: 1" }),
@@ -1029,7 +1029,7 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("keeps launch pull as the primary ready-point action with setup actions below", async () => {
+    it("shows missing ready-point setup actions above launch pull and keeps compact actions below", async () => {
       const activePoint = createMockPoint({
         id: 3,
         pointNumber: 3,
@@ -1053,28 +1053,48 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         />,
       );
 
+      const requiredSetup = screen.getByRole("group", {
+        name: "Required setup",
+      });
+      const setupPlayersButton = within(requiredSetup).getByRole("button", {
+        name: /Select players/i,
+      });
+      expect(setupPlayersButton).toBeInTheDocument();
+      expect(setupPlayersButton).toHaveClass("MuiButton-colorWarning");
+      expect(within(requiredSetup).getByText("Players")).toBeVisible();
+      const setupStrategyButton = within(requiredSetup).getByRole("button", {
+        name: /Set strategy/i,
+      });
+      expect(setupStrategyButton).toBeInTheDocument();
+      expect(setupStrategyButton).not.toHaveClass("MuiButton-colorWarning");
+      expect(within(requiredSetup).getByText("Strategy")).toBeVisible();
+
+      const primaryAction = screen.getByRole("group", {
+        name: "Primary point action",
+      });
       expect(
-        screen.getByRole("button", { name: /Launch Pull/i }),
+        within(primaryAction).getByRole("button", { name: /Launch Pull/i }),
       ).toBeInTheDocument();
-      const playersButton = screen.getByRole("button", {
+      const pointActions = screen.getByRole("group", { name: "Point actions" });
+      const compactPlayersButton = within(pointActions).getByRole("button", {
         name: /Players/i,
       });
-      expect(playersButton).toBeInTheDocument();
-      expect(playersButton).toHaveClass("MuiButton-colorWarning");
-      expect(screen.getByText("Players")).toBeVisible();
-      const strategyButton = screen.getByRole("button", {
+      expect(compactPlayersButton).toBeInTheDocument();
+      expect(compactPlayersButton).toHaveClass("MuiButton-colorWarning");
+      expect(within(pointActions).getByText("Players")).toBeVisible();
+      const compactStrategyButton = within(pointActions).getByRole("button", {
         name: /Strategy/i,
       });
-      expect(strategyButton).toBeInTheDocument();
-      expect(strategyButton).not.toHaveClass("MuiButton-colorWarning");
-      expect(screen.getByText("Strategy")).toBeVisible();
+      expect(compactStrategyButton).toBeInTheDocument();
+      expect(compactStrategyButton).not.toHaveClass("MuiButton-colorWarning");
+      expect(within(pointActions).getByText("Strategy")).toBeVisible();
       expect(
-        screen.getByRole("button", { name: /^Comment$/i }),
+        within(pointActions).getByRole("button", { name: /^Comment$/i }),
       ).toBeInTheDocument();
-      expect(screen.getByText("Comment")).toBeVisible();
+      expect(within(pointActions).getByText("Comment")).toBeVisible();
     });
 
-    it("hides ready-point setup labels on mobile while keeping accessible names", async () => {
+    it("keeps the large setup labels visible on mobile while compact labels stay hidden", async () => {
       mockSmallViewport(true);
       const activePoint = createMockPoint({
         id: 3,
@@ -1099,24 +1119,38 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         />,
       );
 
+      const requiredSetup = screen.getByRole("group", {
+        name: "Required setup",
+      });
+      expect(
+        within(requiredSetup).getByRole("button", { name: /Select players/i }),
+      ).toBeInTheDocument();
+      expect(
+        within(requiredSetup).getByRole("button", { name: /Set strategy/i }),
+      ).toBeInTheDocument();
+      expect(within(requiredSetup).getByText("Players")).toBeVisible();
+      expect(within(requiredSetup).getByText("Strategy")).toBeVisible();
       expect(
         screen.getByRole("button", { name: /Launch Pull/i }),
       ).toBeInTheDocument();
+      const pointActions = screen.getByRole("group", { name: "Point actions" });
       expect(
-        screen.getByRole("button", { name: /Players/i }),
+        within(pointActions).getByRole("button", { name: /Players/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /Strategy/i }),
+        within(pointActions).getByRole("button", { name: /Strategy/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /^Comment$/i }),
+        within(pointActions).getByRole("button", { name: /^Comment$/i }),
       ).toBeInTheDocument();
-      expect(screen.queryByText("Players")).not.toBeInTheDocument();
-      expect(screen.queryByText("Strategy")).not.toBeInTheDocument();
-      expect(screen.queryByText("Comment")).not.toBeInTheDocument();
+      expect(within(pointActions).queryByText("Players")).not.toBeInTheDocument();
+      expect(
+        within(pointActions).queryByText("Strategy"),
+      ).not.toBeInTheDocument();
+      expect(within(pointActions).queryByText("Comment")).not.toBeInTheDocument();
     });
 
-    it("highlights the line action after pull launch while players are incomplete", async () => {
+    it("shows missing setup actions above finish point after pull launch", async () => {
       const activePoint = createMockPoint({
         id: 3,
         pointNumber: 3,
@@ -1138,9 +1172,64 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
         />,
       );
 
-      const playersButton = screen.getByRole("button", { name: /Players/i });
-      expect(playersButton).toBeInTheDocument();
-      expect(playersButton).toHaveClass("MuiButton-colorWarning");
+      const requiredSetup = screen.getByRole("group", {
+        name: "Required setup",
+      });
+      const setupPlayersButton = within(requiredSetup).getByRole("button", {
+        name: /Select players/i,
+      });
+      expect(setupPlayersButton).toBeInTheDocument();
+      expect(setupPlayersButton).toHaveClass("MuiButton-colorWarning");
+      expect(
+        within(requiredSetup).getByRole("button", { name: /Set strategy/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Finish point/i }),
+      ).toBeInTheDocument();
+
+      const pointActions = screen.getByRole("group", { name: "Point actions" });
+      const compactPlayersButton = within(pointActions).getByRole("button", {
+        name: /Players/i,
+      });
+      expect(compactPlayersButton).toBeInTheDocument();
+      expect(compactPlayersButton).toHaveClass("MuiButton-colorWarning");
+    });
+
+    it("does not show required setup once players and strategy are set", async () => {
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "ready",
+        players: mockPlayers,
+        strategy: {
+          id: 9,
+          name: "Vertical stack",
+          description: null,
+          category: "offense",
+          created_at: "2024-01-01T00:00:00Z",
+        },
+        pull: null,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(
+        screen.queryByRole("group", { name: "Required setup" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Launch Pull/i }),
+      ).toBeInTheDocument();
     });
   });
 });
