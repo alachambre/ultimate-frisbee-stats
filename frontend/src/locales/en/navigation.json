@@ -240,6 +240,8 @@
       "actions": {
         "openTeams": "Open teams",
         "newTeam": "New team",
+        "renameTeam": "Rename team",
+        "deleteTeam": "Delete team",
         "addPlayer": "Add player",
         "newLine": "New line",
         "editPlayer": "Edit",
@@ -252,6 +254,16 @@
         "deleteLineAria": "Delete {{lineName}}",
         "manageLineRoster": "Manage roster",
         "manageLineRosterAria": "Manage {{lineName}} roster"
+      },
+      "renameTeam": {
+        "title": "Rename team",
+        "nameLabel": "Team name",
+        "error": "Unable to rename team."
+      },
+      "deleteTeam": {
+        "title": "Delete team?",
+        "confirm": "Delete {{teamName}}? This will remove its players, lines, competitions, and games. This cannot be undone.",
+        "error": "Unable to delete team."
       },
       "roster": {
         "title": "Roster",

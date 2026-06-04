@@ -1,4 +1,11 @@
-import { useMemo, useState, type ChangeEvent, type MouseEvent, type SyntheticEvent } from "react";
+import {
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type MouseEvent,
+  type SyntheticEvent,
+} from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
@@ -47,8 +54,8 @@ import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
 import { deleteLine, getLines } from "../../services/lines";
 import { deletePlayer } from "../../services/players";
-import { getTeam } from "../../services/teams";
-import type { Gender, LineWithPlayers, Player } from "../../types";
+import { deleteTeam, getTeam, updateTeam } from "../../services/teams";
+import type { Gender, LineWithPlayers, Player, TeamWithPlayers } from "../../types";
 import { queryKeys } from "../../utils/queryKeys";
 import { useNewUiTeam } from "../team/useNewUiTeam";
 
@@ -56,6 +63,31 @@ type SetupTab = "roster" | "lines";
 type RosterFilter = "all" | Gender;
 
 const EMPTY_LINES: LineWithPlayers[] = [];
+const TEAM_DELETE_CASCADE_QUERY_ROOTS = new Set([
+  "activePoint",
+  "competition",
+  "competition-games",
+  "competition-players",
+  "competitionPlayerStatistics",
+  "competitionStrategyStatistics",
+  "competitionTeamStatistics",
+  "competitions",
+  "game",
+  "gameLiveState",
+  "gamePointTimeline",
+  "gameStrategyStatistics",
+  "gameTeamStatistics",
+  "gameTurnovers",
+  "games",
+  "halftime",
+  "line",
+  "lines",
+  "liveStats",
+  "teamEvolutionStatistics",
+  "teamPlayerStatistics",
+  "teamStrategyStatistics",
+  "teamTeamStatistics",
+]);
 
 function getInitials(value: string): string {
   const initials = value
@@ -217,6 +249,9 @@ export default function NewTeamSetupPage() {
   const [activeTab, setActiveTab] = useState<SetupTab>("roster");
   const [rosterFilter, setRosterFilter] = useState<RosterFilter>("all");
   const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
+  const [isRenameTeamOpen, setIsRenameTeamOpen] = useState(false);
+  const [teamNameDraft, setTeamNameDraft] = useState("");
+  const [isDeleteTeamOpen, setIsDeleteTeamOpen] = useState(false);
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [deletingPlayer, setDeletingPlayer] = useState<Player | null>(null);
@@ -257,6 +292,7 @@ export default function NewTeamSetupPage() {
   const selectedTeam = selectedTeamDetail ?? selectedTeamOption;
   const lines = linesData ?? EMPTY_LINES;
   const selectedTeamName = selectedTeam?.name ?? "";
+  const trimmedTeamNameDraft = teamNameDraft.trim();
   const menCount =
     selectedTeam?.players.filter((player) => player.gender === "M").length ?? 0;
   const womenCount =
@@ -304,6 +340,58 @@ export default function NewTeamSetupPage() {
     ]);
   };
 
+  const renameTeamMutation = useMutation({
+    mutationFn: ({ name, teamId }: { name: string; teamId: number }) =>
+      updateTeam(teamId, { name }),
+    onSuccess: async (team) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.teams }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.publicTeams }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.team(team.id) }),
+      ]);
+      setIsRenameTeamOpen(false);
+      setTeamNameDraft("");
+    },
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: (teamId: number) => deleteTeam(teamId),
+    onSuccess: async (_data, deletedTeamId) => {
+      const nextTeam = teams.find((team) => team.id !== deletedTeamId);
+      const removeDeletedTeam = (currentTeams?: TeamWithPlayers[]) =>
+        currentTeams?.filter((team) => team.id !== deletedTeamId);
+
+      queryClient.setQueryData(queryKeys.teams, removeDeletedTeam);
+      queryClient.setQueryData(queryKeys.publicTeams, removeDeletedTeam);
+      queryClient.removeQueries({ queryKey: queryKeys.team(deletedTeamId) });
+      queryClient.removeQueries({ queryKey: queryKeys.teamLines(deletedTeamId) });
+      queryClient.removeQueries({
+        predicate: ({ queryKey }) => {
+          const [root, identifier] = queryKey;
+          if (root === "team" && identifier === deletedTeamId) {
+            return true;
+          }
+
+          return (
+            typeof root === "string" && TEAM_DELETE_CASCADE_QUERY_ROOTS.has(root)
+          );
+        },
+      });
+      setSelectedTeamId(nextTeam?.id);
+      setActiveTab("roster");
+      setRosterFilter("all");
+      setIsDeleteTeamOpen(false);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.teams }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.publicTeams }),
+        nextTeam
+          ? queryClient.invalidateQueries({ queryKey: queryKeys.team(nextTeam.id) })
+          : Promise.resolve(),
+      ]);
+    },
+  });
+
   const deletePlayerMutation = useMutation({
     mutationFn: (playerId: number) => deletePlayer(playerId),
     onSuccess: async () => {
@@ -344,6 +432,51 @@ export default function NewTeamSetupPage() {
     setSelectedTeamId(Number.isFinite(nextTeamId) ? nextTeamId : undefined);
     setActiveTab("roster");
     setRosterFilter("all");
+  };
+
+  const openRenameTeamDialog = () => {
+    renameTeamMutation.reset();
+    setTeamNameDraft(selectedTeamName);
+    setIsRenameTeamOpen(true);
+  };
+
+  const closeRenameTeamDialog = () => {
+    if (renameTeamMutation.isPending) {
+      return;
+    }
+
+    renameTeamMutation.reset();
+    setIsRenameTeamOpen(false);
+  };
+
+  const handleRenameTeamSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (
+      selectedTeamId === undefined ||
+      trimmedTeamNameDraft.length === 0 ||
+      trimmedTeamNameDraft === selectedTeamName.trim()
+    ) {
+      return;
+    }
+
+    renameTeamMutation.mutate({
+      teamId: selectedTeamId,
+      name: trimmedTeamNameDraft,
+    });
+  };
+
+  const openDeleteTeamDialog = () => {
+    deleteTeamMutation.reset();
+    setIsDeleteTeamOpen(true);
+  };
+
+  const closeDeleteTeamDialog = () => {
+    if (deleteTeamMutation.isPending) {
+      return;
+    }
+
+    deleteTeamMutation.reset();
+    setIsDeleteTeamOpen(false);
   };
 
   const handleTeamCreated = (team: { id: number }) => {
@@ -500,10 +633,57 @@ export default function NewTeamSetupPage() {
                 >
                   {getInitials(selectedTeamName)}
                 </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography color="text.secondary" variant="body2">
-                    {t("navigation:newUiPages.teamSetup.teamCard.selectedLabel")}
-                  </Typography>
+                <Box sx={{ minWidth: 0, width: "100%" }}>
+                  <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={0.5}
+                    sx={{ minWidth: 0 }}
+                  >
+                    <Typography color="text.secondary" sx={{ flex: 1 }} variant="body2">
+                      {t("navigation:newUiPages.teamSetup.teamCard.selectedLabel")}
+                    </Typography>
+                    <Tooltip
+                      title={t("navigation:newUiPages.teamSetup.actions.renameTeam")}
+                    >
+                      <IconButton
+                        aria-label={t(
+                          "navigation:newUiPages.teamSetup.actions.renameTeam"
+                        )}
+                        onClick={openRenameTeamDialog}
+                        size="small"
+                        sx={(theme) => ({
+                          color: "text.secondary",
+                          "&:hover": {
+                            bgcolor: alpha(theme.colors.newUi.primary, 0.08),
+                            color: theme.colors.newUi.primary,
+                          },
+                        })}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip
+                      title={t("navigation:newUiPages.teamSetup.actions.deleteTeam")}
+                    >
+                      <IconButton
+                        aria-label={t(
+                          "navigation:newUiPages.teamSetup.actions.deleteTeam"
+                        )}
+                        onClick={openDeleteTeamDialog}
+                        size="small"
+                        sx={(theme) => ({
+                          color: "text.secondary",
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            color: theme.palette.error.main,
+                          },
+                        })}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                   <Typography
                     component="h2"
                     fontWeight={900}
@@ -1198,6 +1378,57 @@ export default function NewTeamSetupPage() {
         onCreated={handleTeamCreated}
       />
 
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        onClose={closeRenameTeamDialog}
+        open={isRenameTeamOpen}
+      >
+        <Box component="form" onSubmit={handleRenameTeamSubmit}>
+          <DialogTitle>
+            {t("navigation:newUiPages.teamSetup.renameTeam.title")}
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              fullWidth
+              inputProps={{ maxLength: 100 }}
+              label={t("navigation:newUiPages.teamSetup.renameTeam.nameLabel")}
+              margin="dense"
+              onChange={(event) => setTeamNameDraft(event.target.value)}
+              required
+              value={teamNameDraft}
+            />
+            {renameTeamMutation.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {t("navigation:newUiPages.teamSetup.renameTeam.error")}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              disabled={renameTeamMutation.isPending}
+              onClick={closeRenameTeamDialog}
+            >
+              {t("common:action.cancel")}
+            </Button>
+            <Button
+              disabled={
+                renameTeamMutation.isPending ||
+                trimmedTeamNameDraft.length === 0 ||
+                trimmedTeamNameDraft === selectedTeamName.trim()
+              }
+              type="submit"
+              variant="contained"
+            >
+              {renameTeamMutation.isPending
+                ? t("common:action.saving")
+                : t("common:action.save")}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
       {selectedTeamId !== undefined && (
         <>
           <AddPlayerModal
@@ -1257,6 +1488,23 @@ export default function NewTeamSetupPage() {
           )}
         </>
       )}
+
+      <ConfirmDeleteDialog
+        errorMessage={t("navigation:newUiPages.teamSetup.deleteTeam.error")}
+        isDeleting={deleteTeamMutation.isPending}
+        isError={deleteTeamMutation.isError}
+        message={t("navigation:newUiPages.teamSetup.deleteTeam.confirm", {
+          teamName: selectedTeamName,
+        })}
+        onClose={closeDeleteTeamDialog}
+        onConfirm={() => {
+          if (selectedTeamId !== undefined) {
+            deleteTeamMutation.mutate(selectedTeamId);
+          }
+        }}
+        open={isDeleteTeamOpen}
+        title={t("navigation:newUiPages.teamSetup.deleteTeam.title")}
+      />
 
       <ConfirmDeleteDialog
         errorMessage={t("navigation:newUiPages.teamSetup.roster.deleteError")}

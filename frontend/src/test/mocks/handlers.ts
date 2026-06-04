@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { Team, TeamCreate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate } from "../../types";
+import type { Team, TeamCreate, TeamUpdate, TeamWithPlayers, Player, PlayerCreate, PlayerUpdate, Competition, CompetitionCreate, CompetitionUpdate, CompetitionWithPlayers, PlayerIdsRequest, Line, LineCreate, LineUpdate, LineWithPlayers, Game, GameCreate, GameUpdate, GameWithScore, GameDetail, GameLiveState, PointWithPlayers, PointCreate, PointFinish, PointUpdate, Strategy, StrategyCreate, StrategyUpdate, Stoppage, StoppageCreate, StoppageUpdate, TurnoverWithPlayer, TurnoverCreate, TurnoverUpdate, Halftime, HalftimeCreate, HalftimeUpdate } from "../../types";
 import { mockDb, resetMockData as resetMockDbData } from "./mockDb";
 import {
   buildCsvExportResponse,
@@ -147,6 +147,19 @@ export const handlers = [
     return HttpResponse.json(newTeam, { status: 201 });
   }),
 
+  // PUT /teams/:id - Update team
+  http.put(`${BASE_URL}/teams/:id`, async ({ params, request }) => {
+    const teamId = Number(params.id);
+    const body = (await request.json()) as TeamUpdate;
+    const team = teams.find((t) => t.id === teamId);
+    if (!team) {
+      return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+    }
+
+    team.name = body.name;
+    return HttpResponse.json(team);
+  }),
+
   // GET /teams/:id - Get team by ID with players
   http.get(`${BASE_URL}/teams/:id`, ({ params }) => {
     const teamId = Number(params.id);
@@ -193,10 +206,42 @@ export const handlers = [
     if (index === -1) {
       return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
     }
+    const deletedCompetitionIds = competitions
+      .filter((competition) => competition.team_id === teamId)
+      .map((competition) => competition.id);
+    const deletedGameIds = games
+      .filter((game) => deletedCompetitionIds.includes(game.competition_id))
+      .map((game) => game.id);
+    const deletedPointIds = points
+      .filter((point) => deletedGameIds.includes(point.game_id))
+      .map((point) => point.id);
+    const deletedLineIds = lines
+      .filter((line) => line.team_id === teamId)
+      .map((line) => line.id);
+
     teams.splice(index, 1);
-    // Also delete associated players and competitions
     players = players.filter((p) => p.team_id !== teamId);
     competitions = competitions.filter((c) => c.team_id !== teamId);
+    games = games.filter((game) => !deletedGameIds.includes(game.id));
+    points = points.filter((point) => !deletedPointIds.includes(point.id));
+    halftimes = halftimes.filter(
+      (halftime) => !deletedGameIds.includes(halftime.game_id)
+    );
+    calls = calls.filter((call) => !deletedPointIds.includes(call.point_id));
+    turnovers = turnovers.filter(
+      (turnover) => !deletedPointIds.includes(turnover.point_id)
+    );
+    lines = lines.filter((line) => line.team_id !== teamId);
+
+    deletedCompetitionIds.forEach((competitionId) => {
+      competitionPlayers.delete(competitionId);
+    });
+    deletedGameIds.forEach((gameId) => {
+      gamePlayers.delete(gameId);
+    });
+    deletedLineIds.forEach((lineId) => {
+      linePlayers.delete(lineId);
+    });
     return new HttpResponse(null, { status: 204 });
   }),
 

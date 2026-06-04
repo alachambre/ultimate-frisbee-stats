@@ -240,6 +240,8 @@
       "actions": {
         "openTeams": "Ouvrir les équipes",
         "newTeam": "Nouvelle équipe",
+        "renameTeam": "Renommer l'équipe",
+        "deleteTeam": "Supprimer l'équipe",
         "addPlayer": "Ajouter un joueur",
         "newLine": "Nouvelle ligne",
         "editPlayer": "Modifier",
@@ -252,6 +254,16 @@
         "deleteLineAria": "Supprimer {{lineName}}",
         "manageLineRoster": "Gérer le roster",
         "manageLineRosterAria": "Gérer le roster {{lineName}}"
+      },
+      "renameTeam": {
+        "title": "Renommer l'équipe",
+        "nameLabel": "Nom de l'équipe",
+        "error": "Impossible de renommer l'équipe."
+      },
+      "deleteTeam": {
+        "title": "Supprimer l'équipe ?",
+        "confirm": "Supprimer {{teamName}} ? Cela retirera ses joueurs, lignes, compétitions et matchs. Cette action est définitive.",
+        "error": "Impossible de supprimer l'équipe."
       },
       "roster": {
         "title": "Roster",

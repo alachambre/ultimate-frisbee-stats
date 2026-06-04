@@ -119,6 +119,103 @@ describe("NewTeamSetupPage", () => {
     expect(screen.queryByText(/Strategies/i)).not.toBeInTheDocument();
   });
 
+  it("renames the selected team from the workspace card", async () => {
+    const user = userEvent.setup();
+    let team = { ...selectedTeam };
+    localStorage.setItem(STORAGE_KEY, "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () => HttpResponse.json([team])),
+      http.get(`${BASE_URL}/teams/1`, () => HttpResponse.json(team)),
+      http.get(`${BASE_URL}/lines`, () => HttpResponse.json(selectedTeamLines)),
+      http.put(`${BASE_URL}/teams/1`, async ({ request }) => {
+        const body = (await request.json()) as { name: string };
+        team = { ...team, name: body.name };
+        return HttpResponse.json({
+          id: team.id,
+          name: team.name,
+          created_at: team.created_at,
+        });
+      })
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "Team setup" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Rename team" }));
+
+    const renameDialog = await screen.findByRole("dialog", {
+      name: "Rename team",
+    });
+    const nameInput = within(renameDialog).getByRole("textbox", {
+      name: "Team name",
+    });
+    await user.clear(nameInput);
+    await user.type(nameInput, "Monkey Club");
+    await user.click(
+      within(renameDialog).getByRole("button", { name: "Save Changes" })
+    );
+
+    expect(
+      await screen.findByText("Monkey Club configuration")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Monkey Club", { selector: "h2" })).toBeInTheDocument();
+  }, 10_000);
+
+  it("deletes the selected team and moves to the next available team", async () => {
+    const user = userEvent.setup();
+    const secondTeam = {
+      id: 2,
+      name: "Skyline",
+      created_at: "2026-01-01T00:00:00Z",
+      players: [],
+    };
+    let teams = [selectedTeam, secondTeam];
+    localStorage.setItem(STORAGE_KEY, "1");
+    server.use(
+      http.get(`${BASE_URL}/teams`, () => HttpResponse.json(teams)),
+      http.get(`${BASE_URL}/teams/:id`, ({ params }) => {
+        const teamId = Number(params.id);
+        const team = teams.find((candidate) => candidate.id === teamId);
+        if (!team) {
+          return HttpResponse.json({ detail: "Team not found" }, { status: 404 });
+        }
+        return HttpResponse.json(team);
+      }),
+      http.get(`${BASE_URL}/lines`, ({ request }) => {
+        const url = new URL(request.url);
+        const teamId = Number(url.searchParams.get("team_id"));
+        return HttpResponse.json(teamId === 1 ? selectedTeamLines : []);
+      }),
+      http.delete(`${BASE_URL}/teams/1`, () => {
+        teams = teams.filter((team) => team.id !== 1);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "Team setup" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete team" }));
+
+    const deleteDialog = await screen.findByRole("dialog", {
+      name: "Delete team?",
+    });
+    expect(
+      within(deleteDialog).getByText(/Delete Monkey Stats\?/)
+    ).toBeInTheDocument();
+    await user.click(within(deleteDialog).getByRole("button", { name: "Delete" }));
+
+    expect(
+      await screen.findByText("Skyline configuration")
+    ).toBeInTheDocument();
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("2");
+    expect(screen.queryByText("Monkey Stats configuration")).not.toBeInTheDocument();
+  });
+
   it("filters roster players and opens edit from the row affordance", async () => {
     const user = userEvent.setup();
     useSelectedTeamWorkspaceHandlers();
