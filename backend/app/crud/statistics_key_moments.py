@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Set
+from typing import Dict, List, Literal, Optional, Sequence, Set, Tuple
 
 
 LONG_POINT_SECONDS = 150
@@ -22,6 +22,10 @@ class TimelinePoint:
     opponent_turnovers: int
     our_score_after: int
     opponent_score_after: int
+
+
+BreakSide = Literal["for_us", "against_us"]
+BreakSegment = Tuple[BreakSide, List[TimelinePoint]]
 
 
 def _pre_point_score(point: TimelinePoint) -> tuple[int, int]:
@@ -46,6 +50,16 @@ def _is_break(point: TimelinePoint) -> bool:
 
 def _is_broken(point: TimelinePoint) -> bool:
     return point.starting_on_offense and not point.won
+
+
+def _break_side(point: TimelinePoint) -> Optional[BreakSide]:
+    if _is_break(point):
+        return "for_us"
+
+    if _is_broken(point):
+        return "against_us"
+
+    return None
 
 
 def _is_long_point(point: TimelinePoint, long_point_cutoff: int) -> bool:
@@ -94,35 +108,44 @@ def _find_point_by_number(points: Sequence[TimelinePoint], point_number: Optiona
     return next((point for point in points if point.point_number == point_number), None)
 
 
-def _find_turning_sequence(points: Sequence[TimelinePoint]) -> Optional[List[TimelinePoint]]:
-    """Find a compact broken/hold/break sequence, preferring late tight-score runs."""
-    best_sequence: Optional[List[TimelinePoint]] = None
-    best_score = -1
+def _find_break_runs(points: Sequence[TimelinePoint]) -> List[BreakSegment]:
+    break_runs: List[BreakSegment] = []
+    current_side: Optional[BreakSide] = None
+    current_run: List[TimelinePoint] = []
+
+    for point in points:
+        side = _break_side(point)
+        if side is not None and side == current_side:
+            current_run.append(point)
+            continue
+
+        if len(current_run) >= 2 and current_side is not None:
+            break_runs.append((current_side, current_run))
+
+        current_side = side
+        current_run = [point] if side is not None else []
+
+    if len(current_run) >= 2 and current_side is not None:
+        break_runs.append((current_side, current_run))
+
+    return break_runs
+
+
+def _find_counter_breaks(points: Sequence[TimelinePoint]) -> List[BreakSegment]:
+    counter_breaks: List[BreakSegment] = []
 
     for index in range(len(points) - 1):
         first = points[index]
         second = points[index + 1]
-        third = points[index + 2] if index + 2 < len(points) else None
+        first_side = _break_side(first)
+        second_side = _break_side(second)
 
-        sequence: Optional[List[TimelinePoint]] = None
-        if _is_broken(first) and _is_break(second):
-            sequence = [first, second]
-        elif third is not None and _is_broken(first) and second.starting_on_offense and second.won and _is_break(third):
-            sequence = [first, second, third]
-
-        if sequence is None:
+        if first_side is None or second_side is None or first_side == second_side:
             continue
 
-        primary = sequence[-1]
-        our_before, opponent_before = _pre_point_score(first)
-        late_bonus = first.point_number
-        tight_bonus = 20 if abs(our_before - opponent_before) <= 1 else 0
-        score = late_bonus + tight_bonus
-        if score > best_score:
-            best_score = score
-            best_sequence = sequence
+        counter_breaks.append((second_side, [first, second]))
 
-    return best_sequence
+    return counter_breaks
 
 
 def build_timeline_markers_and_key_moments(
@@ -205,17 +228,47 @@ def build_timeline_markers_and_key_moments(
             )
         )
 
-    turning_sequence = _find_turning_sequence(points)
-    if turning_sequence is not None:
-        primary = turning_sequence[-1]
-        point_ids = [point.point_id for point in turning_sequence]
+    for side, break_run in _find_break_runs(points):
+        primary = break_run[-1]
+        point_ids = [point.point_id for point in break_run]
+        is_tight = _is_tight_score(break_run[0])
+        moment_type = (
+            "break_run_for_us" if side == "for_us" else "break_run_against_us"
+        )
+        reasons = ["break_run", side]
+        if is_tight:
+            reasons.append("tight_score")
+
         moments.append(
             _build_moment(
-                moment_type="break_sequence",
+                moment_type=moment_type,
                 primary_point_id=primary.point_id,
                 point_ids=point_ids,
-                importance=86 + (4 if _is_tight_score(turning_sequence[0]) else 0),
-                reasons=["broken", "break", "tight_score"] if _is_tight_score(turning_sequence[0]) else ["broken", "break"],
+                importance=86
+                + min((len(break_run) - 2) * 3, 9)
+                + (4 if is_tight else 0),
+                reasons=reasons,
+            )
+        )
+
+    for side, counter_break in _find_counter_breaks(points):
+        primary = counter_break[-1]
+        point_ids = [point.point_id for point in counter_break]
+        is_tight = _is_tight_score(counter_break[0])
+        moment_type = (
+            "counter_break_for_us" if side == "for_us" else "counter_break_against_us"
+        )
+        reasons = ["counter_break", side]
+        if is_tight:
+            reasons.append("tight_score")
+
+        moments.append(
+            _build_moment(
+                moment_type=moment_type,
+                primary_point_id=primary.point_id,
+                point_ids=point_ids,
+                importance=84 + (4 if is_tight else 0),
+                reasons=reasons,
             )
         )
 

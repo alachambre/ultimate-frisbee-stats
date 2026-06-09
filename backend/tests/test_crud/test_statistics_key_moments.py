@@ -36,11 +36,51 @@ def test_key_moments_mark_break_broken_long_and_high_turn_points():
     assert markers[2] == ["broken", "high_turn_point", "long_point"]
     assert markers[3] == ["break"]
     assert {moment["type"] for moment in key_moments} >= {
-        "break_sequence",
+        "counter_break_for_us",
         "broken",
         "break",
         "high_turn_point",
     }
+
+
+def test_key_moments_mark_break_runs_for_each_side():
+    markers, key_moments = build_timeline_markers_and_key_moments([
+        point(1, 1, offense=False, won=True, score=(1, 0)),
+        point(2, 2, offense=False, won=True, score=(2, 0)),
+        point(3, 3, offense=True, won=True, score=(3, 0)),
+        point(4, 4, offense=True, won=False, score=(3, 1)),
+        point(5, 5, offense=True, won=False, score=(3, 2)),
+    ])
+
+    moment_by_type = {moment["type"]: moment for moment in key_moments}
+
+    assert markers[1] == ["break"]
+    assert markers[2] == ["break"]
+    assert markers[4] == ["broken"]
+    assert markers[5] == ["broken"]
+    assert moment_by_type["break_run_for_us"]["point_ids"] == [1, 2]
+    assert moment_by_type["break_run_for_us"]["primary_point_id"] == 2
+    assert moment_by_type["break_run_against_us"]["point_ids"] == [4, 5]
+    assert moment_by_type["break_run_against_us"]["primary_point_id"] == 5
+
+
+def test_key_moments_mark_counter_breaks_for_each_side():
+    markers, key_moments = build_timeline_markers_and_key_moments([
+        point(1, 1, offense=True, won=False, score=(0, 1)),
+        point(2, 2, offense=False, won=True, score=(1, 1)),
+        point(3, 3, offense=False, won=True, score=(2, 1)),
+        point(4, 4, offense=True, won=False, score=(2, 2)),
+    ])
+
+    moment_by_type = {moment["type"]: moment for moment in key_moments}
+
+    assert markers[1] == ["broken"]
+    assert markers[2] == ["break"]
+    assert markers[4] == ["broken"]
+    assert moment_by_type["counter_break_for_us"]["point_ids"] == [1, 2]
+    assert moment_by_type["counter_break_for_us"]["primary_point_id"] == 2
+    assert moment_by_type["counter_break_against_us"]["point_ids"] == [3, 4]
+    assert moment_by_type["counter_break_against_us"]["primary_point_id"] == 4
 
 
 def test_key_moments_mark_galaxy_and_universe_points():
@@ -116,4 +156,4 @@ def test_key_moments_keep_only_most_important_visible_moments():
 
     assert len(key_moments) <= 4
     assert all("high_turn_point" in markers[point_id] for point_id in markers)
-    assert {moment["type"] for moment in key_moments} >= {"break_sequence"}
+    assert "counter_break_against_us" in {moment["type"] for moment in key_moments}

@@ -303,9 +303,12 @@ function getMomentAccentColor(momentType: string, theme: Theme) {
     case "universe_point":
       return theme.colors.performance.medium;
     case "broken":
+    case "break_run_against_us":
+    case "counter_break_against_us":
       return theme.colors.performance.veryLow;
-    case "break_sequence":
     case "break":
+    case "break_run_for_us":
+    case "counter_break_for_us":
       return theme.colors.performance.veryHigh;
     case "high_turn_point":
     case "long_point":

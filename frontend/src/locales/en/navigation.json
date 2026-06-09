@@ -202,7 +202,10 @@
       "keyMomentTypes": {
         "universe_point": "Universe point",
         "galaxy_point": "Galaxy point",
-        "break_sequence": "Momentum swing",
+        "break_run_for_us": "Break run",
+        "break_run_against_us": "Break run",
+        "counter_break_for_us": "Counter break",
+        "counter_break_against_us": "Counter break",
         "break": "Break point",
         "broken": "Broken point",
         "high_turn_point": "High-turn point",
@@ -211,7 +214,10 @@
       "keyMomentDescriptions": {
         "universe_point": "Tight point that decided the game.",
         "galaxy_point": "Tight point that sent the game to half time.",
-        "break_sequence": "A broken point followed by a response.",
+        "break_run_for_us": "Defense converted several points in a row.",
+        "break_run_against_us": "Opponent converted several breaks in a row.",
+        "counter_break_for_us": "Defense answered the break immediately.",
+        "counter_break_against_us": "Opponent answered the break immediately.",
         "break": "Defense converted the point.",
         "broken": "Offense was broken.",
         "high_turn_point": "Several possession changes shaped the point.",

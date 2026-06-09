@@ -202,7 +202,10 @@
       "keyMomentTypes": {
         "universe_point": "Point Univers",
         "galaxy_point": "Point Galaxy",
-        "break_sequence": "Bascule du match",
+        "break_run_for_us": "Série de breaks",
+        "break_run_against_us": "Série de breaks",
+        "counter_break_for_us": "Counter break",
+        "counter_break_against_us": "Counter break",
         "break": "Point de Break",
         "broken": "Point Broken",
         "high_turn_point": "Point à turns",
@@ -211,7 +214,10 @@
       "keyMomentDescriptions": {
         "universe_point": "Point serré qui a décidé le match.",
         "galaxy_point": "Point serré qui a envoyé le match à la mi-temps.",
-        "break_sequence": "Un point broken suivi d'une réponse.",
+        "break_run_for_us": "La défense a converti plusieurs points d'affilée.",
+        "break_run_against_us": "L'adversaire a converti plusieurs breaks d'affilée.",
+        "counter_break_for_us": "La défense a répondu au break immédiatement.",
+        "counter_break_against_us": "L'adversaire a répondu au break immédiatement.",
         "break": "La défense a converti le point.",
         "broken": "L'attaque a été broken.",
         "high_turn_point": "Plusieurs changements de possession ont pesé sur le point.",
