@@ -191,6 +191,8 @@
       "pointList": "Liste des points",
       "pointLabel": "Point {{pointNumber}}",
       "pointRangeLabel": "Points {{firstPointNumber}}-{{lastPointNumber}}",
+      "choosePoint": "Choisir un point",
+      "pointPickerAriaLabel": "Choisir un point à inspecter",
       "latest": "Récent",
       "current": "En cours",
       "selectPoint": "Sélectionner le point {{pointNumber}}",

@@ -515,4 +515,21 @@ describe("NewGameHistoryPage", () => {
     expect(screen.getByRole("heading", { name: "Point 5" })).toBeInTheDocument();
     expect(screen.queryByText("Force middle if they swing.")).not.toBeInTheDocument();
   });
+
+  it("updates the selected point from the mobile point picker", async () => {
+    setupHandlers();
+    const user = userEvent.setup();
+
+    renderPage();
+
+    const pointPickerLabel = (await screen.findAllByText("Point 2 - High-turn point"))
+      .find((element) => element.closest("button"));
+    expect(pointPickerLabel).toBeDefined();
+
+    await user.click(pointPickerLabel!.closest("button")!);
+    await user.click(screen.getByRole("menuitem", { name: /Point 5/i }));
+
+    expect(screen.getByRole("heading", { name: "Point 5" })).toBeInTheDocument();
+    expect(screen.queryByText("Force middle if they swing.")).not.toBeInTheDocument();
+  });
 });

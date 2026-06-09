@@ -33,7 +33,9 @@ function serializeChartDatasets(props: Record<string, unknown>) {
 }
 
 vi.mock("react-chartjs-2", () => ({
-  Chart: forwardRef(function MockChart(props: Record<string, unknown>) {
+  Chart: forwardRef(function MockChart(props: Record<string, unknown>, ref) {
+    void ref;
+
     return createElement("div", {
       "data-testid": "chartjs-chart",
       "data-chart-type": props.type,
@@ -42,7 +44,9 @@ vi.mock("react-chartjs-2", () => ({
       "aria-label": props["aria-label"] ?? "Chart preview",
     });
   }),
-  Line: forwardRef(function MockLine(props: Record<string, unknown>) {
+  Line: forwardRef(function MockLine(props: Record<string, unknown>, ref) {
+    void ref;
+
     return createElement("div", {
       "data-testid": "chartjs-line",
       "data-chart-datasets": serializeChartDatasets(props),

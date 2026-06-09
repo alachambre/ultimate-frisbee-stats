@@ -5,6 +5,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ShieldIcon from "@mui/icons-material/Shield";
 import {
   Box,
@@ -13,6 +14,8 @@ import {
   Chip,
   Container,
   Divider,
+  Menu,
+  MenuItem,
   Paper,
   Stack,
   Typography,
@@ -353,6 +356,19 @@ function getPointMarkerCharacteristicLabel(markers: string[], t: TFunction) {
     : null;
 }
 
+function getPointCharacteristicLabel(
+  pointId: number | null,
+  markers: string[],
+  moments: GameKeyMoment[],
+  t: TFunction,
+) {
+  const characteristicMoment = getPointCharacteristicMoment(pointId, moments);
+
+  return characteristicMoment
+    ? getMomentTitle(characteristicMoment, t)
+    : getPointMarkerCharacteristicLabel(markers, t);
+}
+
 function getMomentDescription(moment: GameKeyMoment, t: TFunction) {
   return t(
     `newUiPages.gameHistory.keyMomentDescriptions.${moment.type}`,
@@ -450,6 +466,7 @@ function KeyMomentsSection({
       sx={(theme) => ({
         border: `1px solid ${theme.palette.divider}`,
         borderRadius: 1,
+        display: { xs: "none", md: "block" },
         p: { xs: 1.5, sm: 2 },
       })}
     >
@@ -859,24 +876,57 @@ function HalftimeListItem({
 }
 
 function MobilePointSelector({
-  historyItems,
-  language,
   currentPointIds,
+  historyItems,
+  keyMoments,
+  language,
   markersByPointId,
   onSelectPoint,
   scoreByPointId,
   selectedPointId,
   t,
 }: {
-  historyItems: HistoryItem[];
-  language?: string;
   currentPointIds: Set<number>;
+  historyItems: HistoryItem[];
+  keyMoments: GameKeyMoment[];
+  language?: string;
   markersByPointId: Map<number, string[]>;
   onSelectPoint: (pointId: number) => void;
   scoreByPointId: Map<number, { opponent: number; our: number }>;
   selectedPointId: number | null;
   t: TFunction;
 }) {
+  const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
+  const selectedItem = historyItems.find(
+    (item) => isPointHistoryItem(item) && item.point.id === selectedPointId,
+  );
+  const selectedPoint =
+    selectedItem && isPointHistoryItem(selectedItem) ? selectedItem.point : null;
+  const selectedScore = selectedPoint ? scoreByPointId.get(selectedPoint.id) : null;
+  const selectedMarkers = selectedPoint
+    ? markersByPointId.get(selectedPoint.id) ?? []
+    : [];
+  const selectedCharacteristicLabel = getPointCharacteristicLabel(
+    selectedPoint?.id ?? null,
+    selectedMarkers,
+    keyMoments,
+    t,
+  );
+  const selectedDurationLabel = selectedPoint
+    ? formatPointDuration(selectedPoint.duration_seconds)
+    : null;
+  const selectedTurnCount = selectedPoint
+    ? (selectedPoint.our_turnovers ?? 0) + (selectedPoint.opponent_turnovers ?? 0)
+    : 0;
+  const isOpen = Boolean(anchorElement);
+  const menuId = "game-history-mobile-point-menu";
+
+  const handleClose = () => setAnchorElement(null);
+  const handleSelectPoint = (pointId: number) => {
+    onSelectPoint(pointId);
+    handleClose();
+  };
+
   return (
     <Paper
       elevation={0}
@@ -890,33 +940,257 @@ function MobilePointSelector({
       <Typography fontWeight={900} sx={{ mb: 1 }} variant="subtitle1">
         {t("newUiPages.gameHistory.pointList")}
       </Typography>
-      <Box sx={{ overflowX: "auto", pb: 0.5 }}>
-        <Stack direction="row" spacing={1} sx={{ width: "max-content" }}>
-          {historyItems.map((item) =>
-            isHalftimeHistoryItem(item) ? (
-              <HalftimeListItem
-                halftime={item.halftime}
-                key={item.id}
-                language={language}
-                t={t}
-                variant="strip"
-              />
-            ) : (
-              <PointSelectButton
-                isCurrent={currentPointIds.has(item.point.id)}
-                isSelected={selectedPointId === item.point.id}
-                key={item.id}
-                markers={markersByPointId.get(item.point.id) ?? []}
-                onSelect={() => onSelectPoint(item.point.id)}
-                point={item.point}
-                scoreAfter={scoreByPointId.get(item.point.id)}
-                t={t}
-                variant="strip"
-              />
-            ),
-          )}
-        </Stack>
-      </Box>
+      <Button
+        aria-controls={isOpen ? menuId : undefined}
+        aria-expanded={isOpen ? "true" : undefined}
+        aria-haspopup="menu"
+        endIcon={<KeyboardArrowDownIcon />}
+        fullWidth
+        onClick={(event) => setAnchorElement(event.currentTarget)}
+        sx={(theme) => {
+          const accent =
+            selectedPoint != null
+              ? getPointAccentColor(selectedPoint, selectedMarkers, theme)
+              : theme.colors.newUi.primary;
+
+          return {
+            alignItems: "stretch",
+            borderColor: alpha(accent, 0.36),
+            color: "text.primary",
+            justifyContent: "space-between",
+            minHeight: 72,
+            px: 1.25,
+            py: 1,
+            textAlign: "left",
+            textTransform: "none",
+            "&:hover": {
+              bgcolor: alpha(accent, 0.04),
+              borderColor: alpha(accent, 0.48),
+            },
+            "& .MuiButton-endIcon": {
+              alignSelf: "center",
+              color: "text.secondary",
+              ml: 1,
+            },
+          };
+        }}
+        variant="outlined"
+      >
+        {selectedPoint ? (
+          <Stack spacing={0.35} sx={{ minWidth: 0, width: "100%" }}>
+            <Stack
+              alignItems="center"
+              direction="row"
+              justifyContent="space-between"
+              spacing={1}
+            >
+              <Stack
+                alignItems="center"
+                direction="row"
+                spacing={0.75}
+                sx={{ minWidth: 0 }}
+              >
+                <PointSideIconBadge point={selectedPoint} t={t} />
+                <Typography fontWeight={900} noWrap variant="subtitle2">
+                  {t("newUiPages.gameHistory.pointLabel", {
+                    pointNumber: selectedPoint.point_number,
+                  })}
+                  {selectedCharacteristicLabel
+                    ? ` - ${selectedCharacteristicLabel}`
+                    : ""}
+                </Typography>
+                {currentPointIds.has(selectedPoint.id) && (
+                  <Chip
+                    label={t("newUiPages.gameHistory.current")}
+                    size="small"
+                    sx={(theme) => ({
+                      bgcolor: theme.colors.newUi.primarySoft,
+                      color: theme.colors.newUi.primary,
+                      fontWeight: 800,
+                      height: 22,
+                    })}
+                  />
+                )}
+              </Stack>
+              {selectedScore && (
+                <Typography fontWeight={900} sx={{ whiteSpace: "nowrap" }} variant="body2">
+                  {selectedScore.our} - {selectedScore.opponent}
+                </Typography>
+              )}
+            </Stack>
+            <Stack alignItems="center" direction="row" flexWrap="wrap" gap={0.75}>
+              <Typography color="text.secondary" variant="caption">
+                {getPointOutcomeLabel(selectedPoint, t)}
+              </Typography>
+              {selectedDurationLabel && (
+                <Typography color="text.secondary" variant="caption">
+                  {selectedDurationLabel}
+                </Typography>
+              )}
+              <Typography color="text.secondary" variant="caption">
+                {t("newUiPages.gameHistory.turnSummary", {
+                  count: selectedTurnCount,
+                })}
+              </Typography>
+            </Stack>
+          </Stack>
+        ) : (
+          <Typography color="text.secondary" fontWeight={800} variant="body2">
+            {t("newUiPages.gameHistory.choosePoint")}
+          </Typography>
+        )}
+      </Button>
+
+      <Menu
+        anchorEl={anchorElement}
+        id={menuId}
+        MenuListProps={{
+          "aria-label": t("newUiPages.gameHistory.pointPickerAriaLabel"),
+          dense: true,
+        }}
+        onClose={handleClose}
+        open={isOpen}
+        slotProps={{
+          paper: {
+            sx: {
+              maxHeight: "min(70vh, 520px)",
+              mt: 0.75,
+              width: anchorElement?.clientWidth,
+            },
+          },
+        }}
+      >
+        {historyItems.map((item) => {
+          if (isHalftimeHistoryItem(item)) {
+            return (
+              <MenuItem disabled key={item.id} sx={{ opacity: 1, py: 1.1 }}>
+                <Stack spacing={0.25} sx={{ minWidth: 0, width: "100%" }}>
+                  <Stack alignItems="center" direction="row" spacing={0.75}>
+                    <Box
+                      sx={(theme) => ({
+                        alignItems: "center",
+                        bgcolor: alpha(theme.colors.performance.medium, 0.14),
+                        borderRadius: "50%",
+                        color: theme.palette.warning.dark,
+                        display: "inline-flex",
+                        flexShrink: 0,
+                        height: 24,
+                        justifyContent: "center",
+                        width: 24,
+                        "& .MuiSvgIcon-root": {
+                          fontSize: 16,
+                        },
+                      })}
+                    >
+                      <AccessTimeFilledIcon titleAccess={t("points:history.halfTime")} />
+                    </Box>
+                    <Typography color="text.primary" fontWeight={900} variant="subtitle2">
+                      {t("points:history.halfTime")}
+                    </Typography>
+                  </Stack>
+                  <Typography color="text.secondary" variant="caption">
+                    {formatDateTime(item.halftime.halftime_timestamp, language)}
+                    {item.halftime.comments ? ` · ${item.halftime.comments}` : ""}
+                  </Typography>
+                </Stack>
+              </MenuItem>
+            );
+          }
+
+          const markers = markersByPointId.get(item.point.id) ?? [];
+          const scoreAfter = scoreByPointId.get(item.point.id);
+          const characteristicLabel = getPointCharacteristicLabel(
+            item.point.id,
+            markers,
+            keyMoments,
+            t,
+          );
+          const durationLabel = formatPointDuration(item.point.duration_seconds);
+          const turnCount =
+            (item.point.our_turnovers ?? 0) + (item.point.opponent_turnovers ?? 0);
+          const isSelected = selectedPointId === item.point.id;
+
+          return (
+            <MenuItem
+              key={item.id}
+              onClick={() => handleSelectPoint(item.point.id)}
+              selected={isSelected}
+              sx={(theme) => {
+                const accent = getPointAccentColor(item.point, markers, theme);
+
+                return {
+                  borderLeft: `4px solid ${accent}`,
+                  minHeight: 72,
+                  py: 1,
+                  whiteSpace: "normal",
+                  "&.Mui-selected": {
+                    bgcolor: alpha(accent, 0.08),
+                  },
+                  "&.Mui-selected:hover": {
+                    bgcolor: alpha(accent, 0.12),
+                  },
+                };
+              }}
+            >
+              <Stack spacing={0.35} sx={{ minWidth: 0, width: "100%" }}>
+                <Stack
+                  alignItems="center"
+                  direction="row"
+                  justifyContent="space-between"
+                  spacing={1}
+                >
+                  <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={0.75}
+                    sx={{ minWidth: 0 }}
+                  >
+                    <PointSideIconBadge point={item.point} t={t} />
+                    <Typography fontWeight={900} noWrap variant="subtitle2">
+                      {t("newUiPages.gameHistory.pointLabel", {
+                        pointNumber: item.point.point_number,
+                      })}
+                      {characteristicLabel ? ` - ${characteristicLabel}` : ""}
+                    </Typography>
+                    {currentPointIds.has(item.point.id) && (
+                      <Chip
+                        label={t("newUiPages.gameHistory.current")}
+                        size="small"
+                        sx={(theme) => ({
+                          bgcolor: theme.colors.newUi.primarySoft,
+                          color: theme.colors.newUi.primary,
+                          fontWeight: 800,
+                          height: 22,
+                        })}
+                      />
+                    )}
+                  </Stack>
+                  {scoreAfter && (
+                    <Typography fontWeight={900} sx={{ whiteSpace: "nowrap" }} variant="body2">
+                      {scoreAfter.our} - {scoreAfter.opponent}
+                    </Typography>
+                  )}
+                </Stack>
+                <Stack alignItems="center" direction="row" flexWrap="wrap" gap={0.75}>
+                  <Typography color="text.secondary" variant="caption">
+                    {getPointOutcomeLabel(item.point, t)}
+                  </Typography>
+                  {durationLabel && (
+                    <Typography color="text.secondary" variant="caption">
+                      {durationLabel}
+                    </Typography>
+                  )}
+                  <Typography color="text.secondary" variant="caption">
+                    {t("newUiPages.gameHistory.turnSummary", {
+                      count: turnCount,
+                    })}
+                  </Typography>
+                </Stack>
+              </Stack>
+            </MenuItem>
+          );
+        })}
+      </Menu>
     </Paper>
   );
 }
@@ -1158,13 +1432,9 @@ export default function NewGameHistoryPage() {
   const selectedMarkers = selectedPointId
     ? markersByPointId.get(selectedPointId) ?? []
     : [];
-  const selectedCharacteristicMoment = getPointCharacteristicMoment(
-    selectedPointId,
-    keyMoments,
-  );
-  const selectedCharacteristicLabel = selectedCharacteristicMoment
-    ? getMomentTitle(selectedCharacteristicMoment, t)
-    : getPointMarkerCharacteristicLabel(selectedMarkers, t) ?? undefined;
+  const selectedCharacteristicLabel =
+    getPointCharacteristicLabel(selectedPointId, selectedMarkers, keyMoments, t) ??
+    undefined;
   const selectedTurnovers = selectedPointId
     ? turnoversByPointId.get(selectedPointId) ?? []
     : [];
@@ -1508,9 +1778,10 @@ export default function NewGameHistoryPage() {
               />
 
               <MobilePointSelector
-                historyItems={historyItems}
-                language={i18n.resolvedLanguage}
                 currentPointIds={currentPointIds}
+                historyItems={historyItems}
+                keyMoments={keyMoments}
+                language={i18n.resolvedLanguage}
                 markersByPointId={markersByPointId}
                 onSelectPoint={handleSelectPoint}
                 scoreByPointId={scoreByPointId}
