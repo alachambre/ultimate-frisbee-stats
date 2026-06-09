@@ -36,6 +36,9 @@ declare module "@mui/material/styles" {
         high: string;
         veryHigh: string;
       };
+      gameHistory: {
+        effort: string;
+      };
       newUi: {
         primary: string;
         primarySoft: string;
@@ -76,6 +79,9 @@ declare module "@mui/material/styles" {
         medium?: string;
         high?: string;
         veryHigh?: string;
+      };
+      gameHistory?: {
+        effort?: string;
       };
       newUi?: {
         primary?: string;
@@ -121,6 +127,9 @@ declare module "@mui/system" {
         medium: string;
         high: string;
         veryHigh: string;
+      };
+      gameHistory: {
+        effort: string;
       };
       newUi: {
         primary: string;

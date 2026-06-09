@@ -2,22 +2,20 @@ import { useMemo } from "react";
 import type { ReactElement } from "react";
 import { useQuery } from "@tanstack/react-query";
 import CommentIcon from "@mui/icons-material/Comment";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FemaleIcon from "@mui/icons-material/Female";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import MaleIcon from "@mui/icons-material/Male";
 import ShieldIcon from "@mui/icons-material/Shield";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Chip,
+  Paper,
   Stack,
   Typography,
 } from "@mui/material";
 import type { ChipProps } from "@mui/material/Chip";
 import { alpha } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
@@ -32,8 +30,8 @@ import { queryKeys } from "../../utils/queryKeys";
 import NewGameHistoryChronology from "./NewGameHistoryChronology";
 
 interface NewGameHistoryPointItemProps {
-  expanded: boolean;
-  onExpandedChange: (expanded: boolean) => void;
+  accentColor?: (theme: Theme) => string;
+  characteristicLabel?: string;
   point: PointWithPlayers;
   scoreAfter?: {
     opponent: number;
@@ -163,8 +161,8 @@ function getTurnChipColor(turns: number) {
 }
 
 export default function NewGameHistoryPointItem({
-  expanded,
-  onExpandedChange,
+  accentColor,
+  characteristicLabel,
   point,
   scoreAfter,
   turnovers: providedTurnovers,
@@ -188,7 +186,7 @@ export default function NewGameHistoryPointItem({
     [point.players],
   );
 
-  const shouldFetchChronology = expanded && Boolean(point.start_datetime);
+  const shouldFetchChronology = Boolean(point.start_datetime);
   const { data: stoppages = [] } = useQuery<Stoppage[]>({
     queryKey: queryKeys.stoppages(point.id),
     queryFn: () => getStoppagesByPoint(point.id),
@@ -206,70 +204,53 @@ export default function NewGameHistoryPointItem({
   const SideIcon = point.starting_on_offense ? FlashOnIcon : ShieldIcon;
 
   return (
-    <Accordion
-      disableGutters
+    <Paper
       elevation={0}
-      expanded={expanded}
-      onChange={(_, isExpanded) => onExpandedChange(isExpanded)}
-      sx={(theme) => ({
-        bgcolor: "background.paper",
-        border: `1px solid ${
-          expanded
-            ? alpha(theme.colors.newUi.primary, 0.24)
-            : alpha(theme.palette.text.primary, 0.08)
-        }`,
-        borderRadius: 1,
-        boxShadow: expanded
-          ? `0 10px 24px ${alpha(theme.colors.newUi.primary, 0.1)}`
-          : `0 1px 2px ${alpha(theme.palette.common.black, 0.025)}`,
-        overflow: "hidden",
-        position: "relative",
-        transition: theme.transitions.create(["border-color", "box-shadow"], {
-          duration: theme.transitions.duration.short,
-        }),
-        "&:after": {
-          bgcolor: expanded ? theme.colors.newUi.primary : "transparent",
-          bottom: 0,
-          content: '""',
-          left: 0,
-          position: "absolute",
-          top: 0,
-          transition: theme.transitions.create("background-color", {
+      sx={(theme) => {
+        const accent = accentColor?.(theme) ?? theme.colors.newUi.primary;
+
+        return {
+          bgcolor: "background.paper",
+          border: `1px solid ${alpha(accent, 0.24)}`,
+          borderRadius: 1,
+          boxShadow: `0 10px 24px ${alpha(accent, 0.1)}`,
+          overflow: "hidden",
+          position: "relative",
+          transition: theme.transitions.create(["border-color", "box-shadow"], {
             duration: theme.transitions.duration.short,
           }),
-          width: 5,
-          zIndex: 1,
-        },
-        "&:before": { display: "none" },
-      })}
+          "&:after": {
+            bgcolor: accent,
+            bottom: 0,
+            content: '""',
+            left: 0,
+            position: "absolute",
+            top: 0,
+            transition: theme.transitions.create("background-color", {
+              duration: theme.transitions.duration.short,
+            }),
+            width: 5,
+            zIndex: 1,
+          },
+        };
+      }}
     >
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        sx={(theme) => ({
-          alignItems: "stretch",
-          bgcolor: expanded
-            ? alpha(theme.colors.newUi.primary, 0.07)
-            : "background.paper",
-          minHeight: 0,
-          pl: expanded ? { xs: 2.5, sm: 3 } : { xs: 2, sm: 2.5 },
-          pr: { xs: 1.5, sm: 2 },
-          py: { xs: 1.4, sm: 1.5 },
-          transition: theme.transitions.create(["background-color", "padding"], {
-            duration: theme.transitions.duration.short,
-          }),
-          "& .MuiAccordionSummary-content": {
-            display: "block",
-            my: 0,
-            minWidth: 0,
-          },
-          "& .MuiAccordionSummary-expandIconWrapper": {
-            alignSelf: "flex-end",
-            color: expanded
-              ? theme.colors.newUi.primary
-              : theme.palette.text.secondary,
-            mb: 1,
-          },
-        })}
+      <Box
+        sx={(theme) => {
+          const accent = accentColor?.(theme) ?? theme.colors.newUi.primary;
+
+          return {
+            alignItems: "stretch",
+            bgcolor: alpha(accent, 0.07),
+            minHeight: 0,
+            pl: { xs: 2.5, sm: 3 },
+            pr: { xs: 1.5, sm: 2 },
+            py: { xs: 1.4, sm: 1.5 },
+            transition: theme.transitions.create(["background-color", "padding"], {
+              duration: theme.transitions.duration.short,
+            }),
+          };
+        }}
       >
         <Stack
           alignItems="flex-start"
@@ -310,6 +291,7 @@ export default function NewGameHistoryPointItem({
                 variant="h6"
               >
                 {t("history.point", "Point")} {point.point_number}
+                {characteristicLabel ? ` - ${characteristicLabel}` : ""}
               </Typography>
               {durationLabel && (
                 <Typography
@@ -345,9 +327,7 @@ export default function NewGameHistoryPointItem({
                 sx={(theme) => {
                   if (!turnChipColor) {
                     return {
-                      bgcolor: expanded
-                        ? theme.palette.background.paper
-                        : "transparent",
+                      bgcolor: theme.palette.background.paper,
                       fontWeight: 700,
                     };
                   }
@@ -384,32 +364,40 @@ export default function NewGameHistoryPointItem({
             </Box>
           )}
         </Stack>
-      </AccordionSummary>
+      </Box>
 
-      <AccordionDetails
-        sx={(theme) => ({
-          bgcolor: "background.paper",
-          borderTop: `1px solid ${alpha(theme.colors.newUi.primary, 0.16)}`,
-          ml: "5px",
-          p: { xs: 2, sm: 2.5 },
-        })}
+      <Box
+        sx={(theme) => {
+          const accent = accentColor?.(theme) ?? theme.colors.newUi.primary;
+
+          return {
+            bgcolor: "background.paper",
+            borderTop: `1px solid ${alpha(accent, 0.16)}`,
+            ml: "5px",
+            p: { xs: 2, sm: 2.5 },
+          };
+        }}
       >
         {point.comments && (
           <Box
-            sx={(theme) => ({
-              bgcolor: alpha(theme.colors.newUi.primary, 0.05),
-              border: `1px solid ${alpha(theme.colors.newUi.primary, 0.12)}`,
-              borderRadius: 1,
-              mb: 2,
-              px: 1.5,
-              py: 1.25,
-            })}
+            sx={(theme) => {
+              const accent = accentColor?.(theme) ?? theme.colors.newUi.primary;
+
+              return {
+                bgcolor: alpha(accent, 0.05),
+                border: `1px solid ${alpha(accent, 0.12)}`,
+                borderRadius: 1,
+                mb: 2,
+                px: 1.5,
+                py: 1.25,
+              };
+            }}
           >
             <Box sx={{ alignItems: "center", display: "flex", gap: 1, mb: 0.5 }}>
               <CommentIcon
                 fontSize="small"
                 sx={(theme) => ({
-                  color: theme.colors.newUi.primary,
+                  color: accentColor?.(theme) ?? theme.colors.newUi.primary,
                 })}
               />
               <Typography fontWeight={700} variant="body2">
@@ -494,7 +482,7 @@ export default function NewGameHistoryPointItem({
           title={t("pointEvents", "Chronology")}
           turnovers={turnovers}
         />
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   );
 }

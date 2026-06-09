@@ -52,6 +52,9 @@ export function createAppTheme() {
         high: "#84cc16",
         veryHigh: "#16a34a",
       },
+      gameHistory: {
+        effort: "#8B5E34",
+      },
       newUi: {
         primary: "#2F6690",
         primarySoft: "#EAF3F8",

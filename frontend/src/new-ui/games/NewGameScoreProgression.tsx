@@ -39,6 +39,8 @@ interface NewGameScoreProgressionProps {
   timeline: GamePointTimeline;
   teamName: string;
   opponentName: string;
+  selectedPointId?: number | null;
+  onPointSelect?: (pointId: number) => void;
 }
 
 function buildSeriesPoints(xValues: number[], yValues: number[]) {
@@ -180,6 +182,67 @@ function buildMarkerColors(
   );
 }
 
+function getPointMarkerY(point: GamePointTimeline["points"][number]) {
+  return point.won ? point.our_score_after : point.opponent_score_after;
+}
+
+function buildOverlayMarkerDataset({
+  borderColor,
+  borderWidth = 2,
+  color,
+  label,
+  points,
+  pointStyle = "circle",
+  radius,
+}: {
+  borderColor: string;
+  borderWidth?: number;
+  color: string;
+  label: string;
+  points: GamePointTimeline["points"];
+  pointStyle?: ScoreProgressionDataset["pointStyle"];
+  radius: number;
+}): ScoreProgressionDataset {
+  return {
+    label,
+    borderColor: "transparent",
+    backgroundColor: color,
+    data: points.map((point) => ({
+      x: point.point_number,
+      y: getPointMarkerY(point),
+    })),
+    showLine: false,
+    pointRadius: radius,
+    pointHoverRadius: radius + 2,
+    pointHitRadius: 10,
+    pointBorderWidth: borderWidth,
+    pointHoverBorderWidth: borderWidth,
+    pointBackgroundColor: color,
+    pointHoverBackgroundColor: color,
+    pointBorderColor: borderColor,
+    pointHoverBorderColor: borderColor,
+    pointStyle,
+  };
+}
+
+function hasPointMarker(
+  point: GamePointTimeline["points"][number],
+  marker: string,
+) {
+  return point.markers?.includes(marker) ?? false;
+}
+
+function getSpecialPointIds(timeline: GamePointTimeline) {
+  return new Set(
+    (timeline.key_moments ?? [])
+      .filter(
+        (moment) =>
+          moment.type === "galaxy_point" || moment.type === "universe_point",
+      )
+      .flatMap((moment) => moment.point_ids),
+  );
+}
+
 function LegendLineItem({ color, label }: { color: string; label: string }) {
   return (
     <Box sx={{ alignItems: "center", display: "flex", gap: 0.75 }}>
@@ -200,19 +263,28 @@ function LegendLineItem({ color, label }: { color: string; label: string }) {
   );
 }
 
-function LegendMarkerItem({ color, label }: { color: string; label: string }) {
+function LegendMarkerItem({
+  color,
+  label,
+  variant = "dot",
+}: {
+  color: string;
+  label: string;
+  variant?: "dot" | "ring";
+}) {
   return (
     <Box sx={{ alignItems: "center", display: "flex", gap: 0.75 }}>
       <Box
         aria-hidden="true"
         sx={(theme) => ({
-          bgcolor: color,
+          bgcolor: variant === "ring" ? "transparent" : color,
           border: "2px solid",
-          borderColor: theme.palette.background.paper,
+          borderColor:
+            variant === "ring" ? color : theme.palette.background.paper,
           borderRadius: "50%",
           boxSizing: "content-box",
-          height: 9,
-          width: 9,
+          height: variant === "ring" ? 11 : 9,
+          width: variant === "ring" ? 11 : 9,
         })}
       />
       <Typography color="text.secondary" variant="caption">
@@ -226,6 +298,8 @@ export default function NewGameScoreProgression({
   timeline,
   teamName,
   opponentName,
+  selectedPointId = null,
+  onPointSelect,
 }: NewGameScoreProgressionProps) {
   const { t } = useTranslation("statistics");
   const theme = useTheme();
@@ -242,12 +316,24 @@ export default function NewGameScoreProgression({
   const maxX = pointNumbers[pointNumbers.length - 1] ?? 0;
   const tickStep = getGameTrendsTickStep(pointNumbers.length);
   const ourSeriesColor = theme.colors.newUi.primary;
-  const opponentSeriesColor = theme.colors.performance.veryLow;
-  const breakMarkerColor = ourSeriesColor;
-  const brokenMarkerColor = opponentSeriesColor;
+  const opponentSeriesColor = theme.palette.text.secondary;
+  const breakMarkerColor = theme.colors.performance.veryHigh;
+  const brokenMarkerColor = theme.colors.performance.veryLow;
+  const specialPointMarkerColor = theme.colors.performance.medium;
+  const selectedMarkerColor = theme.colors.newUi.primary;
   const breakMarkerFlags = getBreakMarkerFlags(timeline.points);
   const basePointFill = alpha(ourSeriesColor, 0.12);
   const opponentPointFill = alpha(opponentSeriesColor, 0.12);
+  const specialPointIds = getSpecialPointIds(timeline);
+  const specialPointMarkers = timeline.points.filter(
+    (point) =>
+      specialPointIds.has(point.point_id) ||
+      hasPointMarker(point, "galaxy_point") ||
+      hasPointMarker(point, "universe_point"),
+  );
+  const selectedPointMarkers = timeline.points.filter(
+    (point) => selectedPointId !== null && point.point_id === selectedPointId,
+  );
   const maxScore = Math.max(
     0,
     ...timeline.points.flatMap((point) => [
@@ -256,99 +342,119 @@ export default function NewGameScoreProgression({
     ]),
   );
 
+  const scoreDatasets: ScoreProgressionDataset[] = [
+    {
+      label: teamName,
+      borderColor: ourSeriesColor,
+      backgroundColor: alpha(ourSeriesColor, 0.14),
+      data: buildSeriesPoints(
+        pointNumbers,
+        prependChartOrigin(
+          timeline.points.map((point) => point.our_score_after),
+        ),
+      ),
+      cubicInterpolationMode: "monotone",
+      tension: 0.22,
+      borderWidth: 3,
+      pointRadius: buildMarkerRadii(breakMarkerFlags.ourBreaks),
+      pointHoverRadius: buildMarkerRadii(breakMarkerFlags.ourBreaks, 4),
+      pointHitRadius: 8,
+      pointBorderWidth: buildMarkerBorders(breakMarkerFlags.ourBreaks),
+      pointHoverBorderWidth: buildMarkerBorders(breakMarkerFlags.ourBreaks),
+      pointBackgroundColor: buildMarkerColors(
+        breakMarkerFlags.ourBreaks,
+        breakMarkerColor,
+        "transparent",
+      ),
+      pointHoverBackgroundColor: buildMarkerColors(
+        breakMarkerFlags.ourBreaks,
+        breakMarkerColor,
+        basePointFill,
+      ),
+      pointBorderColor: buildMarkerColors(
+        breakMarkerFlags.ourBreaks,
+        theme.palette.background.paper,
+        "transparent",
+      ),
+      pointHoverBorderColor: buildMarkerColors(
+        breakMarkerFlags.ourBreaks,
+        theme.palette.background.paper,
+        alpha(ourSeriesColor, 0.72),
+      ),
+      fill: false,
+    },
+    {
+      label: opponentName,
+      borderColor: opponentSeriesColor,
+      backgroundColor: alpha(opponentSeriesColor, 0.12),
+      data: buildSeriesPoints(
+        pointNumbers,
+        prependChartOrigin(
+          timeline.points.map((point) => point.opponent_score_after),
+        ),
+      ),
+      cubicInterpolationMode: "monotone",
+      tension: 0.22,
+      borderWidth: 3,
+      borderDash: [7, 5],
+      pointRadius: buildMarkerRadii(breakMarkerFlags.opponentBreaks),
+      pointHoverRadius: buildMarkerRadii(breakMarkerFlags.opponentBreaks, 4),
+      pointHitRadius: 8,
+      pointBorderWidth: buildMarkerBorders(breakMarkerFlags.opponentBreaks),
+      pointHoverBorderWidth: buildMarkerBorders(
+        breakMarkerFlags.opponentBreaks,
+      ),
+      pointBackgroundColor: buildMarkerColors(
+        breakMarkerFlags.opponentBreaks,
+        brokenMarkerColor,
+        "transparent",
+      ),
+      pointHoverBackgroundColor: buildMarkerColors(
+        breakMarkerFlags.opponentBreaks,
+        brokenMarkerColor,
+        opponentPointFill,
+      ),
+      pointBorderColor: buildMarkerColors(
+        breakMarkerFlags.opponentBreaks,
+        theme.palette.background.paper,
+        "transparent",
+      ),
+      pointHoverBorderColor: buildMarkerColors(
+        breakMarkerFlags.opponentBreaks,
+        theme.palette.background.paper,
+        alpha(opponentSeriesColor, 0.72),
+      ),
+      fill: false,
+    },
+  ];
+  const overlayDatasets: ScoreProgressionDataset[] = [
+    ...(selectedPointMarkers.length > 0
+      ? [
+          buildOverlayMarkerDataset({
+            borderColor: selectedMarkerColor,
+            borderWidth: 3,
+            color: "transparent",
+            label: t("charts.selectedPointMarker", "Selected point"),
+            points: selectedPointMarkers,
+            radius: 10,
+          }),
+        ]
+      : []),
+    ...(specialPointMarkers.length > 0
+      ? [
+          buildOverlayMarkerDataset({
+            borderColor: theme.palette.background.paper,
+            color: specialPointMarkerColor,
+            label: t("charts.specialPointMarker", "Galaxy/Universe point"),
+            points: specialPointMarkers,
+            radius: 6,
+          }),
+        ]
+      : []),
+  ];
+
   const chartData: ChartData<"line", ScoreProgressionPoint[]> = {
-    datasets: [
-      {
-        label: teamName,
-        borderColor: ourSeriesColor,
-        backgroundColor: alpha(ourSeriesColor, 0.14),
-        data: buildSeriesPoints(
-          pointNumbers,
-          prependChartOrigin(
-            timeline.points.map((point) => point.our_score_after),
-          ),
-        ),
-        cubicInterpolationMode: "monotone",
-        tension: 0.22,
-        borderWidth: 3,
-        pointRadius: buildMarkerRadii(breakMarkerFlags.ourBreaks),
-        pointHoverRadius: buildMarkerRadii(breakMarkerFlags.ourBreaks, 4),
-        pointHitRadius: 8,
-        pointBorderWidth: buildMarkerBorders(breakMarkerFlags.ourBreaks),
-        pointHoverBorderWidth: buildMarkerBorders(
-          breakMarkerFlags.ourBreaks,
-        ),
-        pointBackgroundColor: buildMarkerColors(
-          breakMarkerFlags.ourBreaks,
-          breakMarkerColor,
-          "transparent",
-        ),
-        pointHoverBackgroundColor: buildMarkerColors(
-          breakMarkerFlags.ourBreaks,
-          breakMarkerColor,
-          basePointFill,
-        ),
-        pointBorderColor: buildMarkerColors(
-          breakMarkerFlags.ourBreaks,
-          theme.palette.background.paper,
-          "transparent",
-        ),
-        pointHoverBorderColor: buildMarkerColors(
-          breakMarkerFlags.ourBreaks,
-          theme.palette.background.paper,
-          alpha(ourSeriesColor, 0.72),
-        ),
-        fill: false,
-      },
-      {
-        label: opponentName,
-        borderColor: opponentSeriesColor,
-        backgroundColor: alpha(opponentSeriesColor, 0.12),
-        data: buildSeriesPoints(
-          pointNumbers,
-          prependChartOrigin(
-            timeline.points.map((point) => point.opponent_score_after),
-          ),
-        ),
-        cubicInterpolationMode: "monotone",
-        tension: 0.22,
-        borderWidth: 3,
-        borderDash: [7, 5],
-        pointRadius: buildMarkerRadii(breakMarkerFlags.opponentBreaks),
-        pointHoverRadius: buildMarkerRadii(
-          breakMarkerFlags.opponentBreaks,
-          4,
-        ),
-        pointHitRadius: 8,
-        pointBorderWidth: buildMarkerBorders(
-          breakMarkerFlags.opponentBreaks,
-        ),
-        pointHoverBorderWidth: buildMarkerBorders(
-          breakMarkerFlags.opponentBreaks,
-        ),
-        pointBackgroundColor: buildMarkerColors(
-          breakMarkerFlags.opponentBreaks,
-          brokenMarkerColor,
-          "transparent",
-        ),
-        pointHoverBackgroundColor: buildMarkerColors(
-          breakMarkerFlags.opponentBreaks,
-          brokenMarkerColor,
-          opponentPointFill,
-        ),
-        pointBorderColor: buildMarkerColors(
-          breakMarkerFlags.opponentBreaks,
-          theme.palette.background.paper,
-          "transparent",
-        ),
-        pointHoverBorderColor: buildMarkerColors(
-          breakMarkerFlags.opponentBreaks,
-          theme.palette.background.paper,
-          alpha(opponentSeriesColor, 0.72),
-        ),
-        fill: false,
-      },
-    ],
+    datasets: [...scoreDatasets, ...overlayDatasets],
   };
 
   const applyTooltipActivation = (
@@ -420,8 +526,15 @@ export default function NewGameScoreProgression({
       const nextPoint =
         event.type === "mouseout"
           ? null
-          : getNearestSeriesPoint(chart, event, chartData.datasets);
+          : getNearestSeriesPoint(chart, event, scoreDatasets);
       chart.canvas.style.cursor = nextPoint ? "pointer" : "default";
+
+      if (event.type === "click" && nextPoint && nextPoint.dataIndex > 0) {
+        const point = timeline.points[nextPoint.dataIndex - 1];
+        if (point) {
+          onPointSelect?.(point.point_id);
+        }
+      }
 
       if (applyTooltipActivation(chart, nextPoint, false)) {
         args.changed = true;
@@ -553,6 +666,19 @@ export default function NewGameScoreProgression({
             color={brokenMarkerColor}
             label={t("charts.brokenMarker")}
           />
+          {specialPointMarkers.length > 0 && (
+            <LegendMarkerItem
+              color={specialPointMarkerColor}
+              label={t("charts.specialPointMarker", "Galaxy/Universe point")}
+            />
+          )}
+          {selectedPointMarkers.length > 0 && (
+            <LegendMarkerItem
+              color={selectedMarkerColor}
+              label={t("charts.selectedPointMarker", "Selected point")}
+              variant="ring"
+            />
+          )}
         </Box>
       </Box>
 

@@ -150,6 +150,7 @@ def test_get_game_point_timeline_returns_cumulative_score_and_halftime_marker(db
         .number(2).start_at(base_time.replace(minute=5)).defense().lost().with_duration(80).with_turnover(40).complete()
     PointBuilder(db_session, scenario.game.id, player_ids) \
         .number(3).start_at(base_time.replace(minute=10)).offense().won().with_duration(60).complete()
+    scenario.game.status = models.GameStatusEnum.ended
 
     halftime_timestamp = datetime(2024, 1, 1, 10, 3, tzinfo=timezone.utc)
     db_session.add(
@@ -174,6 +175,12 @@ def test_get_game_point_timeline_returns_cumulative_score_and_halftime_marker(db
     assert timeline["points"][0]["duration_seconds"] == 45
     assert timeline["points"][0]["our_turnovers"] == 1
     assert timeline["points"][1]["opponent_turnovers"] == 1
+    assert "galaxy_point" in timeline["points"][0]["markers"]
+    assert "universe_point" in timeline["points"][2]["markers"]
+    assert [moment["type"] for moment in timeline["key_moments"]] == [
+        "universe_point",
+        "galaxy_point",
+    ]
 
 
 def test_get_competition_team_stats_not_found(db_session):

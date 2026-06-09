@@ -2,6 +2,7 @@ import type { GameStatus } from "./enums";
 import type { Halftime } from "./halftimes";
 import type { Player } from "./players";
 import type { PointWithPlayers } from "./points";
+import type { GamePointTimeline } from "./statistics";
 import type { Stoppage } from "./stoppages";
 import type { TurnoverWithPlayer } from "./turnovers";
 
@@ -43,6 +44,7 @@ export interface GameDetail extends GameWithScore {
   points: PointWithPlayers[];
   players: Player[];
   halftime?: Halftime | null;
+  timeline?: GamePointTimeline | null;
 }
 
 export interface GameLiveState {

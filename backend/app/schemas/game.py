@@ -56,11 +56,45 @@ class GameWithScore(Game):
     competition_name: str
 
 
+class GameHistoryTimelinePoint(BaseModel):
+    """Public-safe point-level game history timeline entry."""
+    point_id: int
+    point_number: int
+    starting_on_offense: bool
+    won: bool
+    field_side: Optional[str] = None
+    duration_seconds: int
+    our_turnovers: int
+    opponent_turnovers: int
+    our_score_after: int
+    opponent_score_after: int
+    markers: List[str] = Field(default_factory=list)
+
+
+class GameHistoryKeyMoment(BaseModel):
+    """Public-safe notable game history moment."""
+    id: str
+    type: str
+    primary_point_id: int
+    point_ids: List[int]
+    importance: int
+    reasons: List[str]
+
+
+class GameHistoryTimeline(BaseModel):
+    """Public-safe game history timeline annotations."""
+    game_id: int
+    halftime_after_point_number: Optional[int]
+    points: List[GameHistoryTimelinePoint]
+    key_moments: List[GameHistoryKeyMoment] = Field(default_factory=list)
+
+
 class GameDetail(GameWithScore):
     """Complete game information with all points and players"""
     points: List['PointWithPlayers']  # Forward reference to avoid circular import
     players: List['Player']  # Selected players for this game
     halftime: Optional['Halftime'] = None
+    timeline: Optional[GameHistoryTimeline] = None
 
 
 class GameLiveState(BaseModel):

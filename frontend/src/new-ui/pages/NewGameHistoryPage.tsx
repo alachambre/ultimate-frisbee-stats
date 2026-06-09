@@ -4,16 +4,21 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
+import ShieldIcon from "@mui/icons-material/Shield";
 import {
   Box,
   Button,
+  ButtonBase,
   Chip,
   Container,
+  Divider,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import type { TFunction } from "i18next";
 import { Suspense, lazy, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,6 +28,8 @@ import LoadingState from "../../components/shared/LoadingState";
 import { useGameDetailPageData } from "../../pages/hooks/useGameDetailPageData";
 import type {
   GameDetail,
+  GameKeyMoment,
+  GamePointTimeline,
   Halftime,
   PointWithPlayers,
   TurnoverWithPlayer,
@@ -53,6 +60,12 @@ function isPointHistoryItem(
   item: HistoryItem,
 ): item is Extract<HistoryItem, { type: "point" }> {
   return item.type === "point";
+}
+
+function isHalftimeHistoryItem(
+  item: HistoryItem,
+): item is Extract<HistoryItem, { type: "halftime" }> {
+  return item.type === "halftime";
 }
 
 function getTimestamp(point: PointWithPlayers): string {
@@ -94,6 +107,136 @@ function buildTurnoversByPointId(turnovers?: TurnoverWithPlayer[]) {
   }, new Map<number, TurnoverWithPlayer[]>());
 }
 
+function buildPointMap(points: PointWithPlayers[]) {
+  return points.reduce((pointsById, point) => {
+    pointsById.set(point.id, point);
+    return pointsById;
+  }, new Map<number, PointWithPlayers>());
+}
+
+type PointTone = "break" | "broken" | "default" | "effort" | "special";
+
+function buildTimelineMarkersByPointId(timeline: GamePointTimeline | null) {
+  return (timeline?.points ?? []).reduce((markersByPointId, point) => {
+    markersByPointId.set(point.point_id, point.markers ?? []);
+    return markersByPointId;
+  }, new Map<number, string[]>());
+}
+
+function hasTimelineMarker(markers: string[], marker: string) {
+  return markers.includes(marker);
+}
+
+function getPointTone(point: PointWithPlayers, markers: string[]): PointTone {
+  if (
+    hasTimelineMarker(markers, "galaxy_point") ||
+    hasTimelineMarker(markers, "universe_point")
+  ) {
+    return "special";
+  }
+
+  if (point.status === "completed" && point.won !== null) {
+    if (point.starting_on_offense && !point.won) {
+      return "broken";
+    }
+
+    if (!point.starting_on_offense && point.won) {
+      return "break";
+    }
+  }
+
+  if (
+    hasTimelineMarker(markers, "long_point") ||
+    hasTimelineMarker(markers, "high_turn_point")
+  ) {
+    return "effort";
+  }
+
+  return "default";
+}
+
+function getToneAccentColor(tone: PointTone, theme: Theme) {
+  switch (tone) {
+    case "break":
+      return theme.colors.performance.veryHigh;
+    case "broken":
+      return theme.colors.performance.veryLow;
+    case "effort":
+      return theme.colors.gameHistory.effort;
+    case "special":
+      return theme.colors.performance.medium;
+    default:
+      return theme.colors.newUi.primary;
+  }
+}
+
+function getPointAccentColor(
+  point: PointWithPlayers,
+  markers: string[],
+  theme: Theme,
+) {
+  return getToneAccentColor(getPointTone(point, markers), theme);
+}
+
+function getPointOutcomeAccentColor(point: PointWithPlayers, theme: Theme) {
+  if (point.status === "completed" && point.won !== null) {
+    if (!point.starting_on_offense && point.won) {
+      return theme.colors.performance.veryHigh;
+    }
+
+    if (point.starting_on_offense && !point.won) {
+      return theme.colors.performance.veryLow;
+    }
+  }
+
+  return theme.colors.newUi.primary;
+}
+
+function getSideAccessibilityLabel(point: PointWithPlayers, t: TFunction) {
+  return point.starting_on_offense
+    ? t("points:history.startedOnOffense", "Started on offense")
+    : t("points:history.startedOnDefense", "Started on defense");
+}
+
+function PointSideIconBadge({
+  point,
+  size = 24,
+  t,
+}: {
+  point: PointWithPlayers;
+  size?: number;
+  t: TFunction;
+}) {
+  return (
+    <Box
+      sx={(theme) => ({
+        alignItems: "center",
+        bgcolor: point.starting_on_offense
+          ? theme.colors.newUi.primarySoft
+          : alpha(theme.palette.success.main, 0.1),
+        borderRadius: "50%",
+        color: point.starting_on_offense
+          ? theme.colors.newUi.primary
+          : theme.palette.success.dark,
+        display: "inline-flex",
+        flexShrink: 0,
+        height: size,
+        justifyContent: "center",
+        width: size,
+        "& .MuiSvgIcon-root": {
+          fontSize: Math.max(14, size - 8),
+        },
+      })}
+    >
+      {point.starting_on_offense ? (
+        <FlashOnIcon titleAccess={getSideAccessibilityLabel(point, t)} />
+      ) : (
+        <ShieldIcon titleAccess={getSideAccessibilityLabel(point, t)} />
+      )}
+    </Box>
+  );
+}
+
 function getRunningPoint(points: PointWithPlayers[]) {
   return [...points]
     .sort((left, right) => right.point_number - left.point_number)
@@ -115,6 +258,141 @@ function buildHistorySummary(points: PointWithPlayers[]) {
     pointCount: points.length,
     runningPoint: getRunningPoint(points),
   };
+}
+
+function formatPointDuration(totalSeconds?: number | null): string | null {
+  if (totalSeconds == null) {
+    return null;
+  }
+
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getPointOutcomeLabel(point: PointWithPlayers, t: TFunction) {
+  if (point.status === "running") {
+    return t("points:status.running", "Running");
+  }
+
+  if (point.status !== "completed" || point.won === null) {
+    return t(`points:status.${point.status}`, point.status);
+  }
+
+  if (point.starting_on_offense) {
+    if (point.won) {
+      return (point.our_turnovers ?? 0) === 0
+        ? t("points:history.cleanHold", "Clean hold")
+        : t("points:history.hold", "Hold");
+    }
+
+    return t("points:history.broken", "Broken");
+  }
+
+  return point.won
+    ? t("points:history.breakOutcome", "Break")
+    : t("points:history.lost", "Lost");
+}
+
+function getMomentAccentColor(momentType: string, theme: Theme) {
+  switch (momentType) {
+    case "galaxy_point":
+    case "universe_point":
+      return theme.colors.performance.medium;
+    case "broken":
+      return theme.colors.performance.veryLow;
+    case "break_sequence":
+    case "break":
+      return theme.colors.performance.veryHigh;
+    case "high_turn_point":
+    case "long_point":
+      return theme.colors.gameHistory.effort;
+    default:
+      return theme.colors.newUi.primary;
+  }
+}
+
+function getMomentTitle(moment: GameKeyMoment, t: TFunction) {
+  return t(
+    `newUiPages.gameHistory.keyMomentTypes.${moment.type}`,
+    moment.type,
+  );
+}
+
+function getPointCharacteristicMoment(
+  pointId: number | null,
+  moments: GameKeyMoment[],
+) {
+  if (pointId === null) {
+    return null;
+  }
+
+  return moments
+    .filter((moment) => moment.point_ids.includes(pointId))
+    .sort((left, right) => {
+      if (left.importance !== right.importance) {
+        return right.importance - left.importance;
+      }
+
+      return Math.min(...left.point_ids) - Math.min(...right.point_ids);
+    })[0] ?? null;
+}
+
+function getPointMarkerCharacteristicLabel(markers: string[], t: TFunction) {
+  const marker = [
+    "universe_point",
+    "galaxy_point",
+    "high_turn_point",
+    "long_point",
+    "broken",
+    "break",
+  ].find((candidate) => hasTimelineMarker(markers, candidate));
+
+  return marker
+    ? t(`newUiPages.gameHistory.keyMomentTypes.${marker}`, marker)
+    : null;
+}
+
+function getMomentDescription(moment: GameKeyMoment, t: TFunction) {
+  return t(
+    `newUiPages.gameHistory.keyMomentDescriptions.${moment.type}`,
+    "",
+  );
+}
+
+function getPointRangeLabel(
+  moment: GameKeyMoment,
+  pointsById: Map<number, PointWithPlayers>,
+  t: TFunction,
+) {
+  const pointNumbers = moment.point_ids
+    .map((pointId) => pointsById.get(pointId)?.point_number)
+    .filter((pointNumber): pointNumber is number => pointNumber !== undefined)
+    .sort((left, right) => left - right);
+
+  if (pointNumbers.length === 0) {
+    return null;
+  }
+
+  if (pointNumbers.length === 1) {
+    return t("newUiPages.gameHistory.pointLabel", {
+      pointNumber: pointNumbers[0],
+    });
+  }
+
+  return t("newUiPages.gameHistory.pointRangeLabel", {
+    firstPointNumber: pointNumbers[0],
+    lastPointNumber: pointNumbers[pointNumbers.length - 1],
+  });
+}
+
+function getCurrentPointIds(game: GameDetail | null) {
+  if (!game || game.status !== "started") {
+    return new Set<number>();
+  }
+
+  const currentPoint = getRunningPoint(game.points);
+  return currentPoint ? new Set([currentPoint.id]) : new Set<number>();
 }
 
 function getResultLabel(game: GameDetail, t: TFunction) {
@@ -147,58 +425,629 @@ function getLiveScoreContext(game: GameDetail, t: TFunction) {
   });
 }
 
-function NewGameHistoryHalftimeItem({
-  halftime,
+function KeyMomentsSection({
+  moments,
+  onSelectPoint,
+  pointsById,
+  scoreByPointId,
+  selectedPointId,
+  t,
 }: {
-  halftime: Halftime;
+  moments: GameKeyMoment[];
+  onSelectPoint: (pointId: number) => void;
+  pointsById: Map<number, PointWithPlayers>;
+  scoreByPointId: Map<number, { opponent: number; our: number }>;
+  selectedPointId: number | null;
+  t: TFunction;
 }) {
-  const { t, i18n } = useTranslation(["points"]);
+  if (moments.length === 0) {
+    return null;
+  }
 
   return (
     <Paper
       elevation={0}
       sx={(theme) => ({
-        bgcolor: alpha(theme.palette.warning.main, 0.06),
-        border: `1px solid ${alpha(theme.palette.warning.main, 0.22)}`,
+        border: `1px solid ${theme.palette.divider}`,
         borderRadius: 1,
-        p: { xs: 2, sm: 2.5 },
+        p: { xs: 1.5, sm: 2 },
       })}
     >
-      <Stack alignItems="flex-start" direction="row" spacing={1.5}>
-        <Box
-          sx={(theme) => ({
-            alignItems: "center",
-            bgcolor: alpha(theme.palette.warning.main, 0.14),
-            borderRadius: "50%",
-            color: theme.palette.warning.dark,
-            display: "inline-flex",
-            flexShrink: 0,
-            height: 30,
-            justifyContent: "center",
-            width: 30,
+      <Stack
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        spacing={0.5}
+        sx={{ mb: 1.5 }}
+      >
+        <Typography fontWeight={900} variant="h6">
+          {t("newUiPages.gameHistory.keyMoments")}
+        </Typography>
+        <Typography color="text.secondary" fontWeight={700} variant="body2">
+          {t("newUiPages.gameHistory.keyMomentCount", {
+            count: moments.length,
           })}
-        >
-          <AccessTimeFilledIcon fontSize="small" />
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography fontWeight={900} variant="subtitle1">
-            {t("points:history.halfTime")}
-          </Typography>
-          <Typography color="text.secondary" variant="body2">
-            {formatDateTime(halftime.halftime_timestamp, i18n.resolvedLanguage)}
-          </Typography>
-          {halftime.comments && (
-            <Typography
-              color="text.secondary"
-              sx={{ mt: 1, whiteSpace: "pre-wrap" }}
-              variant="body2"
+        </Typography>
+      </Stack>
+
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1,
+          overflowX: { xs: "auto", md: "visible" },
+          pb: { xs: 0.5, md: 0 },
+        }}
+      >
+        {moments.map((moment) => {
+          const point = pointsById.get(moment.primary_point_id);
+          if (!point) {
+            return null;
+          }
+
+          const scoreAfter = scoreByPointId.get(point.id);
+          const isSelected = selectedPointId === point.id;
+          const pointRangeLabel = getPointRangeLabel(moment, pointsById, t);
+          const description = getMomentDescription(moment, t);
+          const durationLabel = formatPointDuration(point.duration_seconds);
+          const turnCount =
+            (point.our_turnovers ?? 0) + (point.opponent_turnovers ?? 0);
+          const isSpecialMoment =
+            moment.type === "galaxy_point" || moment.type === "universe_point";
+
+          return (
+            <ButtonBase
+              aria-label={t("newUiPages.gameHistory.selectKeyMoment", {
+                label: getMomentTitle(moment, t),
+                pointNumber: point.point_number,
+              })}
+              aria-pressed={isSelected}
+              key={moment.id}
+              onClick={() => onSelectPoint(point.id)}
+              sx={(theme) => {
+                const accent = getMomentAccentColor(moment.type, theme);
+                return {
+                  alignItems: "stretch",
+                  border: `1px solid ${
+                    isSelected
+                      ? alpha(accent, 0.52)
+                      : alpha(theme.palette.text.primary, 0.1)
+                  }`,
+                  borderRadius: 1,
+                  flex: { xs: "0 0 244px", md: "1 1 0" },
+                  justifyContent: "flex-start",
+                  minHeight: 130,
+                  overflow: "hidden",
+                  textAlign: "left",
+                  transition: theme.transitions.create(
+                    ["background-color", "border-color", "box-shadow"],
+                    { duration: theme.transitions.duration.short },
+                  ),
+                  "&:hover": {
+                    bgcolor: alpha(accent, 0.05),
+                    borderColor: alpha(accent, 0.42),
+                  },
+                  "&:focus-visible": {
+                    boxShadow: `0 0 0 3px ${alpha(accent, 0.22)}`,
+                    outline: 0,
+                  },
+                };
+              }}
+              type="button"
             >
-              {halftime.comments}
+              <Box sx={{ display: "flex", minWidth: 0, width: "100%" }}>
+                <Box
+                  aria-hidden="true"
+                  sx={(theme) => ({
+                    bgcolor: getMomentAccentColor(moment.type, theme),
+                    flexShrink: 0,
+                    width: 5,
+                  })}
+                />
+                <Stack spacing={1} sx={{ minWidth: 0, p: 1.25, width: "100%" }}>
+                  <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={1}
+                  >
+                    <Stack
+                      alignItems="center"
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ minWidth: 0 }}
+                    >
+                      <PointSideIconBadge point={point} t={t} />
+                      {isSpecialMoment && (
+                        <EmojiEventsIcon
+                          titleAccess={getMomentTitle(moment, t)}
+                          sx={(theme) => ({
+                            color: getMomentAccentColor(moment.type, theme),
+                            flexShrink: 0,
+                            fontSize: 18,
+                          })}
+                        />
+                      )}
+                      <Typography component="p" fontWeight={900} noWrap variant="subtitle2">
+                        {getMomentTitle(moment, t)}
+                      </Typography>
+                    </Stack>
+                    {scoreAfter && (
+                      <Typography fontWeight={900} variant="body2">
+                        {scoreAfter.our} - {scoreAfter.opponent}
+                      </Typography>
+                    )}
+                  </Stack>
+                  {description && (
+                    <Typography
+                      color="text.secondary"
+                      sx={{
+                        display: "-webkit-box",
+                        overflow: "hidden",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                      }}
+                      variant="body2"
+                    >
+                      {description}
+                    </Typography>
+                  )}
+                  <Stack direction="row" flexWrap="wrap" gap={0.75}>
+                    {pointRangeLabel && (
+                      <Chip
+                        label={pointRangeLabel}
+                        size="small"
+                        sx={{ fontWeight: 800 }}
+                        variant="outlined"
+                      />
+                    )}
+                    <Chip
+                      label={getPointOutcomeLabel(point, t)}
+                      size="small"
+                      sx={(theme) => ({
+                        bgcolor: alpha(
+                          getPointOutcomeAccentColor(point, theme),
+                          0.1,
+                        ),
+                        color: getPointOutcomeAccentColor(point, theme),
+                        fontWeight: 800,
+                      })}
+                    />
+                    {moment.type === "long_point" && durationLabel && (
+                      <Chip
+                        label={durationLabel}
+                        size="small"
+                        sx={{ fontWeight: 800 }}
+                        variant="outlined"
+                      />
+                    )}
+                    {moment.type === "high_turn_point" && (
+                      <Chip
+                        label={t("newUiPages.gameHistory.turnSummary", {
+                          count: turnCount,
+                        })}
+                        size="small"
+                        sx={{ fontWeight: 800 }}
+                        variant="outlined"
+                      />
+                    )}
+                  </Stack>
+                </Stack>
+              </Box>
+            </ButtonBase>
+          );
+        })}
+      </Box>
+    </Paper>
+  );
+}
+
+function PointSelectButton({
+  isCurrent,
+  isSelected,
+  markers,
+  onSelect,
+  point,
+  scoreAfter,
+  t,
+  variant,
+}: {
+  isCurrent: boolean;
+  isSelected: boolean;
+  markers: string[];
+  onSelect: () => void;
+  point: PointWithPlayers;
+  scoreAfter?: { opponent: number; our: number };
+  t: TFunction;
+  variant: "rail" | "strip";
+}) {
+  const durationLabel = formatPointDuration(point.duration_seconds);
+  const turnCount = (point.our_turnovers ?? 0) + (point.opponent_turnovers ?? 0);
+
+  return (
+    <ButtonBase
+      aria-label={t("newUiPages.gameHistory.selectPoint", {
+        pointNumber: point.point_number,
+      })}
+      aria-pressed={isSelected}
+      onClick={onSelect}
+      sx={(theme) => {
+        const accent = getPointAccentColor(point, markers, theme);
+        return {
+          alignItems: "stretch",
+          bgcolor: isSelected ? alpha(accent, 0.07) : "background.paper",
+          border: `1px solid ${
+            isSelected
+              ? alpha(accent, 0.46)
+              : alpha(theme.palette.text.primary, 0.08)
+          }`,
+          borderRadius: 1,
+          boxShadow: isSelected
+            ? `0 8px 20px ${alpha(accent, 0.1)}`
+            : "none",
+          flex: variant === "strip" ? "0 0 220px" : "0 0 auto",
+          justifyContent: "flex-start",
+          overflow: "hidden",
+          textAlign: "left",
+          transition: theme.transitions.create(
+            ["background-color", "border-color", "box-shadow"],
+            { duration: theme.transitions.duration.short },
+          ),
+          width: variant === "rail" ? "100%" : "auto",
+          "&:hover": {
+            bgcolor: alpha(accent, 0.05),
+            borderColor: alpha(accent, 0.34),
+          },
+          "&:focus-visible": {
+            boxShadow: `0 0 0 3px ${alpha(accent, 0.2)}`,
+            outline: 0,
+          },
+        };
+      }}
+      type="button"
+    >
+      <Box sx={{ display: "flex", minWidth: 0, width: "100%" }}>
+        <Box
+          aria-hidden="true"
+          sx={(theme) => ({
+            bgcolor: getPointAccentColor(point, markers, theme),
+            flexShrink: 0,
+            width: 4,
+          })}
+        />
+        <Stack
+          direction={variant === "rail" ? "row" : "column"}
+          justifyContent="space-between"
+          spacing={1}
+          sx={{ minWidth: 0, p: 1.2, width: "100%" }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Stack alignItems="center" direction="row" spacing={0.75}>
+              <PointSideIconBadge point={point} t={t} />
+              <Typography component="p" fontWeight={900} noWrap variant="subtitle2">
+                {t("newUiPages.gameHistory.pointLabel", {
+                  pointNumber: point.point_number,
+                })}
+              </Typography>
+              {isCurrent && (
+                <Chip
+                  label={t("newUiPages.gameHistory.current")}
+                  size="small"
+                  sx={(theme) => ({
+                    bgcolor: theme.colors.newUi.primarySoft,
+                    color: theme.colors.newUi.primary,
+                    fontWeight: 800,
+                    height: 22,
+                  })}
+                />
+              )}
+            </Stack>
+            <Stack
+              alignItems="center"
+              direction="row"
+              flexWrap="wrap"
+              gap={0.75}
+              sx={{ mt: 0.75 }}
+            >
+              <Typography color="text.secondary" variant="caption">
+                {getPointOutcomeLabel(point, t)}
+              </Typography>
+              {durationLabel && (
+                <Typography color="text.secondary" variant="caption">
+                  {durationLabel}
+                </Typography>
+              )}
+              <Typography color="text.secondary" variant="caption">
+                {t("newUiPages.gameHistory.turnSummary", {
+                  count: turnCount,
+                })}
+              </Typography>
+            </Stack>
+          </Box>
+          {scoreAfter && (
+            <Typography
+              component="p"
+              fontWeight={900}
+              sx={{ whiteSpace: "nowrap" }}
+              variant="subtitle2"
+            >
+              {scoreAfter.our} - {scoreAfter.opponent}
             </Typography>
           )}
-        </Box>
+        </Stack>
+      </Box>
+    </ButtonBase>
+  );
+}
+
+function HalftimeListItem({
+  halftime,
+  language,
+  t,
+  variant,
+}: {
+  halftime: Halftime;
+  language?: string;
+  t: TFunction;
+  variant: "rail" | "strip";
+}) {
+  return (
+    <Box
+      sx={(theme) => ({
+        alignItems: "stretch",
+        bgcolor: alpha(theme.colors.performance.medium, 0.07),
+        border: `1px dashed ${alpha(theme.colors.performance.medium, 0.42)}`,
+        borderRadius: 1,
+        display: "flex",
+        flex: variant === "strip" ? "0 0 220px" : "0 0 auto",
+        overflow: "hidden",
+        textAlign: "left",
+        width: variant === "rail" ? "100%" : "auto",
+      })}
+    >
+      <Box
+        aria-hidden="true"
+        sx={(theme) => ({
+          bgcolor: theme.colors.performance.medium,
+          flexShrink: 0,
+          width: 4,
+        })}
+      />
+      <Stack
+        direction={variant === "rail" ? "row" : "column"}
+        justifyContent="space-between"
+        spacing={1}
+        sx={{ minWidth: 0, p: 1.2, width: "100%" }}
+      >
+        <Stack alignItems="center" direction="row" spacing={0.75} sx={{ minWidth: 0 }}>
+          <Box
+            sx={(theme) => ({
+              alignItems: "center",
+              bgcolor: alpha(theme.colors.performance.medium, 0.14),
+              borderRadius: "50%",
+              color: theme.palette.warning.dark,
+              display: "inline-flex",
+              flexShrink: 0,
+              height: 24,
+              justifyContent: "center",
+              width: 24,
+              "& .MuiSvgIcon-root": {
+                fontSize: 16,
+              },
+            })}
+          >
+            <AccessTimeFilledIcon titleAccess={t("points:history.halfTime")} />
+          </Box>
+          <Typography component="p" fontWeight={900} noWrap variant="subtitle2">
+            {t("points:history.halfTime")}
+          </Typography>
+        </Stack>
+        <Typography color="text.secondary" variant="caption">
+          {formatDateTime(halftime.halftime_timestamp, language)}
+        </Typography>
+        {halftime.comments && (
+          <Typography
+            color="text.secondary"
+            noWrap={variant === "rail"}
+            variant="caption"
+          >
+            {halftime.comments}
+          </Typography>
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
+function MobilePointSelector({
+  historyItems,
+  language,
+  currentPointIds,
+  markersByPointId,
+  onSelectPoint,
+  scoreByPointId,
+  selectedPointId,
+  t,
+}: {
+  historyItems: HistoryItem[];
+  language?: string;
+  currentPointIds: Set<number>;
+  markersByPointId: Map<number, string[]>;
+  onSelectPoint: (pointId: number) => void;
+  scoreByPointId: Map<number, { opponent: number; our: number }>;
+  selectedPointId: number | null;
+  t: TFunction;
+}) {
+  return (
+    <Paper
+      elevation={0}
+      sx={(theme) => ({
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 1,
+        display: { xs: "block", md: "none" },
+        p: 1.5,
+      })}
+    >
+      <Typography fontWeight={900} sx={{ mb: 1 }} variant="subtitle1">
+        {t("newUiPages.gameHistory.pointList")}
+      </Typography>
+      <Box sx={{ overflowX: "auto", pb: 0.5 }}>
+        <Stack direction="row" spacing={1} sx={{ width: "max-content" }}>
+          {historyItems.map((item) =>
+            isHalftimeHistoryItem(item) ? (
+              <HalftimeListItem
+                halftime={item.halftime}
+                key={item.id}
+                language={language}
+                t={t}
+                variant="strip"
+              />
+            ) : (
+              <PointSelectButton
+                isCurrent={currentPointIds.has(item.point.id)}
+                isSelected={selectedPointId === item.point.id}
+                key={item.id}
+                markers={markersByPointId.get(item.point.id) ?? []}
+                onSelect={() => onSelectPoint(item.point.id)}
+                point={item.point}
+                scoreAfter={scoreByPointId.get(item.point.id)}
+                t={t}
+                variant="strip"
+              />
+            ),
+          )}
+        </Stack>
+      </Box>
+    </Paper>
+  );
+}
+
+function PointListRail({
+  historyItems,
+  language,
+  currentPointIds,
+  markersByPointId,
+  onSelectPoint,
+  scoreByPointId,
+  selectedPointId,
+  t,
+}: {
+  historyItems: HistoryItem[];
+  language?: string;
+  currentPointIds: Set<number>;
+  markersByPointId: Map<number, string[]>;
+  onSelectPoint: (pointId: number) => void;
+  scoreByPointId: Map<number, { opponent: number; our: number }>;
+  selectedPointId: number | null;
+  t: TFunction;
+}) {
+  const pointCount = historyItems.filter(isPointHistoryItem).length;
+
+  return (
+    <Paper
+      elevation={0}
+      sx={(theme) => ({
+        alignSelf: "start",
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 1,
+        display: { xs: "none", md: "block" },
+        maxHeight: "calc(100vh - 120px)",
+        overflow: "hidden",
+        position: "sticky",
+        top: 16,
+      })}
+    >
+      <Stack spacing={1.25} sx={{ p: 1.5 }}>
+        <Stack
+          alignItems="center"
+          direction="row"
+          justifyContent="space-between"
+          spacing={1}
+        >
+          <Typography fontWeight={900} variant="subtitle1">
+            {t("newUiPages.gameHistory.pointList")}
+          </Typography>
+          <Typography color="text.secondary" fontWeight={800} variant="caption">
+            {t("newUiPages.gameHistory.pointCount", {
+              count: pointCount,
+            })}
+          </Typography>
+        </Stack>
+        <Divider />
+        <Stack
+          spacing={0.8}
+          sx={{
+            maxHeight: "calc(100vh - 210px)",
+            overflowY: "auto",
+            pr: 0.5,
+          }}
+        >
+          {historyItems.map((item) =>
+            isHalftimeHistoryItem(item) ? (
+              <HalftimeListItem
+                halftime={item.halftime}
+                key={item.id}
+                language={language}
+                t={t}
+                variant="rail"
+              />
+            ) : (
+              <PointSelectButton
+                isCurrent={currentPointIds.has(item.point.id)}
+                isSelected={selectedPointId === item.point.id}
+                key={item.id}
+                markers={markersByPointId.get(item.point.id) ?? []}
+                onSelect={() => onSelectPoint(item.point.id)}
+                point={item.point}
+                scoreAfter={scoreByPointId.get(item.point.id)}
+                t={t}
+                variant="rail"
+              />
+            ),
+          )}
+        </Stack>
       </Stack>
     </Paper>
+  );
+}
+
+function SelectedPointDetail({
+  characteristicLabel,
+  markers,
+  point,
+  scoreAfter,
+  t,
+  turnovers,
+}: {
+  characteristicLabel?: string;
+  markers: string[];
+  point: PointWithPlayers | null;
+  scoreAfter?: { opponent: number; our: number };
+  t: TFunction;
+  turnovers: TurnoverWithPlayer[];
+}) {
+  if (!point) {
+    return null;
+  }
+
+  return (
+    <Stack spacing={1.25}>
+      <Stack
+        alignItems="center"
+        direction="row"
+        spacing={1}
+      >
+        <Typography component="h2" fontWeight={900} variant="h6">
+          {t("newUiPages.gameHistory.selectedPoint")}
+        </Typography>
+      </Stack>
+      <NewGameHistoryPointItem
+        accentColor={(theme) => getPointAccentColor(point, markers, theme)}
+        characteristicLabel={characteristicLabel}
+        point={point}
+        scoreAfter={scoreAfter}
+        turnovers={turnovers}
+      />
+    </Stack>
   );
 }
 
@@ -206,7 +1055,7 @@ export default function NewGameHistoryPage() {
   const { t, i18n } = useTranslation(["navigation", "games", "points", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const [searchParams] = useSearchParams();
-  const [requestedExpandedPointId, setRequestedExpandedPointId] = useState<
+  const [requestedSelectedPointId, setRequestedSelectedPointId] = useState<
     number | null | undefined
   >(undefined);
   const source = searchParams.get("from");
@@ -259,12 +1108,15 @@ export default function NewGameHistoryPage() {
       return null;
     }
 
-    return buildGamePointTimelineFromPoints(
-      game.id,
-      game.points,
-      game.halftime,
+    return (
+      game.timeline ??
+      buildGamePointTimelineFromPoints(game.id, game.points, game.halftime)
     );
   }, [game]);
+  const markersByPointId = useMemo(
+    () => buildTimelineMarkersByPointId(scoreTimeline),
+    [scoreTimeline],
+  );
   const historySummary = useMemo(
     () => buildHistorySummary(game?.points ?? []),
     [game?.points],
@@ -273,17 +1125,52 @@ export default function NewGameHistoryPage() {
     () => buildTurnoversByPointId(gameTurnovers ?? []),
     [gameTurnovers],
   );
-  const firstPointId = historyItems.find(isPointHistoryItem)?.point.id;
-  const requestedPointIdIsAvailable = historyItems.some(
-    (item) =>
-      item.type === "point" && item.point.id === requestedExpandedPointId,
+  const pointItems = useMemo(
+    () => historyItems.filter(isPointHistoryItem),
+    [historyItems],
   );
-  const expandedPointId =
-    requestedExpandedPointId === null
+  const pointsById = useMemo(
+    () => buildPointMap(game?.points ?? []),
+    [game?.points],
+  );
+  const currentPointIds = useMemo(() => getCurrentPointIds(game ?? null), [game]);
+  const requestedPointIdIsAvailable =
+    requestedSelectedPointId !== undefined &&
+    requestedSelectedPointId !== null &&
+    pointsById.has(requestedSelectedPointId);
+  const keyMoments = scoreTimeline?.key_moments ?? [];
+  const firstKeyMomentPointId = keyMoments.find((moment) =>
+    pointsById.has(moment.primary_point_id),
+  )?.primary_point_id;
+  const latestPointId = pointItems[0]?.point.id ?? null;
+  const activePointId =
+    game?.status === "started" ? historySummary.runningPoint?.id : undefined;
+  const selectedPointId =
+    requestedSelectedPointId === null
       ? null
       : requestedPointIdIsAvailable
-        ? requestedExpandedPointId
-        : firstPointId;
+        ? requestedSelectedPointId
+        : activePointId ?? firstKeyMomentPointId ?? latestPointId;
+  const selectedPoint = selectedPointId ? pointsById.get(selectedPointId) ?? null : null;
+  const selectedScore = selectedPointId
+    ? scoreByPointId.get(selectedPointId)
+    : undefined;
+  const selectedMarkers = selectedPointId
+    ? markersByPointId.get(selectedPointId) ?? []
+    : [];
+  const selectedCharacteristicMoment = getPointCharacteristicMoment(
+    selectedPointId,
+    keyMoments,
+  );
+  const selectedCharacteristicLabel = selectedCharacteristicMoment
+    ? getMomentTitle(selectedCharacteristicMoment, t)
+    : getPointMarkerCharacteristicLabel(selectedMarkers, t) ?? undefined;
+  const selectedTurnovers = selectedPointId
+    ? turnoversByPointId.get(selectedPointId) ?? []
+    : [];
+  const handleSelectPoint = (pointId: number) => {
+    setRequestedSelectedPointId(pointId);
+  };
 
   if (isLoading) {
     return <LoadingState message={t("newUiPages.gameHistory.loading")} />;
@@ -587,7 +1474,9 @@ export default function NewGameHistoryPage() {
           {scoreTimeline && scoreTimeline.points.length > 0 && (
             <Suspense fallback={null}>
               <LazyNewGameScoreProgression
+                onPointSelect={handleSelectPoint}
                 opponentName={game.opponent_name}
+                selectedPointId={selectedPointId}
                 teamName={game.team_name}
                 timeline={scoreTimeline}
               />
@@ -608,28 +1497,57 @@ export default function NewGameHistoryPage() {
               <Typography>{t("newUiPages.gameHistory.empty")}</Typography>
             </Paper>
           ) : (
-            <Stack spacing={1.5}>
-              {historyItems.map((item) =>
-                item.type === "point" ? (
-                  <NewGameHistoryPointItem
-                    expanded={item.point.id === expandedPointId}
-                    key={item.id}
-                    onExpandedChange={(isExpanded) =>
-                      setRequestedExpandedPointId(
-                        isExpanded ? item.point.id : null,
-                      )
-                    }
-                    point={item.point}
-                    scoreAfter={scoreByPointId.get(item.point.id)}
-                    turnovers={turnoversByPointId.get(item.point.id) ?? []}
+            <Stack spacing={2}>
+              <KeyMomentsSection
+                moments={keyMoments}
+                onSelectPoint={handleSelectPoint}
+                pointsById={pointsById}
+                scoreByPointId={scoreByPointId}
+                selectedPointId={selectedPointId}
+                t={t}
+              />
+
+              <MobilePointSelector
+                historyItems={historyItems}
+                language={i18n.resolvedLanguage}
+                currentPointIds={currentPointIds}
+                markersByPointId={markersByPointId}
+                onSelectPoint={handleSelectPoint}
+                scoreByPointId={scoreByPointId}
+                selectedPointId={selectedPointId}
+                t={t}
+              />
+
+              <Box
+                sx={{
+                  alignItems: "start",
+                  display: "grid",
+                  gap: 2,
+                  gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) 360px" },
+                }}
+              >
+                <Stack spacing={2}>
+                  <SelectedPointDetail
+                    characteristicLabel={selectedCharacteristicLabel}
+                    markers={selectedMarkers}
+                    point={selectedPoint}
+                    scoreAfter={selectedScore}
+                    t={t}
+                    turnovers={selectedTurnovers}
                   />
-                ) : (
-                  <NewGameHistoryHalftimeItem
-                    halftime={item.halftime}
-                    key={item.id}
-                  />
-                ),
-              )}
+                </Stack>
+
+                <PointListRail
+                  historyItems={historyItems}
+                  language={i18n.resolvedLanguage}
+                  currentPointIds={currentPointIds}
+                  markersByPointId={markersByPointId}
+                  onSelectPoint={handleSelectPoint}
+                  scoreByPointId={scoreByPointId}
+                  selectedPointId={selectedPointId}
+                  t={t}
+                />
+              </Box>
             </Stack>
           )}
         </Stack>

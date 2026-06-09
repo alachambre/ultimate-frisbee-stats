@@ -2,7 +2,7 @@
 Statistics schemas
 """
 from datetime import datetime, timezone
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 from typing import Optional
 from enum import Enum
 
@@ -370,6 +370,20 @@ class GamePointTimelinePoint(BaseModel):
     opponent_turnovers: int
     our_score_after: int
     opponent_score_after: int
+    markers: list[str] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
+
+
+class GameKeyMoment(BaseModel):
+    """Backend-owned notable moment for a game timeline."""
+    id: str
+    type: str
+    primary_point_id: int
+    point_ids: list[int]
+    importance: int
+    reasons: list[str]
 
     class Config:
         from_attributes = True
@@ -380,6 +394,7 @@ class GamePointTimeline(BaseModel):
     game_id: int
     halftime_after_point_number: Optional[int]
     points: list[GamePointTimelinePoint]
+    key_moments: list[GameKeyMoment] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

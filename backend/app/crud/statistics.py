@@ -7,6 +7,7 @@ from typing import Callable, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app import models
 from app.crud.statistics_dataset import (
     StatisticsScope,
     build_statistics_dataset,
@@ -21,6 +22,7 @@ from app.crud.statistics_calculations import (
     build_team_team_stats,
 )
 from app.crud.statistics_evolution import get_team_evolution
+from app.crud.statistics_key_moments import build_timeline_markers_and_key_moments
 from app.crud.statistics_queries import (
     get_completed_points,
 )
@@ -246,13 +248,24 @@ def get_game_point_timeline(
             "opponent_score_after": score_after[1],
         })
 
+    halftime_after_point_number = _get_halftime_after_point_number(
+        all_completed_points,
+        game.halftime,
+    )
+    markers_by_point_id, key_moments = build_timeline_markers_and_key_moments(
+        timeline_points,
+        halftime_after_point_number=halftime_after_point_number,
+        final_point_id=all_completed_points[-1].id if all_completed_points else None,
+        is_game_ended=game.status == models.GameStatusEnum.ended,
+    )
+    for point in timeline_points:
+        point["markers"] = markers_by_point_id.get(point["point_id"], [])
+
     return {
         "game_id": game_id,
-        "halftime_after_point_number": _get_halftime_after_point_number(
-            all_completed_points,
-            game.halftime,
-        ),
+        "halftime_after_point_number": halftime_after_point_number,
         "points": timeline_points,
+        "key_moments": key_moments,
     }
 
 

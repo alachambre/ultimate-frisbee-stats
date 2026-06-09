@@ -221,6 +221,103 @@ const game: GameDetail = {
       opponent_turnovers: 0,
     },
   ],
+  timeline: {
+    game_id: 1,
+    halftime_after_point_number: 6,
+    key_moments: [
+      {
+        id: "high_turn_point-2",
+        type: "high_turn_point",
+        primary_point_id: 2,
+        point_ids: [2],
+        importance: 82,
+        reasons: ["high_turn_point"],
+      },
+      {
+        id: "break-1",
+        type: "break",
+        primary_point_id: 1,
+        point_ids: [1],
+        importance: 78,
+        reasons: ["break"],
+      },
+      {
+        id: "long_point-1",
+        type: "long_point",
+        primary_point_id: 1,
+        point_ids: [1],
+        importance: 64,
+        reasons: ["long_point"],
+      },
+    ],
+    points: [
+      {
+        point_id: 1,
+        point_number: 1,
+        starting_on_offense: false,
+        won: true,
+        field_side: null,
+        duration_seconds: 180,
+        our_turnovers: 0,
+        opponent_turnovers: 1,
+        our_score_after: 1,
+        opponent_score_after: 0,
+        markers: ["break", "long_point"],
+      },
+      {
+        point_id: 2,
+        point_number: 2,
+        starting_on_offense: true,
+        won: false,
+        field_side: null,
+        duration_seconds: 150,
+        our_turnovers: 5,
+        opponent_turnovers: 0,
+        our_score_after: 1,
+        opponent_score_after: 1,
+        markers: ["broken", "high_turn_point"],
+      },
+      {
+        point_id: 4,
+        point_number: 4,
+        starting_on_offense: true,
+        won: true,
+        field_side: null,
+        duration_seconds: 60,
+        our_turnovers: 1,
+        opponent_turnovers: 0,
+        our_score_after: 2,
+        opponent_score_after: 1,
+        markers: [],
+      },
+      {
+        point_id: 5,
+        point_number: 5,
+        starting_on_offense: true,
+        won: true,
+        field_side: null,
+        duration_seconds: 45,
+        our_turnovers: 0,
+        opponent_turnovers: 0,
+        our_score_after: 3,
+        opponent_score_after: 1,
+        markers: [],
+      },
+      {
+        point_id: 6,
+        point_number: 6,
+        starting_on_offense: false,
+        won: false,
+        field_side: null,
+        duration_seconds: 50,
+        our_turnovers: 1,
+        opponent_turnovers: 0,
+        our_score_after: 3,
+        opponent_score_after: 2,
+        markers: [],
+      },
+    ],
+  },
 };
 
 function setupHandlers(gameResponse: GameDetail = game) {
@@ -329,24 +426,32 @@ describe("NewGameHistoryPage", () => {
     expect(screen.getByText("Spring Cup")).toBeInTheDocument();
     expect(screen.getAllByText("1 - 1").length).toBeGreaterThan(0);
     expect(screen.queryByText("Score after point")).not.toBeInTheDocument();
-    expect(screen.getByText("6 points")).toBeInTheDocument();
+    expect(screen.getAllByText("6 points").length).toBeGreaterThan(0);
     expect(screen.getByText("1 break")).toBeInTheDocument();
     expect(screen.getByText("1 broken")).toBeInTheDocument();
     expect(await screen.findByText("Game trends")).toBeInTheDocument();
     expect(screen.getByText("Score progression")).toBeInTheDocument();
-    expect(screen.getByText("Break point")).toBeInTheDocument();
+    expect(screen.getAllByText("Break point").length).toBeGreaterThan(0);
     expect(screen.getByText("Broken point")).toBeInTheDocument();
+    expect(screen.getAllByText("Long point")).toHaveLength(1);
+    expect(screen.getAllByText("High-turn point")).toHaveLength(1);
+    expect(screen.getByText("Key moments")).toBeInTheDocument();
+    expect(screen.getAllByText("Point list").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Selected point" })).toBeInTheDocument();
     expect(screen.getByTestId("chartjs-line")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Point 2" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Point 2 - High-turn point" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("3:00").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2:30").length).toBeGreaterThan(0);
-    expect(screen.getByText("5 turns")).toBeInTheDocument();
-    expect(screen.getByText("3 turns")).toBeInTheDocument();
-    expect(screen.getByText("Running")).toBeInTheDocument();
-    expect(screen.getByText("Hold")).toBeInTheDocument();
-    expect(screen.getByText("Clean hold")).toBeInTheDocument();
-    expect(screen.getByText("Lost")).toBeInTheDocument();
-    expect(screen.getByText("Broken")).toBeInTheDocument();
-    expect(screen.getByText("Break")).toBeInTheDocument();
+    expect(screen.getAllByText("5 turns").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("3 turns").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Running").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Hold").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Clean hold").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Lost").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Broken").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Break").length).toBeGreaterThan(0);
     expect(screen.queryByText("Won")).not.toBeInTheDocument();
     expect(screen.queryByText("Completed")).not.toBeInTheDocument();
     expect(screen.queryByText("Our turns")).not.toBeInTheDocument();
@@ -362,7 +467,8 @@ describe("NewGameHistoryPage", () => {
     expect(await screen.findByText("Call")).toBeInTheDocument();
     expect((await screen.findAllByText("Turnover")).length).toBeGreaterThan(0);
     expect(screen.queryByText("Our turnover")).not.toBeInTheDocument();
-    expect(screen.getByText("Short break")).toBeInTheDocument();
+    expect(screen.getAllByText("Half time").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Short break").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /Edit/i })).not.toBeInTheDocument();
   });
 
@@ -389,25 +495,24 @@ describe("NewGameHistoryPage", () => {
     expect(await screen.findByText("Point 3 running")).toBeInTheDocument();
     expect(screen.getByText("Game tied")).toBeInTheDocument();
     expect(screen.getByText("Current: defense")).toBeInTheDocument();
+    expect(screen.getAllByText("Current")).toHaveLength(2);
+    expect(screen.queryByText("Latest")).not.toBeInTheDocument();
   });
 
-  it("closes the previously expanded point when another point is opened", async () => {
+  it("updates the selected point when another point is selected", async () => {
     setupHandlers();
     const user = userEvent.setup();
 
     renderPage();
 
-    const point6Summary = await screen.findByRole("button", {
-      name: /Point 6/i,
+    expect(await screen.findByText("Force middle if they swing.")).toBeInTheDocument();
+
+    const point5Selectors = screen.getAllByRole("button", {
+      name: "Select point 5",
     });
-    const point5Summary = screen.getByRole("button", { name: /Point 5/i });
+    await user.click(point5Selectors[0]);
 
-    expect(point6Summary).toHaveAttribute("aria-expanded", "true");
-    expect(point5Summary).toHaveAttribute("aria-expanded", "false");
-
-    await user.click(point5Summary);
-
-    expect(point6Summary).toHaveAttribute("aria-expanded", "false");
-    expect(point5Summary).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("heading", { name: "Point 5" })).toBeInTheDocument();
+    expect(screen.queryByText("Force middle if they swing.")).not.toBeInTheDocument();
   });
 });

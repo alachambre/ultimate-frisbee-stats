@@ -57,6 +57,7 @@ def test_get_game_point_timeline_success(
 ):
     """Game timeline should expose completed points with cumulative score and halftime marker."""
     sample_game.players.extend(sample_players)
+    sample_game.status = models.GameStatusEnum.ended
     db_session.commit()
 
     point1 = models.Point(
@@ -136,6 +137,12 @@ def test_get_game_point_timeline_success(
         (1, 0),
         (1, 1),
         (2, 1),
+    ]
+    assert "galaxy_point" in data["points"][0]["markers"]
+    assert "universe_point" in data["points"][2]["markers"]
+    assert [moment["type"] for moment in data["key_moments"]] == [
+        "universe_point",
+        "galaxy_point",
     ]
 
 

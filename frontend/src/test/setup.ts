@@ -6,18 +6,46 @@ import { createElement, forwardRef } from "react";
 import { handlers, resetMockData } from "./mocks/handlers";
 import i18n from "../locales";
 
+type MockChartDataset = {
+  data?: unknown[];
+  label?: string;
+  pointBackgroundColor?: unknown;
+  pointBorderColor?: unknown;
+  pointBorderWidth?: unknown;
+  pointRadius?: unknown;
+  pointStyle?: unknown;
+};
+
+function serializeChartDatasets(props: Record<string, unknown>) {
+  const data = props.data as { datasets?: MockChartDataset[] } | undefined;
+
+  return JSON.stringify(
+    (data?.datasets ?? []).map((dataset) => ({
+      dataCount: dataset.data?.length ?? 0,
+      label: dataset.label ?? "",
+      pointBackgroundColor: dataset.pointBackgroundColor,
+      pointBorderColor: dataset.pointBorderColor,
+      pointBorderWidth: dataset.pointBorderWidth,
+      pointRadius: dataset.pointRadius,
+      pointStyle: dataset.pointStyle,
+    })),
+  );
+}
+
 vi.mock("react-chartjs-2", () => ({
-  Chart: forwardRef(function MockChart(props: Record<string, unknown>, _ref) {
+  Chart: forwardRef(function MockChart(props: Record<string, unknown>) {
     return createElement("div", {
       "data-testid": "chartjs-chart",
       "data-chart-type": props.type,
+      "data-chart-datasets": serializeChartDatasets(props),
       role: props.role ?? "img",
       "aria-label": props["aria-label"] ?? "Chart preview",
     });
   }),
-  Line: forwardRef(function MockLine(_props, _ref) {
+  Line: forwardRef(function MockLine(props: Record<string, unknown>) {
     return createElement("div", {
       "data-testid": "chartjs-line",
+      "data-chart-datasets": serializeChartDatasets(props),
       role: "img",
       "aria-label": "Chart preview",
     });

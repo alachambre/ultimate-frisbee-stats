@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import Dict, List, Optional, Sequence
 from datetime import datetime, timedelta, timezone
 from app import models, schemas
+from app.crud.statistics_key_moments import build_timeline_markers_and_key_moments
 from app.logging_config import get_logger
 
 logger = get_logger("crud.games")
@@ -240,6 +241,93 @@ def get_game_score(db: Session, game_id: int) -> tuple[int, int]:
     return get_game_scores_by_game_ids(db, [game_id]).get(game_id, (0, 0))
 
 
+def _point_reference_timestamp(point) -> Optional[datetime]:
+    return point.end_datetime or point.start_datetime or point.created_at
+
+
+def _point_duration_seconds(point) -> int:
+    if point.start_datetime and point.end_datetime:
+        return max(0, int((point.end_datetime - point.start_datetime).total_seconds()))
+    return 0
+
+
+def _get_halftime_after_point_number(completed_points: List[models.Point], halftime) -> Optional[int]:
+    if halftime is None:
+        return None
+
+    points_before_halftime = [
+        point.point_number
+        for point in completed_points
+        if (
+            (reference_timestamp := _point_reference_timestamp(point)) is not None
+            and reference_timestamp <= halftime.halftime_timestamp
+        )
+    ]
+    return max(points_before_halftime) if points_before_halftime else None
+
+
+def _build_game_history_timeline(
+    game_status: models.GameStatusEnum,
+    game_id: int,
+    points: List[models.Point],
+    halftime,
+) -> dict:
+    completed_points = sorted(
+        [
+            point
+            for point in points
+            if point.status == models.PointStatusEnum.completed and point.won is not None
+        ],
+        key=lambda point: (
+            point.point_number,
+            _point_reference_timestamp(point) or datetime.min,
+            point.id,
+        ),
+    )
+
+    our_score = 0
+    opponent_score = 0
+    timeline_points = []
+    for point in completed_points:
+        if point.won is True:
+            our_score += 1
+        else:
+            opponent_score += 1
+
+        timeline_points.append({
+            "point_id": point.id,
+            "point_number": point.point_number,
+            "starting_on_offense": point.starting_on_offense,
+            "won": point.won is True,
+            "field_side": point.field_side,
+            "duration_seconds": _point_duration_seconds(point),
+            "our_turnovers": getattr(point, "our_turnovers", 0),
+            "opponent_turnovers": getattr(point, "opponent_turnovers", 0),
+            "our_score_after": our_score,
+            "opponent_score_after": opponent_score,
+        })
+
+    halftime_after_point_number = _get_halftime_after_point_number(
+        completed_points,
+        halftime,
+    )
+    markers_by_point_id, key_moments = build_timeline_markers_and_key_moments(
+        timeline_points,
+        halftime_after_point_number=halftime_after_point_number,
+        final_point_id=completed_points[-1].id if completed_points else None,
+        is_game_ended=game_status == models.GameStatusEnum.ended,
+    )
+    for point in timeline_points:
+        point["markers"] = markers_by_point_id.get(point["point_id"], [])
+
+    return {
+        "game_id": game_id,
+        "halftime_after_point_number": halftime_after_point_number,
+        "points": timeline_points,
+        "key_moments": key_moments,
+    }
+
+
 def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
     """Get complete game information with score and all points"""
     from app.crud.points import get_points_by_game
@@ -271,6 +359,7 @@ def get_game_detail(db: Session, game_id: int) -> Optional[dict]:
         "points": points,
         "players": game.players,
         "halftime": game.halftime,
+        "timeline": _build_game_history_timeline(game.status, game.id, points, game.halftime),
     }
 
 

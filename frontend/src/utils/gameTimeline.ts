@@ -52,6 +52,7 @@ export function buildGamePointTimelineFromPoints(
       pointsBeforeHalftime.length > 0
         ? pointsBeforeHalftime[pointsBeforeHalftime.length - 1].point_number
         : null,
+    key_moments: [],
     points: completedPoints.map((point) => {
       if (point.won) {
         ourScore += 1;
@@ -70,6 +71,7 @@ export function buildGamePointTimelineFromPoints(
         opponent_turnovers: point.opponent_turnovers ?? 0,
         our_score_after: ourScore,
         opponent_score_after: opponentScore,
+        markers: [],
       };
     }),
   };

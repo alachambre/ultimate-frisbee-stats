@@ -237,10 +237,21 @@ export interface GamePointTimelinePoint {
   opponent_turnovers: number;
   our_score_after: number;
   opponent_score_after: number;
+  markers?: string[];
+}
+
+export interface GameKeyMoment {
+  id: string;
+  type: string;
+  primary_point_id: number;
+  point_ids: number[];
+  importance: number;
+  reasons: string[];
 }
 
 export interface GamePointTimeline {
   game_id: number;
   halftime_after_point_number?: number | null;
   points: GamePointTimelinePoint[];
+  key_moments?: GameKeyMoment[];
 }

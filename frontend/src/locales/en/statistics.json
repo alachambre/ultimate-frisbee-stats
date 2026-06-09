@@ -157,6 +157,10 @@
     "halftime": "Half time",
     "breakMarker": "Break point",
     "brokenMarker": "Broken point",
+    "longPointMarker": "Long point",
+    "highTurnMarker": "High-turn point",
+    "specialPointMarker": "Galaxy/Universe point",
+    "selectedPointMarker": "Selected point",
     "resetZoom": "Reset zoom",
     "empty": "No completed points are available for charting yet."
   },

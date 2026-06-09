@@ -157,6 +157,10 @@
     "halftime": "Mi-temps",
     "breakMarker": "Point de Break",
     "brokenMarker": "Point Broken",
+    "longPointMarker": "Point long",
+    "highTurnMarker": "Point avec beaucoup de turns",
+    "specialPointMarker": "Point Galaxy/Univers",
+    "selectedPointMarker": "Point sélectionné",
     "resetZoom": "R\u00e9initialiser le zoom",
     "empty": "Aucun point complété n'est disponible pour le graphique."
   },

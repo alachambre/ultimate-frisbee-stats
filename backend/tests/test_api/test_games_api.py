@@ -87,9 +87,14 @@ def test_get_game_api_includes_turnover_summary(client, sample_game, db_session)
     response = client.get(f"/games/{sample_game.id}")
 
     assert response.status_code == 200
-    point_data = response.json()["points"][0]
+    data = response.json()
+    point_data = data["points"][0]
     assert point_data["our_turnovers"] == 1
     assert point_data["opponent_turnovers"] == 1
+    assert data["timeline"]["points"][0]["point_id"] == point.id
+    assert data["timeline"]["points"][0]["our_turnovers"] == 1
+    assert data["timeline"]["points"][0]["opponent_turnovers"] == 1
+    assert "universe_point" not in data["timeline"]["points"][0]["markers"]
 
 
 def test_get_game_api_includes_halftime(client, sample_game):
