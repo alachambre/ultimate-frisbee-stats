@@ -105,6 +105,37 @@ def _build_moment(
     }
 
 
+def _select_visible_key_moments(moments: Sequence[Dict]) -> List[Dict]:
+    deduped_moments: Dict[str, Dict] = {}
+    for moment in moments:
+        current = deduped_moments.get(moment["id"])
+        if current is None or moment["importance"] > current["importance"]:
+            deduped_moments[moment["id"]] = moment
+
+    claimed_point_ids: Set[int] = set()
+    visible_moments: List[Dict] = []
+
+    for moment in sorted(
+        deduped_moments.values(),
+        key=lambda candidate: (
+            -candidate["importance"],
+            min(candidate["point_ids"]),
+            candidate["id"],
+        ),
+    ):
+        point_ids = set(moment["point_ids"])
+        if claimed_point_ids.intersection(point_ids):
+            continue
+
+        visible_moments.append(moment)
+        claimed_point_ids.update(point_ids)
+
+        if len(visible_moments) >= MAX_KEY_MOMENTS:
+            break
+
+    return visible_moments
+
+
 def _add_marker(markers_by_point_id: Dict[int, Set[str]], point_id: int, marker: str) -> None:
     markers_by_point_id.setdefault(point_id, set()).add(marker)
 
@@ -322,18 +353,7 @@ def build_timeline_markers_and_key_moments(
                 )
             )
 
-    deduped_moments: Dict[str, Dict] = {}
-    for moment in moments:
-        current = deduped_moments.get(moment["id"])
-        if current is None or moment["importance"] > current["importance"]:
-            deduped_moments[moment["id"]] = moment
-
-    sorted_moments = sorted(
-        deduped_moments.values(),
-        key=lambda moment: (-moment["importance"], min(moment["point_ids"])),
-    )[:MAX_KEY_MOMENTS]
-
     return {
         point_id: sorted(markers)
         for point_id, markers in markers_by_point_id.items()
-    }, sorted_moments
+    }, _select_visible_key_moments(moments)

@@ -1,7 +1,9 @@
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
@@ -14,10 +16,12 @@ import {
   Chip,
   Container,
   Divider,
+  IconButton,
   Menu,
   MenuItem,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -28,7 +32,9 @@ import { useTranslation } from "react-i18next";
 
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
+import { shouldEnforcePermissions, useAuth } from "../../auth";
 import { useGameDetailPageData } from "../../pages/hooks/useGameDetailPageData";
+import { deleteGame } from "../../services/games";
 import type {
   GameDetail,
   GameKeyMoment,
@@ -39,6 +45,8 @@ import type {
 } from "../../types";
 import { formatDateTime } from "../../utils/dateFormatting";
 import { buildGamePointTimelineFromPoints } from "../../utils/gameTimeline";
+import { queryKeys } from "../../utils/queryKeys";
+import DeleteGameDialog from "../games/DeleteGameDialog";
 import NewGameHistoryPointItem from "../history/NewGameHistoryPointItem";
 
 const LazyNewGameScoreProgression = lazy(
@@ -1333,9 +1341,13 @@ function SelectedPointDetail({
 }
 
 export default function NewGameHistoryPage() {
+  const auth = useAuth();
   const { t, i18n } = useTranslation(["navigation", "games", "points", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [requestedSelectedPointId, setRequestedSelectedPointId] = useState<
     number | null | undefined
   >(undefined);
@@ -1350,6 +1362,20 @@ export default function NewGameHistoryPage() {
   } = useGameDetailPageData(gameId, false, {
     includeGameTurnovers: true,
     includeLiveState: false,
+  });
+  const shouldProtectUi = shouldEnforcePermissions(
+    auth.enforcementMode,
+    auth.isLoading,
+  );
+  const canEditData = !shouldProtectUi || auth.capabilities.canEditData;
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteGame(gameIdNumber),
+    onSuccess: async () => {
+      setIsDeleteConfirmOpen(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
+      navigate("/games");
+    },
   });
 
   const historyItems = useMemo<HistoryItem[]>(() => {
@@ -1481,6 +1507,7 @@ export default function NewGameHistoryPage() {
         ? t("newUiPages.gameHistory.currentOffense")
         : t("newUiPages.gameHistory.currentDefense")
       : null;
+  const canDeleteGame = canEditData && game.status === "ended";
 
   return (
     <Container
@@ -1526,22 +1553,53 @@ export default function NewGameHistoryPage() {
               >
                 {backLabel}
               </Button>
-              <Chip
-                label={
-                  game.status === "started"
-                    ? t("newUiPages.liveGame.board.live")
-                    : t(`games:status.${game.status}`)
-                }
-                size="small"
-                sx={(theme) => ({
-                  bgcolor: alpha(theme.palette.common.white, 0.16),
-                  color: theme.palette.common.white,
-                  fontWeight: 800,
-                  "& .MuiChip-label": {
-                    px: 1.25,
-                  },
-                })}
-              />
+              <Stack alignItems="center" direction="row" spacing={0.75}>
+                <Chip
+                  label={
+                    game.status === "started"
+                      ? t("newUiPages.liveGame.board.live")
+                      : t(`games:status.${game.status}`)
+                  }
+                  size="small"
+                  sx={(theme) => ({
+                    bgcolor: alpha(theme.palette.common.white, 0.16),
+                    color: theme.palette.common.white,
+                    fontWeight: 800,
+                    "& .MuiChip-label": {
+                      px: 1.25,
+                    },
+                  })}
+                />
+                {canDeleteGame && (
+                  <Tooltip
+                    title={t(
+                      "newUiPages.allGames.actions.deleteGame",
+                    )}
+                  >
+                    <IconButton
+                      aria-label={t(
+                        "newUiPages.allGames.actions.deleteGameAria",
+                        { opponentName: game.opponent_name },
+                      )}
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        deleteMutation.reset();
+                        setIsDeleteConfirmOpen(true);
+                      }}
+                      size="small"
+                      sx={(theme) => ({
+                        bgcolor: alpha(theme.palette.common.white, 0.14),
+                        color: theme.palette.common.white,
+                        "&:hover": {
+                          bgcolor: alpha(theme.palette.error.light, 0.24),
+                        },
+                      })}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Stack>
             </Stack>
 
             <Typography
@@ -1830,6 +1888,19 @@ export default function NewGameHistoryPage() {
           )}
         </Stack>
       </Stack>
+      <DeleteGameDialog
+        isDeleting={deleteMutation.isPending}
+        isError={deleteMutation.isError}
+        onClose={() => {
+          if (!deleteMutation.isPending) {
+            setIsDeleteConfirmOpen(false);
+            deleteMutation.reset();
+          }
+        }}
+        onConfirm={() => deleteMutation.mutate()}
+        open={isDeleteConfirmOpen}
+        opponentName={game.opponent_name}
+      />
     </Container>
   );
 }

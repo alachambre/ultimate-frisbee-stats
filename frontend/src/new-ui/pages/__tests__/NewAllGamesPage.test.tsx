@@ -420,10 +420,9 @@ describe("NewAllGamesPage", () => {
     expect(screen.getByText("Alex")).toBeInTheDocument();
   });
 
-  it("deletes a game from the selected-team dashboard", async () => {
-    const user = userEvent.setup();
+  it("does not expose game deletion from the selected-team dashboard", async () => {
     localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
-    let games = [
+    const games = [
       {
         id: 1,
         competition_id: 10,
@@ -466,28 +465,15 @@ describe("NewAllGamesPage", () => {
           },
         ])
       ),
-      http.get(`${BASE_URL}/games`, () => HttpResponse.json(games)),
-      http.delete(`${BASE_URL}/games/1`, () => {
-        games = [];
-        return new HttpResponse(null, { status: 204 });
-      })
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json(games))
     );
 
     renderPage();
 
     expect(await screen.findByText("Blue Tigers")).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("button", { name: "Delete game against Blue Tigers" })
-    );
-
     expect(
-      screen.getByRole("heading", { name: "Delete game?" })
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /^Delete$/i }));
-
-    await waitFor(() => {
-      expect(screen.queryByText("Blue Tigers")).not.toBeInTheDocument();
-    });
+      screen.queryByRole("button", { name: "Delete game against Blue Tigers" })
+    ).not.toBeInTheDocument();
   });
 
   it("deletes a competition and its games from the selected-team dashboard", async () => {

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { render, screen } from "../../../test/test-utils";
 import { server } from "../../../test/setup";
+import type { AppRole } from "../../../auth";
 import type { CompetitionWithPlayers, GameDetail, Player } from "../../../types";
 import NewGameHistoryPage from "../NewGameHistoryPage";
 
@@ -389,17 +390,21 @@ function setupHandlers(gameResponse: GameDetail = game) {
   );
 }
 
-function renderPage(route = "/games/1") {
+function renderPage(
+  route = "/games/1",
+  { role = "public" }: { role?: AppRole } = {},
+) {
   return render(
     <Routes>
       <Route path="/games/:gameId" element={<NewGameHistoryPage />} />
+      <Route path="/games" element={<h1>All games</h1>} />
     </Routes>,
     {
       route,
       auth: {
-        role: "public",
-        isAuthenticated: false,
-        hasAppAccess: false,
+        role,
+        isAuthenticated: role !== "public",
+        hasAppAccess: role !== "public",
         enforcementMode: "enforced",
       },
     },
@@ -470,6 +475,36 @@ describe("NewGameHistoryPage", () => {
     expect(screen.getAllByText("Half time").length).toBeGreaterThan(1);
     expect(screen.getAllByText("Short break").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /Edit/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete game against Blue Tigers" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("deletes an editable completed game from the history header", async () => {
+    setupHandlers();
+    const user = userEvent.setup();
+    server.use(
+      http.delete(`${BASE_URL}/games/1`, () =>
+        new HttpResponse(null, { status: 204 }),
+      ),
+    );
+
+    renderPage("/games/1", { role: "team_member" });
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Delete game against Blue Tigers",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Delete game?" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^Delete$/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: "All games" }),
+    ).toBeInTheDocument();
   });
 
   it("returns to live tracking when opened from the live page", async () => {

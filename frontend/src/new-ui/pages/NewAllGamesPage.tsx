@@ -28,8 +28,8 @@ import {
   getCompetitions,
   deleteCompetition,
 } from "../../services/competitions";
-import { deleteGame, getAllGames } from "../../services/games";
-import type { CompetitionWithTeam, GameWithScore } from "../../types";
+import { getAllGames } from "../../services/games";
+import type { CompetitionWithTeam } from "../../types";
 import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 import { queryKeys } from "../../utils/queryKeys";
 import {
@@ -52,7 +52,6 @@ export default function NewAllGamesPage() {
     useState<CompetitionWithTeam | null>(null);
   const [competitionToDelete, setCompetitionToDelete] =
     useState<CompetitionWithTeam | null>(null);
-  const [gameToDelete, setGameToDelete] = useState<GameWithScore | null>(null);
   const {
     selectedTeam,
     selectedTeamId,
@@ -121,14 +120,6 @@ export default function NewAllGamesPage() {
     },
   });
 
-  const deleteGameMutation = useMutation({
-    mutationFn: (gameId: number) => deleteGame(gameId),
-    onSuccess: async () => {
-      setGameToDelete(null);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
-    },
-  });
-
   const isLoading =
     auth.isLoading ||
     isLoadingTeams ||
@@ -183,13 +174,6 @@ export default function NewAllGamesPage() {
       deleteCompetitionMutation.reset();
     }
   };
-  const closeDeleteGameDialog = () => {
-    if (!deleteGameMutation.isPending) {
-      setGameToDelete(null);
-      deleteGameMutation.reset();
-    }
-  };
-
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 5 } }}>
       <Stack spacing={3}>
@@ -409,10 +393,6 @@ export default function NewAllGamesPage() {
                     setCompetitionToDelete(editableGroup.competition);
                   }
                 }}
-                onDeleteGame={(deletableGame) => {
-                  deleteGameMutation.reset();
-                  setGameToDelete(deletableGame);
-                }}
               />
             ))}
           </Stack>
@@ -498,22 +478,6 @@ export default function NewAllGamesPage() {
             }}
             open={competitionToDelete !== null}
             title={t("newUiPages.allGames.deleteCompetition.title")}
-          />
-          <ConfirmDeleteDialog
-            errorMessage={t("newUiPages.allGames.deleteGame.error")}
-            isDeleting={deleteGameMutation.isPending}
-            isError={deleteGameMutation.isError}
-            message={t("newUiPages.allGames.deleteGame.message", {
-              opponentName: gameToDelete?.opponent_name ?? "",
-            })}
-            onClose={closeDeleteGameDialog}
-            onConfirm={() => {
-              if (gameToDelete) {
-                deleteGameMutation.mutate(gameToDelete.id);
-              }
-            }}
-            open={gameToDelete !== null}
-            title={t("newUiPages.allGames.deleteGame.title")}
           />
         </>
       )}

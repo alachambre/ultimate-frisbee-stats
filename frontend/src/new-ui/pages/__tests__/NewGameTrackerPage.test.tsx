@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { HttpResponse, http } from "msw";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { render, screen } from "../../../test/test-utils";
@@ -96,6 +97,7 @@ function renderPage({ role }: { role: "public" | "team_member" }) {
   return render(
     <Routes>
       <Route path="/live/:gameId" element={<NewGameTrackerPage />} />
+      <Route path="/games" element={<h1>All games</h1>} />
     </Routes>,
     {
       route: "/live/1",
@@ -130,6 +132,9 @@ describe("NewGameTrackerPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /^Complete$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete game against Blue Tigers" }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^History$/i })).toHaveAttribute(
       "href",
@@ -167,6 +172,33 @@ describe("NewGameTrackerPage", () => {
       screen.getByRole("button", { name: /^New point$/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Game history/i)).not.toBeInTheDocument();
+  });
+
+  it("deletes an editable live game from the tracker header", async () => {
+    const user = userEvent.setup();
+    setupHandlers(createGame("started"));
+    server.use(
+      http.delete(`${BASE_URL}/games/1`, () =>
+        new HttpResponse(null, { status: 204 }),
+      ),
+    );
+
+    renderPage({ role: "team_member" });
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Delete game against Blue Tigers",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Delete game?" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^Delete$/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: "All games" }),
+    ).toBeInTheDocument();
   });
 
   it("lets team members enter a ready game before it starts", async () => {

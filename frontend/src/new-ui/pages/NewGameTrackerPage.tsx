@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import GroupIcon from "@mui/icons-material/Group";
 import HistoryIcon from "@mui/icons-material/History";
@@ -18,6 +19,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Paper,
   Stack,
   Tooltip,
@@ -33,7 +35,7 @@ import EditGameModal from "../../components/modals/EditGameModal";
 import LivePointTracker from "../../components/points/LivePointTracker";
 import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
-import { finishGame, updateGame } from "../../services";
+import { deleteGame, finishGame, updateGame } from "../../services";
 import { formatDateTime } from "../../utils/dateFormatting";
 import {
   invalidateGameAfterPointMutation,
@@ -42,13 +44,16 @@ import {
 } from "../../utils/queryInvalidation";
 import { queryKeys } from "../../utils/queryKeys";
 import { useGameDetailPageData } from "../../pages/hooks/useGameDetailPageData";
+import DeleteGameDialog from "../games/DeleteGameDialog";
 
 export default function NewGameTrackerPage() {
   const auth = useAuth();
   const { t, i18n } = useTranslation(["navigation", "games", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isFinishConfirmOpen, setIsFinishConfirmOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddPlayersModalOpen, setIsAddPlayersModalOpen] = useState(false);
@@ -77,6 +82,15 @@ export default function NewGameTrackerPage() {
     rosterPlayersForTabs,
     getRosterPlayerHighlight,
   } = useGameDetailPageData(gameId, canViewPlayerStatistics);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteGame(gameIdNumber),
+    onSuccess: async () => {
+      setIsDeleteConfirmOpen(false);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
+      navigate("/games");
+    },
+  });
 
   const startMutation = useMutation({
     mutationFn: () => updateGame(gameIdNumber, { status: "started" }),
@@ -112,6 +126,7 @@ export default function NewGameTrackerPage() {
   const canShowTracker =
     (game.status === "ready" || game.status === "started") &&
     (!canEditData || competition);
+  const canDeleteGame = canEditData && game.status !== "ended";
   const newUiOutlinedButtonSx: SxProps<Theme> = {
     minHeight: { xs: 48, sm: 44 },
     minWidth: 0,
@@ -192,22 +207,53 @@ export default function NewGameTrackerPage() {
               >
                 {t("navigation:newUiPages.liveGame.tracker.back")}
               </Button>
-              <Chip
-                label={
-                  game.status === "started"
-                    ? t("navigation:newUiPages.liveGame.board.live")
-                    : t("games:status.ready")
-                }
-                size="small"
-                sx={(theme) => ({
-                  bgcolor: alpha(theme.palette.common.white, 0.16),
-                  color: theme.palette.common.white,
-                  fontWeight: 800,
-                  "& .MuiChip-label": {
-                    px: 1.25,
-                  },
-                })}
-              />
+              <Stack alignItems="center" direction="row" spacing={0.75}>
+                <Chip
+                  label={
+                    game.status === "started"
+                      ? t("navigation:newUiPages.liveGame.board.live")
+                      : t("games:status.ready")
+                  }
+                  size="small"
+                  sx={(theme) => ({
+                    bgcolor: alpha(theme.palette.common.white, 0.16),
+                    color: theme.palette.common.white,
+                    fontWeight: 800,
+                    "& .MuiChip-label": {
+                      px: 1.25,
+                    },
+                  })}
+                />
+                {canDeleteGame && (
+                  <Tooltip
+                    title={t(
+                      "navigation:newUiPages.allGames.actions.deleteGame",
+                    )}
+                  >
+                    <IconButton
+                      aria-label={t(
+                        "navigation:newUiPages.allGames.actions.deleteGameAria",
+                        { opponentName: game.opponent_name },
+                      )}
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        deleteMutation.reset();
+                        setIsDeleteConfirmOpen(true);
+                      }}
+                      size="small"
+                      sx={(theme) => ({
+                        bgcolor: alpha(theme.palette.common.white, 0.14),
+                        color: theme.palette.common.white,
+                        "&:hover": {
+                          bgcolor: alpha(theme.palette.error.light, 0.24),
+                        },
+                      })}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Stack>
             </Stack>
 
             <Typography
@@ -499,6 +545,20 @@ export default function NewGameTrackerPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <DeleteGameDialog
+        isDeleting={deleteMutation.isPending}
+        isError={deleteMutation.isError}
+        onClose={() => {
+          if (!deleteMutation.isPending) {
+            setIsDeleteConfirmOpen(false);
+            deleteMutation.reset();
+          }
+        }}
+        onConfirm={() => deleteMutation.mutate()}
+        open={isDeleteConfirmOpen}
+        opponentName={game.opponent_name}
+      />
 
       {canEditData && isEditModalOpen && (
         <EditGameModal

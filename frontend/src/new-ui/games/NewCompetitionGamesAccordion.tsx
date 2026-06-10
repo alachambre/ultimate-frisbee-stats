@@ -20,7 +20,6 @@ import {
   type NewGamesCompetitionStatusKind,
 } from "./buildNewGamesDashboard";
 import NewGameCard from "./NewGameCard";
-import type { GameWithScore } from "../../types";
 
 interface NewCompetitionGamesAccordionProps {
   canEditData?: boolean;
@@ -41,7 +40,6 @@ interface NewCompetitionGamesAccordionProps {
     results: string;
   };
   onDeleteCompetition?: (group: NewGamesCompetitionGroup) => void;
-  onDeleteGame?: (game: GameWithScore) => void;
   onEditCompetition?: (group: NewGamesCompetitionGroup) => void;
   onManageRoster?: (group: NewGamesCompetitionGroup) => void;
 }
@@ -78,7 +76,6 @@ export default function NewCompetitionGamesAccordion({
   formatDate,
   labels,
   onDeleteCompetition,
-  onDeleteGame,
   onEditCompetition,
   onManageRoster,
 }: NewCompetitionGamesAccordionProps) {
@@ -235,7 +232,6 @@ export default function NewCompetitionGamesAccordion({
                 <NewGameCard
                   canEditData={canEditData}
                   game={game}
-                  onDelete={onDeleteGame}
                   variant="row"
                 />
               </Fragment>
