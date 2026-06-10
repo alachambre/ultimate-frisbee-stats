@@ -212,15 +212,15 @@
         "long_point": "Point long"
       },
       "keyMomentDescriptions": {
-        "universe_point": "Point serré qui a décidé le match.",
-        "galaxy_point": "Point serré qui a envoyé le match à la mi-temps.",
-        "break_run_for_us": "La défense a converti plusieurs points d'affilée.",
-        "break_run_against_us": "L'adversaire a converti plusieurs breaks d'affilée.",
+        "universe_point": "Le gagnant de ce point gagne le match!",
+        "galaxy_point": "Egalité juste avant la mis-temps!",
+        "break_run_for_us": "La défense a fait plusieurs breaks d'affilée.",
+        "break_run_against_us": "L'adversaire a fait plusieurs breaks d'affilée.",
         "counter_break_for_us": "La défense a répondu au break immédiatement.",
         "counter_break_against_us": "L'adversaire a répondu au break immédiatement.",
-        "break": "La défense a converti le point.",
-        "broken": "L'attaque a été broken.",
-        "high_turn_point": "Plusieurs changements de possession ont pesé sur le point.",
+        "break": "La défense a fait un break.",
+        "broken": "L'attaque s'est fait break.",
+        "high_turn_point": "Il y a eu beaucoup de turns sur ce point.",
         "long_point": "Un des points les plus longs du match."
       },
       "empty": "Aucun point n'a encore été saisi.",
