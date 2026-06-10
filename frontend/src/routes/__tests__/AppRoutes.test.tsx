@@ -7,8 +7,8 @@ import { server } from "../../test/setup";
 import { UiModeProvider } from "../../uiMode/UiModeProvider";
 import AppRoutes from "../AppRoutes";
 
-vi.mock("../../pages/GameDetailPage", () => ({
-  default: () => <div>New UI game detail route</div>,
+vi.mock("../../legacy-ui/pages/GameDetailPage", () => ({
+  default: () => <div>Legacy UI game detail route</div>,
 }));
 
 vi.mock("../../pages/TeamsPage", () => ({
@@ -35,23 +35,19 @@ vi.mock("../../pages/StrategiesPage", () => ({
   default: () => <div>New UI strategies route</div>,
 }));
 
-vi.mock("../../new-ui/pages/NewStrategiesPage", () => ({
-  default: () => <div>New UI strategies route</div>,
-}));
-
-vi.mock("../../new-ui/pages/NewRecordGameDetailPage", () => ({
+vi.mock("../../pages/RecordGameDetailPage", () => ({
   default: () => <div>New UI record game detail route</div>,
 }));
 
-vi.mock("../../new-ui/pages/NewGameTrackerPage", () => ({
+vi.mock("../../pages/GameTrackerPage", () => ({
   default: () => <div>New UI game tracker route</div>,
 }));
 
-vi.mock("../../new-ui/pages/NewGameHistoryPage", () => ({
+vi.mock("../../pages/GameHistoryPage", () => ({
   default: () => <div>New UI game history route</div>,
 }));
 
-vi.mock("../../new-ui/pages/NewAllGamesPage", () => ({
+vi.mock("../../pages/AllGamesPage", () => ({
   default: () => <h1>All games</h1>,
 }));
 

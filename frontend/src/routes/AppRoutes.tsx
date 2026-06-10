@@ -1,9 +1,9 @@
-import NewUiRoutes from "../new-ui/NewUiRoutes";
+import LegacyUiRoutes from "../legacy-ui/routes/LegacyUiRoutes";
 import { useUiMode } from "../uiMode/useUiMode";
-import OldUiRoutes from "./OldUiRoutes";
+import DefaultRoutes from "./DefaultRoutes";
 
 export default function AppRoutes() {
   const { uiMode } = useUiMode();
 
-  return uiMode === "new" ? <NewUiRoutes /> : <OldUiRoutes />;
+  return uiMode === "old" ? <LegacyUiRoutes /> : <DefaultRoutes />;
 }

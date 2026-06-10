@@ -21,11 +21,11 @@ const UiModeContext = createContext<UiModeContextValue | undefined>(undefined);
 
 function readInitialUiMode(): UiMode {
   if (typeof window === "undefined") {
-    return "old";
+    return "new";
   }
 
   const storedMode = window.localStorage.getItem(UI_MODE_STORAGE_KEY);
-  return storedMode === "new" ? "new" : "old";
+  return storedMode === "old" ? "old" : "new";
 }
 
 interface UiModeProviderProps {

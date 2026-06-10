@@ -1,670 +1,477 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "../../test/test-utils";
+import { HttpResponse, http } from "msw";
 import userEvent from "@testing-library/user-event";
-import {
-  addPlayersToGame,
-  addPlayersToRoster,
-  createCompetition,
-  createGame,
-  createPlayer,
-  createTurnover,
-  createTeam,
-  finishPoint,
-  startPoint,
-  updateGame,
-  updatePoint,
-} from "../../services";
+import { beforeEach, describe, expect, it } from "vitest";
+
+import { render, screen, waitFor, within } from "../../test/test-utils";
 import { server } from "../../test/setup";
+import type {
+  PlayerGameStats,
+  TeamEvolutionResponse,
+  TeamStrategyStats,
+  TeamTeamStats,
+  TurnoverTypeBucket,
+  TurnoverTypeStats,
+} from "../../types";
+import TeamSelector from "../../components/shell/TeamSelector";
+import { SelectedTeamProvider } from "../../components/team/SelectedTeamProvider";
 import StatisticsPage from "../StatisticsPage";
+
+const BASE_URL = "http://localhost:8000";
+
+const teamStats: TeamTeamStats = {
+  team_id: 1,
+  total_completed_points: 12,
+  turnover_type_stats: createTurnoverTypeStats(),
+  offense: {
+    points_started: 8,
+    points_won: 6,
+    points_lost: 2,
+    hold_rate: 0.75,
+    points_won_no_turnover: 5,
+    clean_hold_rate: 0.625,
+    broken_rate: 0.25,
+    our_turnovers: 4,
+    opponent_turnovers: 2,
+  },
+  defense: {
+    points_started: 4,
+    points_won: 2,
+    points_lost: 2,
+    break_rate: 0.5,
+    points_with_turnover: 3,
+    turnover_rate: 0.75,
+    conversion_rate: 0.667,
+    points_won_no_turnover: 1,
+    clean_break_rate: 0.25,
+    clean_conversion_rate: 0.333,
+    points_lost_no_turnover: 1,
+    our_turnovers: 1,
+    opponent_turnovers: 6,
+    pull_stats: {
+      total_pulls: 4,
+      inbound_pulls: 3,
+      out_of_bounds_pulls: 1,
+      inbound_rate: 0.75,
+    },
+  },
+  field_side_stats: {
+    table_left: {
+      offense: {
+        points_started: 0,
+        points_won: 0,
+        hold_rate: 0,
+      },
+      defense: {
+        points_started: 0,
+        points_won: 0,
+        break_rate: 0,
+      },
+    },
+    table_right: {
+      offense: {
+        points_started: 0,
+        points_won: 0,
+        hold_rate: 0,
+      },
+      defense: {
+        points_started: 0,
+        points_won: 0,
+        break_rate: 0,
+      },
+    },
+  },
+};
+
+const teamEvolution: TeamEvolutionResponse = {
+  team_id: 1,
+  filters: {
+    competition_ids: [],
+    game_ids: [],
+    player_ids: [],
+  },
+  default_preset_id: "turnover_battle",
+  omitted_games_count: 0,
+  metrics: [
+    {
+      id: "total_our_turnovers",
+      label: "Our turns",
+      description: "Our turns",
+      unit: "count",
+      group: "turnovers",
+      format: "integer",
+      higher_is_better: false,
+    },
+    {
+      id: "total_opponent_turnovers",
+      label: "Opponent turns",
+      description: "Opponent turns",
+      unit: "count",
+      group: "turnovers",
+      format: "integer",
+      higher_is_better: true,
+    },
+  ],
+  presets: [
+    {
+      id: "turnover_battle",
+      label: "Turnover battle",
+      metric_ids: ["total_our_turnovers", "total_opponent_turnovers"],
+    },
+  ],
+  games: [
+    {
+      game_id: 1,
+      competition_id: 10,
+      competition_name: "Spring Cup",
+      opponent_name: "Blue Tigers",
+      date: "2026-05-22T10:00:00Z",
+      our_score: 13,
+      opponent_score: 9,
+      completed_points: 12,
+      metrics: {
+        total_our_turnovers: 5,
+        total_opponent_turnovers: 8,
+      },
+    },
+  ],
+};
+
+const teamStrategyStats: TeamStrategyStats = {
+  team_id: 1,
+  offense_strategies: [
+    {
+      strategy_id: 1,
+      strategy_name: "Vertical stack",
+      points_played: 8,
+      points_won: 6,
+      points_lost: 2,
+      hold_rate: 0.75,
+      clean_holds: 5,
+      clean_hold_rate: 0.625,
+      quick_scores: 1,
+      quick_score_rate: 0.125,
+    },
+  ],
+  defense_strategies: [
+    {
+      strategy_id: 2,
+      strategy_name: "Zone defense",
+      points_played: 4,
+      points_won: 2,
+      points_lost: 2,
+      break_rate: 0.5,
+      points_with_turnover: 3,
+      turnover_rate: 0.75,
+      turnover_type_stats: createTurnoverTypeStats(),
+    },
+  ],
+};
+
+const teamPlayerStats: PlayerGameStats[] = [
+  {
+    player_id: 1,
+    player_name: "Alice",
+    player_number: 12,
+    points_played: 10,
+    effective_time_seconds: 1840,
+    offense: {
+      points_played: 6,
+      points_won: 5,
+      points_lost: 1,
+      hold_rate: 0.833,
+      points_won_no_turnover: 4,
+      clean_hold_rate: 0.667,
+      our_turnovers: 1,
+      opponent_turnovers: 0,
+    },
+    defense: {
+      points_played: 4,
+      points_won: 2,
+      points_lost: 2,
+      break_rate: 0.5,
+      points_with_turnover: 3,
+      turnover_rate: 0.75,
+      conversion_rate: 0.667,
+      points_won_no_turnover: 1,
+      clean_break_rate: 0.25,
+      clean_conversion_rate: 0.333,
+      points_lost_no_turnover: 1,
+      our_turnovers: 0,
+      opponent_turnovers: 4,
+    },
+  },
+  {
+    player_id: 2,
+    player_name: "Boris",
+    player_number: 8,
+    points_played: 8,
+    effective_time_seconds: 960,
+    offense: {
+      points_played: 8,
+      points_won: 4,
+      points_lost: 4,
+      hold_rate: 0.5,
+      points_won_no_turnover: 3,
+      clean_hold_rate: 0.375,
+      our_turnovers: 3,
+      opponent_turnovers: 1,
+    },
+    defense: {
+      points_played: 0,
+      points_won: 0,
+      points_lost: 0,
+      break_rate: 0,
+      points_with_turnover: 0,
+      turnover_rate: 0,
+      conversion_rate: 0,
+      points_won_no_turnover: 0,
+      clean_break_rate: 0,
+      clean_conversion_rate: 0,
+      points_lost_no_turnover: 0,
+      our_turnovers: 0,
+      opponent_turnovers: 0,
+    },
+  },
+];
+
+function createTurnoverTypeBucket(total: number): TurnoverTypeBucket {
+  return {
+    total_turnovers: total,
+    by_type: {
+      defended_pass: { count: 0, percentage: 0 },
+      missed_pass: { count: 0, percentage: 0 },
+      defended_huck: { count: 0, percentage: 0 },
+      missed_huck: { count: 0, percentage: 0 },
+      drop: { count: Math.min(total, 1), percentage: total > 0 ? 1 / total : 0 },
+      stall_out: { count: 0, percentage: 0 },
+      miscommunication: { count: Math.max(total - 1, 0), percentage: total > 0 ? (total - 1) / total : 0 },
+      other: { count: 0, percentage: 0 },
+    },
+  };
+}
+
+function createTurnoverTypeStats(): TurnoverTypeStats {
+  return {
+    all_points: {
+      our_possession_turnovers: createTurnoverTypeBucket(5),
+      opponent_possession_turnovers: createTurnoverTypeBucket(8),
+    },
+    started_on_offense: {
+      our_possession_turnovers: createTurnoverTypeBucket(4),
+      opponent_possession_turnovers: createTurnoverTypeBucket(2),
+    },
+    started_on_defense: {
+      our_possession_turnovers: createTurnoverTypeBucket(1),
+      opponent_possession_turnovers: createTurnoverTypeBucket(6),
+    },
+  };
+}
+
+function setupHandlers() {
+  server.use(
+    http.get(`${BASE_URL}/teams`, () =>
+      HttpResponse.json([
+        {
+          id: 1,
+          name: "Monkey Stats",
+          created_at: "2026-01-01T00:00:00Z",
+          players: [],
+        },
+        {
+          id: 2,
+          name: "Flying Foxes",
+          created_at: "2026-01-01T00:00:00Z",
+          players: [],
+        },
+      ])
+    ),
+    http.get(`${BASE_URL}/competitions`, ({ request }) => {
+      const teamId = new URL(request.url).searchParams.get("team_id");
+      if (teamId === "1") {
+        return HttpResponse.json([
+          {
+            id: 10,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Spring Cup",
+            description: null,
+            start_date: "2026-05-01",
+            end_date: "2026-05-31",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+        ]);
+      }
+
+      return HttpResponse.json([]);
+    }),
+    http.get(`${BASE_URL}/games`, () =>
+      HttpResponse.json([
+        {
+          id: 1,
+          competition_id: 10,
+          opponent_name: "Blue Tigers",
+          date: "2026-05-22T10:00:00Z",
+          comments: null,
+          status: "ended",
+          start_datetime: "2026-05-22T10:00:00Z",
+          end_datetime: "2026-05-22T11:30:00Z",
+          created_at: "2026-05-01T00:00:00Z",
+          our_score: 13,
+          opponent_score: 9,
+          team_name: "Monkey Stats",
+          competition_name: "Spring Cup",
+        },
+      ])
+    ),
+    http.get(`${BASE_URL}/statistics/teams/1/team`, () =>
+      HttpResponse.json(teamStats)
+    ),
+    http.get(`${BASE_URL}/statistics/teams/2/team`, () =>
+      HttpResponse.json({ ...teamStats, team_id: 2 })
+    ),
+    http.get(`${BASE_URL}/statistics/teams/1/evolution`, () =>
+      HttpResponse.json(teamEvolution)
+    ),
+    http.get(`${BASE_URL}/statistics/teams/2/evolution`, () =>
+      HttpResponse.json({
+        ...teamEvolution,
+        team_id: 2,
+        games: [],
+      })
+    ),
+    http.get(`${BASE_URL}/statistics/teams/1/strategies`, () =>
+      HttpResponse.json(teamStrategyStats)
+    ),
+    http.get(`${BASE_URL}/statistics/teams/2/strategies`, () =>
+      HttpResponse.json({ ...teamStrategyStats, team_id: 2 })
+    ),
+    http.get(`${BASE_URL}/statistics/teams/1/players`, () =>
+      HttpResponse.json(teamPlayerStats)
+    ),
+    http.get(`${BASE_URL}/statistics/teams/2/players`, () =>
+      HttpResponse.json(teamPlayerStats)
+    )
+  );
+}
+
+function renderPage(
+  role: "team_member" | "team_analyst" = "team_analyst",
+  route = "/statistics",
+  options: { withTeamSelector?: boolean } = {}
+) {
+  return render(
+    <SelectedTeamProvider canLoadTeamDetails>
+      {options.withTeamSelector && <TeamSelector />}
+      <StatisticsPage />
+    </SelectedTeamProvider>,
+    {
+      route,
+      auth: {
+        role,
+        isAuthenticated: true,
+        hasAppAccess: true,
+        enforcementMode: "enforced",
+      },
+    }
+  );
+}
 
 describe("StatisticsPage", () => {
   beforeEach(() => {
-    window.history.pushState({}, "", "/statistics");
+    localStorage.clear();
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    setupHandlers();
   });
 
-  it("shows a prompt when no team is selected", async () => {
-    render(<StatisticsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText("Statistics")).toBeInTheDocument();
-    });
+  it("syncs the selected app team and renders the coach overview", async () => {
+    renderPage();
 
     expect(
-      screen.getAllByText(/select a team to start exploring statistics/i).length
-    ).toBeGreaterThan(0);
-  });
-
-  it("renders statistics tabs for the selected team dataset", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-
-    render(<StatisticsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Evolution" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Players" })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole("tab", { name: "Players" }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Players statistics" })).toBeInTheDocument();
-    });
-  });
-
-  it("loads statistics tab data only when the tab is opened", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const statisticsRequests: string[] = [];
-    const requestListener = ({ request }: { request: Request }) => {
-      const url = new URL(request.url);
-      if (url.pathname.startsWith(`/statistics/teams/${team.id}/`)) {
-        statisticsRequests.push(url.pathname);
-      }
-    };
-
-    server.events.on("request:start", requestListener);
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-
-    try {
-      render(<StatisticsPage />);
-
-      await waitFor(() => {
-        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/team`);
-      });
-
-      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/evolution`);
-      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/players`);
-      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
-
-      await user.click(screen.getByRole("tab", { name: "Evolution" }));
-
-      await waitFor(() => {
-        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/evolution`);
-      });
-
-      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/players`);
-      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
-
-      await user.click(screen.getByRole("tab", { name: "Players" }));
-
-      await waitFor(() => {
-        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/players`);
-      });
-
-      expect(statisticsRequests).not.toContain(`/statistics/teams/${team.id}/strategies`);
-
-      await user.click(screen.getByRole("tab", { name: "Strategies" }));
-
-      await waitFor(() => {
-        expect(statisticsRequests).toContain(`/statistics/teams/${team.id}/strategies`);
-      });
-    } finally {
-      server.events.removeListener("request:start", requestListener);
-    }
-  });
-
-  it("lets users refresh the active statistics dataset", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const teamStatsRequests: string[] = [];
-    const requestListener = ({ request }: { request: Request }) => {
-      const url = new URL(request.url);
-      if (url.pathname === `/statistics/teams/${team.id}/team`) {
-        teamStatsRequests.push(url.pathname);
-      }
-    };
-
-    server.events.on("request:start", requestListener);
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-
-    try {
-      render(<StatisticsPage />);
-
-      await waitFor(() => {
-        expect(teamStatsRequests).toHaveLength(1);
-      });
-
-      expect(
-        screen.getByText(/Statistics may be cached for up to 5 minutes/i)
-      ).toBeInTheDocument();
-
-      await user.click(screen.getByRole("button", { name: "Refresh statistics" }));
-
-      await waitFor(() => {
-        expect(teamStatsRequests).toHaveLength(2);
-      });
-    } finally {
-      server.events.removeListener("request:start", requestListener);
-    }
-  });
-
-  it("limits team members to team and strategy statistics", async () => {
-    const team = await createTeam({ name: "Monkey" });
-
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-
-    render(<StatisticsPage />, {
-      auth: {
-        role: "team_member",
-        enforcementMode: "enforced",
-        isAuthenticated: true,
-        hasAppAccess: true,
-      },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Team" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Evolution" })).toBeInTheDocument();
-      expect(screen.getByRole("tab", { name: "Strategies" })).toBeInTheDocument();
-    });
-
-    expect(screen.queryByRole("tab", { name: "Players" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("4. Player filter")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
-  });
-
-  it("renders the evolution chart and table for the selected dataset", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const bob = await createPlayer({ team_id: team.id, name: "Bob", gender: "M" });
-    const tom = await createPlayer({ team_id: team.id, name: "Tom", gender: "M" });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-    await addPlayersToRoster(competition.id, [bob.id, tom.id]);
-
-    const earlyGame = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Early Rivals",
-      date: "2026-03-15T10:00:00Z",
-    });
-    await addPlayersToGame(earlyGame.id, [bob.id, tom.id]);
-
-    await createGame({
-      competition_id: competition.id,
-      opponent_name: "Empty Rivals",
-      date: "2026-03-16T10:00:00Z",
-    });
-
-    const lateGame = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Late Rivals",
-      date: "2026-03-17T10:00:00Z",
-    });
-    await addPlayersToGame(lateGame.id, [bob.id, tom.id]);
-
-    const holdPoint = await startPoint({
-      game_id: earlyGame.id,
-      starting_on_offense: true,
-      player_ids: [bob.id, tom.id],
-      start_datetime: "2026-03-15T10:00:00Z",
-    });
-    await updatePoint(holdPoint.id, { status: "running" });
-    await finishPoint(holdPoint.id, {
-      won: true,
-      end_datetime: "2026-03-15T10:01:00Z",
-    });
-
-    const breakPoint = await startPoint({
-      game_id: earlyGame.id,
-      starting_on_offense: false,
-      player_ids: [bob.id, tom.id],
-      start_datetime: "2026-03-15T10:02:00Z",
-    });
-    await updatePoint(breakPoint.id, { status: "running", pull: true });
-    await createTurnover({
-      point_id: breakPoint.id,
-      timestamp: "2026-03-15T10:02:20Z",
-    });
-    await finishPoint(breakPoint.id, {
-      won: true,
-      end_datetime: "2026-03-15T10:03:00Z",
-    });
-
-    const brokenPoint = await startPoint({
-      game_id: lateGame.id,
-      starting_on_offense: true,
-      player_ids: [bob.id, tom.id],
-      start_datetime: "2026-03-17T10:00:00Z",
-    });
-    await updatePoint(brokenPoint.id, { status: "running" });
-    await createTurnover({
-      point_id: brokenPoint.id,
-      timestamp: "2026-03-17T10:00:20Z",
-    });
-    await finishPoint(brokenPoint.id, {
-      won: false,
-      end_datetime: "2026-03-17T10:01:00Z",
-    });
-
-    window.history.pushState(
-      {},
-      "",
-      `/statistics?teamId=${team.id}&competitionIds=${competition.id}`
-    );
-
-    render(<StatisticsPage />);
-
-    const evolutionTab = await screen.findByRole("tab", { name: "Evolution" });
-    await user.click(evolutionTab);
-
-    expect(
-      await screen.findByRole("img", { name: "Statistics evolution chart" })
+      await screen.findByRole("heading", { name: "Statistics" })
     ).toBeInTheDocument();
-    const table = await screen.findByRole("table", {
-      name: "Statistics evolution table",
-    });
-    expect(within(table).getByText("Early Rivals")).toBeInTheDocument();
-    expect(within(table).getByText("Late Rivals")).toBeInTheDocument();
-    expect(within(table).queryByText("Empty Rivals")).not.toBeInTheDocument();
-    expect(within(table).getByText("Our turns")).toBeInTheDocument();
-    expect(within(table).getByText("Opponent turns")).toBeInTheDocument();
-    expect(within(table).getByText("2 - 0")).toBeInTheDocument();
-    expect(within(table).getByText("0 - 1")).toBeInTheDocument();
-    expect(screen.getByText("1 game omitted")).toBeInTheDocument();
-  });
-
-  it("keeps legacy single-competition and single-game links working", async () => {
-    const team = await createTeam({ name: "Monkey" });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-    const game = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals",
-      date: "2026-03-15",
-    });
-    await updateGame(game.id, { status: "started" });
-
-    window.history.pushState(
-      {},
-      "",
-      `/statistics?teamId=${team.id}&mode=competition&competitionId=${competition.id}&gameId=${game.id}`
-    );
-
-    render(<StatisticsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText("0 - 0")).toBeInTheDocument();
-    });
-
-    expect(screen.getAllByText("Spring Cup").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Rivals").length).toBeGreaterThan(0);
-  });
-
-  it("supports plural competition and game filters in the shared dataset", async () => {
-    const team = await createTeam({ name: "Monkey" });
-    const competitionA = await createCompetition({
-      team_id: team.id,
-      name: "Phase 1",
-      start_date: "2026-01-01",
-      end_date: "2026-01-31",
-    });
-    const competitionB = await createCompetition({
-      team_id: team.id,
-      name: "Phase 2",
-      start_date: "2026-02-01",
-      end_date: "2026-02-28",
-    });
-    const gameA = await createGame({
-      competition_id: competitionA.id,
-      opponent_name: "Alpha",
-      date: "2026-01-10",
-    });
-    await updateGame(gameA.id, { status: "ended" });
-    const gameB = await createGame({
-      competition_id: competitionB.id,
-      opponent_name: "Beta",
-      date: "2026-02-10",
-    });
-    await updateGame(gameB.id, { status: "ended" });
-
-    window.history.pushState(
-      {},
-      "",
-      `/statistics?teamId=${team.id}&competitionIds=${competitionA.id},${competitionB.id}&gameIds=${gameA.id},${gameB.id}`
-    );
-
-    render(<StatisticsPage />);
-
-    await waitFor(() => {
-      expect(screen.getAllByText("Phase 1").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Phase 2").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Alpha").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Beta").length).toBeGreaterThan(0);
-    });
-  });
-
-  it("filters available games by the selected competitions", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const competitionA = await createCompetition({
-      team_id: team.id,
-      name: "Phase 1",
-      start_date: "2026-01-01",
-      end_date: "2026-01-31",
-    });
-    const competitionB = await createCompetition({
-      team_id: team.id,
-      name: "Phase 2",
-      start_date: "2026-02-01",
-      end_date: "2026-02-28",
-    });
-    await createGame({
-      competition_id: competitionA.id,
-      opponent_name: "Alpha",
-      date: "2026-01-10",
-    });
-    await createGame({
-      competition_id: competitionB.id,
-      opponent_name: "Beta",
-      date: "2026-02-10",
-    });
-
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-    render(<StatisticsPage />);
-
-    const competitionInput = await screen.findByLabelText("2. Competition");
-    await user.click(competitionInput);
-    await user.click(await screen.findByText("Phase 1"));
-
-    const gamesInput = screen.getByLabelText("3. Game");
-    await user.click(gamesInput);
-
-    const listbox = await screen.findByRole("listbox");
-    expect(within(listbox).getByText("Alpha")).toBeInTheDocument();
-    expect(within(listbox).queryByText("Beta")).not.toBeInTheDocument();
-  });
-
-  it("supports selecting multiple players as a player filter", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const player1 = await createPlayer({
-      team_id: team.id,
-      name: "Bob",
-      number: 10,
-      gender: "M",
-    });
-    const player2 = await createPlayer({
-      team_id: team.id,
-      name: "Tom",
-      number: 11,
-      gender: "M",
-    });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-    await addPlayersToRoster(competition.id, [player1.id, player2.id]);
-    const game = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals",
-      date: "2026-03-15",
-    });
-    await addPlayersToGame(game.id, [player1.id, player2.id]);
-
-    const sharedPoint = await startPoint({
-      game_id: game.id,
-      starting_on_offense: true,
-      player_ids: [player1.id, player2.id],
-    });
-    await updatePoint(sharedPoint.id, { status: "running" });
-    await finishPoint(sharedPoint.id, { won: true });
-
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-    render(<StatisticsPage />);
-
-    const playersInput = await screen.findByLabelText("4. Player filter");
-    await user.click(playersInput);
-    const listbox = await screen.findByRole("listbox");
-    await user.click(within(listbox).getByText("Bob"));
-    await user.click(within(listbox).getByText("Tom"));
-
-    expect(screen.getByRole("listbox")).toBeInTheDocument();
-    expect(screen.queryByText("Active player filter: 1 selected")).not.toBeInTheDocument();
-    expect(window.location.search).not.toContain("playerIds=");
-
-    await user.keyboard("{Escape}");
-
-    await waitFor(() => {
-      expect(screen.getByText("Active player filter: 2 selected")).toBeInTheDocument();
-    });
-
-    expect(window.location.search).toContain(`playerIds=${player1.id}%2C${player2.id}`);
-  });
-
-  it("filters available players to the selected game rosters", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const bob = await createPlayer({ team_id: team.id, name: "Bob", gender: "M" });
-    const tom = await createPlayer({ team_id: team.id, name: "Tom", gender: "M" });
-    const dana = await createPlayer({ team_id: team.id, name: "Dana", gender: "W" });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-
-    await addPlayersToRoster(competition.id, [bob.id, tom.id, dana.id]);
-
-    await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals A",
-      date: "2026-03-15",
-      player_ids: [bob.id, tom.id],
-    });
-    await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals B",
-      date: "2026-03-16",
-      player_ids: [bob.id, dana.id],
-    });
-
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-    render(<StatisticsPage />);
-
-    const gamesInput = await screen.findByLabelText("3. Game");
-    await user.click(gamesInput);
-    await user.click(await screen.findByText("Rivals A"));
-
-    const playersInput = screen.getByLabelText("4. Player filter");
-    await user.click(playersInput);
-
-    await waitFor(() => {
-      const listbox = screen.getByRole("listbox");
-      expect(within(listbox).getByText("Bob")).toBeInTheDocument();
-      expect(within(listbox).getByText("Tom")).toBeInTheDocument();
-      expect(within(listbox).queryByText("Dana")).not.toBeInTheDocument();
-    });
-  });
-
-  it("filters available players to teammates who shared a completed point", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const bob = await createPlayer({ team_id: team.id, name: "Bob", gender: "M" });
-    const tom = await createPlayer({ team_id: team.id, name: "Tom", gender: "M" });
-    const dana = await createPlayer({ team_id: team.id, name: "Dana", gender: "W" });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-
-    await addPlayersToRoster(competition.id, [bob.id, tom.id, dana.id]);
-
-    const game = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals",
-      date: "2026-03-15",
-    });
-    await addPlayersToGame(game.id, [bob.id, tom.id, dana.id]);
-
-    const sharedPoint = await startPoint({
-      game_id: game.id,
-      starting_on_offense: true,
-      player_ids: [bob.id, tom.id],
-    });
-    await updatePoint(sharedPoint.id, { status: "running" });
-    await finishPoint(sharedPoint.id, { won: true });
-
-    const separatePoint = await startPoint({
-      game_id: game.id,
-      starting_on_offense: false,
-      player_ids: [dana.id],
-    });
-    await updatePoint(separatePoint.id, { status: "running" });
-    await finishPoint(separatePoint.id, { won: false });
-
-    window.history.pushState({}, "", `/statistics?teamId=${team.id}`);
-    render(<StatisticsPage />);
-
-    const playersInput = await screen.findByLabelText("4. Player filter");
-    await user.click(playersInput);
-
-    let listbox = await screen.findByRole("listbox");
-    await user.click(within(listbox).getByText("Bob"));
-    await user.keyboard("{Escape}");
-
-    await waitFor(() => {
-      expect(screen.getByText("Active player filter: 1 selected")).toBeInTheDocument();
-    });
-
-    await user.click(playersInput);
-
-    await waitFor(() => {
-      listbox = screen.getByRole("listbox");
-      expect(within(listbox).getByText("Tom")).toBeInTheDocument();
-      expect(within(listbox).queryByText("Dana")).not.toBeInTheDocument();
-    });
-  });
-
-  it("shows game trends for a single selected game and lets the user switch metrics", async () => {
-    const user = userEvent.setup();
-    const team = await createTeam({ name: "Monkey" });
-    const bob = await createPlayer({ team_id: team.id, name: "Bob", gender: "M" });
-    const tom = await createPlayer({ team_id: team.id, name: "Tom", gender: "M" });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-
-    await addPlayersToRoster(competition.id, [bob.id, tom.id]);
-
-    const game = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals",
-      date: "2026-03-15",
-    });
-    await addPlayersToGame(game.id, [bob.id, tom.id]);
-    await updateGame(game.id, { status: "started" });
-
-    const point = await startPoint({
-      game_id: game.id,
-      starting_on_offense: true,
-      player_ids: [bob.id, tom.id],
-      start_datetime: "2026-03-15T10:00:00Z",
-    });
-    await updatePoint(point.id, { status: "running" });
-    await createTurnover({
-      point_id: point.id,
-      timestamp: "2026-03-15T10:00:20Z",
-    });
-    await finishPoint(point.id, {
-      won: true,
-      end_datetime: "2026-03-15T10:01:05Z",
-    });
-
-    window.history.pushState(
-      {},
-      "",
-      `/statistics?teamId=${team.id}&competitionIds=${competition.id}&gameIds=${game.id}`
-    );
-
-    render(<StatisticsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText("Game trends")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Score progression" })).toHaveAttribute(
-        "aria-pressed",
-        "true"
-      );
-    });
-
-    const gameTrendsHeading = screen.getByText("Game trends");
-    const statisticsTabs = screen.getByRole("tablist", { name: "Statistics sections" });
+    expect(screen.getByText("Monkey Stats coach overview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hide" })).toBeInTheDocument();
+    expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThanOrEqual(1);
+    expect(await screen.findByText("Hold rate")).toBeInTheDocument();
+    expect(screen.getByText("Break rate")).toBeInTheDocument();
+    expect(screen.getAllByText("Core metrics")).toHaveLength(2);
+    expect(screen.queryByText("After turnover and pulls")).not.toBeInTheDocument();
+    expect(screen.getAllByText("75%").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("50%").length).toBeGreaterThanOrEqual(1);
     expect(
-      gameTrendsHeading.compareDocumentPosition(statisticsTabs) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-
-    await user.click(screen.getByRole("button", { name: "Point duration" }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Point duration" })).toHaveAttribute(
-        "aria-pressed",
-        "true"
-      );
-    });
-
-    await user.click(screen.getByRole("button", { name: "Turns per point" }));
+      screen.getByRole("navigation", { name: "Statistics sections" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Current stats" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("1. Team")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("1. Competition")).toBeInTheDocument();
+    expect(screen.getByText("Evolution chart")).toBeInTheDocument();
+    expect(screen.getByText("Player comparison")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Turns per point" })).toHaveAttribute(
-        "aria-pressed",
-        "true"
-      );
+      expect(window.location.search).not.toContain("teamId=");
     });
   });
 
-  it("does not show game trends when multiple games are selected", async () => {
-    const team = await createTeam({ name: "Monkey" });
-    const competition = await createCompetition({
-      team_id: team.id,
-      name: "Spring Cup",
-      start_date: "2026-03-01",
-      end_date: "2026-03-31",
-    });
-    const gameA = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals A",
-      date: "2026-03-15",
-    });
-    const gameB = await createGame({
-      competition_id: competition.id,
-      opponent_name: "Rivals B",
-      date: "2026-03-16",
-    });
+  it("uses an explicit statistics team link before the persisted app team", async () => {
+    renderPage("team_analyst", "/statistics?teamId=2");
 
-    window.history.pushState(
-      {},
-      "",
-      `/statistics?teamId=${team.id}&competitionIds=${competition.id}&gameIds=${gameA.id},${gameB.id}`
-    );
-
-    render(<StatisticsPage />);
+    expect(
+      await screen.findByText("Flying Foxes coach overview")
+    ).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getAllByText("Rivals A").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Rivals B").length).toBeGreaterThan(0);
+      expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+      expect(window.location.search).not.toContain("teamId=");
     });
+  });
 
-    expect(screen.queryByText("Game trends")).not.toBeInTheDocument();
+  it("keeps member permissions for filters and exports", async () => {
+    renderPage("team_member");
+
+    expect(await screen.findByText("Monkey Stats coach overview")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Player filter/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Players" })).not.toBeInTheDocument();
+    expect(await screen.findByText("Strategy details")).toBeInTheDocument();
+  });
+
+  it("updates statistics from the top-bar selected team", async () => {
+    const user = userEvent.setup();
+    renderPage("team_analyst", "/statistics", { withTeamSelector: true });
+
+    expect(
+      await screen.findByText("Monkey Stats coach overview")
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("1. Team")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox", { name: "Selected team" }));
+    await user.click(await screen.findByRole("option", { name: "Flying Foxes" }));
+
+    expect(
+      await screen.findByText("Flying Foxes coach overview")
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+      expect(window.location.search).not.toContain("teamId=");
+    });
+  });
+
+  it("sorts the player table from column headers", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByText("Player comparison")).toBeInTheDocument();
+
+    const table = screen.getByRole("table", { name: "Player statistics" });
+    let rows = within(table).getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("Alice");
+    expect(rows[2]).toHaveTextContent("Boris");
+
+    await user.click(within(table).getByRole("button", { name: "O Points" }));
+
+    rows = within(table).getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("Boris");
+    expect(rows[2]).toHaveTextContent("Alice");
   });
 });

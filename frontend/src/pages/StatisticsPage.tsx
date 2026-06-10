@@ -1,57 +1,253 @@
-import { lazy, Suspense, useState } from "react";
-import { Alert, Box, Container, Divider, Paper, Typography } from "@mui/material";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import GroupsIcon from "@mui/icons-material/Groups";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import TuneIcon from "@mui/icons-material/Tune";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import Container from "@mui/material/Container";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import PageHeader from "../components/shared/PageHeader";
-import LoadingState from "../components/shared/LoadingState";
-import GameTimer from "../components/games/GameTimer";
-import StatisticsConfigurationPanel from "../components/statistics/StatisticsConfigurationPanel";
-import CompetitionStatisticsTabs, {
-  type CompetitionStatisticsTab,
-} from "../components/statistics/CompetitionStatisticsTabs";
-import StatisticsSectionContainer from "../components/statistics/StatisticsSectionContainer";
-import type { GameWithScore } from "../types";
-import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
-import { shouldEnforcePermissions, useAuth } from "../auth";
+import { useSearchParams } from "react-router-dom";
 
-const GameTrendsSection = lazy(() => import("../components/statistics/GameTrendsSection"));
+import { shouldEnforcePermissions, useAuth } from "../auth";
+import StatisticsConfigurationPanel from "../components/statistics/StatisticsConfigurationPanel";
+import StatisticsExportMenuButton from "../components/statistics/StatisticsExportMenuButton";
+import ErrorState from "../components/shared/ErrorState";
+import LoadingState from "../components/shared/LoadingState";
+import { useStatisticsPageData } from "./hooks/useStatisticsPageData";
+import type { GameWithScore } from "../types";
+import { parseStatisticsId } from "../utils/statisticsSelection";
+import type { CompetitionStatisticsTab } from "../components/statistics/CompetitionStatisticsTabs";
+import NewStatisticsCurrentStats from "../components/statistics/NewStatisticsCurrentStats";
+import NewStatisticsEvolutionSection from "../components/statistics/NewStatisticsEvolutionSection";
+import NewStatisticsPlayersSection from "../components/statistics/NewStatisticsPlayersSection";
+import { useSelectedTeam } from "../components/team/useSelectedTeam";
+
+interface DatasetRecord {
+  draws: number;
+  losses: number;
+  wins: number;
+}
+
+interface SectionLink {
+  href: string;
+  icon: ReactNode;
+  label: string;
+}
 
 function buildScopeOverview(games: GameWithScore[]) {
   const endedGames = games.filter((game) => game.status === "ended");
-  const wins = endedGames.filter((game) => game.our_score > game.opponent_score).length;
-  const losses = endedGames.filter((game) => game.our_score < game.opponent_score).length;
-  const draws = endedGames.filter((game) => game.our_score === game.opponent_score).length;
-  const decidedGames = wins + losses;
+  const wins = endedGames.filter(
+    (game) => game.our_score > game.opponent_score
+  ).length;
+  const losses = endedGames.filter(
+    (game) => game.our_score < game.opponent_score
+  ).length;
+  const draws = endedGames.filter(
+    (game) => game.our_score === game.opponent_score
+  ).length;
 
   return {
     gamesCount: games.length,
-    wins,
-    losses,
-    draws,
-    winRate: decidedGames > 0 ? wins / decidedGames : 0,
+    record: {
+      draws,
+      losses,
+      wins,
+    },
   };
+}
+
+function SectionHeading({
+  description,
+  meta,
+  title,
+}: {
+  description: string;
+  meta?: ReactNode;
+  title: string;
+}) {
+  return (
+    <Stack
+      alignItems={{ xs: "flex-start", md: "center" }}
+      direction={{ xs: "column", md: "row" }}
+      justifyContent="space-between"
+      spacing={1.5}
+    >
+      <Box>
+        <Typography component="h2" fontWeight={900} variant="h5">
+          {title}
+        </Typography>
+        <Typography color="text.secondary" variant="body2">
+          {description}
+        </Typography>
+      </Box>
+      {meta}
+    </Stack>
+  );
+}
+
+function SectionNavigation({
+  ariaLabel,
+  links,
+}: {
+  ariaLabel: string;
+  links: SectionLink[];
+}) {
+  return (
+    <Paper
+      elevation={0}
+      sx={(theme) => ({
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 1,
+        p: 0.75,
+      })}
+    >
+      <Stack
+        component="nav"
+        direction="row"
+        spacing={0.75}
+        sx={{
+          overflowX: "auto",
+          pb: 0.25,
+        }}
+        aria-label={ariaLabel}
+      >
+        {links.map((link) => (
+          <Button
+            component="a"
+            href={link.href}
+            key={link.href}
+            startIcon={link.icon}
+            sx={(theme) => ({
+              color: theme.palette.text.secondary,
+              flexShrink: 0,
+              fontWeight: 850,
+              minHeight: 40,
+              px: 1.5,
+              "&:hover": {
+                bgcolor: theme.colors.newUi.primarySoft,
+                color: theme.colors.newUi.primary,
+              },
+            })}
+          >
+            {link.label}
+          </Button>
+        ))}
+      </Stack>
+    </Paper>
+  );
+}
+
+function ResultsMeta({ record }: { record: DatasetRecord }) {
+  const { t } = useTranslation(["statistics", "games"]);
+
+  return (
+    <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
+      <Chip
+        label={t("statistics:newUi.currentStats.winsCount", {
+          count: record.wins,
+        })}
+        sx={(theme) => ({
+          bgcolor: alpha(theme.palette.success.main, 0.1),
+          color: theme.palette.success.dark,
+          fontWeight: 900,
+        })}
+      />
+      <Chip
+        label={t("statistics:newUi.currentStats.lossesCount", {
+          count: record.losses,
+        })}
+        sx={(theme) => ({
+          bgcolor: alpha(theme.palette.error.main, 0.08),
+          color: theme.palette.error.main,
+          fontWeight: 900,
+        })}
+      />
+      {record.draws > 0 && (
+        <Chip
+          label={t("statistics:newUi.currentStats.drawsCount", {
+            count: record.draws,
+          })}
+          sx={{ fontWeight: 900 }}
+        />
+      )}
+    </Stack>
+  );
 }
 
 export default function StatisticsPage() {
   const auth = useAuth();
-  const { t } = useTranslation(["statistics", "games", "common"]);
+  const { t } = useTranslation(["navigation", "statistics", "common"]);
+  const {
+    selectedTeam: appSelectedTeam,
+    selectedTeamId: appSelectedTeamId,
+    teams: appTeams,
+    setSelectedTeamId: setAppSelectedTeamId,
+    isLoadingTeams: isLoadingAppTeams,
+    teamsError: appTeamsError,
+  } = useSelectedTeam();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
-  const [activeStatisticsTab, setActiveStatisticsTab] =
-    useState<CompetitionStatisticsTab>("team");
   const [isPlayerFilterOpen, setIsPlayerFilterOpen] = useState(false);
-  const shouldProtectUi = shouldEnforcePermissions(auth.enforcementMode, auth.isLoading);
-  const statisticsAccess = {
-    canViewTeamStatistics:
-      !shouldProtectUi || auth.capabilities.canViewTeamStatistics,
-    canViewStrategyStatistics:
-      !shouldProtectUi || auth.capabilities.canViewStrategyStatistics,
-    canViewPlayerStatistics:
-      !shouldProtectUi || auth.capabilities.canViewPlayerStatistics,
-    canFilterStatisticsByPlayers:
-      !shouldProtectUi || auth.capabilities.canFilterStatisticsByPlayers,
-    canExportStatistics:
-      !shouldProtectUi || auth.capabilities.canExportStatistics,
-  };
+  const legacyTeamId = useMemo(
+    () => parseStatisticsId(searchParams.get("teamId")),
+    [searchParams]
+  );
+
+  const shouldProtectUi = shouldEnforcePermissions(
+    auth.enforcementMode,
+    auth.isLoading
+  );
+  const statisticsAccess = useMemo(
+    () => ({
+      canViewTeamStatistics:
+        !shouldProtectUi || auth.capabilities.canViewTeamStatistics,
+      canViewStrategyStatistics:
+        !shouldProtectUi || auth.capabilities.canViewStrategyStatistics,
+      canViewPlayerStatistics:
+        !shouldProtectUi || auth.capabilities.canViewPlayerStatistics,
+      canFilterStatisticsByPlayers:
+        !shouldProtectUi || auth.capabilities.canFilterStatisticsByPlayers,
+      canExportStatistics:
+        !shouldProtectUi || auth.capabilities.canExportStatistics,
+    }),
+    [
+      auth.capabilities.canExportStatistics,
+      auth.capabilities.canFilterStatisticsByPlayers,
+      auth.capabilities.canViewPlayerStatistics,
+      auth.capabilities.canViewStrategyStatistics,
+      auth.capabilities.canViewTeamStatistics,
+      shouldProtectUi,
+    ]
+  );
+  const enabledTabs = useMemo<CompetitionStatisticsTab[]>(() => {
+    const tabs: CompetitionStatisticsTab[] = [];
+
+    if (statisticsAccess.canViewTeamStatistics) {
+      tabs.push("team", "evolution");
+    }
+    if (statisticsAccess.canViewStrategyStatistics) {
+      tabs.push("strategies");
+    }
+    if (statisticsAccess.canViewPlayerStatistics) {
+      tabs.push("players");
+    }
+
+    return tabs;
+  }, [
+    statisticsAccess.canViewPlayerStatistics,
+    statisticsAccess.canViewStrategyStatistics,
+    statisticsAccess.canViewTeamStatistics,
+  ]);
+
   const {
     teamId,
     playerIds,
@@ -65,7 +261,6 @@ export default function StatisticsPage() {
     isLoadingTeams,
     teamsError,
     selectedTeam,
-    sortedTeams,
 
     competitionsForTeam,
     selectedCompetitions,
@@ -79,10 +274,6 @@ export default function StatisticsPage() {
     isPlayerOptionsLoading,
     controlsError,
     canExport,
-    shouldShowFieldSideStats,
-    gamePointTimeline,
-    isLoadingGamePointTimeline,
-    gamePointTimelineError,
 
     teamStats,
     isLoadingTeamStats,
@@ -97,21 +288,51 @@ export default function StatisticsPage() {
     isLoadingTeamStrategyStats,
     teamStrategyStatsError,
   } = useStatisticsPageData(statisticsAccess, {
-    activeTab: activeStatisticsTab,
+    activeTab: "team",
+    controlledTeamId: appSelectedTeamId,
+    controlledTeams: appTeams,
+    enabledTabs,
+    isTeamSelectionControlled: true,
     isPlayerFilterOpen,
   });
 
-  const datasetOverview = buildScopeOverview(selectedDatasetGames);
-  const selectedSingleGame = selectedGames.length === 1 ? selectedGames[0] : undefined;
-  const selectedSingleCompetition =
-    selectedCompetitions.length === 1 ? selectedCompetitions[0] : undefined;
+  useEffect(() => {
+    if (legacyTeamId === undefined || isLoadingAppTeams) {
+      return;
+    }
 
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("teamId");
+
+    if (appTeams.some((team) => team.id === legacyTeamId)) {
+      if (appSelectedTeamId !== legacyTeamId) {
+        setAppSelectedTeamId(legacyTeamId);
+      }
+    }
+
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [
+    appSelectedTeamId,
+    appTeams,
+    isLoadingAppTeams,
+    legacyTeamId,
+    searchParams,
+    setAppSelectedTeamId,
+    setSearchParams,
+  ]);
+
+  const overview = useMemo(
+    () => buildScopeOverview(selectedDatasetGames),
+    [selectedDatasetGames]
+  );
   const statisticsContextItems = [
-    selectedTeam?.name,
+    selectedTeam?.name ?? appSelectedTeam?.name,
     selectedCompetitions.length === 1
       ? selectedCompetitions[0].name
       : selectedCompetitions.length > 1
-        ? t("statistics:workflow.competitionsCount", { count: selectedCompetitions.length })
+        ? t("statistics:workflow.competitionsCount", {
+            count: selectedCompetitions.length,
+          })
         : undefined,
     selectedGames.length === 1
       ? selectedGames[0].opponent_name
@@ -121,199 +342,278 @@ export default function StatisticsPage() {
     selectedPlayers.length === 1
       ? selectedPlayers[0].name
       : selectedPlayers.length > 1
-        ? t("statistics:workflow.playersCount", { count: selectedPlayers.length })
+        ? t("statistics:workflow.playersCount", {
+            count: selectedPlayers.length,
+          })
         : undefined,
   ].filter((value): value is string => Boolean(value));
+  const displayTeamName = selectedTeam?.name ?? appSelectedTeam?.name;
+  const sectionLinks: SectionLink[] = [
+    {
+      href: "#configuration",
+      icon: <TuneIcon fontSize="small" />,
+      label: t("statistics:workflow.configurationSection"),
+    },
+    {
+      href: "#current-stats",
+      icon: <DashboardIcon fontSize="small" />,
+      label: t("statistics:newUi.sections.currentStats"),
+    },
+    {
+      href: "#evolution",
+      icon: <TimelineIcon fontSize="small" />,
+      label: t("statistics:workflow.evolution"),
+    },
+    ...(statisticsAccess.canViewPlayerStatistics
+      ? [
+          {
+            href: "#players",
+            icon: <GroupsIcon fontSize="small" />,
+            label: t("statistics:workflow.players"),
+          },
+        ]
+      : []),
+  ];
 
-  if (isLoadingTeams) {
+  if (auth.isLoading || isLoadingAppTeams || isLoadingTeams) {
     return <LoadingState message={t("common:action.loading")} />;
   }
 
-  if (teamsError || !teams) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">
-          {t("common:messages.error")}: {teamsError?.message}
-        </Alert>
-      </Container>
-    );
+  if (appTeamsError || teamsError || !teams) {
+    return <ErrorState message={t("common:messages.error")} />;
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <PageHeader title={t("statistics:page.globalTitle")} />
+    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+      <Stack spacing={3.5}>
+        <Stack
+          alignItems={{ xs: "flex-start", md: "flex-end" }}
+          direction={{ xs: "column", md: "row" }}
+          justifyContent="space-between"
+          spacing={2}
+        >
+          <Box sx={{ maxWidth: 760 }}>
+            <Typography color="text.secondary" variant="overline">
+              {displayTeamName
+                ? t("navigation:newUiPages.statistics.selectedTeamEyebrow", {
+                    teamName: displayTeamName,
+                  })
+                : t("navigation:newUiPages.statistics.globalEyebrow")}
+            </Typography>
+            <Typography component="h1" gutterBottom variant="h4">
+              {t("navigation:newUiPages.statistics.heading")}
+            </Typography>
+            <Typography color="text.secondary" variant="body1">
+              {t("navigation:newUiPages.statistics.copy")}
+            </Typography>
+          </Box>
 
-      <StatisticsConfigurationPanel
-        isConfigurationExpanded={isConfigurationExpanded}
-        onToggleConfigurationExpanded={() =>
-          setIsConfigurationExpanded((prev) => !prev)
-        }
-        teamId={teamId}
-        selectedPlayerIds={playerIds}
-        sortedTeams={sortedTeams}
-        competitionsForTeam={competitionsForTeam}
-        selectedCompetitions={selectedCompetitions}
-        availableGames={availableGames}
-        selectedGames={selectedGames}
-        playersForTeam={playersForTeam}
-        selectedPlayers={selectedPlayers}
-        canFilterStatisticsByPlayers={statisticsAccess.canFilterStatisticsByPlayers}
-        controlsLoading={controlsLoading}
-        isPlayerOptionsLoading={isPlayerOptionsLoading}
-        hasControlsError={Boolean(controlsError)}
-        onSelectTeam={(nextTeamId) => {
-          updateSelection({
-            teamId: nextTeamId,
-            competitionIds: [],
-            gameIds: [],
-            playerIds: [],
-          });
-        }}
-        onSelectCompetitionIds={(nextCompetitionIds) => {
-          updateSelection({
-            competitionIds: nextCompetitionIds,
-          });
-        }}
-        onSelectGameIds={(nextGameIds) => {
-          updateSelection({ gameIds: nextGameIds });
-        }}
-        onSelectPlayerIds={(nextPlayerIds) => {
-          updateSelection({ playerIds: nextPlayerIds });
-        }}
-        onClearPlayersSelection={() => updateSelection({ playerIds: [] })}
-        onPlayerFilterOpenChange={setIsPlayerFilterOpen}
-      />
+          <Stack
+            alignItems={{ xs: "stretch", sm: "center" }}
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ width: { xs: "100%", md: "auto" } }}
+          >
+            <Button
+              disabled={isRefreshingStatistics || teamId === undefined}
+              onClick={handleRefreshStatistics}
+              startIcon={
+                isRefreshingStatistics ? (
+                  <CircularProgress color="inherit" size={18} />
+                ) : (
+                  <RefreshIcon />
+                )
+              }
+              variant="outlined"
+            >
+              {isRefreshingStatistics
+                ? t("statistics:workflow.refreshingStatistics")
+                : t("statistics:workflow.refreshStatistics")}
+            </Button>
+            {canExport && (
+              <StatisticsExportMenuButton
+                isExporting={isExporting}
+                onExport={handleExportCSV}
+              />
+            )}
+          </Stack>
+        </Stack>
 
-      <Box>
-        {controlsLoading && <LoadingState message={t("common:action.loading")} />}
+        <SectionNavigation
+          ariaLabel={t("statistics:workflow.statisticsTabsAriaLabel")}
+          links={sectionLinks}
+        />
+
+        <Box component="section" id="configuration">
+          <StatisticsConfigurationPanel
+            availableGames={availableGames}
+            canFilterStatisticsByPlayers={
+              statisticsAccess.canFilterStatisticsByPlayers
+            }
+            competitionsForTeam={competitionsForTeam}
+            controlsLoading={controlsLoading}
+            density="compact"
+            hasControlsError={Boolean(controlsError)}
+            isConfigurationExpanded={isConfigurationExpanded}
+            isPlayerOptionsLoading={isPlayerOptionsLoading}
+            onClearPlayersSelection={() => updateSelection({ playerIds: [] })}
+            onPlayerFilterOpenChange={setIsPlayerFilterOpen}
+            onSelectCompetitionIds={(nextCompetitionIds) => {
+              updateSelection({
+                competitionIds: nextCompetitionIds,
+              });
+            }}
+            onSelectGameIds={(nextGameIds) => {
+              updateSelection({ gameIds: nextGameIds });
+            }}
+            onSelectPlayerIds={(nextPlayerIds) => {
+              updateSelection({ playerIds: nextPlayerIds });
+            }}
+            onToggleConfigurationExpanded={() =>
+              setIsConfigurationExpanded((currentValue) => !currentValue)
+            }
+            playersForTeam={playersForTeam}
+            selectedCompetitions={selectedCompetitions}
+            selectedGames={selectedGames}
+            selectedPlayerIds={playerIds}
+            selectedPlayers={selectedPlayers}
+            showTeamSelector={false}
+            summaryItems={statisticsContextItems}
+            teamId={teamId}
+          />
+        </Box>
+
+        {controlsLoading && (
+          <LoadingState message={t("common:action.loading")} />
+        )}
 
         {!controlsLoading && controlsError && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert severity="error">
             {t("common:messages.error")}: {controlsError.message}
           </Alert>
         )}
 
         {!controlsLoading && !controlsError && teamId === undefined && (
-          <Alert severity="info">{t("statistics:workflow.selectTeamPrompt")}</Alert>
+          <Alert severity="info">
+            {t("statistics:workflow.selectTeamPrompt")}
+          </Alert>
         )}
 
-        {!controlsLoading &&
-          !controlsError &&
-          teamId !== undefined && (
-            <StatisticsSectionContainer
-              pathItems={statisticsContextItems}
-              canExport={canExport}
-              isExporting={isExporting}
-              onExport={handleExportCSV}
-              isRefreshing={isRefreshingStatistics}
-              onRefresh={handleRefreshStatistics}
-            >
-              <>
-                <Paper sx={{ mb: 3 }}>
-                  {selectedSingleGame ? (
-                    <>
-                      <Box p={4} textAlign="center">
-                        <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
-                          <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {selectedSingleGame.competition_name}
-                          </Typography>
-                        </Box>
-                        <Typography variant="h6" color="text.secondary" gutterBottom>
-                          {selectedSingleGame.status === "ended"
-                            ? t("games:detail.finalScore")
-                            : t("games:detail.score")}
-                        </Typography>
-                        <Typography variant="h2" fontWeight="bold">
-                          {selectedSingleGame.our_score} - {selectedSingleGame.opponent_score}
-                        </Typography>
-
-                        {selectedSingleGame.start_datetime && (
-                          <Box mt={2}>
-                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                              {t("games:detail.gameDuration")}
-                            </Typography>
-                            <GameTimer
-                              startDatetime={selectedSingleGame.start_datetime}
-                              endDatetime={selectedSingleGame.end_datetime}
-                            />
-                          </Box>
-                        )}
-                      </Box>
-
-                      <Divider />
-                      <Suspense fallback={<LoadingState showColdStartHint={false} />}>
-                        <GameTrendsSection
-                          timeline={gamePointTimeline}
-                          isLoading={isLoadingGamePointTimeline}
-                          error={gamePointTimelineError}
-                          embedded
-                          teamName={selectedSingleGame.team_name}
-                          opponentName={selectedSingleGame.opponent_name}
-                        />
-                      </Suspense>
-                    </>
-                  ) : (
-                    <Box p={4} textAlign="center">
-                      <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
-                        <EmojiEventsIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {selectedSingleCompetition?.name ?? selectedTeam?.name ?? "-"}
-                        </Typography>
-                      </Box>
-
-                      <Box display="flex" justifyContent="center" gap={4}>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
-                            {t("statistics:teamStats.gamesCount")}
-                          </Typography>
-                          <Typography variant="h3" fontWeight="bold">
-                            {datasetOverview.gamesCount}
-                          </Typography>
-                        </Box>
-                        <Divider orientation="vertical" flexItem />
-                        <Box>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
-                            {t("statistics:teamStats.winLossRatio")}
-                          </Typography>
-                          <Typography variant="h3" fontWeight="bold">
-                            {datasetOverview.wins}/{datasetOverview.losses}
-                          </Typography>
-                          {datasetOverview.draws > 0 && (
-                            <Typography variant="caption" color="text.secondary">
-                              {t("games:status.draw")}: {datasetOverview.draws}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    </Box>
-                  )}
-                </Paper>
-
-                <CompetitionStatisticsTabs
-                  activeTab={activeStatisticsTab}
-                  onTabChange={setActiveStatisticsTab}
-                  teamStats={teamStats}
-                  isLoadingTeamStats={isLoadingTeamStats}
-                  teamStatsError={teamStatsError}
-                  teamEvolution={teamEvolution}
-                  isLoadingTeamEvolution={isLoadingTeamEvolution}
-                  teamEvolutionError={teamEvolutionError}
-                  strategyStats={teamStrategyStats}
-                  isLoadingStrategyStats={isLoadingTeamStrategyStats}
-                  strategyStatsError={teamStrategyStatsError}
-                  playerStats={teamPlayerStats}
-                  isLoadingPlayerStats={isLoadingTeamPlayerStats}
-                  playerStatsError={teamPlayerStatsError}
-                  teamStatsScope={shouldShowFieldSideStats ? "game" : "team"}
-                  canViewTeamStatistics={statisticsAccess.canViewTeamStatistics}
-                  canViewStrategyStatistics={statisticsAccess.canViewStrategyStatistics}
-                  canViewPlayerStatistics={statisticsAccess.canViewPlayerStatistics}
+        {!controlsLoading && !controlsError && teamId !== undefined && (
+          <>
+            <Box component="section" id="current-stats">
+              <Stack spacing={2}>
+                <SectionHeading
+                  description={t("statistics:newUi.currentStats.description")}
+                  meta={
+                    <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
+                      <Chip
+                        label={t("statistics:newUi.currentStats.completedPoints", {
+                          count: teamStats?.total_completed_points ?? 0,
+                        })}
+                        sx={(theme) => ({
+                          bgcolor: theme.colors.newUi.primarySoft,
+                          color: theme.colors.newUi.primary,
+                          fontWeight: 900,
+                        })}
+                      />
+                      <ResultsMeta record={overview.record} />
+                    </Stack>
+                  }
+                  title={t("statistics:newUi.sections.currentStats")}
                 />
-              </>
-            </StatisticsSectionContainer>
-          )}
-      </Box>
+
+                {teamStatsError ? (
+                  <Alert severity="error">
+                    {t("common:messages.error")}: {teamStatsError.message}
+                  </Alert>
+                ) : (
+                  <NewStatisticsCurrentStats
+                    gamesCount={overview.gamesCount}
+                    isLoadingStrategyStats={isLoadingTeamStrategyStats}
+                    isLoadingTeamStats={isLoadingTeamStats}
+                    record={overview.record}
+                    showFieldSideStats={selectedGames.length === 1}
+                    strategyStats={teamStrategyStats}
+                    teamStats={teamStats}
+                  />
+                )}
+
+                {teamStrategyStatsError && (
+                  <Alert severity="warning">
+                    {t("statistics:newUi.currentStats.strategyError")}:{" "}
+                    {teamStrategyStatsError.message}
+                  </Alert>
+                )}
+              </Stack>
+            </Box>
+
+            <Box component="section" id="evolution">
+              <Stack spacing={2}>
+                <SectionHeading
+                  description={t("statistics:newUi.evolution.description")}
+                  meta={
+                    <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
+                      <Chip
+                        label={t("statistics:newUi.evolution.completedGames", {
+                          count: teamEvolution?.games.length ?? 0,
+                        })}
+                        sx={{ fontWeight: 900 }}
+                      />
+                      {(teamEvolution?.omitted_games_count ?? 0) > 0 && (
+                        <Chip
+                          label={t("statistics:evolution.omittedGames", {
+                            count: teamEvolution?.omitted_games_count ?? 0,
+                          })}
+                          sx={(theme) => ({
+                            bgcolor: alpha(theme.colors.performance.low, 0.1),
+                            color: theme.colors.performance.low,
+                            fontWeight: 900,
+                          })}
+                        />
+                      )}
+                    </Stack>
+                  }
+                  title={t("statistics:workflow.evolution")}
+                />
+                <NewStatisticsEvolutionSection
+                  error={teamEvolutionError}
+                  evolution={teamEvolution}
+                  isLoading={isLoadingTeamEvolution}
+                />
+              </Stack>
+            </Box>
+
+            {statisticsAccess.canViewPlayerStatistics && (
+              <Box component="section" id="players">
+                <Stack spacing={2}>
+                  <SectionHeading
+                    description={t("statistics:newUi.players.description")}
+                    meta={
+                      <Chip
+                        label={t("statistics:workflow.playersCount", {
+                          count: teamPlayerStats?.length ?? 0,
+                        })}
+                        sx={(theme) => ({
+                          bgcolor: theme.colors.newUi.primarySoft,
+                          color: theme.colors.newUi.primary,
+                          fontWeight: 900,
+                        })}
+                      />
+                    }
+                    title={t("statistics:workflow.players")}
+                  />
+                  <NewStatisticsPlayersSection
+                    error={teamPlayerStatsError}
+                    isLoading={isLoadingTeamPlayerStats}
+                    players={teamPlayerStats}
+                  />
+                </Stack>
+              </Box>
+            )}
+          </>
+        )}
+      </Stack>
     </Container>
   );
 }

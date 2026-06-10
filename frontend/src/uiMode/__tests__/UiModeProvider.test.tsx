@@ -27,19 +27,7 @@ describe("UiModeProvider", () => {
     localStorage.clear();
   });
 
-  it("defaults to old mode when localStorage is empty", () => {
-    render(
-      <UiModeProvider>
-        <Probe />
-      </UiModeProvider>
-    );
-
-    expect(screen.getByText("Current mode: old")).toBeInTheDocument();
-  });
-
-  it("loads the saved mode from localStorage", () => {
-    localStorage.setItem("monkey-statistics-ui-mode", "new");
-
+  it("defaults to new mode when localStorage is empty", () => {
     render(
       <UiModeProvider>
         <Probe />
@@ -47,6 +35,18 @@ describe("UiModeProvider", () => {
     );
 
     expect(screen.getByText("Current mode: new")).toBeInTheDocument();
+  });
+
+  it("loads the saved mode from localStorage", () => {
+    localStorage.setItem("monkey-statistics-ui-mode", "old");
+
+    render(
+      <UiModeProvider>
+        <Probe />
+      </UiModeProvider>
+    );
+
+    expect(screen.getByText("Current mode: old")).toBeInTheDocument();
   });
 
   it("saves mode changes to localStorage", async () => {
@@ -57,10 +57,10 @@ describe("UiModeProvider", () => {
       </UiModeProvider>
     );
 
-    await user.click(screen.getByRole("button", { name: "Use new" }));
+    await user.click(screen.getByRole("button", { name: "Use old" }));
 
-    expect(screen.getByText("Current mode: new")).toBeInTheDocument();
-    expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("new");
+    expect(screen.getByText("Current mode: old")).toBeInTheDocument();
+    expect(localStorage.getItem("monkey-statistics-ui-mode")).toBe("old");
   });
 
   it("toggles between old and new modes", async () => {
@@ -72,9 +72,9 @@ describe("UiModeProvider", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Toggle" }));
-    expect(screen.getByText("Current mode: new")).toBeInTheDocument();
+    expect(screen.getByText("Current mode: old")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Toggle" }));
-    expect(screen.getByText("Current mode: old")).toBeInTheDocument();
+    expect(screen.getByText("Current mode: new")).toBeInTheDocument();
   });
 });

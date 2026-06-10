@@ -31,8 +31,9 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 
 ## Architecture (High Level)
 **Frontend**
-- `frontend/src/components/` domain-organized components + `shared/` + `modals/`
-- `frontend/src/pages/` route pages
+- `frontend/src/components/` default/shared domain-organized components + `shared/` + `modals/`
+- `frontend/src/pages/` default route pages
+- `frontend/src/legacy-ui/` legacy route tree, pages, and components that are clearly old-UI-only; when ownership is uncertain, keep the component in the default/shared root folders
 - `frontend/src/services/` API layer (per-entity)
 - `frontend/src/types/` TypeScript schemas
 - `frontend/src/test/` MSW + test utils
@@ -48,7 +49,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Shared roster UI components live in `frontend/src/components/players/` (`RosterSummaryHeader`, `RosterGenderPanel`) and should be reused across team/competition/game roster sections
 - Statistics UI entrypoint is `frontend/src/pages/StatisticsPage.tsx` on route `/statistics` (filter-driven workflow: `teamId`, multi-select `competitionIds`, multi-select `gameIds`, multi-select `playerIds`; keep legacy single-value `competitionId`, `gameId`, and `playerId` links backward-compatible when parsing). `team_member` users can access team and strategy statistics plus single-game timeline charts, but player filtering, the Players tab, and CSV export require analyst/export capabilities.
 - Standalone games dashboard route is removed; games should be accessed via competition detail (`/competitions/:competitionId`)
-- Statistics page layout is split into dedicated components such as `StatisticsConfigurationPanel` and `StatisticsSectionContainer` under `frontend/src/components/statistics/`; keep complex workflow UI out of page files when extending stats UX
+- Statistics page layout is split into dedicated components under `frontend/src/components/statistics/`; legacy-only statistics wrappers live under `frontend/src/legacy-ui/components/statistics/`. Keep complex workflow UI out of page files when extending stats UX.
 - Team statistics evolution table/controls are rendered by `frontend/src/components/statistics/StatisticsEvolutionTable.tsx`, with `StatisticsEvolutionChart.tsx` lazy-loaded from the Evolution tab; keep it driven by `/statistics/teams/{team_id}/evolution` metadata and default presets rather than duplicating formulas in the frontend.
 - Turnover-type analytics in the statistics UI are rendered through `frontend/src/components/statistics/TurnoverTypeStatsSection.tsx` and reused in both `TeamStatistics` and `PlayerScopeStatistics`; extend that shared component instead of duplicating the 6-bucket breakdown in multiple places
 - Defensive strategy cards in `frontend/src/components/statistics/StrategyStatistics.tsx` also reuse `TurnoverTypeStatsSection` for turnover-type breakdowns; keep strategy-specific turnover analytics scoped to defense strategies instead of introducing a separate visualization pattern
@@ -71,7 +72,7 @@ A PWA for tracking ultimate frisbee statistics, optimized for mobile use on the 
 - Field side (`field_side`) selection happens on the first point of each half (game start + first point after halftime); other points auto-infer side by alternating from the previous completed point
 - Live point tracker internals are split under `frontend/src/components/points/liveTracker/` (`LivePointHeader`, `LivePointActionBar`, `LivePointContextCards`, `useLivePointState`, `useLivePointMutations`); keep `LivePointTracker.tsx` as composition shell
 - Live tracker polling is consolidated through public `GET /games/{game_id}/live-state` for active point, live turnovers, and live stoppages; prefer extending that payload over adding separate high-frequency live polling queries
-- Game detail page is section-based: `frontend/src/pages/hooks/useGameDetailPageData.ts` + `frontend/src/components/games/detail/` (`GameHeaderActions`, `GameScorePanel`, `GameRosterDialog`, `GameHistorySection`)
+- Game detail data loading is shared through `frontend/src/pages/hooks/useGameDetailPageData.ts`; default/shared game detail pieces stay under `frontend/src/components/games/detail/`, while legacy-only game header/score components live under `frontend/src/legacy-ui/components/games/detail/`
 - Frontend stoppage API naming uses `frontend/src/services/stoppages.ts` and `queryKeys.stoppages`; legacy call aliases are removed
 - Game scheduled date/time inputs and display use the browser's local timezone; convert through `frontend/src/utils/dateTimeLocal.ts` when sending to the API so persisted values stay UTC.
 - UI sport wording must still follow `GLOSSARY.md`: use `stoppage` for the generic interruption concept, and keep `Call` in English when referring to the specific stoppage type

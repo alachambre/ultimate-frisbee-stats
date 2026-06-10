@@ -88,7 +88,8 @@ npm run build
 ## Project Layout
 
 - `src/components/` UI components organized by domain
-- `src/pages/` route pages
+- `src/pages/` default route pages
+- `src/legacy-ui/` legacy route tree, pages, and components that are clearly old-UI-only
 - `src/services/` API clients per entity
 - `src/types/` shared TypeScript types
 - `src/test/` MSW and test utilities
