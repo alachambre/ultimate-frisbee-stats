@@ -52,6 +52,14 @@ def _is_broken(point: TimelinePoint) -> bool:
     return point.starting_on_offense and not point.won
 
 
+def _is_hold(point: TimelinePoint) -> bool:
+    return point.starting_on_offense and point.won
+
+
+def _is_opponent_hold(point: TimelinePoint) -> bool:
+    return not point.starting_on_offense and not point.won
+
+
 def _break_side(point: TimelinePoint) -> Optional[BreakSide]:
     if _is_break(point):
         return "for_us"
@@ -134,16 +142,16 @@ def _find_break_runs(points: Sequence[TimelinePoint]) -> List[BreakSegment]:
 def _find_counter_breaks(points: Sequence[TimelinePoint]) -> List[BreakSegment]:
     counter_breaks: List[BreakSegment] = []
 
-    for index in range(len(points) - 1):
+    for index in range(len(points) - 2):
         first = points[index]
         second = points[index + 1]
-        first_side = _break_side(first)
-        second_side = _break_side(second)
+        third = points[index + 2]
 
-        if first_side is None or second_side is None or first_side == second_side:
-            continue
+        if _is_broken(first) and _is_hold(second) and _is_break(third):
+            counter_breaks.append(("for_us", [first, second, third]))
 
-        counter_breaks.append((second_side, [first, second]))
+        if _is_break(first) and _is_opponent_hold(second) and _is_broken(third):
+            counter_breaks.append(("against_us", [first, second, third]))
 
     return counter_breaks
 
