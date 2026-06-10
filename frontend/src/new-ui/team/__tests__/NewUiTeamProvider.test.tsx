@@ -85,6 +85,36 @@ describe("NewUiTeamProvider", () => {
     expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("1");
   });
 
+  it("auto-selects the first team alphabetically when no team is saved", async () => {
+    server.use(
+      http.get("http://localhost:8000/teams", () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+          {
+            id: 2,
+            name: "Banana Cutters",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      )
+    );
+
+    renderWithProvider(<Probe />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Selected team: Banana Cutters")
+      ).toBeInTheDocument();
+    });
+    expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
+  });
+
   it("restores a saved team when multiple teams are available", async () => {
     localStorage.setItem("monkey-statistics-new-ui-team-id", "2");
     server.use(

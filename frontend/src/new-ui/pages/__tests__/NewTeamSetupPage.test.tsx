@@ -99,7 +99,7 @@ describe("NewTeamSetupPage", () => {
     expect(
       await screen.findByRole("heading", { name: "Team setup" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Monkey Stats")).toBeInTheDocument();
+    expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThan(0);
     expect(
       screen.getByText("All setup changes below apply to this team.")
     ).toBeInTheDocument();
@@ -360,44 +360,39 @@ describe("NewTeamSetupPage", () => {
     });
   });
 
-  it("offers selecting or creating a team when no team is selected", async () => {
-    const user = userEvent.setup();
+  it("opens the first alphabetical team when no team is saved", async () => {
+    const secondTeam = {
+      id: 2,
+      name: "Skyline",
+      created_at: "2026-01-01T00:00:00Z",
+      players: [],
+    };
+
     server.use(
       http.get(`${BASE_URL}/teams`, () =>
-        HttpResponse.json([
-          {
-            id: 1,
-            name: "Monkey Stats",
-            created_at: "2026-01-01T00:00:00Z",
-            players: [],
-          },
-          {
-            id: 2,
-            name: "Skyline",
-            created_at: "2026-01-01T00:00:00Z",
-            players: [],
-          },
-        ])
-      )
+        HttpResponse.json([selectedTeam, secondTeam])
+      ),
+      http.get(`${BASE_URL}/teams/:id`, ({ params }) => {
+        const teamId = Number(params.id);
+        const team = teamId === selectedTeam.id ? selectedTeam : secondTeam;
+        return HttpResponse.json(team);
+      }),
+      http.get(`${BASE_URL}/lines`, () => HttpResponse.json(selectedTeamLines))
     );
 
     renderPage();
 
     expect(
-      await screen.findByRole("heading", { name: "No team selected" })
+      await screen.findByRole("heading", { name: "Team setup" })
     ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "No team selected" }))
+      .not.toBeInTheDocument();
+    expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThan(0);
     expect(screen.getByRole("combobox", { name: "Selected team" }))
       .toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open teams" })).toHaveAttribute(
-      "href",
-      "/teams"
-    );
-
-    await user.click(screen.getByRole("button", { name: "New team" }));
-
     expect(
-      await screen.findByRole("heading", { name: "Create New Team" })
-    ).toBeInTheDocument();
+      localStorage.getItem(STORAGE_KEY)
+    ).toBe("1");
   });
 
   it("selects a newly created team in the workspace", async () => {

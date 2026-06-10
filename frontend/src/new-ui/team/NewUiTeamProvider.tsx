@@ -42,6 +42,14 @@ function readStoredTeamId(): number | undefined {
   return Number.isFinite(parsedValue) ? parsedValue : undefined;
 }
 
+function getDefaultTeamId(teams: TeamWithPlayers[]): number | undefined {
+  return [...teams].sort(
+    (left, right) =>
+      left.name.localeCompare(right.name, undefined, { sensitivity: "base" }) ||
+      left.id - right.id
+  )[0]?.id;
+}
+
 interface NewUiTeamProviderProps {
   children: ReactNode;
   canLoadTeamDetails: boolean;
@@ -70,39 +78,18 @@ export function NewUiTeamProvider({
     () => (!isFetchingTeams ? teams : []),
     [isFetchingTeams, teams]
   );
-  const visibleSelectedTeamId = !isFetchingTeams ? selectedTeamId : undefined;
-
-  useEffect(() => {
-    if (isLoadingTeams || isFetchingTeams || !hasLoadedTeams) {
-      return;
+  const defaultTeamId = useMemo(() => getDefaultTeamId(visibleTeams), [visibleTeams]);
+  const visibleSelectedTeamId = useMemo(() => {
+    if (isFetchingTeams) {
+      return undefined;
     }
 
-    if (teams.length === 1 && selectedTeamId !== teams[0].id) {
-      // Query data determines the default selection once teams have loaded.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedTeamIdState(teams[0].id);
-      window.localStorage.setItem(
-        SELECTED_TEAM_STORAGE_KEY,
-        String(teams[0].id)
-      );
-      return;
-    }
-
-    if (
+    const hasSelectedTeam =
       selectedTeamId !== undefined &&
-      !teams.some((team) => team.id === selectedTeamId)
-    ) {
-      // Query data also invalidates stale persisted selections.
-      setSelectedTeamIdState(undefined);
-      window.localStorage.removeItem(SELECTED_TEAM_STORAGE_KEY);
-    }
-  }, [
-    hasLoadedTeams,
-    isFetchingTeams,
-    isLoadingTeams,
-    selectedTeamId,
-    teams,
-  ]);
+      visibleTeams.some((team) => team.id === selectedTeamId);
+
+    return hasSelectedTeam ? selectedTeamId : defaultTeamId;
+  }, [defaultTeamId, isFetchingTeams, selectedTeamId, visibleTeams]);
 
   const setSelectedTeamId = useCallback((teamId?: number) => {
     setSelectedTeamIdState(teamId);
@@ -113,6 +100,27 @@ export function NewUiTeamProvider({
 
     window.localStorage.setItem(SELECTED_TEAM_STORAGE_KEY, String(teamId));
   }, []);
+
+  useEffect(() => {
+    if (isLoadingTeams || isFetchingTeams || !hasLoadedTeams) {
+      return;
+    }
+
+    if (visibleSelectedTeamId === undefined) {
+      window.localStorage.removeItem(SELECTED_TEAM_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      SELECTED_TEAM_STORAGE_KEY,
+      String(visibleSelectedTeamId)
+    );
+  }, [
+    hasLoadedTeams,
+    isFetchingTeams,
+    isLoadingTeams,
+    visibleSelectedTeamId,
+  ]);
 
   const selectedTeam =
     visibleSelectedTeamId === undefined

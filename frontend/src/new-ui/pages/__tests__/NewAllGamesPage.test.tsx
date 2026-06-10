@@ -200,20 +200,7 @@ describe("NewAllGamesPage", () => {
   it("hides the public spectator notice for an admin global dashboard", async () => {
     server.use(
       http.get(`${BASE_URL}/teams`, () =>
-        HttpResponse.json([
-          {
-            id: 1,
-            name: "Monkey Stats",
-            created_at: "2026-01-01T00:00:00Z",
-            players: [],
-          },
-          {
-            id: 2,
-            name: "Second Team",
-            created_at: "2026-01-01T00:00:00Z",
-            players: [],
-          },
-        ])
+        HttpResponse.json([])
       ),
       http.get(`${BASE_URL}/games`, () =>
         HttpResponse.json([

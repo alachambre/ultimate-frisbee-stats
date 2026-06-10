@@ -12,6 +12,7 @@ import type {
   TurnoverTypeBucket,
   TurnoverTypeStats,
 } from "../../../types";
+import NewTeamSelector from "../../shell/NewTeamSelector";
 import { NewUiTeamProvider } from "../../team/NewUiTeamProvider";
 import NewStatisticsPage from "../NewStatisticsPage";
 
@@ -356,10 +357,12 @@ function setupHandlers() {
 
 function renderPage(
   role: "team_member" | "team_analyst" = "team_analyst",
-  route = "/statistics"
+  route = "/statistics",
+  options: { withTeamSelector?: boolean } = {}
 ) {
   return render(
     <NewUiTeamProvider canLoadTeamDetails>
+      {options.withTeamSelector && <NewTeamSelector />}
       <NewStatisticsPage />
     </NewUiTeamProvider>,
     {
@@ -392,17 +395,21 @@ describe("NewStatisticsPage", () => {
     expect(screen.getAllByText("Monkey Stats").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByText("Hold rate")).toBeInTheDocument();
     expect(screen.getByText("Break rate")).toBeInTheDocument();
+    expect(screen.getAllByText("Core metrics")).toHaveLength(2);
+    expect(screen.queryByText("After turnover and pulls")).not.toBeInTheDocument();
     expect(screen.getAllByText("75%").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("50%").length).toBeGreaterThanOrEqual(1);
     expect(
       screen.getByRole("navigation", { name: "Statistics sections" })
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Current stats" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("1. Team")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("1. Competition")).toBeInTheDocument();
     expect(screen.getByText("Evolution chart")).toBeInTheDocument();
     expect(screen.getByText("Player comparison")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(window.location.search).toContain("teamId=1");
+      expect(window.location.search).not.toContain("teamId=");
     });
   });
 
@@ -415,8 +422,7 @@ describe("NewStatisticsPage", () => {
 
     await waitFor(() => {
       expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
-      expect(window.location.search).toContain("teamId=2");
-      expect(window.location.search).not.toContain("teamId=1");
+      expect(window.location.search).not.toContain("teamId=");
     });
   });
 
@@ -424,26 +430,30 @@ describe("NewStatisticsPage", () => {
     renderPage("team_member");
 
     expect(await screen.findByText("Monkey Stats coach overview")).toBeInTheDocument();
-    expect(screen.queryByLabelText("4. Player filter")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Player filter/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /export csv/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Players" })).not.toBeInTheDocument();
     expect(await screen.findByText("Strategy details")).toBeInTheDocument();
   });
 
-  it("updates the app selected team from the statistics team selector", async () => {
+  it("updates statistics from the top-bar selected team", async () => {
     const user = userEvent.setup();
-    renderPage();
+    renderPage("team_analyst", "/statistics", { withTeamSelector: true });
 
     expect(
       await screen.findByText("Monkey Stats coach overview")
     ).toBeInTheDocument();
+    expect(screen.queryByLabelText("1. Team")).not.toBeInTheDocument();
 
-    await user.click(screen.getByLabelText("1. Team"));
+    await user.click(screen.getByRole("combobox", { name: "Selected team" }));
     await user.click(await screen.findByRole("option", { name: "Flying Foxes" }));
 
+    expect(
+      await screen.findByText("Flying Foxes coach overview")
+    ).toBeInTheDocument();
     await waitFor(() => {
       expect(localStorage.getItem("monkey-statistics-new-ui-team-id")).toBe("2");
-      expect(window.location.search).toContain("teamId=2");
+      expect(window.location.search).not.toContain("teamId=");
     });
   });
 

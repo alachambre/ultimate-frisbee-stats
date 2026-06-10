@@ -45,9 +45,10 @@ interface StatisticsConfigurationPanelProps {
   isConfigurationExpanded: boolean;
   onToggleConfigurationExpanded: () => void;
   summaryItems?: string[];
+  showTeamSelector?: boolean;
   teamId?: number;
   selectedPlayerIds: number[];
-  sortedTeams: TeamWithPlayers[];
+  sortedTeams?: TeamWithPlayers[];
   competitionsForTeam: CompetitionWithTeam[];
   selectedCompetitions: CompetitionWithTeam[];
   availableGames: GameWithScore[];
@@ -58,7 +59,7 @@ interface StatisticsConfigurationPanelProps {
   controlsLoading: boolean;
   isPlayerOptionsLoading: boolean;
   hasControlsError: boolean;
-  onSelectTeam: (teamId?: number) => void;
+  onSelectTeam?: (teamId?: number) => void;
   onSelectCompetitionIds: (competitionIds: number[]) => void;
   onSelectGameIds: (gameIds: number[]) => void;
   onSelectPlayerIds: (playerIds: number[]) => void;
@@ -71,9 +72,10 @@ export default function StatisticsConfigurationPanel({
   isConfigurationExpanded,
   onToggleConfigurationExpanded,
   summaryItems = [],
+  showTeamSelector = true,
   teamId,
   selectedPlayerIds,
-  sortedTeams,
+  sortedTeams = [],
   competitionsForTeam,
   selectedCompetitions,
   availableGames,
@@ -114,6 +116,7 @@ export default function StatisticsConfigurationPanel({
     }
   }, [draftPlayerIds, onSelectPlayerIds, selectedPlayerIds]);
   const isCompact = density === "compact";
+  const firstFilterIndex = showTeamSelector ? 2 : 1;
 
   return (
     <Paper
@@ -188,26 +191,28 @@ export default function StatisticsConfigurationPanel({
               </Alert>
             )}
 
-            <Autocomplete
-              options={sortedTeams}
-              value={selectedTeam}
-              onChange={(_, team) => onSelectTeam(team?.id)}
-              getOptionLabel={(team) => team.name}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={`1. ${t("statistics:workflow.team")}`}
-                  placeholder={t("statistics:workflow.selectTeam")}
-                  helperText={
-                    selectedTeam
-                      ? t("statistics:workflow.stickyTeam", { teamName: selectedTeam.name })
-                      : t("statistics:workflow.selectTeamPrompt")
-                  }
-                />
-              )}
-              noOptionsText={t("common:messages.noData")}
-            />
+            {showTeamSelector && (
+              <Autocomplete
+                options={sortedTeams}
+                value={selectedTeam}
+                onChange={(_, team) => onSelectTeam?.(team?.id)}
+                getOptionLabel={(team) => team.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={`1. ${t("statistics:workflow.team")}`}
+                    placeholder={t("statistics:workflow.selectTeam")}
+                    helperText={
+                      selectedTeam
+                        ? t("statistics:workflow.stickyTeam", { teamName: selectedTeam.name })
+                        : t("statistics:workflow.selectTeamPrompt")
+                    }
+                  />
+                )}
+                noOptionsText={t("common:messages.noData")}
+              />
+            )}
 
             <Autocomplete
               multiple
@@ -244,7 +249,7 @@ export default function StatisticsConfigurationPanel({
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label={`2. ${t("statistics:workflow.competition")}`}
+                  label={`${firstFilterIndex}. ${t("statistics:workflow.competition")}`}
                   placeholder={t("statistics:workflow.selectCompetition")}
                   helperText={
                     teamId === undefined
@@ -291,7 +296,7 @@ export default function StatisticsConfigurationPanel({
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label={`3. ${t("statistics:workflow.game")}`}
+                  label={`${firstFilterIndex + 1}. ${t("statistics:workflow.game")}`}
                   placeholder={t("statistics:workflow.selectGame")}
                   helperText={
                     teamId === undefined
@@ -373,7 +378,7 @@ export default function StatisticsConfigurationPanel({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label={`4. ${t("statistics:workflow.playerFilter")}`}
+                    label={`${firstFilterIndex + 2}. ${t("statistics:workflow.playerFilter")}`}
                     placeholder={t("statistics:workflow.selectPlayer")}
                     helperText={
                       teamId === undefined

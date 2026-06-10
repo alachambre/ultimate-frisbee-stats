@@ -1347,23 +1347,25 @@ export default function NewStatisticsCurrentStats({
           side="defense"
           title={t("statistics:teamStats.defense")}
         >
-          <Box
-            sx={{
-              display: "grid",
-              gap: 2,
-              gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
-            }}
-          >
-            <Box>
-              <Typography
-                color="text.secondary"
-                fontWeight={850}
-                letterSpacing={0.6}
-                textTransform="uppercase"
-                variant="caption"
-              >
-                {t("statistics:newUi.currentStats.coreMetrics")}
-              </Typography>
+          <Box>
+            <Typography
+              color="text.secondary"
+              fontWeight={850}
+              letterSpacing={0.6}
+              textTransform="uppercase"
+              variant="caption"
+            >
+              {t("statistics:newUi.currentStats.coreMetrics")}
+            </Typography>
+            <Box
+              sx={{
+                columnGap: { md: 4.5, lg: 5.5 },
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+                mt: 0.75,
+                rowGap: 0,
+              }}
+            >
               <Box>
                 <MetricRow
                   context={t("statistics:tooltips.turnoverRate")}
@@ -1393,18 +1395,7 @@ export default function NewStatisticsCurrentStats({
                   )}
                 />
               </Box>
-            </Box>
 
-            <Box>
-              <Typography
-                color="text.secondary"
-                fontWeight={850}
-                letterSpacing={0.6}
-                textTransform="uppercase"
-                variant="caption"
-              >
-                {t("statistics:newUi.currentStats.advancedDefense")}
-              </Typography>
               <Box>
                 <MetricRow
                   context={t("statistics:tooltips.conversionRate")}

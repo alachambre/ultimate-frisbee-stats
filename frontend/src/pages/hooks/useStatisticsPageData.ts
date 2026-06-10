@@ -31,6 +31,7 @@ import {
   type StatisticsSelection,
 } from "../../utils/statisticsSelection";
 import type { CompetitionStatisticsTab } from "../../components/statistics/CompetitionStatisticsTabs";
+import type { TeamWithPlayers } from "../../types";
 
 interface StatisticsPageAccess {
   canViewTeamStatistics: boolean;
@@ -44,6 +45,9 @@ interface StatisticsPageQueryOptions {
   activeTab: CompetitionStatisticsTab;
   enabledTabs?: CompetitionStatisticsTab[];
   isPlayerFilterOpen: boolean;
+  controlledTeamId?: number;
+  controlledTeams?: TeamWithPlayers[];
+  isTeamSelectionControlled?: boolean;
 }
 
 const STICKY_TEAM_KEY = "statistics:selectedTeamId";
@@ -66,9 +70,23 @@ export function useStatisticsPageData(
   const [isExporting, setIsExporting] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  const selection = useMemo(() => parseStatisticsSelection(searchParams), [searchParams]);
+  const parsedSelection = useMemo(
+    () => parseStatisticsSelection(searchParams),
+    [searchParams]
+  );
+  const isTeamSelectionControlled =
+    queryOptions.isTeamSelectionControlled ?? false;
+  const teamId = isTeamSelectionControlled
+    ? queryOptions.controlledTeamId
+    : parsedSelection.teamId;
+  const selection = useMemo(
+    () => ({
+      ...parsedSelection,
+      teamId,
+    }),
+    [parsedSelection, teamId]
+  );
 
-  const teamId = selection.teamId;
   const competitionIds = selection.competitionIds;
   const gameIds = selection.gameIds;
   const playerIds = access.canFilterStatisticsByPlayers ? selection.playerIds : EMPTY_IDS;
@@ -87,21 +105,39 @@ export function useStatisticsPageData(
       };
       const merged = mergeStatisticsSelection(currentSelection, updates);
 
-      setSearchParams(serializeStatisticsSelection(merged), {
+      const nextSearchParams = serializeStatisticsSelection(merged);
+      if (isTeamSelectionControlled) {
+        nextSearchParams.delete("teamId");
+      }
+
+      setSearchParams(nextSearchParams, {
         replace: options?.replace,
       });
     },
-    [competitionIds, gameIds, playerIds, setSearchParams, teamId]
+    [
+      competitionIds,
+      gameIds,
+      isTeamSelectionControlled,
+      playerIds,
+      setSearchParams,
+      teamId,
+    ]
   );
 
   const {
-    data: teams,
-    isLoading: isLoadingTeams,
-    error: teamsError,
+    data: queriedTeams,
+    isLoading: isLoadingQueriedTeams,
+    error: queriedTeamsError,
   } = useQuery({
     queryKey: queryKeys.teams,
     queryFn: getTeams,
+    enabled: queryOptions.controlledTeams === undefined,
   });
+  const teams = queryOptions.controlledTeams ?? queriedTeams;
+  const isLoadingTeams =
+    queryOptions.controlledTeams === undefined ? isLoadingQueriedTeams : false;
+  const teamsError =
+    queryOptions.controlledTeams === undefined ? queriedTeamsError : null;
 
   const {
     data: competitions,
@@ -295,7 +331,7 @@ export function useStatisticsPageData(
   }, [access.canFilterStatisticsByPlayers, selection.playerIds.length, updateSelection]);
 
   useEffect(() => {
-    if (!teams || teamId !== undefined) {
+    if (isTeamSelectionControlled || !teams || teamId !== undefined) {
       return;
     }
 
@@ -306,15 +342,15 @@ export function useStatisticsPageData(
     ) {
       updateSelection({ teamId: persistedTeamId }, { replace: true });
     }
-  }, [teamId, teams, updateSelection]);
+  }, [isTeamSelectionControlled, teamId, teams, updateSelection]);
 
   useEffect(() => {
-    if (teamId === undefined) {
+    if (isTeamSelectionControlled || teamId === undefined) {
       return;
     }
 
     localStorage.setItem(STICKY_TEAM_KEY, String(teamId));
-  }, [teamId]);
+  }, [isTeamSelectionControlled, teamId]);
 
   useEffect(() => {
     if (teamId === undefined || controlsLoading || controlsError) {

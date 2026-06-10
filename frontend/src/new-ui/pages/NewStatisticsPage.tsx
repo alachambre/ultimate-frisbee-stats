@@ -15,6 +15,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import { shouldEnforcePermissions, useAuth } from "../../auth";
 import StatisticsConfigurationPanel from "../../components/statistics/StatisticsConfigurationPanel";
@@ -23,6 +24,7 @@ import ErrorState from "../../components/shared/ErrorState";
 import LoadingState from "../../components/shared/LoadingState";
 import { useStatisticsPageData } from "../../pages/hooks/useStatisticsPageData";
 import type { GameWithScore } from "../../types";
+import { parseStatisticsId } from "../../utils/statisticsSelection";
 import type { CompetitionStatisticsTab } from "../../components/statistics/CompetitionStatisticsTabs";
 import NewStatisticsCurrentStats from "../statistics/NewStatisticsCurrentStats";
 import NewStatisticsEvolutionSection from "../statistics/NewStatisticsEvolutionSection";
@@ -187,12 +189,18 @@ export default function NewStatisticsPage() {
   const {
     selectedTeam: appSelectedTeam,
     selectedTeamId: appSelectedTeamId,
+    teams: appTeams,
     setSelectedTeamId: setAppSelectedTeamId,
     isLoadingTeams: isLoadingAppTeams,
     teamsError: appTeamsError,
   } = useNewUiTeam();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isConfigurationExpanded, setIsConfigurationExpanded] = useState(true);
   const [isPlayerFilterOpen, setIsPlayerFilterOpen] = useState(false);
+  const legacyTeamId = useMemo(
+    () => parseStatisticsId(searchParams.get("teamId")),
+    [searchParams]
+  );
 
   const shouldProtectUi = shouldEnforcePermissions(
     auth.enforcementMode,
@@ -253,7 +261,6 @@ export default function NewStatisticsPage() {
     isLoadingTeams,
     teamsError,
     selectedTeam,
-    sortedTeams,
 
     competitionsForTeam,
     selectedCompetitions,
@@ -282,33 +289,37 @@ export default function NewStatisticsPage() {
     teamStrategyStatsError,
   } = useStatisticsPageData(statisticsAccess, {
     activeTab: "team",
+    controlledTeamId: appSelectedTeamId,
+    controlledTeams: appTeams,
     enabledTabs,
+    isTeamSelectionControlled: true,
     isPlayerFilterOpen,
   });
 
   useEffect(() => {
-    if (teamId !== undefined) {
-      if (appSelectedTeamId !== teamId) {
-        setAppSelectedTeamId(teamId);
+    if (legacyTeamId === undefined || isLoadingAppTeams) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("teamId");
+
+    if (appTeams.some((team) => team.id === legacyTeamId)) {
+      if (appSelectedTeamId !== legacyTeamId) {
+        setAppSelectedTeamId(legacyTeamId);
       }
-
-      return;
     }
 
-    if (appSelectedTeamId === undefined) {
-      return;
-    }
-
-    updateSelection(
-      {
-        competitionIds: [],
-        gameIds: [],
-        playerIds: [],
-        teamId: appSelectedTeamId,
-      },
-      { replace: true }
-    );
-  }, [appSelectedTeamId, setAppSelectedTeamId, teamId, updateSelection]);
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [
+    appSelectedTeamId,
+    appTeams,
+    isLoadingAppTeams,
+    legacyTeamId,
+    searchParams,
+    setAppSelectedTeamId,
+    setSearchParams,
+  ]);
 
   const overview = useMemo(
     () => buildScopeOverview(selectedDatasetGames),
@@ -458,15 +469,6 @@ export default function NewStatisticsPage() {
             onSelectPlayerIds={(nextPlayerIds) => {
               updateSelection({ playerIds: nextPlayerIds });
             }}
-            onSelectTeam={(nextTeamId) => {
-              setAppSelectedTeamId(nextTeamId);
-              updateSelection({
-                competitionIds: [],
-                gameIds: [],
-                playerIds: [],
-                teamId: nextTeamId,
-              });
-            }}
             onToggleConfigurationExpanded={() =>
               setIsConfigurationExpanded((currentValue) => !currentValue)
             }
@@ -475,7 +477,7 @@ export default function NewStatisticsPage() {
             selectedGames={selectedGames}
             selectedPlayerIds={playerIds}
             selectedPlayers={selectedPlayers}
-            sortedTeams={sortedTeams}
+            showTeamSelector={false}
             summaryItems={statisticsContextItems}
             teamId={teamId}
           />
