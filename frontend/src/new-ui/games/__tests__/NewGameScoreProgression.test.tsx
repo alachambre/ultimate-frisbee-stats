@@ -20,6 +20,18 @@ function getChartDatasets() {
   }>;
 }
 
+function getChartTooltipItems() {
+  const rawTooltipItems =
+    screen.getByTestId("chartjs-line").getAttribute("data-chart-tooltip-items") ??
+    "[]";
+
+  return JSON.parse(rawTooltipItems) as Array<{
+    afterLabel?: string;
+    label?: string;
+    title?: string;
+  }>;
+}
+
 const timelineWithSpecialPoint: GamePointTimeline = {
   game_id: 1,
   halftime_after_point_number: null,
@@ -125,5 +137,28 @@ describe("NewGameScoreProgression", () => {
       pointRadius: 10,
     });
     expect(selectedDatasetIndex).toBeLessThan(specialDatasetIndex);
+  });
+
+  it("shows both team scores while keeping the tooltip attached to the hovered series", () => {
+    render(
+      <NewGameScoreProgression
+        opponentName="Opponent"
+        teamName="Monkey"
+        timeline={timelineWithSpecialPoint}
+      />,
+    );
+
+    expect(getChartTooltipItems()).toEqual([
+      {
+        afterLabel: "Opponent: 1",
+        label: "Monkey: 2",
+        title: "Point 3",
+      },
+      {
+        afterLabel: "Monkey: 2",
+        label: "Opponent: 1",
+        title: "Point 3",
+      },
+    ]);
   });
 });

@@ -16,6 +16,28 @@ type MockChartDataset = {
   pointStyle?: unknown;
 };
 
+type MockTooltipItem = {
+  dataIndex: number;
+  dataset: MockChartDataset;
+  datasetIndex: number;
+  parsed: {
+    x: number;
+    y: number;
+  };
+};
+
+type MockChartOptions = {
+  plugins?: {
+    tooltip?: {
+      callbacks?: {
+        afterLabel?: (item: MockTooltipItem) => unknown;
+        label?: (item: MockTooltipItem) => unknown;
+        title?: (items: MockTooltipItem[]) => unknown;
+      };
+    };
+  };
+};
+
 function serializeChartDatasets(props: Record<string, unknown>) {
   const data = props.data as { datasets?: MockChartDataset[] } | undefined;
 
@@ -32,6 +54,63 @@ function serializeChartDatasets(props: Record<string, unknown>) {
   );
 }
 
+function getMockTooltipItem(
+  dataset: MockChartDataset,
+  datasetIndex: number,
+): MockTooltipItem {
+  const dataIndex = Math.max(0, (dataset.data?.length ?? 1) - 1);
+  const rawValue = dataset.data?.[dataIndex];
+  const parsed =
+    typeof rawValue === "object" && rawValue !== null
+      ? {
+          x:
+            typeof (rawValue as { x?: unknown }).x === "number"
+              ? (rawValue as { x: number }).x
+              : dataIndex,
+          y:
+            typeof (rawValue as { y?: unknown }).y === "number"
+              ? (rawValue as { y: number }).y
+              : 0,
+        }
+      : {
+          x: dataIndex,
+          y: typeof rawValue === "number" ? rawValue : 0,
+        };
+
+  return {
+    dataIndex,
+    dataset,
+    datasetIndex,
+    parsed,
+  };
+}
+
+function serializeChartTooltipItems(props: Record<string, unknown>) {
+  const data = props.data as { datasets?: MockChartDataset[] } | undefined;
+  const options = props.options as MockChartOptions | undefined;
+  const callbacks = options?.plugins?.tooltip?.callbacks;
+
+  if (!callbacks?.label) {
+    return "[]";
+  }
+
+  try {
+    return JSON.stringify(
+      (data?.datasets ?? []).slice(0, 2).map((dataset, datasetIndex) => {
+        const item = getMockTooltipItem(dataset, datasetIndex);
+
+        return {
+          afterLabel: callbacks.afterLabel?.(item),
+          label: callbacks.label?.(item),
+          title: callbacks.title?.([item]),
+        };
+      }),
+    );
+  } catch {
+    return "[]";
+  }
+}
+
 vi.mock("react-chartjs-2", () => ({
   Chart: forwardRef(function MockChart(props: Record<string, unknown>, ref) {
     void ref;
@@ -40,6 +119,7 @@ vi.mock("react-chartjs-2", () => ({
       "data-testid": "chartjs-chart",
       "data-chart-type": props.type,
       "data-chart-datasets": serializeChartDatasets(props),
+      "data-chart-tooltip-items": serializeChartTooltipItems(props),
       role: props.role ?? "img",
       "aria-label": props["aria-label"] ?? "Chart preview",
     });
@@ -50,6 +130,7 @@ vi.mock("react-chartjs-2", () => ({
     return createElement("div", {
       "data-testid": "chartjs-line",
       "data-chart-datasets": serializeChartDatasets(props),
+      "data-chart-tooltip-items": serializeChartTooltipItems(props),
       role: "img",
       "aria-label": "Chart preview",
     });

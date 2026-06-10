@@ -243,6 +243,45 @@ function getSpecialPointIds(timeline: GamePointTimeline) {
   );
 }
 
+function getTooltipScores(
+  item: TooltipItem<"line">,
+  timeline: GamePointTimeline,
+) {
+  const point =
+    item.dataIndex > 0 ? timeline.points[item.dataIndex - 1] : undefined;
+
+  if (point) {
+    return {
+      opponent: point.opponent_score_after,
+      our: point.our_score_after,
+    };
+  }
+
+  return {
+    opponent: 0,
+    our: 0,
+  };
+}
+
+function getTooltipScoreLines(
+  item: TooltipItem<"line">,
+  timeline: GamePointTimeline,
+  teamName: string,
+  opponentName: string,
+) {
+  const scores = getTooltipScores(item, timeline);
+  const isOpponentSeries = item.datasetIndex === 1;
+  const primaryLabel = isOpponentSeries ? opponentName : teamName;
+  const secondaryLabel = isOpponentSeries ? teamName : opponentName;
+  const primaryScore = isOpponentSeries ? scores.opponent : scores.our;
+  const secondaryScore = isOpponentSeries ? scores.our : scores.opponent;
+
+  return {
+    primary: `${primaryLabel}: ${primaryScore}`,
+    secondary: `${secondaryLabel}: ${secondaryScore}`,
+  };
+}
+
 function LegendLineItem({ color, label }: { color: string; label: string }) {
   return (
     <Box sx={{ alignItems: "center", display: "flex", gap: 0.75 }}>
@@ -620,7 +659,9 @@ export default function NewGameScoreProgression({
             return `${t("charts.xAxis")} ${pointValue}`;
           },
           label: (item: TooltipItem<"line">) =>
-            `${item.dataset.label}: ${Math.round(item.parsed.y ?? 0)}`,
+            getTooltipScoreLines(item, timeline, teamName, opponentName).primary,
+          afterLabel: (item: TooltipItem<"line">) =>
+            getTooltipScoreLines(item, timeline, teamName, opponentName).secondary,
         },
       },
     },
