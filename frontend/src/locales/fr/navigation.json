@@ -200,14 +200,14 @@
       "turnSummary_one": "{{count}} turn",
       "turnSummary_other": "{{count}} turns",
       "keyMomentTypes": {
-        "universe_point": "Point Univers",
-        "galaxy_point": "Point Galaxy",
+        "universe_point": "Univers point",
+        "galaxy_point": "Galaxy point",
         "break_run_for_us": "Série de breaks",
         "break_run_against_us": "Série de breaks",
         "counter_break_for_us": "Counter break",
         "counter_break_against_us": "Counter break",
-        "break": "Point de Break",
-        "broken": "Point Broken",
+        "break": "Break",
+        "broken": "Break adverse",
         "high_turn_point": "Point à turns",
         "long_point": "Point long"
       },
