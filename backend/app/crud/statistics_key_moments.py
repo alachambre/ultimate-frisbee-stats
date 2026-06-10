@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Sequence, Set, Tuple
 
 
-LONG_POINT_SECONDS = 150
+LONG_POINT_MIN_SECONDS = 5 * 60
 HIGH_TURN_COUNT = 3
 MAX_KEY_MOMENTS = 4
 
@@ -62,8 +62,8 @@ def _break_side(point: TimelinePoint) -> Optional[BreakSide]:
     return None
 
 
-def _is_long_point(point: TimelinePoint, long_point_cutoff: int) -> bool:
-    return point.duration_seconds >= long_point_cutoff
+def _is_long_point(point: TimelinePoint) -> bool:
+    return point.duration_seconds > LONG_POINT_MIN_SECONDS
 
 
 def _is_high_turn_point(point: TimelinePoint, high_turn_cutoff: int) -> bool:
@@ -177,11 +177,6 @@ def build_timeline_markers_and_key_moments(
     if not points:
         return {}, []
 
-    long_point_cutoff = _percentile_cutoff(
-        [point.duration_seconds for point in points],
-        0.85,
-        LONG_POINT_SECONDS,
-    )
     high_turn_cutoff = _percentile_cutoff(
         [point.our_turnovers + point.opponent_turnovers for point in points],
         0.85,
@@ -199,7 +194,7 @@ def build_timeline_markers_and_key_moments(
             _add_marker(markers_by_point_id, point.point_id, "break")
         if _is_broken(point):
             _add_marker(markers_by_point_id, point.point_id, "broken")
-        if _is_long_point(point, long_point_cutoff):
+        if _is_long_point(point):
             _add_marker(markers_by_point_id, point.point_id, "long_point")
         if _is_high_turn_point(point, high_turn_cutoff):
             _add_marker(markers_by_point_id, point.point_id, "high_turn_point")
@@ -308,7 +303,7 @@ def build_timeline_markers_and_key_moments(
                 )
             )
 
-        if _is_long_point(point, long_point_cutoff):
+        if _is_long_point(point):
             moments.append(
                 _build_moment(
                     moment_type="long_point",

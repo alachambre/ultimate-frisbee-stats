@@ -28,7 +28,7 @@ def point(
 def test_key_moments_mark_break_broken_long_and_high_turn_points():
     markers, key_moments = build_timeline_markers_and_key_moments([
         point(1, 1, offense=True, won=True, duration=45, score=(1, 0)),
-        point(2, 2, offense=True, won=False, duration=160, our_turnovers=3, score=(1, 1)),
+        point(2, 2, offense=True, won=False, duration=301, our_turnovers=3, score=(1, 1)),
         point(3, 3, offense=False, won=True, duration=60, score=(2, 1)),
         point(4, 4, offense=True, won=True, duration=65, score=(3, 1)),
     ])
@@ -41,6 +41,17 @@ def test_key_moments_mark_break_broken_long_and_high_turn_points():
         "break",
         "high_turn_point",
     }
+
+
+def test_key_moments_mark_long_points_only_above_five_minutes():
+    markers, key_moments = build_timeline_markers_and_key_moments([
+        point(1, 1, offense=True, won=True, duration=300, score=(1, 0)),
+        point(2, 2, offense=True, won=True, duration=301, score=(2, 0)),
+    ])
+
+    assert "long_point" not in markers[1]
+    assert "long_point" in markers[2]
+    assert "long_point" in {moment["type"] for moment in key_moments}
 
 
 def test_key_moments_mark_break_runs_for_each_side():

@@ -83,8 +83,8 @@ const game: GameDetail = {
       },
       comments: null,
       start_datetime: "2026-05-22T10:05:00Z",
-      end_datetime: "2026-05-22T10:08:00Z",
-      duration_seconds: 180,
+      end_datetime: "2026-05-22T10:11:00Z",
+      duration_seconds: 360,
       created_at: "2026-05-22T10:05:00Z",
       players,
       our_turnovers: 0,
@@ -257,7 +257,7 @@ const game: GameDetail = {
         starting_on_offense: false,
         won: true,
         field_side: null,
-        duration_seconds: 180,
+        duration_seconds: 360,
         our_turnovers: 0,
         opponent_turnovers: 1,
         our_score_after: 1,
@@ -442,7 +442,7 @@ describe("NewGameHistoryPage", () => {
     expect(
       screen.getByRole("heading", { name: "Point 2 - High-turn point" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("3:00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("6:00").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2:30").length).toBeGreaterThan(0);
     expect(screen.getAllByText("5 turns").length).toBeGreaterThan(0);
     expect(screen.getAllByText("3 turns").length).toBeGreaterThan(0);

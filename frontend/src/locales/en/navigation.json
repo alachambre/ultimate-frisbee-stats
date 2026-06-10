@@ -221,7 +221,7 @@
         "break": "Defense converted the point.",
         "broken": "Offense was broken.",
         "high_turn_point": "Several possession changes shaped the point.",
-        "long_point": "One of the longest rallies of the game."
+        "long_point": "Point longer than 5 minutes."
       },
       "empty": "No point has been recorded yet.",
       "loading": "Loading game history...",

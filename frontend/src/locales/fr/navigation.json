@@ -221,7 +221,7 @@
         "break": "La défense a fait un break.",
         "broken": "L'attaque s'est fait break.",
         "high_turn_point": "Il y a eu beaucoup de turns sur ce point.",
-        "long_point": "Un des points les plus longs du match."
+        "long_point": "Point de plus de 5 minutes."
       },
       "empty": "Aucun point n'a encore été saisi.",
       "loading": "Chargement de l'historique du match...",

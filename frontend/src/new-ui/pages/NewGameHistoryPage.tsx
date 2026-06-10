@@ -527,12 +527,16 @@ function KeyMomentsSection({
                 const accent = getMomentAccentColor(moment.type, theme);
                 return {
                   alignItems: "stretch",
+                  bgcolor: isSelected ? alpha(accent, 0.07) : "background.paper",
                   border: `1px solid ${
                     isSelected
                       ? alpha(accent, 0.52)
                       : alpha(theme.palette.text.primary, 0.1)
                   }`,
                   borderRadius: 1,
+                  boxShadow: isSelected
+                    ? `0 8px 20px ${alpha(accent, 0.1)}`
+                    : "none",
                   flex: { xs: "0 0 244px", md: "1 1 0" },
                   justifyContent: "flex-start",
                   minHeight: 130,
