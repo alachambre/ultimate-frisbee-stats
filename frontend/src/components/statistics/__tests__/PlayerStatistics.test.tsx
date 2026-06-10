@@ -100,19 +100,19 @@ describe("PlayerStatistics", () => {
       screen.getByRole("button", { name: "Number of completed offensive points played" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Offensive points won, out of all offensive points played." })
+      screen.getByRole("button", { name: "Offense points won out of all offense points." })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Number of completed defensive points played" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Defensive points where at least one turnover occurred, out of all defensive points played." })
+      screen.getByRole("button", { name: "Defense points with at least one possession turnover." })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Defensive points won, out of all defensive points played." })
+      screen.getByRole("button", { name: "Defense points won out of all defense points." })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Defensive points won without us committing a turnover, out of all defensive points played." })
+      screen.getByRole("button", { name: "Defense points won without us making a turnover." })
     ).toBeInTheDocument();
   });
 

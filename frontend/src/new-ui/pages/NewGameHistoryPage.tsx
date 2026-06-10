@@ -117,6 +117,10 @@ function buildPointMap(points: PointWithPlayers[]) {
   }, new Map<number, PointWithPlayers>());
 }
 
+function getPointTurnCount(point: PointWithPlayers): number {
+  return point.our_turnovers ?? 0;
+}
+
 type PointTone = "break" | "broken" | "default" | "effort" | "special";
 
 function buildTimelineMarkersByPointId(timeline: GamePointTimeline | null) {
@@ -509,8 +513,7 @@ function KeyMomentsSection({
           const pointRangeLabel = getPointRangeLabel(moment, pointsById, t);
           const description = getMomentDescription(moment, t);
           const durationLabel = formatPointDuration(point.duration_seconds);
-          const turnCount =
-            (point.our_turnovers ?? 0) + (point.opponent_turnovers ?? 0);
+          const turnCount = getPointTurnCount(point);
           const isSpecialMoment =
             moment.type === "galaxy_point" || moment.type === "universe_point";
 
@@ -685,7 +688,7 @@ function PointSelectButton({
   variant: "rail" | "strip";
 }) {
   const durationLabel = formatPointDuration(point.duration_seconds);
-  const turnCount = (point.our_turnovers ?? 0) + (point.opponent_turnovers ?? 0);
+  const turnCount = getPointTurnCount(point);
 
   return (
     <ButtonBase
@@ -922,9 +925,7 @@ function MobilePointSelector({
   const selectedDurationLabel = selectedPoint
     ? formatPointDuration(selectedPoint.duration_seconds)
     : null;
-  const selectedTurnCount = selectedPoint
-    ? (selectedPoint.our_turnovers ?? 0) + (selectedPoint.opponent_turnovers ?? 0)
-    : 0;
+  const selectedTurnCount = selectedPoint ? getPointTurnCount(selectedPoint) : 0;
   const isOpen = Boolean(anchorElement);
   const menuId = "game-history-mobile-point-menu";
 
@@ -1113,8 +1114,7 @@ function MobilePointSelector({
             t,
           );
           const durationLabel = formatPointDuration(item.point.duration_seconds);
-          const turnCount =
-            (item.point.our_turnovers ?? 0) + (item.point.opponent_turnovers ?? 0);
+          const turnCount = getPointTurnCount(item.point);
           const isSelected = selectedPointId === item.point.id;
 
           return (

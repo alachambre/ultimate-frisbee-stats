@@ -363,7 +363,7 @@ describe("TeamStatistics", () => {
     await user.hover(within(cleanConversionStat).getByRole("button"));
     expect(
       await screen.findByText(
-        "Defensive points won without us committing a turnover, out of defensive points where at least one turnover occurred."
+        "Turnover chances converted without us making a turnover."
       )
     ).toBeInTheDocument();
   });

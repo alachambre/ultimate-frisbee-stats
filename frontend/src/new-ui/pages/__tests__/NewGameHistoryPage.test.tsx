@@ -113,8 +113,8 @@ const game: GameDetail = {
       duration_seconds: 150,
       created_at: "2026-05-22T10:10:00Z",
       players,
-      our_turnovers: 5,
-      opponent_turnovers: 0,
+      our_turnovers: 3,
+      opponent_turnovers: 2,
     },
     {
       id: 3,
@@ -139,8 +139,8 @@ const game: GameDetail = {
       duration_seconds: 45,
       created_at: "2026-05-22T10:09:00Z",
       players,
-      our_turnovers: 3,
-      opponent_turnovers: 0,
+      our_turnovers: 1,
+      opponent_turnovers: 1,
     },
     {
       id: 4,
@@ -166,7 +166,7 @@ const game: GameDetail = {
       created_at: "2026-05-22T10:13:00Z",
       players,
       our_turnovers: 1,
-      opponent_turnovers: 0,
+      opponent_turnovers: 1,
     },
     {
       id: 5,
@@ -218,7 +218,7 @@ const game: GameDetail = {
       created_at: "2026-05-22T10:16:00Z",
       players,
       our_turnovers: 1,
-      opponent_turnovers: 0,
+      opponent_turnovers: 1,
     },
   ],
   timeline: {
@@ -271,8 +271,8 @@ const game: GameDetail = {
         won: false,
         field_side: null,
         duration_seconds: 150,
-        our_turnovers: 5,
-        opponent_turnovers: 0,
+        our_turnovers: 3,
+        opponent_turnovers: 2,
         our_score_after: 1,
         opponent_score_after: 1,
         markers: ["broken", "high_turn_point"],
@@ -285,7 +285,7 @@ const game: GameDetail = {
         field_side: null,
         duration_seconds: 60,
         our_turnovers: 1,
-        opponent_turnovers: 0,
+        opponent_turnovers: 1,
         our_score_after: 2,
         opponent_score_after: 1,
         markers: [],
@@ -311,7 +311,7 @@ const game: GameDetail = {
         field_side: null,
         duration_seconds: 50,
         our_turnovers: 1,
-        opponent_turnovers: 0,
+        opponent_turnovers: 1,
         our_score_after: 3,
         opponent_score_after: 2,
         markers: [],
@@ -444,8 +444,8 @@ describe("NewGameHistoryPage", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("6:00").length).toBeGreaterThan(0);
     expect(screen.getAllByText("2:30").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("5 turns").length).toBeGreaterThan(0);
     expect(screen.getAllByText("3 turns").length).toBeGreaterThan(0);
+    expect(screen.queryByText("5 turns")).not.toBeInTheDocument();
     expect(screen.getAllByText("Running").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Hold").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Clean hold").length).toBeGreaterThan(0);
