@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -26,9 +26,10 @@ import PermissionNotice from "../../components/shared/PermissionNotice";
 import {
   getCompetitionPlayers,
   getCompetitions,
+  deleteCompetition,
 } from "../../services/competitions";
-import { getAllGames } from "../../services/games";
-import type { CompetitionWithTeam } from "../../types";
+import { deleteGame, getAllGames } from "../../services/games";
+import type { CompetitionWithTeam, GameWithScore } from "../../types";
 import { formatDate, formatDateTime } from "../../utils/dateFormatting";
 import { queryKeys } from "../../utils/queryKeys";
 import {
@@ -41,6 +42,7 @@ import { useNewUiTeam } from "../team/useNewUiTeam";
 
 export default function NewAllGamesPage() {
   const auth = useAuth();
+  const queryClient = useQueryClient();
   const { t, i18n } = useTranslation(["navigation", "games", "common"]);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
   const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
@@ -48,6 +50,9 @@ export default function NewAllGamesPage() {
     useState<CompetitionWithTeam | null>(null);
   const [rosterCompetition, setRosterCompetition] =
     useState<CompetitionWithTeam | null>(null);
+  const [competitionToDelete, setCompetitionToDelete] =
+    useState<CompetitionWithTeam | null>(null);
+  const [gameToDelete, setGameToDelete] = useState<GameWithScore | null>(null);
   const {
     selectedTeam,
     selectedTeamId,
@@ -105,6 +110,25 @@ export default function NewAllGamesPage() {
     [effectiveSelectedTeamId, games, teamCompetitions]
   );
 
+  const deleteCompetitionMutation = useMutation({
+    mutationFn: (competitionId: number) => deleteCompetition(competitionId),
+    onSuccess: async () => {
+      setCompetitionToDelete(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.competitions }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.games }),
+      ]);
+    },
+  });
+
+  const deleteGameMutation = useMutation({
+    mutationFn: (gameId: number) => deleteGame(gameId),
+    onSuccess: async () => {
+      setGameToDelete(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.games });
+    },
+  });
+
   const isLoading =
     auth.isLoading ||
     isLoadingTeams ||
@@ -153,6 +177,18 @@ export default function NewAllGamesPage() {
       : formatDateTime(value, i18n.resolvedLanguage);
   };
   const closeRosterDialog = () => setRosterCompetition(null);
+  const closeDeleteCompetitionDialog = () => {
+    if (!deleteCompetitionMutation.isPending) {
+      setCompetitionToDelete(null);
+      deleteCompetitionMutation.reset();
+    }
+  };
+  const closeDeleteGameDialog = () => {
+    if (!deleteGameMutation.isPending) {
+      setGameToDelete(null);
+      deleteGameMutation.reset();
+    }
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 5 } }}>
@@ -332,6 +368,13 @@ export default function NewAllGamesPage() {
                 group={group}
                 key={group.competitionId}
                 labels={{
+                  deleteCompetition: t(
+                    "newUiPages.allGames.actions.deleteCompetition"
+                  ),
+                  deleteCompetitionAria: t(
+                    "newUiPages.allGames.actions.deleteCompetitionAria",
+                    { competitionName: group.competitionName }
+                  ),
                   editCompetition: t(
                     "newUiPages.allGames.actions.editCompetition"
                   ),
@@ -359,6 +402,16 @@ export default function NewAllGamesPage() {
                   if (editableGroup.competition) {
                     setRosterCompetition(editableGroup.competition);
                   }
+                }}
+                onDeleteCompetition={(editableGroup) => {
+                  if (editableGroup.competition) {
+                    deleteCompetitionMutation.reset();
+                    setCompetitionToDelete(editableGroup.competition);
+                  }
+                }}
+                onDeleteGame={(deletableGame) => {
+                  deleteGameMutation.reset();
+                  setGameToDelete(deletableGame);
                 }}
               />
             ))}
@@ -430,8 +483,93 @@ export default function NewAllGamesPage() {
                 teamId={rosterCompetition.team_id}
               />
             )}
+          <ConfirmDeleteDialog
+            errorMessage={t("newUiPages.allGames.deleteCompetition.error")}
+            isDeleting={deleteCompetitionMutation.isPending}
+            isError={deleteCompetitionMutation.isError}
+            message={t("newUiPages.allGames.deleteCompetition.message", {
+              competitionName: competitionToDelete?.name ?? "",
+            })}
+            onClose={closeDeleteCompetitionDialog}
+            onConfirm={() => {
+              if (competitionToDelete) {
+                deleteCompetitionMutation.mutate(competitionToDelete.id);
+              }
+            }}
+            open={competitionToDelete !== null}
+            title={t("newUiPages.allGames.deleteCompetition.title")}
+          />
+          <ConfirmDeleteDialog
+            errorMessage={t("newUiPages.allGames.deleteGame.error")}
+            isDeleting={deleteGameMutation.isPending}
+            isError={deleteGameMutation.isError}
+            message={t("newUiPages.allGames.deleteGame.message", {
+              opponentName: gameToDelete?.opponent_name ?? "",
+            })}
+            onClose={closeDeleteGameDialog}
+            onConfirm={() => {
+              if (gameToDelete) {
+                deleteGameMutation.mutate(gameToDelete.id);
+              }
+            }}
+            open={gameToDelete !== null}
+            title={t("newUiPages.allGames.deleteGame.title")}
+          />
         </>
       )}
     </Container>
+  );
+}
+
+interface ConfirmDeleteDialogProps {
+  errorMessage: string;
+  isDeleting: boolean;
+  isError: boolean;
+  message: string;
+  onClose: () => void;
+  onConfirm: () => void;
+  open: boolean;
+  title: string;
+}
+
+function ConfirmDeleteDialog({
+  errorMessage,
+  isDeleting,
+  isError,
+  message,
+  onClose,
+  onConfirm,
+  open,
+  title,
+}: ConfirmDeleteDialogProps) {
+  const { t } = useTranslation(["common"]);
+
+  return (
+    <Dialog fullWidth maxWidth="xs" onClose={onClose} open={open}>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <Typography color="text.secondary" variant="body2">
+          {message}
+        </Typography>
+        {isError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button disabled={isDeleting} onClick={onClose}>
+          {t("action.cancel")}
+        </Button>
+        <Button
+          color="error"
+          disabled={isDeleting}
+          onClick={onConfirm}
+          variant="contained"
+        >
+          {isDeleting ? t("action.loading") : t("action.delete")}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

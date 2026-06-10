@@ -384,7 +384,9 @@ describe("NewAllGamesPage", () => {
 
     renderPage();
 
-    expect(await screen.findByText("Spring Cup")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Spring Cup" })
+    ).toBeInTheDocument();
     const editButton = screen.getByRole("button", {
       name: "Edit Spring Cup competition",
     });
@@ -416,6 +418,152 @@ describe("NewAllGamesPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("Alex")).toBeInTheDocument();
+  });
+
+  it("deletes a game from the selected-team dashboard", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    let games = [
+      {
+        id: 1,
+        competition_id: 10,
+        opponent_name: "Blue Tigers",
+        date: "2026-05-22T10:00:00Z",
+        comments: null,
+        status: "started",
+        start_datetime: null,
+        end_datetime: null,
+        created_at: "2026-05-01T00:00:00Z",
+        our_score: 5,
+        opponent_score: 4,
+        team_name: "Monkey Stats",
+        competition_name: "Spring Cup",
+      },
+    ];
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, () =>
+        HttpResponse.json([
+          {
+            id: 10,
+            team_id: 1,
+            team_name: "Monkey Stats",
+            name: "Spring Cup",
+            description: null,
+            start_date: "2026-05-01",
+            end_date: "2026-05-31",
+            status: "ongoing",
+            created_at: "2026-05-01T00:00:00Z",
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json(games)),
+      http.delete(`${BASE_URL}/games/1`, () => {
+        games = [];
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderPage();
+
+    expect(await screen.findByText("Blue Tigers")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Delete game against Blue Tigers" })
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Delete game?" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Delete$/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Blue Tigers")).not.toBeInTheDocument();
+    });
+  });
+
+  it("deletes a competition and its games from the selected-team dashboard", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("monkey-statistics-new-ui-team-id", "1");
+    let competitions = [
+      {
+        id: 10,
+        team_id: 1,
+        team_name: "Monkey Stats",
+        name: "Spring Cup",
+        description: null,
+        start_date: "2026-05-01",
+        end_date: "2026-05-31",
+        status: "ongoing",
+        created_at: "2026-05-01T00:00:00Z",
+      },
+    ];
+    let games = [
+      {
+        id: 1,
+        competition_id: 10,
+        opponent_name: "Blue Tigers",
+        date: "2026-05-22T10:00:00Z",
+        comments: null,
+        status: "started",
+        start_datetime: null,
+        end_datetime: null,
+        created_at: "2026-05-01T00:00:00Z",
+        our_score: 5,
+        opponent_score: 4,
+        team_name: "Monkey Stats",
+        competition_name: "Spring Cup",
+      },
+    ];
+    server.use(
+      http.get(`${BASE_URL}/teams`, () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            name: "Monkey Stats",
+            created_at: "2026-01-01T00:00:00Z",
+            players: [],
+          },
+        ])
+      ),
+      http.get(`${BASE_URL}/competitions`, () =>
+        HttpResponse.json(competitions)
+      ),
+      http.get(`${BASE_URL}/games`, () => HttpResponse.json(games)),
+      http.delete(`${BASE_URL}/competitions/10`, () => {
+        competitions = [];
+        games = [];
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "Spring Cup" })
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Delete Spring Cup competition" })
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Delete competition?" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Delete$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: "Spring Cup" })
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("excludes over competitions from the New game competition dropdown", async () => {
@@ -522,6 +670,9 @@ describe("NewAllGamesPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Manage Spring Cup roster" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete Spring Cup competition" })
     ).not.toBeInTheDocument();
   });
 });

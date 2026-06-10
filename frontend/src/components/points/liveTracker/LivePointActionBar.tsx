@@ -1,4 +1,5 @@
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
@@ -21,7 +22,10 @@ interface LivePointActionBarProps {
   hasPendingStoppage: boolean;
   hasValidPlayerComposition?: boolean;
   isLaunchPullPending: boolean;
+  isUpdatePullPending?: boolean;
   onLaunchPull: () => void;
+  onMarkPullInbounds?: () => void;
+  onMarkPullOutOfBounds?: () => void;
   isRestartPending: boolean;
   onRestartPoint: () => void;
   onOpenFinish: () => void;
@@ -33,6 +37,7 @@ interface LivePointActionBarProps {
   onOpenManagePlayers?: () => void;
   onOpenStrategy?: () => void;
   onOpenComment?: () => void;
+  showPullResolution?: boolean;
   variant?: "classic" | "field";
 }
 
@@ -41,7 +46,10 @@ export function LivePointActionBar({
   hasPendingStoppage,
   hasValidPlayerComposition,
   isLaunchPullPending,
+  isUpdatePullPending = false,
   onLaunchPull,
+  onMarkPullInbounds,
+  onMarkPullOutOfBounds,
   isRestartPending,
   onRestartPoint,
   onOpenFinish,
@@ -53,6 +61,7 @@ export function LivePointActionBar({
   onOpenManagePlayers,
   onOpenStrategy,
   onOpenComment,
+  showPullResolution = false,
   variant = "classic",
 }: LivePointActionBarProps) {
   const { t } = useTranslation(["points", "common"]);
@@ -95,6 +104,15 @@ export function LivePointActionBar({
     } satisfies SxProps<Theme>;
     const fieldSetupButtonSx = {
       fontWeight: 800,
+      minHeight: 52,
+      minWidth: 0,
+      px: 2,
+      whiteSpace: "nowrap",
+      "& .MuiButton-startIcon": {
+        mr: 1,
+      },
+    } satisfies SxProps<Theme>;
+    const fieldPullButtonSx = {
       minHeight: 52,
       minWidth: 0,
       px: 2,
@@ -394,6 +412,34 @@ export function LivePointActionBar({
             sx={fieldSetupRowSx}
           >
             {setupActions}
+          </Box>
+        )}
+        {showPullResolution && (
+          <Box
+            role="group"
+            aria-label={t("points:tracker.pullResolutionActions")}
+            sx={fieldSetupRowSx}
+          >
+            <Button
+              color="success"
+              disabled={isUpdatePullPending || !onMarkPullInbounds}
+              onClick={onMarkPullInbounds}
+              startIcon={<CheckCircleIcon />}
+              sx={fieldPullButtonSx}
+              variant="outlined"
+            >
+              {t("points:dialog.start.inbounds")}
+            </Button>
+            <Button
+              color="error"
+              disabled={isUpdatePullPending || !onMarkPullOutOfBounds}
+              onClick={onMarkPullOutOfBounds}
+              startIcon={<CloseIcon />}
+              sx={fieldPullButtonSx}
+              variant="outlined"
+            >
+              {t("points:dialog.start.outOfBounds")}
+            </Button>
           </Box>
         )}
         {primaryAction && (

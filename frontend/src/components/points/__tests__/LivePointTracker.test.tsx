@@ -843,6 +843,105 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(screen.queryByText(/Pull inbound/i)).not.toBeInTheDocument();
     });
 
+    it("shows visible pull result buttons for a running defensive point", async () => {
+      const user = userEvent.setup();
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        startingOnOffense: false,
+        pull: null,
+        strategy: {
+          id: 9,
+          name: "Zone defense",
+          description: null,
+          category: "defense",
+          created_at: "2024-01-01T00:00:00Z",
+        },
+      });
+      const game = createMockGame("started", null, [activePoint]);
+      let submittedPull: boolean | null = null;
+      server.use(
+        http.put(`${BASE_URL}/points/3`, async ({ request }) => {
+          const body = (await request.json()) as { pull?: boolean };
+          submittedPull = body.pull ?? null;
+          return HttpResponse.json({ ...activePoint, pull: body.pull });
+        }),
+      );
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      const pullResultActions = screen.getByRole("group", {
+        name: "Pull result",
+      });
+      expect(
+        within(pullResultActions).getByRole("button", { name: /Inbounds/i }),
+      ).toBeInTheDocument();
+      expect(
+        within(pullResultActions).getByRole("button", {
+          name: /Out of Bounds/i,
+        }),
+      ).toBeInTheDocument();
+
+      await user.click(
+        within(pullResultActions).getByRole("button", { name: /Inbounds/i }),
+      );
+
+      await waitFor(() => expect(submittedPull).toBe(true));
+    });
+
+    it("deletes the current point from the More menu after confirmation", async () => {
+      const user = userEvent.setup();
+      const activePoint = createMockPoint({
+        id: 3,
+        pointNumber: 3,
+        status: "running",
+        pull: true,
+      });
+      const game = createMockGame("started", null, [activePoint]);
+      let deletedPointId: string | undefined;
+      server.use(
+        http.delete(`${BASE_URL}/points/:id`, ({ params }) => {
+          deletedPointId = String(params.id);
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+
+      render(
+        <LivePointTracker
+          activePoint={activePoint}
+          activePointStoppages={[]}
+          activePointTurnovers={[]}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      await user.click(screen.getByRole("button", { name: /^More$/i }));
+      await user.click(
+        await screen.findByRole("menuitem", { name: /Delete point/i }),
+      );
+
+      expect(
+        screen.getByRole("heading", { name: "Delete current point?" }),
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: /^Delete$/i }));
+
+      await waitFor(() => expect(deletedPointId).toBe("3"));
+    });
+
     it("renders current point counters and a compact chronology table above field actions", async () => {
       const activePoint = createMockPoint({
         id: 3,

@@ -55,6 +55,8 @@ function renderAccordion(groupOverrides: Partial<NewGamesCompetitionGroup> = {})
       group={group}
       labels={{
         completed: "Completed",
+        deleteCompetition: "Delete competition",
+        deleteCompetitionAria: "Delete Spring Cup competition",
         editCompetition: "Edit competition",
         editCompetitionAria: "Edit Spring Cup competition",
         emptyCompetition: "No games in this competition yet.",

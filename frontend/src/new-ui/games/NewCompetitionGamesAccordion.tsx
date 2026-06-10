@@ -1,4 +1,5 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -19,6 +20,7 @@ import {
   type NewGamesCompetitionStatusKind,
 } from "./buildNewGamesDashboard";
 import NewGameCard from "./NewGameCard";
+import type { GameWithScore } from "../../types";
 
 interface NewCompetitionGamesAccordionProps {
   canEditData?: boolean;
@@ -26,6 +28,8 @@ interface NewCompetitionGamesAccordionProps {
   group: NewGamesCompetitionGroup;
   formatDate: (value: string | null) => string;
   labels: {
+    deleteCompetition: string;
+    deleteCompetitionAria: string;
     editCompetition: string;
     editCompetitionAria: string;
     emptyCompetition: string;
@@ -36,6 +40,8 @@ interface NewCompetitionGamesAccordionProps {
     completed: string;
     results: string;
   };
+  onDeleteCompetition?: (group: NewGamesCompetitionGroup) => void;
+  onDeleteGame?: (game: GameWithScore) => void;
   onEditCompetition?: (group: NewGamesCompetitionGroup) => void;
   onManageRoster?: (group: NewGamesCompetitionGroup) => void;
 }
@@ -71,9 +77,12 @@ export default function NewCompetitionGamesAccordion({
   group,
   formatDate,
   labels,
+  onDeleteCompetition,
+  onDeleteGame,
   onEditCompetition,
   onManageRoster,
 }: NewCompetitionGamesAccordionProps) {
+  const [isExpanded, setIsExpanded] = useState(group.isInitiallyExpanded);
   const relevantDate =
     group.nextRelevantDate ?? group.mostRecentDate ?? group.startDate;
   const canShowCompetitionActions =
@@ -85,10 +94,14 @@ export default function NewCompetitionGamesAccordion({
   const handleManageRoster = () => {
     onManageRoster?.(group);
   };
+  const handleDeleteCompetition = () => {
+    onDeleteCompetition?.(group);
+  };
 
   return (
     <Accordion
-      defaultExpanded={group.isInitiallyExpanded}
+      expanded={isExpanded}
+      onChange={(_, nextExpanded) => setIsExpanded(nextExpanded)}
       disableGutters
       elevation={0}
       sx={(theme) => ({
@@ -171,6 +184,16 @@ export default function NewCompetitionGamesAccordion({
                 <GroupsIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+            <Tooltip title={labels.deleteCompetition}>
+              <IconButton
+                aria-label={labels.deleteCompetitionAria}
+                color="error"
+                onClick={handleDeleteCompetition}
+                size="small"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Stack>
         )}
       </Box>
@@ -212,6 +235,7 @@ export default function NewCompetitionGamesAccordion({
                 <NewGameCard
                   canEditData={canEditData}
                   game={game}
+                  onDelete={onDeleteGame}
                   variant="row"
                 />
               </Fragment>

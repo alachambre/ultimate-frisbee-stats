@@ -57,6 +57,10 @@
       "actions": {
         "newGame": "New game",
         "newCompetition": "New competition",
+        "deleteCompetition": "Delete competition",
+        "deleteCompetitionAria": "Delete {{competitionName}} competition",
+        "deleteGame": "Delete game",
+        "deleteGameAria": "Delete game against {{opponentName}}",
         "editCompetition": "Edit competition",
         "editCompetitionAria": "Edit {{competitionName}} competition",
         "manageRoster": "Manage roster",
@@ -88,6 +92,16 @@
         "global": "No games are available yet.",
         "competition": "No games in this competition yet.",
         "section": "Nothing to show here right now."
+      },
+      "deleteCompetition": {
+        "title": "Delete competition?",
+        "message": "Delete {{competitionName}} and all games in this competition? This cannot be undone.",
+        "error": "Unable to delete competition."
+      },
+      "deleteGame": {
+        "title": "Delete game?",
+        "message": "Delete the game against {{opponentName}}? This cannot be undone.",
+        "error": "Unable to delete game."
       },
       "loading": "Loading games...",
       "error": "Unable to load games."

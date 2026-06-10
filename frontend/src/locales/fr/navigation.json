@@ -57,6 +57,10 @@
       "actions": {
         "newGame": "Nouveau match",
         "newCompetition": "Nouvelle compétition",
+        "deleteCompetition": "Supprimer la compétition",
+        "deleteCompetitionAria": "Supprimer la compétition {{competitionName}}",
+        "deleteGame": "Supprimer le match",
+        "deleteGameAria": "Supprimer le match contre {{opponentName}}",
         "editCompetition": "Modifier la compétition",
         "editCompetitionAria": "Modifier la compétition {{competitionName}}",
         "manageRoster": "Gérer le roster",
@@ -88,6 +92,16 @@
         "global": "Aucun match disponible pour le moment.",
         "competition": "Aucun match dans cette compétition pour le moment.",
         "section": "Rien à afficher pour le moment."
+      },
+      "deleteCompetition": {
+        "title": "Supprimer la compétition ?",
+        "message": "Supprimer {{competitionName}} et tous les matchs de cette compétition ? Cette action est irréversible.",
+        "error": "Impossible de supprimer la compétition."
+      },
+      "deleteGame": {
+        "title": "Supprimer le match ?",
+        "message": "Supprimer le match contre {{opponentName}} ? Cette action est irréversible.",
+        "error": "Impossible de supprimer le match."
       },
       "loading": "Chargement des matchs...",
       "error": "Impossible de charger les matchs."

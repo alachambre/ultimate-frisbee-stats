@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip, { type ChipProps } from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
@@ -17,6 +20,7 @@ import { formatDateTime } from "../../utils/dateFormatting";
 interface NewGameCardProps {
   canEditData?: boolean;
   game: GameWithScore;
+  onDelete?: (game: GameWithScore) => void;
   variant?: "card" | "row";
 }
 
@@ -78,6 +82,7 @@ function getStatusChipProps(
 export default function NewGameCard({
   canEditData = true,
   game,
+  onDelete,
   variant = "card",
 }: NewGameCardProps) {
   const { t, i18n } = useTranslation(["games", "navigation"]);
@@ -222,6 +227,27 @@ export default function NewGameCard({
           >
             {actionLabel}
           </Button>
+          {canEditData && onDelete && (
+            <Tooltip
+              title={t("navigation:newUiPages.allGames.actions.deleteGame")}
+            >
+              <IconButton
+                aria-label={t(
+                  "navigation:newUiPages.allGames.actions.deleteGameAria",
+                  { opponentName: game.opponent_name }
+                )}
+                color="error"
+                onClick={() => onDelete(game)}
+                size={isRow ? "small" : "medium"}
+                sx={(theme) => ({
+                  border: `1px solid ${theme.palette.error.light}`,
+                  flexShrink: 0,
+                })}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Stack>
       </CardContent>
     </Card>

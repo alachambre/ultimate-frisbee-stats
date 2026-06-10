@@ -22,6 +22,7 @@ import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EmojiObjectsIcon from "@mui/icons-material/EmojiObjects";
 import { useTranslation } from "react-i18next";
 import StartPointDialog from "../modals/StartPointDialog";
@@ -93,6 +94,8 @@ export default function LivePointTracker({
   const [isManagePlayersDialogOpen, setIsManagePlayersDialogOpen] =
     useState(false);
   const [isHalftimeConfirmOpen, setIsHalftimeConfirmOpen] = useState(false);
+  const [isDeletePointConfirmOpen, setIsDeletePointConfirmOpen] =
+    useState(false);
   const [moreActionsAnchor, setMoreActionsAnchor] =
     useState<null | HTMLElement>(null);
   const hasHalftime = Boolean(game.halftime);
@@ -135,9 +138,11 @@ export default function LivePointTracker({
     launchPullMutation,
     restartPointMutation,
     createHalftimeMutation,
+    deleteCurrentPointMutation,
   } = useLivePointMutations({
     gameId: game.id,
     activePoint,
+    currentPoint,
     scoredPoint,
     onPointUpdated,
     onHalftimeCreated: () => {
@@ -455,40 +460,6 @@ export default function LivePointTracker({
                     </ListItemText>
                   </MenuItem>
                 ),
-                isFieldVariant && shouldShowPullResolution && (
-                  <MenuItem
-                    key="pull-inbounds"
-                    disabled={updatePullMutation.isPending}
-                    onClick={() => {
-                      updatePullMutation.mutate(true);
-                      setMoreActionsAnchor(null);
-                    }}
-                  >
-                    <ListItemIcon>
-                      <CheckIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>
-                      {t("points:dialog.start.inbounds")}
-                    </ListItemText>
-                  </MenuItem>
-                ),
-                isFieldVariant && shouldShowPullResolution && (
-                  <MenuItem
-                    key="pull-out-of-bounds"
-                    disabled={updatePullMutation.isPending}
-                    onClick={() => {
-                      updatePullMutation.mutate(false);
-                      setMoreActionsAnchor(null);
-                    }}
-                  >
-                    <ListItemIcon>
-                      <CloseIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>
-                      {t("points:dialog.start.outOfBounds")}
-                    </ListItemText>
-                  </MenuItem>
-                ),
                 <MenuItem
                   key="comment"
                   onClick={() => {
@@ -503,6 +474,22 @@ export default function LivePointTracker({
                     {currentPoint.comments
                       ? t("points:tracker.editComment", "Edit Comment")
                       : t("points:tracker.addComment", "Add Comment")}
+                  </ListItemText>
+                </MenuItem>,
+                <MenuItem
+                  key="delete-current-point"
+                  disabled={deleteCurrentPointMutation.isPending}
+                  onClick={() => {
+                    deleteCurrentPointMutation.reset();
+                    setIsDeletePointConfirmOpen(true);
+                    setMoreActionsAnchor(null);
+                  }}
+                >
+                  <ListItemIcon>
+                    <DeleteIcon color="error" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>
+                    {t("points:tracker.deleteCurrentPoint")}
                   </ListItemText>
                 </MenuItem>,
               ].filter(Boolean)}
@@ -534,7 +521,10 @@ export default function LivePointTracker({
                 hasPendingStoppage={hasPendingStoppage}
                 hasValidPlayerComposition={hasValidPlayerComposition}
                 isLaunchPullPending={launchPullMutation.isPending}
+                isUpdatePullPending={updatePullMutation.isPending}
                 onLaunchPull={() => launchPullMutation.mutate()}
+                onMarkPullInbounds={() => updatePullMutation.mutate(true)}
+                onMarkPullOutOfBounds={() => updatePullMutation.mutate(false)}
                 isRestartPending={restartPointMutation.isPending}
                 onRestartPoint={() => restartPointMutation.mutate()}
                 onOpenFinish={() => setIsFinishDialogOpen(true)}
@@ -548,6 +538,7 @@ export default function LivePointTracker({
                 onOpenManagePlayers={() => setIsManagePlayersDialogOpen(true)}
                 onOpenStrategy={() => setIsStrategyDialogOpen(true)}
                 onOpenComment={() => setIsCommentDialogOpen(true)}
+                showPullResolution={Boolean(shouldShowPullResolution)}
                 variant={variant}
               />
             )}
@@ -718,6 +709,66 @@ export default function LivePointTracker({
               {createHalftimeMutation.isPending
                 ? t("points:tracker.recordingHalftime", "Recording...")
                 : t("common:action.confirm")}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {!readOnly && currentPoint && (
+        <Dialog
+          open={isDeletePointConfirmOpen}
+          onClose={() => {
+            if (!deleteCurrentPointMutation.isPending) {
+              setIsDeletePointConfirmOpen(false);
+              deleteCurrentPointMutation.reset();
+            }
+          }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>
+            {t("points:tracker.deleteCurrentPointTitle")}
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary">
+              {t("points:tracker.deleteCurrentPointDescription", {
+                pointNumber: currentPoint.point_number,
+              })}
+            </Typography>
+            {deleteCurrentPointMutation.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {(
+                  deleteCurrentPointMutation.error as {
+                    response?: { data?: { detail?: string } };
+                  }
+                )?.response?.data?.detail ||
+                  t("points:tracker.deleteCurrentPointError")}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                setIsDeletePointConfirmOpen(false);
+                deleteCurrentPointMutation.reset();
+              }}
+              disabled={deleteCurrentPointMutation.isPending}
+            >
+              {t("common:action.cancel")}
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() =>
+                deleteCurrentPointMutation.mutate(undefined, {
+                  onSuccess: () => setIsDeletePointConfirmOpen(false),
+                })
+              }
+              disabled={deleteCurrentPointMutation.isPending}
+            >
+              {deleteCurrentPointMutation.isPending
+                ? t("common:action.loading")
+                : t("common:action.delete")}
             </Button>
           </DialogActions>
         </Dialog>

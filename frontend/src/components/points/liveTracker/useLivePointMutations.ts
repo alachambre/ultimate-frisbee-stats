@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createHalftime } from "../../../services/halftimes";
-import { updatePoint } from "../../../services/points";
+import { deletePoint, updatePoint } from "../../../services/points";
 import type { PointWithPlayers } from "../../../types";
 import {
   invalidateGameAfterPointMutation,
@@ -11,6 +11,7 @@ import { queryKeys } from "../../../utils/queryKeys";
 interface UseLivePointMutationsParams {
   gameId: number;
   activePoint: PointWithPlayers | null;
+  currentPoint?: PointWithPlayers | null;
   scoredPoint?: PointWithPlayers;
   onPointUpdated?: () => void;
   onHalftimeCreated?: () => void;
@@ -19,6 +20,7 @@ interface UseLivePointMutationsParams {
 export function useLivePointMutations({
   gameId,
   activePoint,
+  currentPoint,
   scoredPoint,
   onPointUpdated,
   onHalftimeCreated,
@@ -87,10 +89,22 @@ export function useLivePointMutations({
     },
   });
 
+  const deleteCurrentPointMutation = useMutation({
+    mutationFn: () => {
+      if (!currentPoint) throw new Error("No current point");
+      return deletePoint(currentPoint.id);
+    },
+    onSuccess: async () => {
+      await invalidateGameAfterPointMutation(queryClient, gameId);
+      onPointUpdated?.();
+    },
+  });
+
   return {
     updatePullMutation,
     launchPullMutation,
     restartPointMutation,
     createHalftimeMutation,
+    deleteCurrentPointMutation,
   };
 }
