@@ -256,7 +256,7 @@ export default function AllGamesPage() {
                   sx={(theme) => ({
                     bgcolor: {
                       xs: theme.palette.background.paper,
-                      sm: theme.colors.newUi.primary,
+                      sm: theme.colors.newUi.primaryAction,
                     },
                     border: {
                       xs: `1px solid ${theme.colors.newUi.primaryBorder}`,
@@ -271,12 +271,12 @@ export default function AllGamesPage() {
                     },
                     color: {
                       xs: theme.colors.newUi.primary,
-                      sm: theme.palette.common.white,
+                      sm: theme.colors.newUi.primaryActionText,
                     },
                     "&:hover": {
                       bgcolor: {
                         xs: theme.palette.background.paper,
-                        sm: theme.colors.newUi.primary,
+                        sm: theme.colors.newUi.primaryActionHover,
                       },
                       boxShadow: {
                         xs: `0 5px 12px ${alpha(

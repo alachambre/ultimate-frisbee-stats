@@ -82,10 +82,10 @@ export default function RecordGameDetailPage() {
     },
   });
   const newUiContainedButtonSx = (theme: import("@mui/material/styles").Theme) => ({
-    bgcolor: theme.colors.newUi.primary,
-    color: theme.palette.common.white,
+    bgcolor: theme.colors.newUi.primaryAction,
+    color: theme.colors.newUi.primaryActionText,
     "&:hover": {
-      bgcolor: theme.colors.newUi.primary,
+      bgcolor: theme.colors.newUi.primaryActionHover,
     },
   });
 

@@ -224,9 +224,10 @@ export function LivePointActionBar({
           }
           sx={{
             ...fieldPrimaryButtonSx,
-            bgcolor: (theme) => theme.colors.newUi.primary,
+            bgcolor: (theme) => theme.colors.newUi.primaryAction,
+            color: (theme) => theme.colors.newUi.primaryActionText,
             "&:hover": {
-              bgcolor: (theme) => theme.colors.newUi.primary,
+              bgcolor: (theme) => theme.colors.newUi.primaryActionHover,
             },
           }}
         >

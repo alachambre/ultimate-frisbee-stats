@@ -75,6 +75,11 @@ declare module "@mui/material/styles" {
         primary: string;
         primarySoft: string;
         primaryBorder: string;
+        primaryAction: string;
+        primaryActionHover: string;
+        primaryActionText: string;
+        primarySurface: string;
+        primarySurfaceText: string;
       };
     };
   }
@@ -109,6 +114,11 @@ declare module "@mui/material/styles" {
         primary?: string;
         primarySoft?: string;
         primaryBorder?: string;
+        primaryAction?: string;
+        primaryActionHover?: string;
+        primaryActionText?: string;
+        primarySurface?: string;
+        primarySurfaceText?: string;
       };
     };
   }
@@ -147,6 +157,11 @@ declare module "@mui/system" {
         primary: string;
         primarySoft: string;
         primaryBorder: string;
+        primaryAction: string;
+        primaryActionHover: string;
+        primaryActionText: string;
+        primarySurface: string;
+        primarySurfaceText: string;
       };
     };
   }

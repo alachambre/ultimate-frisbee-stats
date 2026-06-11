@@ -594,10 +594,10 @@ export default function TeamSetupPage() {
                   onClick={() => setIsCreateTeamOpen(true)}
                   startIcon={<AddIcon />}
                   sx={(theme) => ({
-                    bgcolor: theme.colors.newUi.primary,
-                    color: theme.palette.common.white,
+                    bgcolor: theme.colors.newUi.primaryAction,
+                    color: theme.colors.newUi.primaryActionText,
                     "&:hover": {
-                      bgcolor: theme.colors.newUi.primary,
+                      bgcolor: theme.colors.newUi.primaryActionHover,
                     },
                   })}
                   variant="contained"
@@ -730,10 +730,10 @@ export default function TeamSetupPage() {
                   onClick={() => setIsCreateTeamOpen(true)}
                   startIcon={<AddIcon />}
                   sx={(theme) => ({
-                    bgcolor: theme.colors.newUi.primary,
-                    color: theme.palette.common.white,
+                    bgcolor: theme.colors.newUi.primaryAction,
+                    color: theme.colors.newUi.primaryActionText,
                     "&:hover": {
-                      bgcolor: theme.colors.newUi.primary,
+                      bgcolor: theme.colors.newUi.primaryActionHover,
                     },
                   })}
                   variant="contained"
@@ -841,11 +841,11 @@ export default function TeamSetupPage() {
                         onClick={() => setIsAddPlayerOpen(true)}
                         startIcon={<PeopleAltIcon />}
                         sx={(theme) => ({
-                          bgcolor: theme.colors.newUi.primary,
-                          color: theme.palette.common.white,
+                          bgcolor: theme.colors.newUi.primaryAction,
+                          color: theme.colors.newUi.primaryActionText,
                           flexShrink: 0,
                           "&:hover": {
-                            bgcolor: theme.colors.newUi.primary,
+                            bgcolor: theme.colors.newUi.primaryActionHover,
                           },
                         })}
                         variant="contained"
@@ -1103,11 +1103,11 @@ export default function TeamSetupPage() {
                         onClick={() => setIsCreateLineOpen(true)}
                         startIcon={<AddIcon />}
                         sx={(theme) => ({
-                          bgcolor: theme.colors.newUi.primary,
-                          color: theme.palette.common.white,
+                          bgcolor: theme.colors.newUi.primaryAction,
+                          color: theme.colors.newUi.primaryActionText,
                           flexShrink: 0,
                           "&:hover": {
-                            bgcolor: theme.colors.newUi.primary,
+                            bgcolor: theme.colors.newUi.primaryActionHover,
                           },
                         })}
                         variant="contained"

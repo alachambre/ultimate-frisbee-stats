@@ -3,17 +3,14 @@ import { type ReactElement } from "react";
 import { render as rtlRender, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider } from "@mui/material/styles";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../locales";
 import { AuthProvider } from "../auth";
 import type { AppRole, AuthEnforcementMode } from "../auth";
-import { createAppTheme } from "../theme";
+import { ThemeModeProvider } from "../themeMode/ThemeModeProvider";
 
 // Create a custom render function that includes providers
 // Similar to backend's conftest.py fixtures
-
-const theme = createAppTheme();
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -55,13 +52,13 @@ const AllTheProviders = ({ children, auth }: AllTheProvidersProps) => {
 
   return (
     <I18nextProvider i18n={testI18n}>
-      <ThemeProvider theme={theme}>
+      <ThemeModeProvider>
         <QueryClientProvider client={testQueryClient}>
           <AuthProvider {...auth}>
             <BrowserRouter>{children}</BrowserRouter>
           </AuthProvider>
         </QueryClientProvider>
-      </ThemeProvider>
+      </ThemeModeProvider>
     </I18nextProvider>
   );
 };

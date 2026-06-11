@@ -323,11 +323,12 @@ export default function StrategiesPage() {
   const newUiPrimaryButtonSx = (
     theme: import("@mui/material/styles").Theme
   ) => ({
-    bgcolor: theme.colors.newUi.primary,
-    boxShadow: `0 3px 8px ${alpha(theme.colors.newUi.primary, 0.22)}`,
+    bgcolor: theme.colors.newUi.primaryAction,
+    boxShadow: `0 3px 8px ${alpha(theme.colors.newUi.primaryAction, 0.22)}`,
+    color: theme.colors.newUi.primaryActionText,
     "&:hover": {
-      bgcolor: alpha(theme.colors.newUi.primary, 0.92),
-      boxShadow: `0 4px 10px ${alpha(theme.colors.newUi.primary, 0.28)}`,
+      bgcolor: theme.colors.newUi.primaryActionHover,
+      boxShadow: `0 4px 10px ${alpha(theme.colors.newUi.primaryAction, 0.28)}`,
     },
   });
 
