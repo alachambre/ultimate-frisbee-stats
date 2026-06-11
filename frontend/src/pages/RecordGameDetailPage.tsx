@@ -51,7 +51,7 @@ import { useGameDetailPageData } from "./hooks/useGameDetailPageData";
 
 export default function RecordGameDetailPage() {
   const auth = useAuth();
-  const { t, i18n } = useTranslation(["navigation", "games", "common"]);
+  const { t, i18n } = useTranslation(["games", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const queryClient = useQueryClient();
 
@@ -167,7 +167,7 @@ export default function RecordGameDetailPage() {
           sx={{ alignSelf: "flex-start" }}
           to="/record"
         >
-          {t("navigation:newUiPages.recordGame.detail.back")}
+          {t("games:recording.detail.back")}
         </Button>
 
         <Paper
@@ -187,10 +187,10 @@ export default function RecordGameDetailPage() {
             >
               <Box>
                 <Typography color="text.secondary" variant="overline">
-                  {t("navigation:newUiPages.recordGame.detail.eyebrow")}
+                  {t("games:recording.detail.eyebrow")}
                 </Typography>
                 <Typography component="h1" fontWeight={900} variant="h5">
-                  {t("navigation:newUiPages.recordGame.detail.heading", {
+                  {t("games:recording.detail.heading", {
                     teamName: game.team_name,
                     opponentName: game.opponent_name,
                   })}
@@ -208,7 +208,7 @@ export default function RecordGameDetailPage() {
             </Stack>
 
             <Box
-              aria-label={t("navigation:newUiPages.recordGame.detail.score")}
+              aria-label={t("games:recording.detail.score")}
               sx={{
                 bgcolor: "action.hover",
                 borderRadius: 1,
@@ -216,7 +216,7 @@ export default function RecordGameDetailPage() {
               }}
             >
               <Typography color="text.secondary" textAlign="center" variant="body2">
-                {t("navigation:newUiPages.recordGame.detail.score")}
+                {t("games:recording.detail.score")}
               </Typography>
               <Stack
                 alignItems="center"
@@ -336,7 +336,7 @@ export default function RecordGameDetailPage() {
 
         <Box component="section">
           <Typography component="h2" fontWeight={800} gutterBottom variant="h6">
-            {t("navigation:newUiPages.recordGame.detail.history")}
+            {t("games:recording.detail.history")}
           </Typography>
           <GameHistorySection
             gameEndedAt={game.end_datetime}

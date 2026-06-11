@@ -20,21 +20,21 @@ interface NewRecordGameCardProps {
 
 function getActionLabel(
   status: GameWithScore["status"],
-  t: ReturnType<typeof useTranslation<["games", "navigation"]>>["t"]
+  t: ReturnType<typeof useTranslation<"games">>["t"]
 ) {
   if (status === "started") {
-    return t("navigation:newUiPages.recordGame.actions.continue", {
+    return t("games:recording.actions.continue", {
       defaultValue: "Continue recording",
     });
   }
 
-  return t("navigation:newUiPages.recordGame.actions.prepare", {
+  return t("games:recording.actions.prepare", {
     defaultValue: "Prepare game",
   });
 }
 
 export default function NewRecordGameCard({ game }: NewRecordGameCardProps) {
-  const { t, i18n } = useTranslation(["games", "navigation"]);
+  const { t, i18n } = useTranslation("games");
   const actionLabel = getActionLabel(game.status, t);
 
   return (

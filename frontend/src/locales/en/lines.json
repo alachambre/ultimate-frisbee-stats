@@ -53,5 +53,36 @@
     "noLines": "No lines yet",
     "description": "Create lines to organize players into offensive, defensive, or custom groups",
     "createFirst": "Create your first line"
+  },
+  "teamSetup": {
+    "actions": {
+      "newLine": "New line",
+      "editLine": "Edit",
+      "editLineAria": "Edit {{lineName}}",
+      "deleteLine": "Delete",
+      "deleteLineAria": "Delete {{lineName}}",
+      "manageLineRoster": "Manage roster",
+      "manageLineRosterAria": "Manage {{lineName}} roster"
+    },
+    "lines": {
+      "title": "Lines",
+      "copy": "Reusable player groups for fast sideline selection.",
+      "loading": "Loading lines...",
+      "error": "Unable to load lines.",
+      "empty": "No lines yet.",
+      "tableLabel": "Team lines",
+      "composition": "{{men}}M / {{women}}W",
+      "noPlayers": "No players",
+      "lineDataUnavailable": "Lines unavailable",
+      "deleteTitle": "Delete line?",
+      "deleteConfirm": "Are you sure you want to delete {{lineName}}?",
+      "deleteError": "Unable to delete line.",
+      "columns": {
+        "line": "Line",
+        "composition": "Composition",
+        "players": "Players",
+        "actions": "Actions"
+      }
+    }
   }
 }

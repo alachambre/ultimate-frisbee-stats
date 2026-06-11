@@ -44,5 +44,55 @@
   "card": {
     "players": "{{count}} player",
     "players_plural": "{{count}} players"
+  },
+  "setup": {
+    "heading": "Team setup",
+    "copy": "Maintain the selected team roster and reusable lines in one operational workspace.",
+    "selectedTeamEyebrow": "{{teamName}} configuration",
+    "noTeamEyebrow": "No team selected",
+    "noTeamTitle": "No team selected",
+    "noTeamCopy": "Select a team to configure its roster and lines.",
+    "noTeamsCopy": "Create a team before configuring roster and lines.",
+    "playerCount": {
+      "one": "{{count}} player",
+      "other": "{{count}} players"
+    },
+    "loading": "Loading team setup...",
+    "error": "Unable to load team setup.",
+    "teamCard": {
+      "label": "Selected team context",
+      "selectedLabel": "Selected team",
+      "selectLabel": "Selected team",
+      "scopeCopy": "All setup changes below apply to this team.",
+      "onlyTeam": "Only team available"
+    },
+    "summary": {
+      "label": "Team summary",
+      "players": "Players",
+      "men": "Men",
+      "women": "Women",
+      "lines": "Lines"
+    },
+    "tabs": {
+      "label": "Team setup sections",
+      "roster": "Roster",
+      "lines": "Lines"
+    },
+    "actions": {
+      "openTeams": "Open teams",
+      "newTeam": "New team",
+      "renameTeam": "Rename team",
+      "deleteTeam": "Delete team"
+    },
+    "renameTeam": {
+      "title": "Rename team",
+      "nameLabel": "Team name",
+      "error": "Unable to rename team."
+    },
+    "deleteTeam": {
+      "title": "Delete team?",
+      "confirm": "Delete {{teamName}}? This will remove its players, lines, competitions, and games. This cannot be undone.",
+      "error": "Unable to delete team."
+    }
   }
 }

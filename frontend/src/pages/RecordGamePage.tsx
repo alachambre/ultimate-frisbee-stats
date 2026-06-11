@@ -17,7 +17,7 @@ import NewRecordGamesSection from "../components/record/NewRecordGamesSection";
 import { useSelectedTeam } from "../components/team/useSelectedTeam";
 
 export default function RecordGamePage() {
-  const { t } = useTranslation("navigation");
+  const { t } = useTranslation("games");
   const { selectedTeam, selectedTeamId, isLoadingTeams, teamsError } =
     useSelectedTeam();
   const effectiveSelectedTeamId = teamsError ? undefined : selectedTeamId;
@@ -61,11 +61,11 @@ export default function RecordGamePage() {
   const error = teamsError || gamesError || teamCompetitionsError;
 
   if (isLoading) {
-    return <LoadingState message={t("newUiPages.recordGame.loading")} />;
+    return <LoadingState message={t("games:recording.loading")} />;
   }
 
   if (error) {
-    return <ErrorState message={t("newUiPages.recordGame.error")} />;
+    return <ErrorState message={t("games:recording.error")} />;
   }
 
   return (
@@ -74,16 +74,16 @@ export default function RecordGamePage() {
         <Box sx={{ maxWidth: 760 }}>
           <Typography color="text.secondary" variant="overline">
             {selectedTeam && effectiveSelectedTeamId !== undefined
-              ? t("newUiPages.recordGame.selectedTeamEyebrow", {
+              ? t("games:recording.selectedTeamEyebrow", {
                   teamName: selectedTeam.name,
                 })
-              : t("newUiPages.recordGame.globalEyebrow")}
+              : t("games:recording.globalEyebrow")}
           </Typography>
           <Typography component="h1" gutterBottom variant="h4">
-            {t("newUiPages.recordGame.heading")}
+            {t("games:recording.heading")}
           </Typography>
           <Typography color="text.secondary" variant="body1">
-            {t("newUiPages.recordGame.copy")}
+            {t("games:recording.copy")}
           </Typography>
         </Box>
 
@@ -99,20 +99,20 @@ export default function RecordGamePage() {
             })}
           >
             <Typography variant="body1">
-              {t("newUiPages.recordGame.empty.page")}
+              {t("games:recording.empty.page")}
             </Typography>
           </Paper>
         ) : (
           <Stack spacing={4}>
             <NewRecordGamesSection
-              emptyLabel={t("newUiPages.recordGame.empty.section")}
+              emptyLabel={t("games:recording.empty.section")}
               games={recordView.startedGames}
-              title={t("newUiPages.recordGame.sections.started")}
+              title={t("games:recording.sections.started")}
             />
             <NewRecordGamesSection
-              emptyLabel={t("newUiPages.recordGame.empty.section")}
+              emptyLabel={t("games:recording.empty.section")}
               games={recordView.readyGames}
-              title={t("newUiPages.recordGame.sections.ready")}
+              title={t("games:recording.sections.ready")}
             />
           </Stack>
         )}

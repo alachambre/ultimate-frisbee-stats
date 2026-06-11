@@ -43,7 +43,7 @@ import { useSelectedTeam } from "../components/team/useSelectedTeam";
 export default function AllGamesPage() {
   const auth = useAuth();
   const queryClient = useQueryClient();
-  const { t, i18n } = useTranslation(["navigation", "games", "common"]);
+  const { t, i18n } = useTranslation(["games", "competitions", "common"]);
   const [isCreateCompetitionOpen, setIsCreateCompetitionOpen] = useState(false);
   const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
   const [editingCompetition, setEditingCompetition] =
@@ -128,11 +128,11 @@ export default function AllGamesPage() {
   const error = gamesError || teamCompetitionsError;
 
   if (isLoading) {
-    return <LoadingState message={t("newUiPages.allGames.loading")} />;
+    return <LoadingState message={t("games:dashboard.loading")} />;
   }
 
   if (error) {
-    return <ErrorState message={t("newUiPages.allGames.error")} />;
+    return <ErrorState message={t("games:dashboard.error")} />;
   }
 
   const hasTeamScope = effectiveSelectedTeamId !== undefined;
@@ -142,22 +142,22 @@ export default function AllGamesPage() {
     shouldProtectUi && !auth.hasAppAccess && isGlobalGameFallback;
   const pageEyebrow =
     selectedTeam && hasTeamScope
-      ? t("newUiPages.allGames.selectedTeamEyebrow", {
+      ? t("games:dashboard.selectedTeamEyebrow", {
           teamName: selectedTeam.name,
         })
       : shouldShowPublicSpectatorNotice
-        ? t("newUiPages.allGames.globalEyebrow")
-        : t("newUiPages.allGames.globalDashboardEyebrow");
+        ? t("games:dashboard.globalEyebrow")
+        : t("games:dashboard.globalDashboardEyebrow");
   const pageCopy = shouldShowPublicSpectatorNotice
-    ? t("newUiPages.allGames.publicNotice")
+    ? t("games:dashboard.publicNotice")
     : hasTeamScope
-      ? t("newUiPages.allGames.copy")
-      : t("newUiPages.allGames.globalCopy");
+      ? t("games:dashboard.copy")
+      : t("games:dashboard.globalCopy");
   const emptyMessage = hasTeamScope
-    ? t("newUiPages.allGames.empty.team")
+    ? t("games:dashboard.empty.team")
     : shouldShowPublicSpectatorNotice
-      ? t("newUiPages.allGames.empty.public")
-      : t("newUiPages.allGames.empty.global");
+      ? t("games:dashboard.empty.public")
+      : t("games:dashboard.empty.global");
   const formatCompetitionDate = (value: string | null) => {
     if (!value) {
       return t("games:detail.dateNotSet");
@@ -214,7 +214,7 @@ export default function AllGamesPage() {
                 sx={{ lineHeight: 1.1 }}
                 variant="h4"
               >
-                {t("newUiPages.allGames.heading")}
+                {t("games:dashboard.heading")}
               </Typography>
               {selectedTeam && effectiveSelectedTeamId !== undefined && (
                 <Chip
@@ -290,7 +290,7 @@ export default function AllGamesPage() {
                   type="button"
                   variant="contained"
                 >
-                  {t("newUiPages.allGames.actions.newGame")}
+                  {t("games:dashboard.actions.newGame")}
                 </Button>
                 <Button
                   onClick={() => setIsCreateCompetitionOpen(true)}
@@ -306,7 +306,7 @@ export default function AllGamesPage() {
                   type="button"
                   variant="outlined"
                 >
-                  {t("newUiPages.allGames.actions.newCompetition")}
+                  {t("competitions:dashboard.actions.newCompetition")}
                 </Button>
               </>
             )}
@@ -315,18 +315,18 @@ export default function AllGamesPage() {
 
         {shouldShowPublicSpectatorNotice && (
           <PermissionNotice
-            title={t("newUiPages.allGames.publicCopy")}
-            description={t("newUiPages.allGames.publicNotice")}
+            title={t("games:dashboard.publicCopy")}
+            description={t("games:dashboard.publicNotice")}
           />
         )}
 
         <NewGamesSummaryStrip
           summary={dashboard.summary}
           labels={{
-            live: t("newUiPages.allGames.summary.live"),
-            upcoming: t("newUiPages.allGames.summary.upcoming"),
-            completed: t("newUiPages.allGames.summary.completed"),
-            results: t("newUiPages.allGames.summary.results"),
+            live: t("games:dashboard.summary.live"),
+            upcoming: t("games:dashboard.summary.upcoming"),
+            completed: t("games:dashboard.summary.completed"),
+            results: t("games:dashboard.summary.results"),
           }}
         />
 
@@ -353,31 +353,31 @@ export default function AllGamesPage() {
                 key={group.competitionId}
                 labels={{
                   deleteCompetition: t(
-                    "newUiPages.allGames.actions.deleteCompetition"
+                    "competitions:dashboard.actions.deleteCompetition"
                   ),
                   deleteCompetitionAria: t(
-                    "newUiPages.allGames.actions.deleteCompetitionAria",
+                    "competitions:dashboard.actions.deleteCompetitionAria",
                     { competitionName: group.competitionName }
                   ),
                   editCompetition: t(
-                    "newUiPages.allGames.actions.editCompetition"
+                    "competitions:dashboard.actions.editCompetition"
                   ),
                   editCompetitionAria: t(
-                    "newUiPages.allGames.actions.editCompetitionAria",
+                    "competitions:dashboard.actions.editCompetitionAria",
                     { competitionName: group.competitionName }
                   ),
                   emptyCompetition: t(
-                    "newUiPages.allGames.empty.competition"
+                    "competitions:dashboard.empty.competition"
                   ),
-                  live: t("newUiPages.allGames.summary.live"),
-                  manageRoster: t("newUiPages.allGames.actions.manageRoster"),
+                  live: t("games:dashboard.summary.live"),
+                  manageRoster: t("competitions:dashboard.actions.manageRoster"),
                   manageRosterAria: t(
-                    "newUiPages.allGames.actions.manageRosterAria",
+                    "competitions:dashboard.actions.manageRosterAria",
                     { competitionName: group.competitionName }
                   ),
-                  upcoming: t("newUiPages.allGames.summary.upcoming"),
-                  completed: t("newUiPages.allGames.summary.completed"),
-                  results: t("newUiPages.allGames.summary.results"),
+                  upcoming: t("games:dashboard.summary.upcoming"),
+                  completed: t("games:dashboard.summary.completed"),
+                  results: t("games:dashboard.summary.results"),
                 }}
                 onEditCompetition={(editableGroup) =>
                   setEditingCompetition(editableGroup.competition)
@@ -422,7 +422,7 @@ export default function AllGamesPage() {
           {rosterCompetition && isLoadingRosterPlayers && (
             <Dialog open onClose={closeRosterDialog} maxWidth="sm" fullWidth>
               <DialogTitle>
-                {t("newUiPages.allGames.actions.manageRoster")}
+                {t("competitions:dashboard.actions.manageRoster")}
               </DialogTitle>
               <DialogContent>
                 <Typography color="text.secondary">
@@ -439,7 +439,7 @@ export default function AllGamesPage() {
           {rosterCompetition && rosterPlayersError && (
             <Dialog open onClose={closeRosterDialog} maxWidth="sm" fullWidth>
               <DialogTitle>
-                {t("newUiPages.allGames.actions.manageRoster")}
+                {t("competitions:dashboard.actions.manageRoster")}
               </DialogTitle>
               <DialogContent>
                 <Alert severity="error">{t("common:error.loading")}</Alert>
@@ -464,10 +464,10 @@ export default function AllGamesPage() {
               />
             )}
           <ConfirmDeleteDialog
-            errorMessage={t("newUiPages.allGames.deleteCompetition.error")}
+            errorMessage={t("competitions:dashboard.deleteCompetition.error")}
             isDeleting={deleteCompetitionMutation.isPending}
             isError={deleteCompetitionMutation.isError}
-            message={t("newUiPages.allGames.deleteCompetition.message", {
+            message={t("competitions:dashboard.deleteCompetition.message", {
               competitionName: competitionToDelete?.name ?? "",
             })}
             onClose={closeDeleteCompetitionDialog}
@@ -477,7 +477,7 @@ export default function AllGamesPage() {
               }
             }}
             open={competitionToDelete !== null}
-            title={t("newUiPages.allGames.deleteCompetition.title")}
+            title={t("competitions:dashboard.deleteCompetition.title")}
           />
         </>
       )}

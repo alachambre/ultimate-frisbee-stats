@@ -244,7 +244,7 @@ function ConfirmDeleteDialog({
 }
 
 export default function TeamSetupPage() {
-  const { t } = useTranslation(["navigation", "common"]);
+  const { t } = useTranslation(["teams", "players", "lines", "common"]);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<SetupTab>("roster");
   const [rosterFilter, setRosterFilter] = useState<RosterFilter>("all");
@@ -314,17 +314,17 @@ export default function TeamSetupPage() {
 
   const getRosterLineLabel = (playerId: number) => {
     if (isLoadingLines) {
-      return t("navigation:newUiPages.teamSetup.lines.loading");
+      return t("lines:teamSetup.lines.loading");
     }
 
     if (linesError) {
-      return t("navigation:newUiPages.teamSetup.lines.lineDataUnavailable");
+      return t("lines:teamSetup.lines.lineDataUnavailable");
     }
 
     return getPlayerLineNames(
       playerId,
       lines,
-      t("navigation:newUiPages.teamSetup.roster.noLines")
+      t("players:teamSetup.roster.noLines")
     );
   };
 
@@ -501,11 +501,11 @@ export default function TeamSetupPage() {
   };
 
   if (isLoadingTeams || (hasSelectedTeam && isLoadingSelectedTeam)) {
-    return <LoadingState message={t("navigation:newUiPages.teamSetup.loading")} />;
+    return <LoadingState message={t("teams:setup.loading")} />;
   }
 
   if (teamsError || selectedTeamError) {
-    return <ErrorState message={t("navigation:newUiPages.teamSetup.error")} />;
+    return <ErrorState message={t("teams:setup.error")} />;
   }
 
   const canChangeSelectedTeam = teams.length > 1;
@@ -518,21 +518,21 @@ export default function TeamSetupPage() {
         <Stack spacing={0.75} sx={{ maxWidth: 760 }}>
           <Typography color="text.secondary" variant="overline">
             {selectedTeam
-              ? t("navigation:newUiPages.teamSetup.selectedTeamEyebrow", {
+              ? t("teams:setup.selectedTeamEyebrow", {
                   teamName: selectedTeam.name,
                 })
-              : t("navigation:newUiPages.teamSetup.noTeamEyebrow")}
+              : t("teams:setup.noTeamEyebrow")}
           </Typography>
           <Typography component="h1" fontWeight={900} sx={{ lineHeight: 1.1 }} variant="h4">
-            {t("navigation:newUiPages.teamSetup.heading")}
+            {t("teams:setup.heading")}
           </Typography>
           <Typography color="text.secondary" variant="body1">
-            {t("navigation:newUiPages.teamSetup.copy")}
+            {t("teams:setup.copy")}
           </Typography>
         </Stack>
 
         <Paper
-          aria-label={t("navigation:newUiPages.teamSetup.teamCard.label")}
+          aria-label={t("teams:setup.teamCard.label")}
           elevation={0}
           sx={(theme) => ({
             border: `1px solid ${theme.palette.divider}`,
@@ -562,12 +562,12 @@ export default function TeamSetupPage() {
                 </Box>
                 <Box>
                   <Typography component="h2" fontWeight={900} variant="h5">
-                    {t("navigation:newUiPages.teamSetup.noTeamTitle")}
+                    {t("teams:setup.noTeamTitle")}
                   </Typography>
                   <Typography color="text.secondary" variant="body2">
                     {teams.length > 0
-                      ? t("navigation:newUiPages.teamSetup.noTeamCopy")
-                      : t("navigation:newUiPages.teamSetup.noTeamsCopy")}
+                      ? t("teams:setup.noTeamCopy")
+                      : t("teams:setup.noTeamsCopy")}
                   </Typography>
                 </Box>
               </Stack>
@@ -575,7 +575,7 @@ export default function TeamSetupPage() {
               {teams.length > 0 && (
                 <TextField
                   fullWidth
-                  label={t("navigation:newUiPages.teamSetup.teamCard.selectLabel")}
+                  label={t("teams:setup.teamCard.selectLabel")}
                   onChange={handleTeamSelectionChange}
                   select
                   size="small"
@@ -602,10 +602,10 @@ export default function TeamSetupPage() {
                   })}
                   variant="contained"
                 >
-                  {t("navigation:newUiPages.teamSetup.actions.newTeam")}
+                  {t("teams:setup.actions.newTeam")}
                 </Button>
                 <Button component={Link} to="/teams" variant="outlined">
-                  {t("navigation:newUiPages.teamSetup.actions.openTeams")}
+                  {t("teams:setup.actions.openTeams")}
                 </Button>
               </Stack>
             </Stack>
@@ -641,14 +641,14 @@ export default function TeamSetupPage() {
                     sx={{ minWidth: 0 }}
                   >
                     <Typography color="text.secondary" sx={{ flex: 1 }} variant="body2">
-                      {t("navigation:newUiPages.teamSetup.teamCard.selectedLabel")}
+                      {t("teams:setup.teamCard.selectedLabel")}
                     </Typography>
                     <Tooltip
-                      title={t("navigation:newUiPages.teamSetup.actions.renameTeam")}
+                      title={t("teams:setup.actions.renameTeam")}
                     >
                       <IconButton
                         aria-label={t(
-                          "navigation:newUiPages.teamSetup.actions.renameTeam"
+                          "teams:setup.actions.renameTeam"
                         )}
                         onClick={openRenameTeamDialog}
                         size="small"
@@ -664,11 +664,11 @@ export default function TeamSetupPage() {
                       </IconButton>
                     </Tooltip>
                     <Tooltip
-                      title={t("navigation:newUiPages.teamSetup.actions.deleteTeam")}
+                      title={t("teams:setup.actions.deleteTeam")}
                     >
                       <IconButton
                         aria-label={t(
-                          "navigation:newUiPages.teamSetup.actions.deleteTeam"
+                          "teams:setup.actions.deleteTeam"
                         )}
                         onClick={openDeleteTeamDialog}
                         size="small"
@@ -694,7 +694,7 @@ export default function TeamSetupPage() {
                     {selectedTeamName}
                   </Typography>
                   <Typography color="text.secondary" variant="body2">
-                    {t("navigation:newUiPages.teamSetup.teamCard.scopeCopy")}
+                    {t("teams:setup.teamCard.scopeCopy")}
                   </Typography>
                 </Box>
               </Stack>
@@ -703,7 +703,7 @@ export default function TeamSetupPage() {
                 {canChangeSelectedTeam ? (
                   <TextField
                     fullWidth
-                    label={t("navigation:newUiPages.teamSetup.teamCard.selectLabel")}
+                    label={t("teams:setup.teamCard.selectLabel")}
                     onChange={handleTeamSelectionChange}
                     select
                     size="small"
@@ -718,7 +718,7 @@ export default function TeamSetupPage() {
                 ) : (
                   <Chip
                     icon={<SwapHorizIcon />}
-                    label={t("navigation:newUiPages.teamSetup.teamCard.onlyTeam")}
+                    label={t("teams:setup.teamCard.onlyTeam")}
                     sx={(theme) => ({
                       alignSelf: "flex-start",
                       bgcolor: alpha(theme.colors.newUi.primary, 0.08),
@@ -738,7 +738,7 @@ export default function TeamSetupPage() {
                   })}
                   variant="contained"
                 >
-                  {t("navigation:newUiPages.teamSetup.actions.newTeam")}
+                  {t("teams:setup.actions.newTeam")}
                 </Button>
               </Stack>
             </Stack>
@@ -748,7 +748,7 @@ export default function TeamSetupPage() {
         {!showNoTeamState && selectedTeam && (
           <>
             <Box
-              aria-label={t("navigation:newUiPages.teamSetup.summary.label")}
+              aria-label={t("teams:setup.summary.label")}
               sx={{
                 display: "grid",
                 gap: { xs: 1.25, sm: 1.75 },
@@ -759,19 +759,19 @@ export default function TeamSetupPage() {
               }}
             >
               <SummaryItem
-                label={t("navigation:newUiPages.teamSetup.summary.players")}
+                label={t("teams:setup.summary.players")}
                 value={playerCount}
               />
               <SummaryItem
-                label={t("navigation:newUiPages.teamSetup.summary.men")}
+                label={t("teams:setup.summary.men")}
                 value={menCount}
               />
               <SummaryItem
-                label={t("navigation:newUiPages.teamSetup.summary.women")}
+                label={t("teams:setup.summary.women")}
                 value={womenCount}
               />
               <SummaryItem
-                label={t("navigation:newUiPages.teamSetup.summary.lines")}
+                label={t("teams:setup.summary.lines")}
                 value={isLoadingLines || linesError ? "-" : lines.length}
               />
             </Box>
@@ -785,7 +785,7 @@ export default function TeamSetupPage() {
               })}
             >
               <Tabs
-                aria-label={t("navigation:newUiPages.teamSetup.tabs.label")}
+                aria-label={t("teams:setup.tabs.label")}
                 onChange={handleTabChange}
                 sx={(theme) => ({
                   borderBottom: `1px solid ${theme.palette.divider}`,
@@ -807,13 +807,13 @@ export default function TeamSetupPage() {
                 <Tab
                   icon={<GroupsIcon />}
                   iconPosition="start"
-                  label={t("navigation:newUiPages.teamSetup.tabs.roster")}
+                  label={t("teams:setup.tabs.roster")}
                   value="roster"
                 />
                 <Tab
                   icon={<ViewListIcon />}
                   iconPosition="start"
-                  label={t("navigation:newUiPages.teamSetup.tabs.lines")}
+                  label={t("teams:setup.tabs.lines")}
                   value="lines"
                 />
               </Tabs>
@@ -831,10 +831,10 @@ export default function TeamSetupPage() {
                     >
                       <Box>
                         <Typography component="h2" fontWeight={900} variant="h5">
-                          {t("navigation:newUiPages.teamSetup.roster.title")}
+                          {t("players:teamSetup.roster.title")}
                         </Typography>
                         <Typography color="text.secondary" variant="body2">
-                          {t("navigation:newUiPages.teamSetup.roster.copy")}
+                          {t("players:teamSetup.roster.copy")}
                         </Typography>
                       </Box>
                       <Button
@@ -850,7 +850,7 @@ export default function TeamSetupPage() {
                         })}
                         variant="contained"
                       >
-                        {t("navigation:newUiPages.teamSetup.actions.addPlayer")}
+                        {t("players:teamSetup.actions.addPlayer")}
                       </Button>
                     </Stack>
 
@@ -863,11 +863,11 @@ export default function TeamSetupPage() {
                       }}
                     >
                       <Typography color="text.secondary" fontWeight={800} variant="body2">
-                        {t("navigation:newUiPages.teamSetup.roster.filterLabel")}
+                        {t("players:teamSetup.roster.filterLabel")}
                       </Typography>
                       <ToggleButtonGroup
                         aria-label={t(
-                          "navigation:newUiPages.teamSetup.roster.filterAria"
+                          "players:teamSetup.roster.filterAria"
                         )}
                         exclusive
                         onChange={handleRosterFilterChange}
@@ -875,13 +875,13 @@ export default function TeamSetupPage() {
                         value={rosterFilter}
                       >
                         <ToggleButton value="all">
-                          {t("navigation:newUiPages.teamSetup.roster.filters.all")}
+                          {t("players:teamSetup.roster.filters.all")}
                         </ToggleButton>
                         <ToggleButton value="M">
-                          {t("navigation:newUiPages.teamSetup.roster.filters.men")}
+                          {t("players:teamSetup.roster.filters.men")}
                         </ToggleButton>
                         <ToggleButton value="W">
-                          {t("navigation:newUiPages.teamSetup.roster.filters.women")}
+                          {t("players:teamSetup.roster.filters.women")}
                         </ToggleButton>
                       </ToggleButtonGroup>
                     </Stack>
@@ -897,26 +897,26 @@ export default function TeamSetupPage() {
                         })}
                       >
                         <Typography>
-                          {t("navigation:newUiPages.teamSetup.roster.empty")}
+                          {t("players:teamSetup.roster.empty")}
                         </Typography>
                       </Box>
                     ) : (
                       <>
                         <TableContainer sx={{ display: { xs: "none", md: "block" } }}>
-                          <Table aria-label={t("navigation:newUiPages.teamSetup.roster.tableLabel")}>
+                          <Table aria-label={t("players:teamSetup.roster.tableLabel")}>
                             <TableHead>
                               <TableRow>
                                 <TableCell>
-                                  {t("navigation:newUiPages.teamSetup.roster.columns.player")}
+                                  {t("players:teamSetup.roster.columns.player")}
                                 </TableCell>
                                 <TableCell>
-                                  {t("navigation:newUiPages.teamSetup.roster.columns.gender")}
+                                  {t("players:teamSetup.roster.columns.gender")}
                                 </TableCell>
                                 <TableCell>
-                                  {t("navigation:newUiPages.teamSetup.roster.columns.lines")}
+                                  {t("players:teamSetup.roster.columns.lines")}
                                 </TableCell>
                                 <TableCell align="right">
-                                  {t("navigation:newUiPages.teamSetup.roster.columns.actions")}
+                                  {t("players:teamSetup.roster.columns.actions")}
                                 </TableCell>
                               </TableRow>
                             </TableHead>
@@ -939,7 +939,7 @@ export default function TeamSetupPage() {
                                                 variant="caption"
                                               >
                                                 {t(
-                                                  "navigation:newUiPages.teamSetup.roster.number",
+                                                  "players:teamSetup.roster.number",
                                                   { number: player.number }
                                                 )}
                                               </Typography>
@@ -949,7 +949,7 @@ export default function TeamSetupPage() {
                                     </TableCell>
                                     <TableCell>
                                       {t(
-                                        `navigation:newUiPages.teamSetup.gender.${
+                                        `players:teamSetup.gender.${
                                           player.gender === "M" ? "men" : "women"
                                         }`
                                       )}
@@ -958,12 +958,12 @@ export default function TeamSetupPage() {
                                     <TableCell align="right">
                                       <Tooltip
                                         title={t(
-                                          "navigation:newUiPages.teamSetup.actions.editPlayer"
+                                          "players:teamSetup.actions.editPlayer"
                                         )}
                                       >
                                         <IconButton
                                           aria-label={t(
-                                            "navigation:newUiPages.teamSetup.actions.editPlayerAria",
+                                            "players:teamSetup.actions.editPlayerAria",
                                             { playerName: player.name }
                                           )}
                                           onClick={() => setEditingPlayer(player)}
@@ -974,12 +974,12 @@ export default function TeamSetupPage() {
                                       </Tooltip>
                                       <Tooltip
                                         title={t(
-                                          "navigation:newUiPages.teamSetup.actions.deletePlayer"
+                                          "players:teamSetup.actions.deletePlayer"
                                         )}
                                       >
                                         <IconButton
                                           aria-label={t(
-                                            "navigation:newUiPages.teamSetup.actions.deletePlayerAria",
+                                            "players:teamSetup.actions.deletePlayerAria",
                                             { playerName: player.name }
                                           )}
                                           color="error"
@@ -1013,7 +1013,7 @@ export default function TeamSetupPage() {
                               >
                                 <Button
                                   aria-label={t(
-                                    "navigation:newUiPages.teamSetup.actions.editPlayerAria",
+                                    "players:teamSetup.actions.editPlayerAria",
                                     { playerName: player.name }
                                   )}
                                   onClick={() => setEditingPlayer(player)}
@@ -1036,7 +1036,7 @@ export default function TeamSetupPage() {
                                       </Typography>
                                       <Typography color="text.secondary" variant="body2">
                                         {t(
-                                          `navigation:newUiPages.teamSetup.gender.${
+                                          `players:teamSetup.gender.${
                                             player.gender === "M" ? "men" : "women"
                                           }`
                                         )}{" "}
@@ -1047,12 +1047,12 @@ export default function TeamSetupPage() {
                                 </Button>
                                 <Tooltip
                                   title={t(
-                                    "navigation:newUiPages.teamSetup.actions.deletePlayer"
+                                    "players:teamSetup.actions.deletePlayer"
                                   )}
                                 >
                                   <IconButton
                                     aria-label={t(
-                                      "navigation:newUiPages.teamSetup.actions.deletePlayerAria",
+                                      "players:teamSetup.actions.deletePlayerAria",
                                       { playerName: player.name }
                                     )}
                                     color="error"
@@ -1093,10 +1093,10 @@ export default function TeamSetupPage() {
                     >
                       <Box>
                         <Typography component="h2" fontWeight={900} variant="h5">
-                          {t("navigation:newUiPages.teamSetup.lines.title")}
+                          {t("lines:teamSetup.lines.title")}
                         </Typography>
                         <Typography color="text.secondary" variant="body2">
-                          {t("navigation:newUiPages.teamSetup.lines.copy")}
+                          {t("lines:teamSetup.lines.copy")}
                         </Typography>
                       </Box>
                       <Button
@@ -1112,17 +1112,17 @@ export default function TeamSetupPage() {
                         })}
                         variant="contained"
                       >
-                        {t("navigation:newUiPages.teamSetup.actions.newLine")}
+                        {t("lines:teamSetup.actions.newLine")}
                       </Button>
                     </Stack>
 
                     {isLoadingLines ? (
                       <Typography color="text.secondary">
-                        {t("navigation:newUiPages.teamSetup.lines.loading")}
+                        {t("lines:teamSetup.lines.loading")}
                       </Typography>
                     ) : linesError ? (
                       <Alert severity="error">
-                        {t("navigation:newUiPages.teamSetup.lines.error")}
+                        {t("lines:teamSetup.lines.error")}
                       </Alert>
                     ) : sortedLines.length === 0 ? (
                       <Box
@@ -1135,26 +1135,26 @@ export default function TeamSetupPage() {
                         })}
                       >
                         <Typography>
-                          {t("navigation:newUiPages.teamSetup.lines.empty")}
+                          {t("lines:teamSetup.lines.empty")}
                         </Typography>
                       </Box>
                     ) : (
                       <>
                         <TableContainer sx={{ display: { xs: "none", md: "block" } }}>
-                          <Table aria-label={t("navigation:newUiPages.teamSetup.lines.tableLabel")}>
+                          <Table aria-label={t("lines:teamSetup.lines.tableLabel")}>
                             <TableHead>
                               <TableRow>
                                 <TableCell>
-                                  {t("navigation:newUiPages.teamSetup.lines.columns.line")}
+                                  {t("lines:teamSetup.lines.columns.line")}
                                 </TableCell>
                                 <TableCell>
-                                  {t("navigation:newUiPages.teamSetup.lines.columns.composition")}
+                                  {t("lines:teamSetup.lines.columns.composition")}
                                 </TableCell>
                                 <TableCell>
-                                  {t("navigation:newUiPages.teamSetup.lines.columns.players")}
+                                  {t("lines:teamSetup.lines.columns.players")}
                                 </TableCell>
                                 <TableCell align="right">
-                                  {t("navigation:newUiPages.teamSetup.lines.columns.actions")}
+                                  {t("lines:teamSetup.lines.columns.actions")}
                                 </TableCell>
                               </TableRow>
                             </TableHead>
@@ -1184,7 +1184,7 @@ export default function TeamSetupPage() {
                                     <TableCell>
                                       <Chip
                                         label={t(
-                                          "navigation:newUiPages.teamSetup.lines.composition",
+                                          "lines:teamSetup.lines.composition",
                                           composition
                                         )}
                                         size="small"
@@ -1200,18 +1200,18 @@ export default function TeamSetupPage() {
                                     <TableCell>
                                       {getPlayersPreview(
                                         line.players,
-                                        t("navigation:newUiPages.teamSetup.lines.noPlayers")
+                                        t("lines:teamSetup.lines.noPlayers")
                                       )}
                                     </TableCell>
                                     <TableCell align="right">
                                       <Tooltip
                                         title={t(
-                                          "navigation:newUiPages.teamSetup.actions.editLine"
+                                          "lines:teamSetup.actions.editLine"
                                         )}
                                       >
                                         <IconButton
                                           aria-label={t(
-                                            "navigation:newUiPages.teamSetup.actions.editLineAria",
+                                            "lines:teamSetup.actions.editLineAria",
                                             { lineName: line.name }
                                           )}
                                           onClick={() => setEditingLine(line)}
@@ -1222,12 +1222,12 @@ export default function TeamSetupPage() {
                                       </Tooltip>
                                       <Tooltip
                                         title={t(
-                                          "navigation:newUiPages.teamSetup.actions.manageLineRoster"
+                                          "lines:teamSetup.actions.manageLineRoster"
                                         )}
                                       >
                                         <IconButton
                                           aria-label={t(
-                                            "navigation:newUiPages.teamSetup.actions.manageLineRosterAria",
+                                            "lines:teamSetup.actions.manageLineRosterAria",
                                             { lineName: line.name }
                                           )}
                                           onClick={() => setManagingLine(line)}
@@ -1238,12 +1238,12 @@ export default function TeamSetupPage() {
                                       </Tooltip>
                                       <Tooltip
                                         title={t(
-                                          "navigation:newUiPages.teamSetup.actions.deleteLine"
+                                          "lines:teamSetup.actions.deleteLine"
                                         )}
                                       >
                                         <IconButton
                                           aria-label={t(
-                                            "navigation:newUiPages.teamSetup.actions.deleteLineAria",
+                                            "lines:teamSetup.actions.deleteLineAria",
                                             { lineName: line.name }
                                           )}
                                           color="error"
@@ -1277,7 +1277,7 @@ export default function TeamSetupPage() {
                               >
                                 <Button
                                   aria-label={t(
-                                    "navigation:newUiPages.teamSetup.actions.editLineAria",
+                                    "lines:teamSetup.actions.editLineAria",
                                     { lineName: line.name }
                                   )}
                                   onClick={() => setEditingLine(line)}
@@ -1301,7 +1301,7 @@ export default function TeamSetupPage() {
                                         </Typography>
                                         <Typography color="text.secondary" variant="body2">
                                           {t(
-                                            "navigation:newUiPages.teamSetup.lines.composition",
+                                            "lines:teamSetup.lines.composition",
                                             composition
                                           )}
                                           {line.description ? ` · ${line.description}` : ""}
@@ -1311,19 +1311,19 @@ export default function TeamSetupPage() {
                                     <Typography color="text.secondary" variant="body2">
                                       {getPlayersPreview(
                                         line.players,
-                                        t("navigation:newUiPages.teamSetup.lines.noPlayers")
+                                        t("lines:teamSetup.lines.noPlayers")
                                       )}
                                     </Typography>
                                   </Stack>
                                 </Button>
                                 <Tooltip
                                   title={t(
-                                    "navigation:newUiPages.teamSetup.actions.manageLineRoster"
+                                    "lines:teamSetup.actions.manageLineRoster"
                                   )}
                                 >
                                   <IconButton
                                     aria-label={t(
-                                      "navigation:newUiPages.teamSetup.actions.manageLineRosterAria",
+                                      "lines:teamSetup.actions.manageLineRosterAria",
                                       { lineName: line.name }
                                     )}
                                     onClick={() => setManagingLine(line)}
@@ -1335,12 +1335,12 @@ export default function TeamSetupPage() {
                                 </Tooltip>
                                 <Tooltip
                                   title={t(
-                                    "navigation:newUiPages.teamSetup.actions.deleteLine"
+                                    "lines:teamSetup.actions.deleteLine"
                                   )}
                                 >
                                   <IconButton
                                     aria-label={t(
-                                      "navigation:newUiPages.teamSetup.actions.deleteLineAria",
+                                      "lines:teamSetup.actions.deleteLineAria",
                                       { lineName: line.name }
                                     )}
                                     color="error"
@@ -1386,14 +1386,14 @@ export default function TeamSetupPage() {
       >
         <Box component="form" onSubmit={handleRenameTeamSubmit}>
           <DialogTitle>
-            {t("navigation:newUiPages.teamSetup.renameTeam.title")}
+            {t("teams:setup.renameTeam.title")}
           </DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
               fullWidth
               inputProps={{ maxLength: 100 }}
-              label={t("navigation:newUiPages.teamSetup.renameTeam.nameLabel")}
+              label={t("teams:setup.renameTeam.nameLabel")}
               margin="dense"
               onChange={(event) => setTeamNameDraft(event.target.value)}
               required
@@ -1401,7 +1401,7 @@ export default function TeamSetupPage() {
             />
             {renameTeamMutation.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
-                {t("navigation:newUiPages.teamSetup.renameTeam.error")}
+                {t("teams:setup.renameTeam.error")}
               </Alert>
             )}
           </DialogContent>
@@ -1490,10 +1490,10 @@ export default function TeamSetupPage() {
       )}
 
       <ConfirmDeleteDialog
-        errorMessage={t("navigation:newUiPages.teamSetup.deleteTeam.error")}
+        errorMessage={t("teams:setup.deleteTeam.error")}
         isDeleting={deleteTeamMutation.isPending}
         isError={deleteTeamMutation.isError}
-        message={t("navigation:newUiPages.teamSetup.deleteTeam.confirm", {
+        message={t("teams:setup.deleteTeam.confirm", {
           teamName: selectedTeamName,
         })}
         onClose={closeDeleteTeamDialog}
@@ -1503,14 +1503,14 @@ export default function TeamSetupPage() {
           }
         }}
         open={isDeleteTeamOpen}
-        title={t("navigation:newUiPages.teamSetup.deleteTeam.title")}
+        title={t("teams:setup.deleteTeam.title")}
       />
 
       <ConfirmDeleteDialog
-        errorMessage={t("navigation:newUiPages.teamSetup.roster.deleteError")}
+        errorMessage={t("players:teamSetup.roster.deleteError")}
         isDeleting={deletePlayerMutation.isPending}
         isError={deletePlayerMutation.isError}
-        message={t("navigation:newUiPages.teamSetup.roster.deleteConfirm", {
+        message={t("players:teamSetup.roster.deleteConfirm", {
           playerName: deletingPlayer?.name ?? "",
         })}
         onClose={() => setDeletingPlayer(null)}
@@ -1520,14 +1520,14 @@ export default function TeamSetupPage() {
           }
         }}
         open={deletingPlayer !== null}
-        title={t("navigation:newUiPages.teamSetup.roster.deleteTitle")}
+        title={t("players:teamSetup.roster.deleteTitle")}
       />
 
       <ConfirmDeleteDialog
-        errorMessage={t("navigation:newUiPages.teamSetup.lines.deleteError")}
+        errorMessage={t("lines:teamSetup.lines.deleteError")}
         isDeleting={deleteLineMutation.isPending}
         isError={deleteLineMutation.isError}
-        message={t("navigation:newUiPages.teamSetup.lines.deleteConfirm", {
+        message={t("lines:teamSetup.lines.deleteConfirm", {
           lineName: deletingLine?.name ?? "",
         })}
         onClose={() => setDeletingLine(null)}
@@ -1537,7 +1537,7 @@ export default function TeamSetupPage() {
           }
         }}
         open={deletingLine !== null}
-        title={t("navigation:newUiPages.teamSetup.lines.deleteTitle")}
+        title={t("lines:teamSetup.lines.deleteTitle")}
       />
     </Container>
   );

@@ -19,7 +19,7 @@
   "workflow": {
     "description": "Sélectionnez une équipe, puis affinez le jeu de données avec les compétitions, les matchs et les joueurs.",
     "path": "Chemin actuel",
-    "evolution": "\u00c9volution",
+    "evolution": "Évolution",
     "team": "Équipe",
     "competition": "Compétition",
     "game": "Match",
@@ -103,7 +103,7 @@
       "offenseDescription": "Protéger le disque et Hold.",
       "defenseDescription": "Créer des turns et Break.",
       "coreMetrics": "Métriques principales",
-        "ourTurnsOffenseContext": "Turns commis sur les points commencés en attaque.",
+      "ourTurnsOffenseContext": "Turns commis sur les points commencés en attaque.",
       "ourTurnsOffense": "Nos turns en attaque",
       "bestOffenseStrategy": "Meilleure stratégie offensive",
       "advancedDefense": "Après turnover et Pulls",
@@ -130,6 +130,18 @@
       "sortableColumns": "Colonnes triables",
       "tableAria": "Statistiques des joueurs",
       "cardsAria": "Cartes de statistiques des joueurs"
+    },
+    "page": {
+      "heading": "Statistiques",
+      "copy": "Commencez par la vue coach, puis affinez le même jeu de données par compétition, match et joueur.",
+      "selectedTeamEyebrow": "Vue coach {{teamName}}",
+      "globalEyebrow": "Vue coach"
+    },
+    "overview": {
+      "title": "Vue coach",
+      "holdRate": "Taux de hold",
+      "breakRate": "Taux de break",
+      "turnRate": "Création de turns"
     }
   },
   "view": {
@@ -161,40 +173,40 @@
     "highTurnMarker": "Point avec beaucoup de turns",
     "specialPointMarker": "Point Galaxy/Univers",
     "selectedPointMarker": "Point sélectionné",
-    "resetZoom": "R\u00e9initialiser le zoom",
+    "resetZoom": "Réinitialiser le zoom",
     "empty": "Aucun point complété n'est disponible pour le graphique."
   },
   "evolution": {
-    "title": "\u00c9volution",
-    "chartTitle": "Graphique d'\u00e9volution",
-    "chartLoading": "Chargement du graphique d'\u00e9volution...",
-    "tableTitle": "Donn\u00e9es d'\u00e9volution",
-    "loading": "Chargement de l'\u00e9volution...",
-    "empty": "Aucun match compl\u00e9t\u00e9 n'est disponible pour cette s\u00e9lection.",
-    "noMetrics": "Aucune m\u00e9trique d'\u00e9volution n'est disponible pour cette s\u00e9lection.",
-    "omittedGames": "{{count}} match ignor\u00e9",
-    "omittedGames_plural": "{{count}} matchs ignor\u00e9s",
-    "metricsLabel": "M\u00e9triques",
+    "title": "Évolution",
+    "chartTitle": "Graphique d'évolution",
+    "chartLoading": "Chargement du graphique d'évolution...",
+    "tableTitle": "Données d'évolution",
+    "loading": "Chargement de l'évolution...",
+    "empty": "Aucun match complété n'est disponible pour cette sélection.",
+    "noMetrics": "Aucune métrique d'évolution n'est disponible pour cette sélection.",
+    "omittedGames": "{{count}} match ignoré",
+    "omittedGames_plural": "{{count}} matchs ignorés",
+    "metricsLabel": "Métriques",
     "chartMode": "Mode du graphique",
     "chartModeAuto": "Auto",
     "chartModeLine": "Ligne",
     "chartModeBar": "Barres",
-    "chartAriaLabel": "Graphique d'\u00e9volution des statistiques",
+    "chartAriaLabel": "Graphique d'évolution des statistiques",
     "metricUnitCount": "Nombre",
     "metricUnitPercentage": "Pourcentage",
-    "metricUnitContext": "Unit\u00e9 : {{unit}}",
+    "metricUnitContext": "Unité : {{unit}}",
     "metricOptionContext": "{{group}} / {{unit}}",
     "date": "Date",
     "game": "Match",
-    "competition": "Comp\u00e9tition",
+    "competition": "Compétition",
     "score": "Score",
     "completedPoints": "Points",
-    "tableAriaLabel": "Tableau d'\u00e9volution des statistiques",
+    "tableAriaLabel": "Tableau d'évolution des statistiques",
     "metricGroups": {
       "turnovers": "Turns",
-      "results": "R\u00e9sultats",
+      "results": "Résultats",
       "offense": "Attaque",
-      "defense": "D\u00e9fense"
+      "defense": "Défense"
     },
     "metrics": {
       "total_our_turnovers": {
@@ -207,63 +219,63 @@
       },
       "offense_our_turnovers": {
         "label": "Turns O-line",
-        "description": "Turns commis par nous sur les points commenc\u00e9s en attaque."
+        "description": "Turns commis par nous sur les points commencés en attaque."
       },
       "defense_our_turnovers": {
         "label": "Turns D-line",
-        "description": "Turns commis par nous sur les points commenc\u00e9s en d\u00e9fense."
+        "description": "Turns commis par nous sur les points commencés en défense."
       },
       "defense_opponent_turnovers": {
         "label": "Turns adverses contre D-line",
-        "description": "Turns commis par l'adversaire sur les points que nous avons commenc\u00e9s en d\u00e9fense."
+        "description": "Turns commis par l'adversaire sur les points que nous avons commencés en défense."
       },
       "points_won": {
-        "label": "Points gagn\u00e9s",
-        "description": "Points compl\u00e9t\u00e9s gagn\u00e9s par nous."
+        "label": "Points gagnés",
+        "description": "Points complétés gagnés par nous."
       },
       "points_lost": {
         "label": "Points perdus",
-        "description": "Points compl\u00e9t\u00e9s gagn\u00e9s par l'adversaire."
+        "description": "Points complétés gagnés par l'adversaire."
       },
       "holds": {
         "label": "Holds",
-        "description": "Points d'attaque gagn\u00e9s par nous."
+        "description": "Points d'attaque gagnés par nous."
       },
       "breaks": {
         "label": "Breaks",
-        "description": "Points de d\u00e9fense gagn\u00e9s par nous."
+        "description": "Points de défense gagnés par nous."
       },
       "offense_hold_rate": {
         "label": "Taux de hold",
-        "description": "Points d'attaque gagn\u00e9s, sur tous les points d'attaque jou\u00e9s."
+        "description": "Points d'attaque gagnés, sur tous les points d'attaque joués."
       },
       "offense_clean_hold_rate": {
         "label": "Taux de clean hold",
-        "description": "Points d'attaque gagn\u00e9s sans que nous ne commettions de turnover, sur tous les points d'attaque jou\u00e9s."
+        "description": "Points d'attaque gagnés sans que nous ne commettions de turnover, sur tous les points d'attaque joués."
       },
       "defense_turnover_rate": {
         "label": "Taux de points de D avec turns",
-        "description": "Points de d\u00e9fense avec au moins un turnover de possession, sur tous les points de d\u00e9fense jou\u00e9s."
+        "description": "Points de défense avec au moins un turnover de possession, sur tous les points de défense joués."
       },
       "defense_break_rate": {
         "label": "Taux de break",
-        "description": "Points de d\u00e9fense gagn\u00e9s, sur tous les points de d\u00e9fense jou\u00e9s."
+        "description": "Points de défense gagnés, sur tous les points de défense joués."
       },
       "defense_clean_break_rate": {
         "label": "Taux de clean break",
-        "description": "Points de d\u00e9fense gagn\u00e9s sans que nous ne commettions de turnover, sur tous les points de d\u00e9fense jou\u00e9s."
+        "description": "Points de défense gagnés sans que nous ne commettions de turnover, sur tous les points de défense joués."
       },
       "defense_conversion_rate": {
         "label": "Taux de conversion",
-        "description": "Points de d\u00e9fense gagn\u00e9s parmi les points de d\u00e9fense avec au moins un turnover de possession."
+        "description": "Points de défense gagnés parmi les points de défense avec au moins un turnover de possession."
       },
       "defense_clean_conversion_rate": {
         "label": "Taux de clean conversion",
-        "description": "Points de d\u00e9fense gagn\u00e9s sans que nous ne commettions de turnover, parmi les points de d\u00e9fense avec au moins un turnover de possession."
+        "description": "Points de défense gagnés sans que nous ne commettions de turnover, parmi les points de défense avec au moins un turnover de possession."
       },
       "defense_pull_inbound_rate": {
         "label": "Taux de Pull dans le terrain",
-        "description": "Pulls suivis qui sont rest\u00e9s dans le terrain, sur tous les pulls suivis."
+        "description": "Pulls suivis qui sont restés dans le terrain, sur tous les pulls suivis."
       }
     }
   },
@@ -362,16 +374,16 @@
     "cohortExplanation": "Ces statistiques sont calculées à partir des points où tous les joueurs sélectionnés étaient ensemble sur le point."
   },
   "tooltips": {
-      "cleanPointRate": "Points d'attaque gagnés sans turnover de notre part.",
-      "breakRate": "Points de défense gagnés sur tous les points.",
-      "turnoverRate": "Points de défense avec au moins un turnover.",
-      "conversionRate": "Points de défense gagnés après une occasion de turnover.",
-      "cleanBreakRate": "Points de défense gagnés sans turnover de notre part.",
-      "cleanConversionRate": "Occasions de turnover converties sans turnover de notre part.",
-      "holdRate": "Points d'attaque gagnés sur tous les points.",
+    "cleanPointRate": "Points d'attaque gagnés sans turnover de notre part.",
+    "breakRate": "Points de défense gagnés sur tous les points.",
+    "turnoverRate": "Points de défense avec au moins un turnover.",
+    "conversionRate": "Points de défense gagnés après une occasion de turnover.",
+    "cleanBreakRate": "Points de défense gagnés sans turnover de notre part.",
+    "cleanConversionRate": "Occasions de turnover converties sans turnover de notre part.",
+    "holdRate": "Points d'attaque gagnés sur tous les points.",
     "forcedTurnovers": "Points défensifs où au moins un turnover a eu lieu",
     "offensePoints": "Nombre de points offensifs complétés joués",
     "defensePoints": "Nombre de points défensifs complétés joués",
-      "pullRate": "Pulls suivis qui restent dans le terrain."
+    "pullRate": "Pulls suivis qui restent dans le terrain."
   }
 }

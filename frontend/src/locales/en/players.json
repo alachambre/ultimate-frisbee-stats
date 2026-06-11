@@ -35,5 +35,42 @@
   "empty": {
     "noPlayers": "No players yet",
     "addFirst": "Add your first player"
+  },
+  "teamSetup": {
+    "gender": {
+      "men": "Men",
+      "women": "Women"
+    },
+    "actions": {
+      "addPlayer": "Add player",
+      "editPlayer": "Edit",
+      "editPlayerAria": "Edit {{playerName}}",
+      "deletePlayer": "Delete",
+      "deletePlayerAria": "Delete {{playerName}}"
+    },
+    "roster": {
+      "title": "Roster",
+      "copy": "Players available for team setup and reusable lines.",
+      "filterLabel": "Show players",
+      "filterAria": "Roster gender filter",
+      "tableLabel": "Roster players",
+      "empty": "No players match this roster view.",
+      "noLines": "No lines",
+      "number": "#{{number}}",
+      "deleteTitle": "Delete player?",
+      "deleteConfirm": "Are you sure you want to remove {{playerName}} from this team?",
+      "deleteError": "Unable to delete player.",
+      "filters": {
+        "all": "All",
+        "men": "Men",
+        "women": "Women"
+      },
+      "columns": {
+        "player": "Player",
+        "gender": "Gender",
+        "lines": "Lines",
+        "actions": "Actions"
+      }
+    }
   }
 }

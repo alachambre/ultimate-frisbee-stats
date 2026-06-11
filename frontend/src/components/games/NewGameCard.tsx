@@ -22,15 +22,15 @@ interface NewGameCardProps {
 
 function getActionLabel(
   status: GameWithScore["status"],
-  t: ReturnType<typeof useTranslation<["games", "navigation"]>>["t"]
+  t: ReturnType<typeof useTranslation<"games">>["t"]
 ) {
   if (status !== "ended") {
-    return t("navigation:newUiPages.allGames.actions.go", {
+    return t("games:dashboard.actions.go", {
       defaultValue: "Go",
     });
   }
 
-  return t("navigation:newUiPages.allGames.actions.review", {
+  return t("games:dashboard.actions.review", {
     defaultValue: "Review",
   });
 }
@@ -48,17 +48,17 @@ function getGameOutcome(
 
 function getStatusChipProps(
   game: GameWithScore,
-  t: ReturnType<typeof useTranslation<["games", "navigation"]>>["t"]
+  t: ReturnType<typeof useTranslation<"games">>["t"]
 ): Pick<ChipProps, "color" | "label"> {
   if (game.status === "started") {
     return {
-      label: t("navigation:newUiPages.allGames.status.live"),
+      label: t("games:dashboard.status.live"),
     };
   }
 
   if (game.status === "ready") {
     return {
-      label: t("navigation:newUiPages.allGames.status.ready"),
+      label: t("games:dashboard.status.ready"),
     };
   }
 
@@ -71,7 +71,7 @@ function getStatusChipProps(
 
   return {
     color: outcomeColors[outcome],
-    label: t(`navigation:newUiPages.allGames.status.${outcome}`),
+    label: t(`games:dashboard.status.${outcome}`),
   };
 }
 
@@ -80,7 +80,7 @@ export default function NewGameCard({
   game,
   variant = "card",
 }: NewGameCardProps) {
-  const { t, i18n } = useTranslation(["games", "navigation"]);
+  const { t, i18n } = useTranslation("games");
   const actionLabel = getActionLabel(game.status, t);
   const actionPath =
     game.status === "ended" || !canEditData

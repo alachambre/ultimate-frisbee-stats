@@ -78,5 +78,24 @@
     "games_plural": "{{count}} games",
     "players": "{{count}} player",
     "players_plural": "{{count}} players"
+  },
+  "dashboard": {
+    "actions": {
+      "newCompetition": "New competition",
+      "deleteCompetition": "Delete competition",
+      "deleteCompetitionAria": "Delete {{competitionName}} competition",
+      "editCompetition": "Edit competition",
+      "editCompetitionAria": "Edit {{competitionName}} competition",
+      "manageRoster": "Manage roster",
+      "manageRosterAria": "Manage {{competitionName}} roster"
+    },
+    "empty": {
+      "competition": "No games in this competition yet."
+    },
+    "deleteCompetition": {
+      "title": "Delete competition?",
+      "message": "Delete {{competitionName}} and all games in this competition? This cannot be undone.",
+      "error": "Unable to delete competition."
+    }
   }
 }

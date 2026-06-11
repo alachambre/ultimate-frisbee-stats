@@ -78,5 +78,24 @@
     "games_plural": "{{count}} matchs",
     "players": "{{count}} joueur",
     "players_plural": "{{count}} joueurs"
+  },
+  "dashboard": {
+    "actions": {
+      "newCompetition": "Nouvelle compétition",
+      "deleteCompetition": "Supprimer la compétition",
+      "deleteCompetitionAria": "Supprimer la compétition {{competitionName}}",
+      "editCompetition": "Modifier la compétition",
+      "editCompetitionAria": "Modifier la compétition {{competitionName}}",
+      "manageRoster": "Gérer le roster",
+      "manageRosterAria": "Gérer le roster {{competitionName}}"
+    },
+    "empty": {
+      "competition": "Aucun match dans cette compétition pour le moment."
+    },
+    "deleteCompetition": {
+      "title": "Supprimer la compétition ?",
+      "message": "Supprimer {{competitionName}} et tous les matchs de cette compétition ? Cette action est irréversible.",
+      "error": "Impossible de supprimer la compétition."
+    }
   }
 }

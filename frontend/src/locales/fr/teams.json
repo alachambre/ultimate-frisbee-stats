@@ -44,5 +44,55 @@
   "card": {
     "players": "{{count}} joueur",
     "players_plural": "{{count}} joueurs"
+  },
+  "setup": {
+    "heading": "Configuration équipe",
+    "copy": "Maintenez le roster et les lignes réutilisables de l'équipe sélectionnée dans un seul espace de travail.",
+    "selectedTeamEyebrow": "Configuration {{teamName}}",
+    "noTeamEyebrow": "Aucune équipe sélectionnée",
+    "noTeamTitle": "Aucune équipe sélectionnée",
+    "noTeamCopy": "Sélectionnez une équipe pour configurer son roster et ses lignes.",
+    "noTeamsCopy": "Créez une équipe avant de configurer le roster et les lignes.",
+    "playerCount": {
+      "one": "{{count}} joueur",
+      "other": "{{count}} joueurs"
+    },
+    "loading": "Chargement de la configuration équipe...",
+    "error": "Impossible de charger la configuration équipe.",
+    "teamCard": {
+      "label": "Contexte de l'équipe sélectionnée",
+      "selectedLabel": "Équipe sélectionnée",
+      "selectLabel": "Équipe sélectionnée",
+      "scopeCopy": "Tous les changements ci-dessous s'appliquent à cette équipe.",
+      "onlyTeam": "Seule équipe disponible"
+    },
+    "summary": {
+      "label": "Résumé équipe",
+      "players": "Joueurs",
+      "men": "Hommes",
+      "women": "Femmes",
+      "lines": "Lignes"
+    },
+    "tabs": {
+      "label": "Sections de configuration équipe",
+      "roster": "Roster",
+      "lines": "Lignes"
+    },
+    "actions": {
+      "openTeams": "Ouvrir les équipes",
+      "newTeam": "Nouvelle équipe",
+      "renameTeam": "Renommer l'équipe",
+      "deleteTeam": "Supprimer l'équipe"
+    },
+    "renameTeam": {
+      "title": "Renommer l'équipe",
+      "nameLabel": "Nom de l'équipe",
+      "error": "Impossible de renommer l'équipe."
+    },
+    "deleteTeam": {
+      "title": "Supprimer l'équipe ?",
+      "confirm": "Supprimer {{teamName}} ? Cela retirera ses joueurs, lignes, compétitions et matchs. Cette action est définitive.",
+      "error": "Impossible de supprimer l'équipe."
+    }
   }
 }

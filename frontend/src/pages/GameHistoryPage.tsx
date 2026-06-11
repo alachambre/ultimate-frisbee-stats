@@ -332,7 +332,7 @@ function getMomentAccentColor(momentType: string, theme: Theme) {
 
 function getMomentTitle(moment: GameKeyMoment, t: TFunction) {
   return t(
-    `newUiPages.gameHistory.keyMomentTypes.${moment.type}`,
+    `games:history.keyMomentTypes.${moment.type}`,
     moment.type,
   );
 }
@@ -367,7 +367,7 @@ function getPointMarkerCharacteristicLabel(markers: string[], t: TFunction) {
   ].find((candidate) => hasTimelineMarker(markers, candidate));
 
   return marker
-    ? t(`newUiPages.gameHistory.keyMomentTypes.${marker}`, marker)
+    ? t(`games:history.keyMomentTypes.${marker}`, marker)
     : null;
 }
 
@@ -386,7 +386,7 @@ function getPointCharacteristicLabel(
 
 function getMomentDescription(moment: GameKeyMoment, t: TFunction) {
   return t(
-    `newUiPages.gameHistory.keyMomentDescriptions.${moment.type}`,
+    `games:history.keyMomentDescriptions.${moment.type}`,
     "",
   );
 }
@@ -406,12 +406,12 @@ function getPointRangeLabel(
   }
 
   if (pointNumbers.length === 1) {
-    return t("newUiPages.gameHistory.pointLabel", {
+    return t("games:history.pointLabel", {
       pointNumber: pointNumbers[0],
     });
   }
 
-  return t("newUiPages.gameHistory.pointRangeLabel", {
+  return t("games:history.pointRangeLabel", {
     firstPointNumber: pointNumbers[0],
     lastPointNumber: pointNumbers[pointNumbers.length - 1],
   });
@@ -428,28 +428,28 @@ function getCurrentPointIds(game: GameDetail | null) {
 
 function getResultLabel(game: GameDetail, t: TFunction) {
   if (game.our_score > game.opponent_score) {
-    return t("newUiPages.gameHistory.resultWon", {
+    return t("games:history.resultWon", {
       teamName: game.team_name,
     });
   }
 
   if (game.opponent_score > game.our_score) {
-    return t("newUiPages.gameHistory.resultWon", {
+    return t("games:history.resultWon", {
       teamName: game.opponent_name,
     });
   }
 
-  return t("newUiPages.gameHistory.resultDraw");
+  return t("games:history.resultDraw");
 }
 
 function getLiveScoreContext(game: GameDetail, t: TFunction) {
   const margin = Math.abs(game.our_score - game.opponent_score);
 
   if (margin === 0) {
-    return t("newUiPages.gameHistory.liveTied");
+    return t("games:history.liveTied");
   }
 
-  return t("newUiPages.gameHistory.liveLeading", {
+  return t("games:history.liveLeading", {
     count: margin,
     teamName:
       game.our_score > game.opponent_score ? game.team_name : game.opponent_name,
@@ -493,10 +493,10 @@ function KeyMomentsSection({
         sx={{ mb: 1.5 }}
       >
         <Typography fontWeight={900} variant="h6">
-          {t("newUiPages.gameHistory.keyMoments")}
+          {t("games:history.keyMoments")}
         </Typography>
         <Typography color="text.secondary" fontWeight={700} variant="body2">
-          {t("newUiPages.gameHistory.keyMomentCount", {
+          {t("games:history.keyMomentCount", {
             count: moments.length,
           })}
         </Typography>
@@ -527,7 +527,7 @@ function KeyMomentsSection({
 
           return (
             <ButtonBase
-              aria-label={t("newUiPages.gameHistory.selectKeyMoment", {
+              aria-label={t("games:history.selectKeyMoment", {
                 label: getMomentTitle(moment, t),
                 pointNumber: point.point_number,
               })}
@@ -657,7 +657,7 @@ function KeyMomentsSection({
                     )}
                     {moment.type === "high_turn_point" && (
                       <Chip
-                        label={t("newUiPages.gameHistory.turnSummary", {
+                        label={t("games:history.turnSummary", {
                           count: turnCount,
                         })}
                         size="small"
@@ -700,7 +700,7 @@ function PointSelectButton({
 
   return (
     <ButtonBase
-      aria-label={t("newUiPages.gameHistory.selectPoint", {
+      aria-label={t("games:history.selectPoint", {
         pointNumber: point.point_number,
       })}
       aria-pressed={isSelected}
@@ -759,13 +759,13 @@ function PointSelectButton({
             <Stack alignItems="center" direction="row" spacing={0.75}>
               <PointSideIconBadge point={point} t={t} />
               <Typography component="p" fontWeight={900} noWrap variant="subtitle2">
-                {t("newUiPages.gameHistory.pointLabel", {
+                {t("games:history.pointLabel", {
                   pointNumber: point.point_number,
                 })}
               </Typography>
               {isCurrent && (
                 <Chip
-                  label={t("newUiPages.gameHistory.current")}
+                  label={t("games:history.current")}
                   size="small"
                   sx={(theme) => ({
                     bgcolor: theme.colors.newUi.primarySoft,
@@ -792,7 +792,7 @@ function PointSelectButton({
                 </Typography>
               )}
               <Typography color="text.secondary" variant="caption">
-                {t("newUiPages.gameHistory.turnSummary", {
+                {t("games:history.turnSummary", {
                   count: turnCount,
                 })}
               </Typography>
@@ -954,7 +954,7 @@ function MobilePointSelector({
       })}
     >
       <Typography fontWeight={900} sx={{ mb: 1 }} variant="subtitle1">
-        {t("newUiPages.gameHistory.pointList")}
+        {t("games:history.pointList")}
       </Typography>
       <Button
         aria-controls={isOpen ? menuId : undefined}
@@ -1008,7 +1008,7 @@ function MobilePointSelector({
               >
                 <PointSideIconBadge point={selectedPoint} t={t} />
                 <Typography fontWeight={900} noWrap variant="subtitle2">
-                  {t("newUiPages.gameHistory.pointLabel", {
+                  {t("games:history.pointLabel", {
                     pointNumber: selectedPoint.point_number,
                   })}
                   {selectedCharacteristicLabel
@@ -1017,7 +1017,7 @@ function MobilePointSelector({
                 </Typography>
                 {currentPointIds.has(selectedPoint.id) && (
                   <Chip
-                    label={t("newUiPages.gameHistory.current")}
+                    label={t("games:history.current")}
                     size="small"
                     sx={(theme) => ({
                       bgcolor: theme.colors.newUi.primarySoft,
@@ -1044,7 +1044,7 @@ function MobilePointSelector({
                 </Typography>
               )}
               <Typography color="text.secondary" variant="caption">
-                {t("newUiPages.gameHistory.turnSummary", {
+                {t("games:history.turnSummary", {
                   count: selectedTurnCount,
                 })}
               </Typography>
@@ -1052,7 +1052,7 @@ function MobilePointSelector({
           </Stack>
         ) : (
           <Typography color="text.secondary" fontWeight={800} variant="body2">
-            {t("newUiPages.gameHistory.choosePoint")}
+            {t("games:history.choosePoint")}
           </Typography>
         )}
       </Button>
@@ -1061,7 +1061,7 @@ function MobilePointSelector({
         anchorEl={anchorElement}
         id={menuId}
         MenuListProps={{
-          "aria-label": t("newUiPages.gameHistory.pointPickerAriaLabel"),
+          "aria-label": t("games:history.pointPickerAriaLabel"),
           dense: true,
         }}
         onClose={handleClose}
@@ -1162,14 +1162,14 @@ function MobilePointSelector({
                   >
                     <PointSideIconBadge point={item.point} t={t} />
                     <Typography fontWeight={900} noWrap variant="subtitle2">
-                      {t("newUiPages.gameHistory.pointLabel", {
+                      {t("games:history.pointLabel", {
                         pointNumber: item.point.point_number,
                       })}
                       {characteristicLabel ? ` - ${characteristicLabel}` : ""}
                     </Typography>
                     {currentPointIds.has(item.point.id) && (
                       <Chip
-                        label={t("newUiPages.gameHistory.current")}
+                        label={t("games:history.current")}
                         size="small"
                         sx={(theme) => ({
                           bgcolor: theme.colors.newUi.primarySoft,
@@ -1196,7 +1196,7 @@ function MobilePointSelector({
                     </Typography>
                   )}
                   <Typography color="text.secondary" variant="caption">
-                    {t("newUiPages.gameHistory.turnSummary", {
+                    {t("games:history.turnSummary", {
                       count: turnCount,
                     })}
                   </Typography>
@@ -1253,10 +1253,10 @@ function PointListRail({
           spacing={1}
         >
           <Typography fontWeight={900} variant="subtitle1">
-            {t("newUiPages.gameHistory.pointList")}
+            {t("games:history.pointList")}
           </Typography>
           <Typography color="text.secondary" fontWeight={800} variant="caption">
-            {t("newUiPages.gameHistory.pointCount", {
+            {t("games:history.pointCount", {
               count: pointCount,
             })}
           </Typography>
@@ -1326,7 +1326,7 @@ function SelectedPointDetail({
         spacing={1}
       >
         <Typography component="h2" fontWeight={900} variant="h6">
-          {t("newUiPages.gameHistory.selectedPoint")}
+          {t("games:history.selectedPoint")}
         </Typography>
       </Stack>
       <NewGameHistoryPointItem
@@ -1342,7 +1342,7 @@ function SelectedPointDetail({
 
 export default function GameHistoryPage() {
   const auth = useAuth();
-  const { t, i18n } = useTranslation(["navigation", "games", "points", "common"]);
+  const { t, i18n } = useTranslation(["games", "points", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -1476,26 +1476,26 @@ export default function GameHistoryPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message={t("newUiPages.gameHistory.loading")} />;
+    return <LoadingState message={t("games:history.loading")} />;
   }
 
   if (error || !game) {
-    return <ErrorState message={t("newUiPages.gameHistory.error")} />;
+    return <ErrorState message={t("games:history.error")} />;
   }
 
   const backPath = isFromLive ? `/live/${gameIdNumber}` : "/games";
   const backLabel = isFromLive
-    ? t("newUiPages.gameHistory.backToLive")
-    : t("newUiPages.gameHistory.backToAllGames");
+    ? t("games:history.backToLive")
+    : t("games:history.backToAllGames");
   const resultLabel =
     game.status === "started"
       ? historySummary.runningPoint
-        ? t("newUiPages.gameHistory.livePointRunning", {
+        ? t("games:history.livePointRunning", {
             pointNumber: historySummary.runningPoint.point_number,
           })
-        : t("newUiPages.gameHistory.liveGame")
+        : t("games:history.liveGame")
       : game.status === "ready"
-        ? t("newUiPages.gameHistory.resultPending")
+        ? t("games:history.resultPending")
         : getResultLabel(game, t);
   const resultContext =
     game.status === "started"
@@ -1504,8 +1504,8 @@ export default function GameHistoryPage() {
   const currentPointContext =
     game.status === "started" && historySummary.runningPoint
       ? historySummary.runningPoint.starting_on_offense
-        ? t("newUiPages.gameHistory.currentOffense")
-        : t("newUiPages.gameHistory.currentDefense")
+        ? t("games:history.currentOffense")
+        : t("games:history.currentDefense")
       : null;
   const canDeleteGame = canEditData && game.status === "ended";
 
@@ -1557,7 +1557,7 @@ export default function GameHistoryPage() {
                 <Chip
                   label={
                     game.status === "started"
-                      ? t("newUiPages.liveGame.board.live")
+                      ? t("games:live.board.live")
                       : t(`games:status.${game.status}`)
                   }
                   size="small"
@@ -1573,12 +1573,12 @@ export default function GameHistoryPage() {
                 {canDeleteGame && (
                   <Tooltip
                     title={t(
-                      "newUiPages.allGames.actions.deleteGame",
+                      "games:dashboard.actions.deleteGame",
                     )}
                   >
                     <IconButton
                       aria-label={t(
-                        "newUiPages.allGames.actions.deleteGameAria",
+                        "games:dashboard.actions.deleteGameAria",
                         { opponentName: game.opponent_name },
                       )}
                       disabled={deleteMutation.isPending}
@@ -1618,7 +1618,7 @@ export default function GameHistoryPage() {
                 width: 1,
               }}
             >
-              {t("newUiPages.gameHistory.heading")}
+              {t("games:history.heading")}
             </Typography>
 
             <Box
@@ -1655,7 +1655,7 @@ export default function GameHistoryPage() {
                   </Typography>
                 </Box>
                 <Typography
-                  aria-label={t("newUiPages.liveGame.board.currentScore")}
+                  aria-label={t("games:live.board.currentScore")}
                   fontWeight={900}
                   sx={{
                     fontSize: { xs: "3.25rem", md: "5rem" },
@@ -1680,7 +1680,7 @@ export default function GameHistoryPage() {
               </Stack>
 
               <Box
-                aria-label={t("newUiPages.gameHistory.summaryLabel")}
+                aria-label={t("games:history.summaryLabel")}
                 sx={(theme) => ({
                   alignSelf: "stretch",
                   bgcolor: alpha(theme.palette.common.white, 0.09),
@@ -1747,7 +1747,7 @@ export default function GameHistoryPage() {
                   sx={{ mt: 1.5 }}
                 >
                   <Chip
-                    label={t("newUiPages.gameHistory.pointCount", {
+                    label={t("games:history.pointCount", {
                       count: historySummary.pointCount,
                     })}
                     size="small"
@@ -1758,7 +1758,7 @@ export default function GameHistoryPage() {
                     })}
                   />
                   <Chip
-                    label={t("newUiPages.gameHistory.breakCount", {
+                    label={t("games:history.breakCount", {
                       count: historySummary.breakCount,
                     })}
                     size="small"
@@ -1769,7 +1769,7 @@ export default function GameHistoryPage() {
                     })}
                   />
                   <Chip
-                    label={t("newUiPages.gameHistory.brokenCount", {
+                    label={t("games:history.brokenCount", {
                       count: historySummary.brokenCount,
                     })}
                     size="small"
@@ -1829,7 +1829,7 @@ export default function GameHistoryPage() {
                 textAlign: "center",
               })}
             >
-              <Typography>{t("newUiPages.gameHistory.empty")}</Typography>
+              <Typography>{t("games:history.empty")}</Typography>
             </Paper>
           ) : (
             <Stack spacing={2}>

@@ -185,7 +185,7 @@ function ResultsMeta({ record }: { record: DatasetRecord }) {
 
 export default function StatisticsPage() {
   const auth = useAuth();
-  const { t } = useTranslation(["navigation", "statistics", "common"]);
+  const { t } = useTranslation(["statistics", "common"]);
   const {
     selectedTeam: appSelectedTeam,
     selectedTeamId: appSelectedTeamId,
@@ -395,16 +395,16 @@ export default function StatisticsPage() {
           <Box sx={{ maxWidth: 760 }}>
             <Typography color="text.secondary" variant="overline">
               {displayTeamName
-                ? t("navigation:newUiPages.statistics.selectedTeamEyebrow", {
+                ? t("statistics:newUi.page.selectedTeamEyebrow", {
                     teamName: displayTeamName,
                   })
-                : t("navigation:newUiPages.statistics.globalEyebrow")}
+                : t("statistics:newUi.page.globalEyebrow")}
             </Typography>
             <Typography component="h1" gutterBottom variant="h4">
-              {t("navigation:newUiPages.statistics.heading")}
+              {t("statistics:newUi.page.heading")}
             </Typography>
             <Typography color="text.secondary" variant="body1">
-              {t("navigation:newUiPages.statistics.copy")}
+              {t("statistics:newUi.page.copy")}
             </Typography>
           </Box>
 

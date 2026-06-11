@@ -53,5 +53,36 @@
     "noLines": "Aucune ligne pour le moment",
     "description": "Créez des lignes pour organiser les joueurs en groupes offensifs, défensifs ou personnalisés",
     "createFirst": "Créez votre première ligne"
+  },
+  "teamSetup": {
+    "actions": {
+      "newLine": "Nouvelle ligne",
+      "editLine": "Modifier",
+      "editLineAria": "Modifier {{lineName}}",
+      "deleteLine": "Supprimer",
+      "deleteLineAria": "Supprimer {{lineName}}",
+      "manageLineRoster": "Gérer le roster",
+      "manageLineRosterAria": "Gérer le roster {{lineName}}"
+    },
+    "lines": {
+      "title": "Lignes",
+      "copy": "Groupes de joueurs réutilisables pour une sélection rapide au bord du terrain.",
+      "loading": "Chargement des lignes...",
+      "error": "Impossible de charger les lignes.",
+      "empty": "Aucune ligne pour le moment.",
+      "tableLabel": "Lignes équipe",
+      "composition": "{{men}}M / {{women}}F",
+      "noPlayers": "Aucun joueur",
+      "lineDataUnavailable": "Lignes indisponibles",
+      "deleteTitle": "Supprimer la ligne ?",
+      "deleteConfirm": "Voulez-vous vraiment supprimer {{lineName}} ?",
+      "deleteError": "Impossible de supprimer la ligne.",
+      "columns": {
+        "line": "Ligne",
+        "composition": "Composition",
+        "players": "Joueurs",
+        "actions": "Actions"
+      }
+    }
   }
 }

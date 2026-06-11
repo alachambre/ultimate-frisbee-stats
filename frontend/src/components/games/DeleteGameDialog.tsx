@@ -24,20 +24,20 @@ export default function DeleteGameDialog({
   open,
   opponentName,
 }: DeleteGameDialogProps) {
-  const { t } = useTranslation(["common", "navigation"]);
+  const { t } = useTranslation(["common", "games"]);
 
   return (
     <Dialog fullWidth maxWidth="xs" onClose={onClose} open={open}>
-      <DialogTitle>{t("navigation:newUiPages.allGames.deleteGame.title")}</DialogTitle>
+      <DialogTitle>{t("games:dashboard.deleteGame.title")}</DialogTitle>
       <DialogContent>
         <Typography color="text.secondary" variant="body2">
-          {t("navigation:newUiPages.allGames.deleteGame.message", {
+          {t("games:dashboard.deleteGame.message", {
             opponentName,
           })}
         </Typography>
         {isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {t("navigation:newUiPages.allGames.deleteGame.error")}
+            {t("games:dashboard.deleteGame.error")}
           </Alert>
         )}
       </DialogContent>

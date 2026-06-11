@@ -287,7 +287,7 @@ def build_timeline_markers_and_key_moments(
 
     for side, counter_break in _find_counter_breaks(points):
         primary = counter_break[-1]
-        point_ids = [point.point_id for point in counter_break]
+        point_ids = [primary.point_id]
         is_tight = _is_tight_score(counter_break[0])
         moment_type = (
             "counter_break_for_us" if side == "for_us" else "counter_break_against_us"

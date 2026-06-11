@@ -93,7 +93,7 @@ export default function NewStatisticsOverview({
   record,
   teamStats,
 }: NewStatisticsOverviewProps) {
-  const { t } = useTranslation(["navigation", "statistics", "games"]);
+  const { t } = useTranslation(["statistics", "games"]);
   const theme = useTheme();
 
   return (
@@ -127,7 +127,7 @@ export default function NewStatisticsOverview({
           accentColor={theme.colors.newUi.primary}
           caption={`${teamStats?.offense.points_won ?? 0}/${teamStats?.offense.points_started ?? 0}`}
           icon={<FlashOnIcon fontSize="small" />}
-          label={t("navigation:newUiPages.statistics.overview.holdRate")}
+          label={t("statistics:newUi.overview.holdRate")}
           value={formatPercentage(
             teamStats?.offense.hold_rate,
             teamStats?.offense.points_started
@@ -139,7 +139,7 @@ export default function NewStatisticsOverview({
           accentColor={theme.colors.newUi.primary}
           caption={`${teamStats?.defense.points_won ?? 0}/${teamStats?.defense.points_started ?? 0}`}
           icon={<ShieldIcon fontSize="small" />}
-          label={t("navigation:newUiPages.statistics.overview.breakRate")}
+          label={t("statistics:newUi.overview.breakRate")}
           value={formatPercentage(
             teamStats?.defense.break_rate,
             teamStats?.defense.points_started
@@ -151,7 +151,7 @@ export default function NewStatisticsOverview({
           accentColor={theme.colors.pull.main}
           caption={`${teamStats?.defense.points_with_turnover ?? 0}/${teamStats?.defense.points_started ?? 0}`}
           icon={<SwapHorizIcon fontSize="small" />}
-          label={t("navigation:newUiPages.statistics.overview.turnRate")}
+          label={t("statistics:newUi.overview.turnRate")}
           value={formatPercentage(
             teamStats?.defense.turnover_rate,
             teamStats?.defense.points_started

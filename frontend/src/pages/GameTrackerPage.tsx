@@ -48,7 +48,7 @@ import DeleteGameDialog from "../components/games/DeleteGameDialog";
 
 export default function GameTrackerPage() {
   const auth = useAuth();
-  const { t, i18n } = useTranslation(["navigation", "games", "common"]);
+  const { t, i18n } = useTranslation(["games", "common"]);
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -205,13 +205,13 @@ export default function GameTrackerPage() {
                 }}
                 to="/games"
               >
-                {t("navigation:newUiPages.liveGame.tracker.back")}
+                {t("games:live.tracker.back")}
               </Button>
               <Stack alignItems="center" direction="row" spacing={0.75}>
                 <Chip
                   label={
                     game.status === "started"
-                      ? t("navigation:newUiPages.liveGame.board.live")
+                      ? t("games:live.board.live")
                       : t("games:status.ready")
                   }
                   size="small"
@@ -227,12 +227,12 @@ export default function GameTrackerPage() {
                 {canDeleteGame && (
                   <Tooltip
                     title={t(
-                      "navigation:newUiPages.allGames.actions.deleteGame",
+                      "games:dashboard.actions.deleteGame",
                     )}
                   >
                     <IconButton
                       aria-label={t(
-                        "navigation:newUiPages.allGames.actions.deleteGameAria",
+                        "games:dashboard.actions.deleteGameAria",
                         { opponentName: game.opponent_name },
                       )}
                       disabled={deleteMutation.isPending}
@@ -272,7 +272,7 @@ export default function GameTrackerPage() {
                 width: 1,
               }}
             >
-              {t("navigation:newUiPages.liveGame.tracker.heading", {
+              {t("games:live.tracker.heading", {
                 teamName: game.team_name,
                 opponentName: game.opponent_name,
               })}
@@ -296,7 +296,7 @@ export default function GameTrackerPage() {
               </Box>
               <Typography
                 aria-label={t(
-                  "navigation:newUiPages.liveGame.board.currentScore",
+                  "games:live.board.currentScore",
                 )}
                 fontWeight={900}
                 sx={{
@@ -345,12 +345,12 @@ export default function GameTrackerPage() {
           >
             <Tooltip
               title={t(
-                "navigation:newUiPages.liveGame.tracker.actions.history",
+                "games:live.tracker.actions.history",
               )}
             >
               <Button
                 aria-label={t(
-                  "navigation:newUiPages.liveGame.tracker.actions.history",
+                  "games:live.tracker.actions.history",
                 )}
                 component={Link}
                 fullWidth
@@ -360,19 +360,19 @@ export default function GameTrackerPage() {
                 variant="outlined"
               >
                 <Box component="span" sx={mobileHiddenLabelSx}>
-                  {t("navigation:newUiPages.liveGame.tracker.actions.history")}
+                  {t("games:live.tracker.actions.history")}
                 </Box>
               </Button>
             </Tooltip>
             {(canEditData || canViewStatistics) && (
               <Tooltip
                 title={t(
-                  "navigation:newUiPages.liveGame.tracker.actions.roster",
+                  "games:live.tracker.actions.roster",
                 )}
               >
                 <Button
                   aria-label={t(
-                    "navigation:newUiPages.liveGame.tracker.actions.roster",
+                    "games:live.tracker.actions.roster",
                   )}
                   fullWidth
                   onClick={() => setIsRosterDialogOpen(true)}
@@ -381,7 +381,7 @@ export default function GameTrackerPage() {
                   variant="outlined"
                 >
                   <Box component="span" sx={mobileHiddenLabelSx}>
-                    {t("navigation:newUiPages.liveGame.tracker.actions.roster")}
+                    {t("games:live.tracker.actions.roster")}
                   </Box>
                 </Button>
               </Tooltip>
@@ -389,12 +389,12 @@ export default function GameTrackerPage() {
             {canViewStatistics && (
               <Tooltip
                 title={t(
-                  "navigation:newUiPages.liveGame.tracker.actions.stats",
+                  "games:live.tracker.actions.stats",
                 )}
               >
                 <Button
                   aria-label={t(
-                    "navigation:newUiPages.liveGame.tracker.actions.stats",
+                    "games:live.tracker.actions.stats",
                   )}
                   component={Link}
                   fullWidth
@@ -404,7 +404,7 @@ export default function GameTrackerPage() {
                   variant="outlined"
                 >
                   <Box component="span" sx={mobileHiddenLabelSx}>
-                    {t("navigation:newUiPages.liveGame.tracker.actions.stats")}
+                    {t("games:live.tracker.actions.stats")}
                   </Box>
                 </Button>
               </Tooltip>
@@ -412,12 +412,12 @@ export default function GameTrackerPage() {
             {canEditData && (
               <Tooltip
                 title={t(
-                  "navigation:newUiPages.liveGame.tracker.actions.edit",
+                  "games:live.tracker.actions.edit",
                 )}
               >
                 <Button
                   aria-label={t(
-                    "navigation:newUiPages.liveGame.tracker.actions.edit",
+                    "games:live.tracker.actions.edit",
                   )}
                   fullWidth
                   onClick={() => setIsEditModalOpen(true)}
@@ -426,7 +426,7 @@ export default function GameTrackerPage() {
                   variant="outlined"
                 >
                   <Box component="span" sx={mobileHiddenLabelSx}>
-                    {t("navigation:newUiPages.liveGame.tracker.actions.edit")}
+                    {t("games:live.tracker.actions.edit")}
                   </Box>
                 </Button>
               </Tooltip>
@@ -455,12 +455,12 @@ export default function GameTrackerPage() {
             {canEditData && game.status === "started" && (
               <Tooltip
                 title={t(
-                  "navigation:newUiPages.liveGame.tracker.actions.complete",
+                  "games:live.tracker.actions.complete",
                 )}
               >
                 <Button
                   aria-label={t(
-                    "navigation:newUiPages.liveGame.tracker.actions.complete",
+                    "games:live.tracker.actions.complete",
                   )}
                   color="success"
                   fullWidth
@@ -470,7 +470,7 @@ export default function GameTrackerPage() {
                   variant="outlined"
                 >
                   <Box component="span" sx={mobileHiddenLabelSx}>
-                    {t("navigation:newUiPages.liveGame.tracker.actions.complete")}
+                    {t("games:live.tracker.actions.complete")}
                   </Box>
                 </Button>
               </Tooltip>
@@ -541,7 +541,7 @@ export default function GameTrackerPage() {
           >
             {finishMutation.isPending
               ? t("common:action.loading")
-              : t("navigation:newUiPages.liveGame.tracker.actions.complete")}
+              : t("games:live.tracker.actions.complete")}
           </Button>
         </DialogActions>
       </Dialog>

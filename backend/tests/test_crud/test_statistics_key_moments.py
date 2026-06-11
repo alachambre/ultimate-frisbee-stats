@@ -37,6 +37,7 @@ def test_key_moments_mark_break_broken_long_and_high_turn_points():
     assert markers[4] == ["break"]
     assert [moment["type"] for moment in key_moments] == [
         "counter_break_for_us",
+        "broken",
     ]
 
 
@@ -88,21 +89,28 @@ def test_key_moments_mark_counter_breaks_for_each_side():
     assert markers[1] == ["broken"]
     assert markers[3] == ["break"]
     assert markers[7] == ["broken"]
-    assert moment_by_type["counter_break_for_us"]["point_ids"] == [1, 2, 3]
+    assert moment_by_type["counter_break_for_us"]["point_ids"] == [3]
     assert moment_by_type["counter_break_for_us"]["primary_point_id"] == 3
-    assert moment_by_type["counter_break_against_us"]["point_ids"] == [5, 6, 7]
+    assert moment_by_type["counter_break_against_us"]["point_ids"] == [7]
     assert moment_by_type["counter_break_against_us"]["primary_point_id"] == 7
 
 
-def test_key_moments_show_overlapping_points_only_once():
+def test_key_moments_mark_only_final_counter_break_point_as_counter_break():
     _, key_moments = build_timeline_markers_and_key_moments([
         point(1, 1, offense=True, won=False, score=(0, 1)),
         point(2, 2, offense=True, won=True, score=(1, 1)),
         point(3, 3, offense=False, won=True, score=(2, 1)),
     ])
 
-    assert [moment["type"] for moment in key_moments] == ["counter_break_for_us"]
-    assert key_moments[0]["point_ids"] == [1, 2, 3]
+    moment_by_type = {moment["type"]: moment for moment in key_moments}
+
+    assert moment_by_type["counter_break_for_us"]["point_ids"] == [3]
+    assert moment_by_type["counter_break_for_us"]["primary_point_id"] == 3
+    assert all(
+        1 not in moment["point_ids"] and 2 not in moment["point_ids"]
+        for moment in key_moments
+        if moment["type"] == "counter_break_for_us"
+    )
 
 
 def test_key_moments_keep_only_one_characteristic_per_point():

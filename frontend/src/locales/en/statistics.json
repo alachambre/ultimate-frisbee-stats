@@ -130,6 +130,18 @@
       "sortableColumns": "Sortable columns",
       "tableAria": "Player statistics",
       "cardsAria": "Player statistics cards"
+    },
+    "page": {
+      "heading": "Statistics",
+      "copy": "Start with the coach overview, then refine the same dataset with competitions, games, and players.",
+      "selectedTeamEyebrow": "{{teamName}} coach overview",
+      "globalEyebrow": "Coach overview"
+    },
+    "overview": {
+      "title": "Coach overview",
+      "holdRate": "Hold rate",
+      "breakRate": "Break rate",
+      "turnRate": "Turn creation"
     }
   },
   "view": {
@@ -362,16 +374,16 @@
     "cohortExplanation": "Stats are computed from points where all selected players were on the line together."
   },
   "tooltips": {
-      "cleanPointRate": "Offense points won without us making a turnover.",
-      "breakRate": "Defense points won out of all defense points.",
-      "turnoverRate": "Defense points with at least one possession turnover.",
-      "conversionRate": "Defense points won after creating a turnover chance.",
-      "cleanBreakRate": "Defense points won without us making a turnover.",
-      "cleanConversionRate": "Turnover chances converted without us making a turnover.",
-      "holdRate": "Offense points won out of all offense points.",
+    "cleanPointRate": "Offense points won without us making a turnover.",
+    "breakRate": "Defense points won out of all defense points.",
+    "turnoverRate": "Defense points with at least one possession turnover.",
+    "conversionRate": "Defense points won after creating a turnover chance.",
+    "cleanBreakRate": "Defense points won without us making a turnover.",
+    "cleanConversionRate": "Turnover chances converted without us making a turnover.",
+    "holdRate": "Offense points won out of all offense points.",
     "forcedTurnovers": "Defensive points where at least one turnover occurred",
     "offensePoints": "Number of completed offensive points played",
     "defensePoints": "Number of completed defensive points played",
-      "pullRate": "Tracked Pulls that stayed inbound on the field."
+    "pullRate": "Tracked Pulls that stayed inbound on the field."
   }
 }
