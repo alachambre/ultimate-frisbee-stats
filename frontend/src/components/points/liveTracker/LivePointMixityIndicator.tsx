@@ -12,7 +12,7 @@ interface LivePointMixityIndicatorProps {
 
 export function LivePointMixityIndicator({
   requiredGenderRatio,
-  tone = "filled",
+  tone = "soft",
 }: LivePointMixityIndicatorProps) {
   const { t } = useTranslation(["points"]);
   const theme = useTheme();

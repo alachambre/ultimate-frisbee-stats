@@ -2,6 +2,7 @@ import { Box, Chip, Typography, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import PointTimer from "../PointTimer";
 import { LivePointMixityIndicator } from "./LivePointMixityIndicator";
+import { LivePointPossessionIndicator } from "./LivePointPossessionIndicator";
 import type { PointWithPlayers } from "../../../types";
 import type { GenderRatio } from "../../../utils/playerComposition";
 
@@ -80,20 +81,8 @@ export function LivePointHeader({
 
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <Chip label={statusLabel} size="small" variant="outlined" />
-          <Chip
-            label={
-              currentPoint.starting_on_offense
-                ? t("points:tracker.offense")
-                : t("points:tracker.defense")
-            }
-            size="small"
-            sx={(innerTheme) => ({
-              bgcolor: innerTheme.colors.newUi.primary,
-              color: innerTheme.palette.common.white,
-              "& .MuiChip-label": {
-                color: innerTheme.palette.common.white,
-              },
-            })}
+          <LivePointPossessionIndicator
+            startingOnOffense={currentPoint.starting_on_offense}
           />
           <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
           {currentPoint.status === "scored" && (
@@ -125,25 +114,8 @@ export function LivePointHeader({
           {statusLabel}
         </Typography>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-          <Chip
-            label={
-              currentPoint.starting_on_offense
-                ? t("points:tracker.offense")
-                : t("points:tracker.defense")
-            }
-            size="small"
-            sx={(innerTheme) =>
-              currentPoint.starting_on_offense
-                ? {}
-                : {
-                    bgcolor: innerTheme.colors.defense.main,
-                    color: innerTheme.palette.common.white,
-                    "& .MuiChip-label": {
-                      color: innerTheme.palette.common.white,
-                    },
-                  }
-            }
-            color={currentPoint.starting_on_offense ? "primary" : undefined}
+          <LivePointPossessionIndicator
+            startingOnOffense={currentPoint.starting_on_offense}
           />
           <LivePointMixityIndicator requiredGenderRatio={expectedGenderRatio} />
           {currentPoint.status === "scored" && (
