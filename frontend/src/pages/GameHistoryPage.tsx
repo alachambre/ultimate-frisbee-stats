@@ -173,15 +173,15 @@ function getPointTone(point: PointWithPlayers, markers: string[]): PointTone {
 function getToneAccentColor(tone: PointTone, theme: Theme) {
   switch (tone) {
     case "break":
-      return theme.colors.performance.veryHigh;
+      return theme.colors.gameHistory.point.break;
     case "broken":
-      return theme.colors.performance.veryLow;
+      return theme.colors.gameHistory.point.broken;
     case "effort":
-      return theme.colors.gameHistory.effort;
+      return theme.colors.gameHistory.point.effort;
     case "special":
-      return theme.colors.performance.medium;
+      return theme.colors.gameHistory.point.special;
     default:
-      return theme.colors.newUi.primary;
+      return theme.colors.gameHistory.point.default;
   }
 }
 
@@ -196,15 +196,15 @@ function getPointAccentColor(
 function getPointOutcomeAccentColor(point: PointWithPlayers, theme: Theme) {
   if (point.status === "completed" && point.won !== null) {
     if (!point.starting_on_offense && point.won) {
-      return theme.colors.performance.veryHigh;
+      return theme.colors.gameHistory.point.break;
     }
 
     if (point.starting_on_offense && !point.won) {
-      return theme.colors.performance.veryLow;
+      return theme.colors.gameHistory.point.broken;
     }
   }
 
-  return theme.colors.newUi.primary;
+  return theme.colors.gameHistory.point.default;
 }
 
 function getSideAccessibilityLabel(point: PointWithPlayers, t: TFunction) {
@@ -224,24 +224,26 @@ function PointSideIconBadge({
 }) {
   return (
     <Box
-      sx={(theme) => ({
-        alignItems: "center",
-        bgcolor: point.starting_on_offense
-          ? theme.colors.newUi.primarySoft
-          : alpha(theme.palette.success.main, 0.1),
-        borderRadius: "50%",
-        color: point.starting_on_offense
-          ? theme.colors.newUi.primary
-          : theme.palette.success.dark,
-        display: "inline-flex",
-        flexShrink: 0,
-        height: size,
-        justifyContent: "center",
-        width: size,
-        "& .MuiSvgIcon-root": {
-          fontSize: Math.max(14, size - 8),
-        },
-      })}
+      sx={(theme) => {
+        const sideColors = point.starting_on_offense
+          ? theme.colors.offense
+          : theme.colors.defense;
+
+        return {
+          alignItems: "center",
+          bgcolor: sideColors.soft,
+          borderRadius: "50%",
+          color: point.starting_on_offense ? sideColors.main : sideColors.dark,
+          display: "inline-flex",
+          flexShrink: 0,
+          height: size,
+          justifyContent: "center",
+          width: size,
+          "& .MuiSvgIcon-root": {
+            fontSize: Math.max(14, size - 8),
+          },
+        };
+      }}
     >
       {point.starting_on_offense ? (
         <FlashOnIcon titleAccess={getSideAccessibilityLabel(point, t)} />
@@ -313,20 +315,20 @@ function getMomentAccentColor(momentType: string, theme: Theme) {
   switch (momentType) {
     case "galaxy_point":
     case "universe_point":
-      return theme.colors.performance.medium;
+      return theme.colors.gameHistory.moment.special;
     case "broken":
     case "break_run_against_us":
     case "counter_break_against_us":
-      return theme.colors.performance.veryLow;
+      return theme.colors.gameHistory.moment.broken;
     case "break":
     case "break_run_for_us":
     case "counter_break_for_us":
-      return theme.colors.performance.veryHigh;
+      return theme.colors.gameHistory.moment.break;
     case "high_turn_point":
     case "long_point":
-      return theme.colors.gameHistory.effort;
+      return theme.colors.gameHistory.moment.effort;
     default:
-      return theme.colors.newUi.primary;
+      return theme.colors.gameHistory.moment.default;
   }
 }
 
@@ -829,8 +831,8 @@ function HalftimeListItem({
     <Box
       sx={(theme) => ({
         alignItems: "stretch",
-        bgcolor: alpha(theme.colors.performance.medium, 0.07),
-        border: `1px dashed ${alpha(theme.colors.performance.medium, 0.42)}`,
+        bgcolor: alpha(theme.colors.gameHistory.moment.special, 0.07),
+        border: `1px dashed ${alpha(theme.colors.gameHistory.moment.special, 0.42)}`,
         borderRadius: 1,
         display: "flex",
         flex: variant === "strip" ? "0 0 220px" : "0 0 auto",
@@ -842,7 +844,7 @@ function HalftimeListItem({
       <Box
         aria-hidden="true"
         sx={(theme) => ({
-          bgcolor: theme.colors.performance.medium,
+          bgcolor: theme.colors.gameHistory.moment.special,
           flexShrink: 0,
           width: 4,
         })}
@@ -857,7 +859,7 @@ function HalftimeListItem({
           <Box
             sx={(theme) => ({
               alignItems: "center",
-              bgcolor: alpha(theme.colors.performance.medium, 0.14),
+              bgcolor: alpha(theme.colors.gameHistory.moment.special, 0.14),
               borderRadius: "50%",
               color: theme.palette.warning.dark,
               display: "inline-flex",
@@ -1085,7 +1087,7 @@ function MobilePointSelector({
                     <Box
                       sx={(theme) => ({
                         alignItems: "center",
-                        bgcolor: alpha(theme.colors.performance.medium, 0.14),
+                        bgcolor: alpha(theme.colors.gameHistory.moment.special, 0.14),
                         borderRadius: "50%",
                         color: theme.palette.warning.dark,
                         display: "inline-flex",

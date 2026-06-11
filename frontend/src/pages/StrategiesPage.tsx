@@ -58,12 +58,12 @@ function StrategyTypeIcon({ category }: StrategyTypeIconProps) {
       sx={(theme) => ({
         alignItems: "center",
         bgcolor: isOffense
-          ? theme.colors.newUi.primarySoft
-          : alpha(theme.palette.success.main, 0.1),
+          ? theme.colors.offense.soft
+          : theme.colors.defense.soft,
         borderRadius: "50%",
         color: isOffense
-          ? theme.colors.newUi.primary
-          : theme.palette.success.dark,
+          ? theme.colors.offense.main
+          : theme.colors.defense.dark,
         display: "inline-flex",
         flex: "0 0 auto",
         height: 40,
@@ -90,16 +90,16 @@ function StrategyCategoryChip({ category }: StrategyCategoryChipProps) {
       size="small"
       sx={(theme) => ({
         bgcolor: isOffense
-          ? theme.colors.newUi.primarySoft
-          : alpha(theme.palette.success.main, 0.1),
+          ? theme.colors.offense.soft
+          : theme.colors.defense.soft,
         border: `1px solid ${
           isOffense
-            ? theme.colors.newUi.primaryBorder
-            : alpha(theme.palette.success.main, 0.3)
+            ? theme.colors.offense.border
+            : theme.colors.defense.border
         }`,
         color: isOffense
-          ? theme.colors.newUi.primary
-          : theme.palette.success.dark,
+          ? theme.colors.offense.main
+          : theme.colors.defense.dark,
         fontWeight: 800,
       })}
     />

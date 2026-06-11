@@ -354,12 +354,12 @@ export default function NewGameScoreProgression({
   );
   const maxX = pointNumbers[pointNumbers.length - 1] ?? 0;
   const tickStep = getGameTrendsTickStep(pointNumbers.length);
-  const ourSeriesColor = theme.colors.newUi.primary;
-  const opponentSeriesColor = theme.palette.text.secondary;
-  const breakMarkerColor = theme.colors.performance.veryHigh;
-  const brokenMarkerColor = theme.colors.performance.veryLow;
-  const specialPointMarkerColor = theme.colors.performance.medium;
-  const selectedMarkerColor = theme.colors.newUi.primary;
+  const ourSeriesColor = theme.colors.gameHistory.chart.ourSeries;
+  const opponentSeriesColor = theme.colors.gameHistory.chart.opponentSeries;
+  const breakMarkerColor = theme.colors.gameHistory.moment.break;
+  const brokenMarkerColor = theme.colors.gameHistory.moment.broken;
+  const specialPointMarkerColor = theme.colors.gameHistory.moment.special;
+  const selectedMarkerColor = theme.colors.gameHistory.chart.selectedPoint;
   const breakMarkerFlags = getBreakMarkerFlags(timeline.points);
   const basePointFill = alpha(ourSeriesColor, 0.12);
   const opponentPointFill = alpha(opponentSeriesColor, 0.12);

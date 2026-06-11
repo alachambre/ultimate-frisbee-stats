@@ -261,26 +261,28 @@ export default function NewGameHistoryPointItem({
           <Box sx={{ minWidth: 0 }}>
             <Stack alignItems="center" direction="row" spacing={1}>
               <Box
-                sx={(theme) => ({
-                  "--history-side-icon-bg": point.starting_on_offense
-                    ? theme.colors.newUi.primarySoft
-                    : alpha(theme.palette.success.main, 0.1),
-                  "--history-side-icon-color": point.starting_on_offense
-                    ? theme.colors.newUi.primary
-                    : theme.palette.success.dark,
-                  alignItems: "center",
-                  bgcolor: "var(--history-side-icon-bg)",
-                  borderRadius: "50%",
-                  color: "var(--history-side-icon-color)",
-                  display: "inline-flex",
-                  flexShrink: 0,
-                  height: 30,
-                  justifyContent: "center",
-                  width: 30,
-                  "& .MuiSvgIcon-root": {
-                    fontSize: 18,
-                  },
-                })}
+                sx={(theme) => {
+                  const sideColors = point.starting_on_offense
+                    ? theme.colors.offense
+                    : theme.colors.defense;
+
+                  return {
+                    alignItems: "center",
+                    bgcolor: sideColors.soft,
+                    borderRadius: "50%",
+                    color: point.starting_on_offense
+                      ? sideColors.main
+                      : sideColors.dark,
+                    display: "inline-flex",
+                    flexShrink: 0,
+                    height: 30,
+                    justifyContent: "center",
+                    width: 30,
+                    "& .MuiSvgIcon-root": {
+                      fontSize: 18,
+                    },
+                  };
+                }}
               >
                 <SideIcon titleAccess={sideAccessibilityLabel} />
               </Box>
@@ -314,9 +316,9 @@ export default function NewGameHistoryPointItem({
                   label={t("status.running", "Running")}
                   size="small"
                   sx={(theme) => ({
-                    bgcolor: alpha(theme.palette.success.main, 0.14),
-                    border: `1px solid ${alpha(theme.palette.success.main, 0.35)}`,
-                    color: theme.palette.success.dark,
+                    bgcolor: alpha(theme.colors.gameHistory.point.running, 0.14),
+                    border: `1px solid ${alpha(theme.colors.gameHistory.point.running, 0.35)}`,
+                    color: theme.colors.defense.dark,
                     fontWeight: 800,
                   })}
                 />

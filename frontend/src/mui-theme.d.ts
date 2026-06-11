@@ -1,5 +1,47 @@
 import "@mui/material/styles";
 
+type TeamSideColorScale = {
+  main: string;
+  light: string;
+  dark: string;
+  soft: string;
+  border: string;
+};
+
+type GameHistoryToneColors = {
+  default: string;
+  break: string;
+  broken: string;
+  effort: string;
+  special: string;
+};
+
+type GameHistoryPointColors = GameHistoryToneColors & {
+  running: string;
+};
+
+type GameHistoryChartColors = {
+  ourSeries: string;
+  opponentSeries: string;
+  selectedPoint: string;
+};
+
+type GameHistoryColors = {
+  effort: string;
+  chart: GameHistoryChartColors;
+  point: GameHistoryPointColors;
+  moment: GameHistoryToneColors;
+};
+
+type TeamSideColorOptions = Partial<TeamSideColorScale>;
+
+type GameHistoryColorOptions = {
+  effort?: string;
+  chart?: Partial<GameHistoryChartColors>;
+  point?: Partial<GameHistoryPointColors>;
+  moment?: Partial<GameHistoryToneColors>;
+};
+
 // Augment @mui/material/styles for createTheme
 declare module "@mui/material/styles" {
   interface Theme {
@@ -10,16 +52,8 @@ declare module "@mui/material/styles" {
       middle: string;
     };
     colors: {
-      offense: {
-        main: string;
-        light: string;
-        dark: string;
-      };
-      defense: {
-        main: string;
-        light: string;
-        dark: string;
-      };
+      offense: TeamSideColorScale;
+      defense: TeamSideColorScale;
       men: {
         main: string;
       };
@@ -36,9 +70,7 @@ declare module "@mui/material/styles" {
         high: string;
         veryHigh: string;
       };
-      gameHistory: {
-        effort: string;
-      };
+      gameHistory: GameHistoryColors;
       newUi: {
         primary: string;
         primarySoft: string;
@@ -54,16 +86,8 @@ declare module "@mui/material/styles" {
       middle?: string;
     };
     colors?: {
-      offense?: {
-        main?: string;
-        light?: string;
-        dark?: string;
-      };
-      defense?: {
-        main?: string;
-        light?: string;
-        dark?: string;
-      };
+      offense?: TeamSideColorOptions;
+      defense?: TeamSideColorOptions;
       men?: {
         main?: string;
       };
@@ -80,9 +104,7 @@ declare module "@mui/material/styles" {
         high?: string;
         veryHigh?: string;
       };
-      gameHistory?: {
-        effort?: string;
-      };
+      gameHistory?: GameHistoryColorOptions;
       newUi?: {
         primary?: string;
         primarySoft?: string;
@@ -102,16 +124,8 @@ declare module "@mui/system" {
       middle: string;
     };
     colors: {
-      offense: {
-        main: string;
-        light: string;
-        dark: string;
-      };
-      defense: {
-        main: string;
-        light: string;
-        dark: string;
-      };
+      offense: TeamSideColorScale;
+      defense: TeamSideColorScale;
       men: {
         main: string;
       };
@@ -128,9 +142,7 @@ declare module "@mui/system" {
         high: string;
         veryHigh: string;
       };
-      gameHistory: {
-        effort: string;
-      };
+      gameHistory: GameHistoryColors;
       newUi: {
         primary: string;
         primarySoft: string;
