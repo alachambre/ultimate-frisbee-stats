@@ -37,6 +37,12 @@
     "switchToOld": "Switch to old UI",
     "switchToNew": "Switch to new UI"
   },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light",
+    "switchToDark": "Switch to dark theme",
+    "switchToLight": "Switch to light theme"
+  },
   "team": {
     "selectedTeam": "Selected team",
     "noTeam": "No team selected",

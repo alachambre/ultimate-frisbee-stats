@@ -325,6 +325,24 @@ describe("AppShell", () => {
     expect(localStorage.getItem("i18nextLng")).toBe("fr");
   });
 
+  it("lets users switch theme from the new UI shell", async () => {
+    renderShell("public");
+    const user = userEvent.setup();
+
+    await user.click(
+      screen.getAllByRole("button", {
+        name: /^(Switch to dark theme|Basculer vers le thème sombre)$/i,
+      })[0],
+    );
+
+    expect(localStorage.getItem("monkey-statistics-theme-mode")).toBe("dark");
+    expect(
+      screen.getAllByRole("button", {
+        name: /^(Switch to light theme|Basculer vers le thème clair)$/i,
+      }).length,
+    ).toBeGreaterThan(0);
+  });
+
   it("uses the mobile fullscreen shell for live tracking and game history", () => {
     expect(isMobileFullscreenRoute("/live/1")).toBe(true);
     expect(isMobileFullscreenRoute("/games/1")).toBe(true);

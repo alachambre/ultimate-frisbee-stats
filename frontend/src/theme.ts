@@ -1,5 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 
+export type AppThemeMode = "light" | "dark";
+
 const primaryMain = "#2F6690";
 const primarySoft = "#EAF3F8";
 const primaryBorder = "#B9D5E5";
@@ -25,117 +27,193 @@ const performanceVeryHigh = "#16a34a";
 const effortMain = "#8B5E34";
 const neutralSeries = "#6b7280";
 
-export function createAppTheme() {
+const darkPrimaryMain = "#8bb9d4";
+const darkPrimarySoft = "#173244";
+const darkPrimaryBorder = "#3f789e";
+const darkPrimaryDark = "#5b8cb1";
+const darkPrimaryActionHover = "#3d82a8";
+const darkPrimarySurface = "#23465d";
+const darkSecondaryMain = "#67d3f3";
+const darkSecondaryLight = "#a5e7fb";
+const darkSecondaryDark = "#309ac8";
+const darkPageBackground = "#101418";
+const darkPaperBackground = "#171c22";
+const darkElevatedBackground = "#1d242b";
+const darkTextPrimary = "#f4f7fb";
+const darkTextSecondary = "#aab6c3";
+const darkDivider = "#2b3440";
+const darkDefenseMain = "#7bcf8f";
+const darkDefenseLight = "#a7e0b5";
+const darkDefenseDark = "#4c9560";
+const darkDefenseSoft = "#173322";
+const darkDefenseBorder = "#356c44";
+const darkDangerMain = "#ff8a80";
+const darkDangerLight = "#ffb4aa";
+const darkDangerDark = "#f97066";
+const darkWarningMain = "#ffbd6b";
+const darkWarningLight = "#ffd08a";
+const darkWarningDark = "#f79009";
+const darkPerformanceHigh = "#a8df5a";
+const darkPerformanceVeryHigh = "#67c983";
+const darkEffortMain = "#c99c6d";
+const darkNeutralSeries = "#c0c8d2";
+const darkWomenMain = "#7bc8e6";
+
+export function createAppTheme(mode: AppThemeMode = "light") {
+  const isDark = mode === "dark";
+  const resolvedPrimaryMain = isDark ? darkPrimaryMain : primaryMain;
+  const resolvedPrimarySoft = isDark ? darkPrimarySoft : primarySoft;
+  const resolvedPrimaryBorder = isDark ? darkPrimaryBorder : primaryBorder;
+  const resolvedPrimaryDark = isDark ? darkPrimaryDark : primaryDark;
+  const resolvedSecondaryMain = isDark ? darkSecondaryMain : secondaryMain;
+  const resolvedSecondaryLight = isDark ? darkSecondaryLight : secondaryLight;
+  const resolvedSecondaryDark = isDark ? darkSecondaryDark : secondaryDark;
+  const resolvedPageBackground = isDark ? darkPageBackground : pageBackground;
+  const resolvedPaperBackground = isDark ? darkPaperBackground : paperBackground;
+  const resolvedDefenseMain = isDark ? darkDefenseMain : defenseMain;
+  const resolvedDefenseLight = isDark ? darkDefenseLight : defenseLight;
+  const resolvedDefenseDark = isDark ? darkDefenseDark : defenseDark;
+  const resolvedDefenseSoft = isDark ? darkDefenseSoft : defenseSoft;
+  const resolvedDefenseBorder = isDark ? darkDefenseBorder : defenseBorder;
+  const resolvedDangerMain = isDark ? darkDangerMain : dangerMain;
+  const resolvedDangerLight = isDark ? darkDangerLight : dangerLight;
+  const resolvedDangerDark = isDark ? darkDangerDark : dangerDark;
+  const resolvedWarningMain = isDark ? darkWarningMain : warningMain;
+  const resolvedWarningLight = isDark ? darkWarningLight : warningLight;
+  const resolvedWarningDark = isDark ? darkWarningDark : warningDark;
+  const resolvedPerformanceHigh = isDark ? darkPerformanceHigh : performanceHigh;
+  const resolvedPerformanceVeryHigh = isDark
+    ? darkPerformanceVeryHigh
+    : performanceVeryHigh;
+  const resolvedEffortMain = isDark ? darkEffortMain : effortMain;
+  const resolvedNeutralSeries = isDark ? darkNeutralSeries : neutralSeries;
+
   return createTheme({
     palette: {
-      mode: "light",
+      mode,
       primary: {
-        main: primaryMain,
-        light: primarySoft,
-        dark: primaryDark,
-        contrastText: paperBackground,
+        main: resolvedPrimaryMain,
+        light: resolvedPrimarySoft,
+        dark: resolvedPrimaryDark,
+        contrastText: isDark ? darkPageBackground : paperBackground,
       },
       secondary: {
-        main: secondaryMain,
-        light: secondaryLight,
-        dark: secondaryDark,
+        main: resolvedSecondaryMain,
+        light: resolvedSecondaryLight,
+        dark: resolvedSecondaryDark,
       },
       success: {
-        main: defenseMain,
-        light: defenseLight,
-        dark: defenseDark,
-        contrastText: paperBackground,
+        main: resolvedDefenseMain,
+        light: resolvedDefenseLight,
+        dark: resolvedDefenseDark,
+        contrastText: isDark ? darkPageBackground : paperBackground,
       },
       error: {
-        main: dangerMain,
-        light: dangerLight,
-        dark: dangerDark,
-        contrastText: paperBackground,
+        main: resolvedDangerMain,
+        light: resolvedDangerLight,
+        dark: resolvedDangerDark,
+        contrastText: isDark ? darkPageBackground : paperBackground,
       },
       warning: {
-        main: warningMain,
-        light: warningLight,
-        dark: warningDark,
-        contrastText: "#1f2937",
+        main: resolvedWarningMain,
+        light: resolvedWarningLight,
+        dark: resolvedWarningDark,
+        contrastText: isDark ? darkPageBackground : "#1f2937",
       },
       info: {
-        main: primaryMain,
-        light: primarySoft,
-        dark: primaryDark,
-        contrastText: paperBackground,
+        main: resolvedPrimaryMain,
+        light: resolvedPrimarySoft,
+        dark: resolvedPrimaryDark,
+        contrastText: isDark ? darkPageBackground : paperBackground,
       },
       background: {
-        default: pageBackground,
-        paper: paperBackground,
+        default: resolvedPageBackground,
+        paper: resolvedPaperBackground,
       },
+      ...(isDark
+        ? {
+            divider: darkDivider,
+            text: {
+              primary: darkTextPrimary,
+              secondary: darkTextSecondary,
+            },
+          }
+        : {}),
     },
     gradients: {
-      primary: `linear-gradient(135deg, ${primaryDark} 0%, ${secondaryMain} 100%)`,
-      primaryReverse: `linear-gradient(180deg, ${primaryDark} 0%, ${secondaryMain} 100%)`,
-      light: `linear-gradient(to bottom, ${pageBackground} 0%, ${paperBackground} 100%)`,
-      middle: "#2b7cc1",
+      primary: `linear-gradient(135deg, ${resolvedPrimaryDark} 0%, ${resolvedSecondaryMain} 100%)`,
+      primaryReverse: `linear-gradient(180deg, ${resolvedPrimaryDark} 0%, ${resolvedSecondaryMain} 100%)`,
+      light: `linear-gradient(to bottom, ${resolvedPageBackground} 0%, ${
+        isDark ? darkElevatedBackground : paperBackground
+      } 100%)`,
+      middle: isDark ? resolvedPrimaryMain : "#2b7cc1",
     },
     colors: {
       offense: {
-        main: primaryMain,
-        light: "#5b8cb1",
-        dark: primaryDark,
-        soft: primarySoft,
-        border: primaryBorder,
+        main: resolvedPrimaryMain,
+        light: isDark ? darkSecondaryLight : "#5b8cb1",
+        dark: resolvedPrimaryDark,
+        soft: resolvedPrimarySoft,
+        border: resolvedPrimaryBorder,
       },
       defense: {
-        main: defenseMain,
-        light: defenseLight,
-        dark: defenseDark,
-        soft: defenseSoft,
-        border: defenseBorder,
+        main: resolvedDefenseMain,
+        light: resolvedDefenseLight,
+        dark: resolvedDefenseDark,
+        soft: resolvedDefenseSoft,
+        border: resolvedDefenseBorder,
       },
       men: {
-        main: primaryMain,
+        main: resolvedPrimaryMain,
       },
       women: {
-        main: "#309ac8",
+        main: isDark ? darkWomenMain : "#309ac8",
       },
       pull: {
-        main: defenseMain,
+        main: resolvedDefenseMain,
       },
       performance: {
-        veryLow: dangerMain,
-        low: warningMain,
-        medium: warningLight,
-        high: performanceHigh,
-        veryHigh: performanceVeryHigh,
+        veryLow: resolvedDangerMain,
+        low: resolvedWarningMain,
+        medium: resolvedWarningLight,
+        high: resolvedPerformanceHigh,
+        veryHigh: resolvedPerformanceVeryHigh,
       },
       gameHistory: {
-        effort: effortMain,
+        effort: resolvedEffortMain,
         chart: {
-          ourSeries: primaryMain,
-          opponentSeries: neutralSeries,
-          selectedPoint: primaryMain,
+          ourSeries: resolvedPrimaryMain,
+          opponentSeries: resolvedNeutralSeries,
+          selectedPoint: resolvedPrimaryMain,
         },
         point: {
-          default: primaryMain,
-          break: performanceVeryHigh,
-          broken: dangerMain,
-          effort: effortMain,
-          running: defenseMain,
-          special: warningLight,
+          default: resolvedPrimaryMain,
+          break: resolvedPerformanceVeryHigh,
+          broken: resolvedDangerMain,
+          effort: resolvedEffortMain,
+          running: resolvedDefenseMain,
+          special: resolvedWarningLight,
         },
         moment: {
-          default: primaryMain,
-          break: performanceVeryHigh,
-          broken: dangerMain,
-          effort: effortMain,
-          special: warningLight,
+          default: resolvedPrimaryMain,
+          break: resolvedPerformanceVeryHigh,
+          broken: resolvedDangerMain,
+          effort: resolvedEffortMain,
+          special: resolvedWarningLight,
         },
       },
       newUi: {
-        primary: primaryMain,
-        primarySoft,
-        primaryBorder,
+        primary: resolvedPrimaryMain,
+        primarySoft: resolvedPrimarySoft,
+        primaryBorder: resolvedPrimaryBorder,
+        primaryAction: isDark ? darkPrimarySurface : primaryMain,
+        primaryActionHover: isDark ? darkPrimaryActionHover : primaryDark,
+        primaryActionText: isDark ? darkTextPrimary : paperBackground,
+        primarySurface: isDark ? darkPrimarySurface : primaryMain,
+        primarySurfaceText: isDark ? darkTextPrimary : paperBackground,
       },
     },
   });
 }
 
-export const appTheme = createAppTheme();
+export const appTheme = createAppTheme("light");

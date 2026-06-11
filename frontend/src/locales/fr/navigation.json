@@ -37,6 +37,12 @@
     "switchToOld": "Basculer vers l'ancienne UI",
     "switchToNew": "Basculer vers la nouvelle UI"
   },
+  "theme": {
+    "dark": "Sombre",
+    "light": "Clair",
+    "switchToDark": "Basculer vers le thème sombre",
+    "switchToLight": "Basculer vers le thème clair"
+  },
   "team": {
     "selectedTeam": "Équipe sélectionnée",
     "noTeam": "Aucune équipe sélectionnée",

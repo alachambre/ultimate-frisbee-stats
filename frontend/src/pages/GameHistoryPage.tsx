@@ -1522,9 +1522,9 @@ export default function GameHistoryPage() {
           component="header"
           elevation={0}
           sx={(theme) => ({
-            bgcolor: theme.colors.newUi.primary,
+            bgcolor: theme.colors.newUi.primarySurface,
             borderRadius: { xs: 0, sm: 1 },
-            color: theme.palette.primary.contrastText,
+            color: theme.colors.newUi.primarySurfaceText,
             overflow: "hidden",
           })}
         >

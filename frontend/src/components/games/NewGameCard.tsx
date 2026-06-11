@@ -203,19 +203,19 @@ export default function NewGameCard({
               bgcolor:
                 game.status === "ended"
                   ? "transparent"
-                  : theme.colors.newUi.primary,
+                  : theme.colors.newUi.primaryAction,
               borderColor: theme.colors.newUi.primaryBorder,
               color:
                 game.status === "ended"
                   ? theme.colors.newUi.primary
-                  : theme.palette.common.white,
+                  : theme.colors.newUi.primaryActionText,
               minWidth: { xs: isRow ? 72 : "100%", sm: 96 },
               px: { xs: isRow ? 1.5 : 2, sm: 2 },
               "&:hover": {
                 bgcolor:
                   game.status === "ended"
                     ? alpha(theme.colors.newUi.primary, 0.08)
-                    : theme.colors.newUi.primary,
+                    : theme.colors.newUi.primaryActionHover,
                 borderColor: theme.colors.newUi.primary,
               },
             })}

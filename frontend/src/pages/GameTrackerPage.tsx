@@ -153,10 +153,10 @@ export default function GameTrackerPage() {
   };
   const newUiContainedButtonSx: SxProps<Theme> = {
     ...gameActionButtonSx,
-    bgcolor: (theme) => theme.colors.newUi.primary,
-    color: (theme) => theme.palette.common.white,
+    bgcolor: (theme) => theme.colors.newUi.primaryAction,
+    color: (theme) => theme.colors.newUi.primaryActionText,
     "&:hover": {
-      bgcolor: (theme) => theme.colors.newUi.primary,
+      bgcolor: (theme) => theme.colors.newUi.primaryActionHover,
     },
   };
   const mobileHiddenLabelSx = {
@@ -174,9 +174,9 @@ export default function GameTrackerPage() {
           component="header"
           elevation={0}
           sx={(theme) => ({
-            bgcolor: theme.colors.newUi.primary,
+            bgcolor: theme.colors.newUi.primarySurface,
             borderRadius: { xs: 0, sm: 1 },
-            color: theme.palette.primary.contrastText,
+            color: theme.colors.newUi.primarySurfaceText,
             overflow: "hidden",
           })}
         >

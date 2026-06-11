@@ -39,6 +39,7 @@ import type { GameWithScore } from "../../types";
 import { queryKeys } from "../../utils/queryKeys";
 import { isMobileFullscreenRoute } from "./mobileFullscreenRoutes";
 import TeamSelector from "./TeamSelector";
+import ThemeModeToggle from "./ThemeModeToggle";
 import UiModeToggle from "./UiModeToggle";
 import { useSelectedTeam } from "../team/useSelectedTeam";
 
@@ -299,11 +300,11 @@ export default function AppShell() {
         position="sticky"
         sx={(theme) => ({
           bgcolor: {
-            xs: theme.colors.newUi.primary,
+            xs: theme.colors.newUi.primarySurface,
             sm: "background.default",
           },
           color: {
-            xs: theme.palette.common.white,
+            xs: theme.colors.newUi.primarySurfaceText,
             sm: theme.palette.text.primary,
           },
           borderBottom: {
@@ -414,17 +415,17 @@ export default function AppShell() {
                   variant={isActive ? "contained" : "text"}
                   sx={(theme) => ({
                     bgcolor: isActive
-                      ? theme.colors.newUi.primary
+                      ? theme.colors.newUi.primaryAction
                       : "transparent",
                     boxShadow: "none",
                     color: isActive
-                      ? theme.palette.common.white
+                      ? theme.colors.newUi.primaryActionText
                       : theme.palette.text.primary,
                     flexShrink: 0,
                     whiteSpace: "nowrap",
                     "&:hover": {
                       bgcolor: isActive
-                        ? theme.colors.newUi.primary
+                        ? theme.colors.newUi.primaryActionHover
                         : alpha(theme.palette.text.primary, 0.06),
                       boxShadow: "none",
                     },
@@ -456,6 +457,12 @@ export default function AppShell() {
                 <LanguageIcon />
               </IconButton>
             </Tooltip>
+            <ThemeModeToggle
+              iconButtonProps={{
+                sx: newUiIconButtonSx,
+              }}
+              iconOnly
+            />
             <UiModeToggle
               iconButtonProps={{
                 sx: newUiIconButtonSx,
@@ -576,6 +583,12 @@ export default function AppShell() {
                   <LanguageIcon />
                 </IconButton>
               </Tooltip>
+              <ThemeModeToggle
+                iconButtonProps={{
+                  sx: newUiIconButtonSx,
+                }}
+                iconOnly
+              />
               <UiModeToggle
                 iconButtonProps={{
                   sx: newUiIconButtonSx,

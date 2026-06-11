@@ -155,10 +155,10 @@ export default function LivePointTracker({
   const isFieldVariant = variant === "field";
   const newUiContainedButtonSx: SxProps<Theme> | undefined = isFieldVariant
     ? {
-        bgcolor: (theme) => theme.colors.newUi.primary,
-        color: (theme) => theme.palette.common.white,
+        bgcolor: (theme) => theme.colors.newUi.primaryAction,
+        color: (theme) => theme.colors.newUi.primaryActionText,
         "&:hover": {
-          bgcolor: (theme) => theme.colors.newUi.primary,
+          bgcolor: (theme) => theme.colors.newUi.primaryActionHover,
         },
       }
     : undefined;
