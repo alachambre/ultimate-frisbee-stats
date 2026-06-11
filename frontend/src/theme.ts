@@ -5,9 +5,10 @@ export function createAppTheme() {
     palette: {
       mode: "light",
       primary: {
-        main: "#1e3a8a",
-        light: "#3b82f6",
-        dark: "#1e40af",
+        main: "#2F6690",
+        light: "#EAF3F8",
+        dark: "#245173",
+        contrastText: "#ffffff",
       },
       secondary: {
         main: "#38bdf8",
@@ -27,20 +28,20 @@ export function createAppTheme() {
     },
     colors: {
       offense: {
-        main: "#1e3a8a",
+        main: "#2F6690",
         light: "#3b82f6",
-        dark: "#1e40af",
+        dark: "#245173",
       },
       defense: {
-        main: "#1e3a8a",
+        main: "#2F6690",
         light: "#3b82f6",
-        dark: "#1e40af",
+        dark: "#245173",
       },
       men: {
-        main: "#1e3a8a",
+        main: "#2F6690",
       },
       women: {
-        main: "#38bdf8",
+        main: "#309ac8",
       },
       pull: {
         main: "#2d7a3e",

@@ -447,7 +447,7 @@ describe("GameHistoryPage", () => {
     expect(screen.getByText("1 broken")).toBeInTheDocument();
     expect(await screen.findByText("Game trends")).toBeInTheDocument();
     expect(screen.getByText("Score progression")).toBeInTheDocument();
-    expect(screen.getAllByText("Break point").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Break").length).toBeGreaterThan(0);
     expect(screen.getByText("Broken point")).toBeInTheDocument();
     expect(screen.getAllByText("Long point")).toHaveLength(1);
     expect(screen.getAllByText("High-turn point")).toHaveLength(1);
