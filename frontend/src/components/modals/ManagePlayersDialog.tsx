@@ -254,8 +254,18 @@ export default function ManagePlayersDialog({
                     sx={{
                       mt: 0.5,
                       bgcolor: requiredGenderRatio.men === 4 ? theme.colors.men.main : theme.colors.women.main,
-                      color: theme.palette.common.white,
-                      "& .MuiChip-icon": { color: theme.palette.common.white },
+                      color: theme.palette.getContrastText(
+                        requiredGenderRatio.men === 4
+                          ? theme.colors.men.main
+                          : theme.colors.women.main,
+                      ),
+                      "& .MuiChip-icon": {
+                        color: theme.palette.getContrastText(
+                          requiredGenderRatio.men === 4
+                            ? theme.colors.men.main
+                            : theme.colors.women.main,
+                        ),
+                      },
                     }}
                   />
                   <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>

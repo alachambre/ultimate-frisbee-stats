@@ -262,7 +262,7 @@ export default function LivePointTracker({
                   : t("points:empty.noPoints")}
               </Typography>
             )}
-            {expectedGenderRatio && (
+            {expectedGenderRatio && !isFieldVariant && (
               <Box mb={2} display="flex" justifyContent="center">
                 <LivePointMixityIndicator
                   requiredGenderRatio={expectedGenderRatio}
@@ -297,6 +297,33 @@ export default function LivePointTracker({
                       }
                 }
               >
+                {isFieldVariant && expectedGenderRatio && (
+                  <Box
+                    sx={{
+                      alignItems: "center",
+                      display: "flex",
+                      gap: 1.5,
+                      justifyContent: "space-between",
+                      mb: 1.25,
+                    }}
+                  >
+                    <Typography
+                      color="text.secondary"
+                      sx={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        letterSpacing: 0,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {t("points:tracker.nextPoint", "Next point")}
+                    </Typography>
+                    <LivePointMixityIndicator
+                      requiredGenderRatio={expectedGenderRatio}
+                      tone="soft"
+                    />
+                  </Box>
+                )}
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
                   spacing={1.5}

@@ -59,7 +59,7 @@ function formatDuration(totalSeconds?: number | null): string | null {
 function getGenderLabel(
   point: PointWithPlayers,
   t: TFunction,
-): { icon: ReactElement; label: string } | null {
+): { gender: "M" | "W"; icon: ReactElement; label: string } | null {
   const menCount = point.players.filter((player) => player.gender === "M").length;
   const womenCount = point.players.filter(
     (player) => player.gender === "W",
@@ -71,12 +71,14 @@ function getGenderLabel(
 
   if (menCount >= womenCount) {
     return {
+      gender: "M",
       icon: <MaleIcon />,
       label: t("dialog.start.men", "Men"),
     };
   }
 
   return {
+    gender: "W",
     icon: <FemaleIcon />,
     label: t("dialog.start.women", "Women"),
   };
@@ -434,27 +436,30 @@ export default function NewGameHistoryPointItem({
                   component="span"
                   direction="row"
                   spacing={0.25}
-                  sx={{
-                    color: "text.secondary",
+                  sx={(theme) => ({
+                    color:
+                      genderLabel.gender === "M"
+                        ? theme.colors.men.main
+                        : theme.colors.women.main,
                     fontStyle: "italic",
                     "& .MuiSvgIcon-root": {
                       fontSize: 16,
                     },
-                  }}
+                  })}
                 >
-                  <Typography color="text.secondary" component="span" variant="body2">
+                  <Typography color="inherit" component="span" variant="body2">
                     (
                   </Typography>
                   {genderLabel.icon}
                   <Typography
-                    color="text.secondary"
+                    color="inherit"
                     component="span"
                     fontStyle="italic"
                     variant="body2"
                   >
                     {genderLabel.label}
                   </Typography>
-                  <Typography color="text.secondary" component="span" variant="body2">
+                  <Typography color="inherit" component="span" variant="body2">
                     )
                   </Typography>
                 </Stack>
@@ -468,7 +473,28 @@ export default function NewGameHistoryPointItem({
                   label={player.name}
                   size="small"
                   sx={(theme) => ({
-                    bgcolor: alpha(theme.palette.text.primary, 0.025),
+                    borderColor: alpha(
+                      player.gender === "M"
+                        ? theme.colors.men.main
+                        : theme.colors.women.main,
+                      theme.palette.mode === "dark" ? 0.44 : 0.28,
+                    ),
+                    color:
+                      player.gender === "M"
+                        ? theme.colors.men.main
+                        : theme.colors.women.main,
+                    "& .MuiChip-icon": {
+                      color:
+                        player.gender === "M"
+                          ? theme.colors.men.main
+                          : theme.colors.women.main,
+                    },
+                    bgcolor: alpha(
+                      player.gender === "M"
+                        ? theme.colors.men.main
+                        : theme.colors.women.main,
+                      theme.palette.mode === "dark" ? 0.12 : 0.05,
+                    ),
                   })}
                   variant="outlined"
                 />

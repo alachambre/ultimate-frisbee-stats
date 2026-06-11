@@ -8,6 +8,8 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import GroupsIcon from "@mui/icons-material/Groups";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
 import { useTranslation } from "react-i18next";
 import type { LineWithPlayers } from "../../types";
 
@@ -82,15 +84,33 @@ export default function LineCard({ line }: LineCardProps) {
           />
           {menCount > 0 && (
             <Chip
+              icon={<MaleIcon />}
               label={`${menCount} ${menCount === 1 ? t("common:labels.male") : t("common:labels.men")}`}
               size="small"
+              sx={(theme) => ({
+                bgcolor: alpha(theme.colors.men.main, 0.05),
+                borderColor: alpha(theme.colors.men.main, 0.5),
+                color: theme.colors.men.main,
+                "& .MuiChip-icon": {
+                  color: theme.colors.men.main,
+                },
+              })}
               variant="outlined"
             />
           )}
           {womenCount > 0 && (
             <Chip
+              icon={<FemaleIcon />}
               label={`${womenCount} ${womenCount === 1 ? t("common:labels.female") : t("common:labels.women")}`}
               size="small"
+              sx={(theme) => ({
+                bgcolor: alpha(theme.colors.women.main, 0.05),
+                borderColor: alpha(theme.colors.women.main, 0.5),
+                color: theme.colors.women.main,
+                "& .MuiChip-icon": {
+                  color: theme.colors.women.main,
+                },
+              })}
               variant="outlined"
             />
           )}

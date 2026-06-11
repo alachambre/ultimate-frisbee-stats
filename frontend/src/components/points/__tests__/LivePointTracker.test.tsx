@@ -1093,6 +1093,28 @@ describe("LivePointTracker - Pending Stoppage Feature", () => {
       expect(screen.queryByText(/Game history/i)).not.toBeInTheDocument();
     });
 
+    it("shows the next point mixity in the action footer when no point is active", () => {
+      const previousPoint = createMockPoint({
+        id: 1,
+        pointNumber: 1,
+        status: "completed",
+      });
+      const game = createMockGame("started", null, [previousPoint]);
+
+      render(
+        <LivePointTracker
+          activePoint={null}
+          game={game}
+          players={mockPlayers}
+          teamId={1}
+          variant="field"
+        />,
+      );
+
+      expect(screen.getByText("Next point")).toBeInTheDocument();
+      expect(screen.getByText("Men")).toBeInTheDocument();
+    });
+
     it("renders a waiting copy without recorder guidance for read-only users", async () => {
       const game = createMockGame();
 

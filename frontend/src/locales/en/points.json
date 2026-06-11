@@ -5,6 +5,7 @@
     "fieldNewPoint": "New point",
     "liveTracking": "Live tracking",
     "currentPoint": "Current point",
+    "nextPoint": "Next point",
     "noActivePoint": "No active point",
     "noActivePointCopy": "No point is currently running. The next action is available at the bottom of the screen.",
     "offense": "Offense",

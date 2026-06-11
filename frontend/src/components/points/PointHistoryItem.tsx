@@ -323,12 +323,26 @@ export default function PointHistoryItem({
                 >
                   ({t("points:dialog.start.mixity")}:
                   {isMixityMen ? (
-                    <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
+                    <Box
+                      component="span"
+                      sx={(theme) => ({
+                        alignItems: "center",
+                        color: theme.colors.men.main,
+                        display: "flex",
+                      })}
+                    >
                       <MaleIcon sx={{ fontSize: 16, mr: 0.25 }} />
                       {t("points:dialog.start.men")}
                     </Box>
                   ) : (
-                    <Box component="span" sx={{ display: "flex", alignItems: "center" }}>
+                    <Box
+                      component="span"
+                      sx={(theme) => ({
+                        alignItems: "center",
+                        color: theme.colors.women.main,
+                        display: "flex",
+                      })}
+                    >
                       <FemaleIcon sx={{ fontSize: 16, mr: 0.25 }} />
                       {t("points:dialog.start.women")}
                     </Box>
@@ -347,10 +361,21 @@ export default function PointHistoryItem({
                   label={player.name}
                   size="small"
                   sx={(theme) => ({
-                    backgroundColor: player.gender === "M" ? theme.palette.primary.main : theme.palette.secondary.main,
-                    color: theme.palette.common.white,
+                    backgroundColor:
+                      player.gender === "M"
+                        ? theme.colors.men.main
+                        : theme.colors.women.main,
+                    color: theme.palette.getContrastText(
+                      player.gender === "M"
+                        ? theme.colors.men.main
+                        : theme.colors.women.main,
+                    ),
                     "& .MuiChip-icon": {
-                      color: theme.palette.common.white,
+                      color: theme.palette.getContrastText(
+                        player.gender === "M"
+                          ? theme.colors.men.main
+                          : theme.colors.women.main,
+                      ),
                     },
                   })}
                 />

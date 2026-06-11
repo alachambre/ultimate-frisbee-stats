@@ -72,13 +72,27 @@ export default function RosterSummaryHeader({
           icon={<MaleIcon />}
           label={menLabel}
           variant="outlined"
-          sx={{ borderColor: (theme) => alpha(theme.colors.men.main, 0.5) }}
+          sx={(theme) => ({
+            bgcolor: alpha(theme.colors.men.main, 0.05),
+            borderColor: alpha(theme.colors.men.main, 0.5),
+            color: theme.colors.men.main,
+            "& .MuiChip-icon": {
+              color: theme.colors.men.main,
+            },
+          })}
         />
         <Chip
           icon={<FemaleIcon />}
           label={womenLabel}
           variant="outlined"
-          sx={{ borderColor: (theme) => alpha(theme.colors.women.main, 0.5) }}
+          sx={(theme) => ({
+            bgcolor: alpha(theme.colors.women.main, 0.05),
+            borderColor: alpha(theme.colors.women.main, 0.5),
+            color: theme.colors.women.main,
+            "& .MuiChip-icon": {
+              color: theme.colors.women.main,
+            },
+          })}
         />
       </Box>
     </Box>

@@ -54,21 +54,22 @@ export default function PlayerForm({
               fontWeight: 500,
               "&.Mui-selected": {
                 fontWeight: "bold",
-                color: theme.palette.common.white,
                 "&:hover": {
                   opacity: 0.9,
                 },
               },
               "&.Mui-selected[value='M']": {
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: theme.colors.men.main,
+                color: theme.palette.getContrastText(theme.colors.men.main),
                 "&:hover": {
-                  backgroundColor: theme.palette.primary.dark,
+                  backgroundColor: theme.colors.men.main,
                 },
               },
               "&.Mui-selected[value='W']": {
-                backgroundColor: theme.palette.secondary.main,
+                backgroundColor: theme.colors.women.main,
+                color: theme.palette.getContrastText(theme.colors.women.main),
                 "&:hover": {
-                  backgroundColor: theme.palette.secondary.dark,
+                  backgroundColor: theme.colors.women.main,
                 },
               },
             },

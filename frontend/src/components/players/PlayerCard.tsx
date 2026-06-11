@@ -23,8 +23,6 @@ interface PlayerCardProps {
 export default function PlayerCard({ player, onCardClick, onEdit, onDelete }: PlayerCardProps) {
   const { t } = useTranslation("players");
   const hasInlineActions = Boolean(onEdit || onDelete);
-  const getAccentColor = (isMale: boolean, primary: string, secondary: string) =>
-    isMale ? primary : secondary;
 
   const content = (
     <CardContent>
@@ -67,20 +65,16 @@ export default function PlayerCard({ player, onCardClick, onEdit, onDelete }: Pl
         borderRadius: 2,
         borderColor: (theme) =>
           alpha(
-            getAccentColor(
-              player.gender === "M",
-              theme.palette.primary.main,
-              theme.palette.secondary.main
-            ),
+            player.gender === "M"
+              ? theme.colors.men.main
+              : theme.colors.women.main,
             0.22
           ),
         backgroundImage: (theme) =>
           `linear-gradient(150deg, ${theme.palette.background.paper} 0%, ${alpha(
-            getAccentColor(
-              player.gender === "M",
-              theme.palette.primary.main,
-              theme.palette.secondary.main
-            ),
+            player.gender === "M"
+              ? theme.colors.men.main
+              : theme.colors.women.main,
             0.04
           )} 100%)`,
         transition: "box-shadow 0.2s ease, transform 0.2s ease",
